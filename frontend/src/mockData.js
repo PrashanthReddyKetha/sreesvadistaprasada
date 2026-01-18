@@ -8,7 +8,7 @@ export const featuredDishes = [
     description: "Traditional Andhra-style chicken curry with tamarind and aromatic spices",
     price: "£12.99",
     spiceLevel: 3,
-    image: ""
+    image: "https://images.unsplash.com/photo-1631292784640-2b24be784d5d?crop=entropy&cs=srgb&fm=jpg&q=85"
   },
   {
     id: 2,
@@ -17,7 +17,7 @@ export const featuredDishes = [
     description: "Temple-style tangy tamarind rice, pure and divine",
     price: "£8.99",
     spiceLevel: 1,
-    image: ""
+    image: "https://images.unsplash.com/photo-1742281258189-3b933879867a?crop=entropy&cs=srgb&fm=jpg&q=85"
   },
   {
     id: 3,
@@ -26,7 +26,7 @@ export const featuredDishes = [
     description: "Soft steamed rice cakes with traditional sambar and chutneys",
     price: "£6.99",
     spiceLevel: 2,
-    image: ""
+    image: "https://images.unsplash.com/photo-1632104667384-06f58cb7ad44?crop=entropy&cs=srgb&fm=jpg&q=85"
   },
   {
     id: 4,
@@ -35,7 +35,7 @@ export const featuredDishes = [
     description: "Grandmother's recipe of tangy sorrel leaves pickle",
     price: "£4.99",
     spiceLevel: 3,
-    image: ""
+    image: "https://images.unsplash.com/photo-1617854307432-13950e24ba07?crop=entropy&cs=srgb&fm=jpg&q=85"
   }
 ];
 
