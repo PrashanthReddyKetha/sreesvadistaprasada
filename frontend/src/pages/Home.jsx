@@ -20,150 +20,131 @@ const Home = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4" style={{ background: 'linear-gradient(135deg, #ECEC75 0%, #e6e67c 100%)' }}>
-        <div className="container mx-auto max-w-6xl text-center">
-          <h1 
-            className="text-5xl lg:text-7xl font-bold mb-6 text-gray-900"
-            style={{ fontFamily: "'Crimson Text', serif", lineHeight: '1.2' }}
-          >
-            Sree Svadista Prasada
-          </h1>
-          <p className="text-xl lg:text-2xl mb-4 text-gray-800 font-medium">
-            Traditional South Indian Homely Food in the UK
-          </p>
-          <p className="text-lg text-gray-700 mb-10 max-w-2xl mx-auto" style={{ lineHeight: '1.8' }}>
-            From grandmother's kitchen to your plate – pure, divine, and truly home-style.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/menu">
-              <Button 
-                size="lg" 
-                className="bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 hover:-translate-y-1 shadow-md hover:shadow-lg text-base px-8 py-6"
-              >
-                View Menu
-              </Button>
-            </Link>
-            <Link to="/subscriptions">
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="border-2 border-gray-900 text-gray-900 bg-transparent hover:bg-gray-900 hover:text-white transition-all duration-200 hover:-translate-y-1 text-base px-8 py-6"
-              >
-                Subscribe for Weekly Meals
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Hero Slider */}
+      <HeroSlider />
 
       {/* Two Worlds Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
+      <section id="two-worlds" className="py-24 px-4" style={{ backgroundColor: '#F5F5F5' }}>
+        <div className="container mx-auto max-w-7xl">
           <h2 
-            className="text-4xl lg:text-5xl font-bold text-center mb-4 text-gray-900"
-            style={{ fontFamily: "'Crimson Text', serif" }}
+            className="text-4xl lg:text-5xl font-bold text-center mb-6"
+            style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
           >
             Two Worlds, One Divine Experience
           </h2>
-          <p className="text-center text-gray-600 mb-16 max-w-2xl mx-auto" style={{ lineHeight: '1.8' }}>
-            Experience authentic South Indian cuisine in two distinct journeys
+          <p className="text-center text-gray-700 mb-16 max-w-2xl mx-auto text-lg leading-relaxed">
+            Experience authentic South Indian cuisine in two distinct culinary journeys
           </p>
           
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Svadista */}
-            <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2" style={{ background: '#e6e67c' }}>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Flame className="text-red-600" size={32} />
-                  <Badge variant="outline" className="bg-white">Non-Veg</Badge>
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Svadista - Non-Veg */}
+            <Link to="/svadista" className="group block">
+              <div 
+                className="relative h-96 lg:h-[500px] rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+                style={{ backgroundColor: '#FFD580' }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Flame size={40} className="text-red-400" />
+                    <Badge variant="outline" className="bg-white text-gray-900 border-0 text-sm px-3 py-1">Non-Veg</Badge>
+                  </div>
+                  <h3 
+                    className="text-4xl lg:text-5xl font-bold mb-4"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    Sree Svadista
+                  </h3>
+                  <p className="text-lg mb-6 text-gray-200 leading-relaxed">
+                    The Traditional - Rustic, spicy, bold non-vegetarian dishes. Just like Sunday at your grandmother's home.
+                  </p>
+                  <div className="flex items-center gap-2 text-white group-hover:gap-4 transition-all duration-300">
+                    <span className="font-semibold">Explore Svadista</span>
+                    <span className="text-2xl">→</span>
+                  </div>
                 </div>
-                <CardTitle className="text-3xl mb-2" style={{ fontFamily: "'Crimson Text', serif" }}>
-                  Svadista
-                </CardTitle>
-                <CardDescription className="text-gray-700 text-base">
-                  For Traditional Non-Veg Lovers
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-800 mb-6" style={{ lineHeight: '1.8' }}>
-                  Traditional South Indian non-veg dishes, just like Sunday at home. Authentic recipes passed down through generations.
-                </p>
-                <Link to="/svadista">
-                  <Button className="w-full bg-gray-900 text-white hover:bg-gray-800 transition-colors duration-200">
-                    Explore Svadista
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+              </div>
+            </Link>
 
-            {/* Prasada */}
-            <Card className="border-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-2" style={{ background: '#e6e67c' }}>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Leaf className="text-green-600" size={32} />
-                  <Badge variant="outline" className="bg-white">Pure Veg</Badge>
+            {/* Prasada - Pure Veg */}
+            <Link to="/prasada" className="group block">
+              <div 
+                className="relative h-96 lg:h-[500px] rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+                style={{ backgroundColor: '#90EE90' }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Leaf size={40} className="text-green-300" />
+                    <Badge variant="outline" className="bg-white text-gray-900 border-0 text-sm px-3 py-1">Pure Veg</Badge>
+                  </div>
+                  <h3 
+                    className="text-4xl lg:text-5xl font-bold mb-4"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    Sree Prasada
+                  </h3>
+                  <p className="text-lg mb-6 text-gray-200 leading-relaxed">
+                    The Divine - 100% pure vegetarian temple-style cooking. Separate utensils, oils, and complete devotion.
+                  </p>
+                  <div className="flex items-center gap-2 text-white group-hover:gap-4 transition-all duration-300">
+                    <span className="font-semibold">Explore Prasada</span>
+                    <span className="text-2xl">→</span>
+                  </div>
                 </div>
-                <CardTitle className="text-3xl mb-2" style={{ fontFamily: "'Crimson Text', serif" }}>
-                  Prasada
-                </CardTitle>
-                <CardDescription className="text-gray-700 text-base">
-                  100% Pure Vegetarian
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-800 mb-6" style={{ lineHeight: '1.8' }}>
-                  Temple-style purity with separate oil, utensils, and cooking. Divine food prepared with complete devotion.
-                </p>
-                <Link to="/prasada">
-                  <Button className="w-full bg-gray-900 text-white hover:bg-gray-800 transition-colors duration-200">
-                    Explore Prasada
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+              </div>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Why Different Section */}
-      <section className="py-20 px-4" style={{ backgroundColor: '#f8fafc' }}>
+      <section className="py-20 px-4" style={{ backgroundColor: '#FFFFF0' }}>
         <div className="container mx-auto max-w-6xl">
           <h2 
-            className="text-4xl lg:text-5xl font-bold text-center mb-16 text-gray-900"
-            style={{ fontFamily: "'Crimson Text', serif" }}
+            className="text-4xl lg:text-5xl font-bold text-center mb-4"
+            style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
           >
             Why We're Different
           </h2>
+          <p className="text-center text-gray-700 mb-16 max-w-2xl mx-auto text-lg leading-relaxed">
+            We bring the warmth of grandmother's kitchen to the UK
+          </p>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-10">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Utensils className="text-white" size={28} />
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: '#800020' }}>
+                <Utensils className="text-white" size={32} />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-900">Grandma's Recipes</h3>
-              <p className="text-gray-600" style={{ lineHeight: '1.8' }}>
-                Authentic recipes passed down through generations, cooked just like at home
+              <h3 className="text-2xl font-semibold mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                Grandma's Recipes
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                Authentic recipes passed down through generations, cooked with the same love and care
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Leaf className="text-white" size={28} />
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: '#800020' }}>
+                <Leaf className="text-white" size={32} />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-900">Temple-like Purity</h3>
-              <p className="text-gray-600" style={{ lineHeight: '1.8' }}>
-                Separate veg & non-veg handling with different oils and utensils
+              <h3 className="text-2xl font-semibold mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                Temple Purity
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                Separate veg & non-veg kitchens with different oils, utensils, and cooking methods
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="text-white" size={28} />
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: '#800020' }}>
+                <CheckCircle className="text-white" size={32} />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-900">Flexible Plans</h3>
-              <p className="text-gray-600" style={{ lineHeight: '1.8' }}>
-                Weekly & monthly meal subscriptions with corporate dabba wala service
+              <h3 className="text-2xl font-semibold mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                Flexible Plans
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                Weekly & monthly subscriptions with Dabba Wala service for busy professionals
               </p>
             </div>
           </div>
@@ -171,57 +152,63 @@ const Home = () => {
       </section>
 
       {/* Services Section */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-20 px-4" style={{ backgroundColor: '#F5F5F5' }}>
         <div className="container mx-auto max-w-6xl">
           <h2 
-            className="text-4xl lg:text-5xl font-bold text-center mb-4 text-gray-900"
-            style={{ fontFamily: "'Crimson Text', serif" }}
+            className="text-4xl lg:text-5xl font-bold text-center mb-4"
+            style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
           >
             Our Services
           </h2>
-          <p className="text-center text-gray-600 mb-16 max-w-2xl mx-auto" style={{ lineHeight: '1.8' }}>
-            From dine-in to doorstep, we bring homely food to you
+          <p className="text-center text-gray-700 mb-16 max-w-2xl mx-auto text-lg leading-relaxed">
+            From dine-in to doorstep delivery, homely food wherever you need
           </p>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="hover:shadow-lg transition-all duration-300">
+            <Card className="hover:shadow-xl transition-all duration-300 bg-white border-0">
               <CardHeader>
-                <Store className="mb-4 text-gray-900" size={36} />
-                <CardTitle className="text-2xl" style={{ fontFamily: "'Crimson Text', serif" }}>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: '#800020' }}>
+                  <ShoppingBag className="text-white" size={28} />
+                </div>
+                <CardTitle className="text-2xl" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                   Dine-in Restaurant
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600" style={{ lineHeight: '1.8' }}>
-                  Homely ambiance with traditional seating. Family-friendly environment where you can enjoy authentic South Indian meals.
+                <p className="text-gray-700 leading-relaxed">
+                  Experience homely ambiance with traditional seating. A family-friendly space to savor authentic South Indian meals.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-all duration-300">
+            <Card className="hover:shadow-xl transition-all duration-300 bg-white border-0">
               <CardHeader>
-                <Utensils className="mb-4 text-gray-900" size={36} />
-                <CardTitle className="text-2xl" style={{ fontFamily: "'Crimson Text', serif" }}>
-                  Subscription Meals
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: '#800020' }}>
+                  <Clock className="text-white" size={28} />
+                </div>
+                <CardTitle className="text-2xl" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                  Dabba Wala Service
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600" style={{ lineHeight: '1.8' }}>
-                  Weekly and monthly flexible plans. Perfect for students and professionals who miss home-cooked food.
+                <p className="text-gray-700 leading-relaxed">
+                  Weekly and monthly meal subscriptions. Perfect for students and professionals missing home-cooked food.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-all duration-300">
+            <Card className="hover:shadow-xl transition-all duration-300 bg-white border-0">
               <CardHeader>
-                <Users className="mb-4 text-gray-900" size={36} />
-                <CardTitle className="text-2xl" style={{ fontFamily: "'Crimson Text', serif" }}>
-                  Catering & Corporate
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: '#800020' }}>
+                  <Users className="text-white" size={28} />
+                </div>
+                <CardTitle className="text-2xl" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                  Catering & Events
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600" style={{ lineHeight: '1.8' }}>
-                  Events, poojas, and office lunches. Dabba-wala style delivery for corporate professionals.
+                <p className="text-gray-700 leading-relaxed">
+                  Full catering for poojas, weddings, corporate events, and housewarming celebrations.
                 </p>
               </CardContent>
             </Card>
@@ -229,36 +216,41 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Items Section */}
-      <section className="py-20 px-4" style={{ background: 'linear-gradient(135deg, #ECEC75 0%, #e6e67c 100%)' }}>
+      {/* Featured Dishes Section */}
+      <section className="py-20 px-4" style={{ backgroundColor: '#FFFFF0' }}>
         <div className="container mx-auto max-w-6xl">
           <h2 
-            className="text-4xl lg:text-5xl font-bold text-center mb-4 text-gray-900"
-            style={{ fontFamily: "'Crimson Text', serif" }}
+            className="text-4xl lg:text-5xl font-bold text-center mb-4"
+            style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
           >
-            Featured Dishes
+            Trending & Loved
           </h2>
-          <p className="text-center text-gray-700 mb-16 max-w-2xl mx-auto" style={{ lineHeight: '1.8' }}>
-            Taste the authentic flavors that remind you of home
+          <p className="text-center text-gray-700 mb-16 max-w-2xl mx-auto text-lg leading-relaxed">
+            Dishes that remind you of home and bring comfort to your soul
           </p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredDishes.map((dish) => (
-              <Card key={dish.id} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
-                <CardHeader>
+              <Card key={dish.id} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 overflow-hidden">
+                <CardHeader className="pb-3">
                   <div className="flex justify-between items-start mb-2">
-                    <Badge variant={dish.category === 'Non-Veg' ? 'destructive' : 'secondary'}>
+                    <Badge 
+                      variant={dish.category === 'Non-Veg' ? 'destructive' : 'secondary'}
+                      className="text-xs"
+                    >
                       {dish.category}
                     </Badge>
                     {getSpiceIndicator(dish.spiceLevel)}
                   </div>
-                  <CardTitle className="text-xl">{dish.name}</CardTitle>
+                  <CardTitle className="text-xl" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    {dish.name}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-600 text-sm mb-4" style={{ lineHeight: '1.6' }}>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">
                     {dish.description}
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">{dish.price}</p>
+                  <p className="text-2xl font-bold" style={{ color: '#800020' }}>{dish.price}</p>
                 </CardContent>
               </Card>
             ))}
@@ -268,7 +260,8 @@ const Home = () => {
             <Link to="/menu">
               <Button 
                 size="lg"
-                className="bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200 hover:-translate-y-1 shadow-md px-8 py-6"
+                className="text-white text-lg px-10 py-6 font-semibold hover:opacity-90 transition-all duration-200"
+                style={{ backgroundColor: '#800020' }}
               >
                 View Full Menu
               </Button>
@@ -278,29 +271,29 @@ const Home = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-20 px-4" style={{ backgroundColor: '#F5F5F5' }}>
         <div className="container mx-auto max-w-6xl">
           <h2 
-            className="text-4xl lg:text-5xl font-bold text-center mb-16 text-gray-900"
-            style={{ fontFamily: "'Crimson Text', serif" }}
+            className="text-4xl lg:text-5xl font-bold text-center mb-16"
+            style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
           >
             What Our Customers Say
           </h2>
           
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial) => (
-              <Card key={testimonial.id} className="hover:shadow-lg transition-all duration-300">
+              <Card key={testimonial.id} className="hover:shadow-lg transition-all duration-300 bg-white border-0">
                 <CardContent className="pt-6">
                   <div className="flex mb-4">
                     {Array(testimonial.rating).fill(0).map((_, i) => (
-                      <span key={i} className="text-yellow-500 text-xl">★</span>
+                      <span key={i} className="text-2xl" style={{ color: '#B8860B' }}>★</span>
                     ))}
                   </div>
-                  <p className="text-gray-700 mb-4 italic" style={{ lineHeight: '1.8' }}>
+                  <p className="text-gray-700 mb-4 italic leading-relaxed">
                     "{testimonial.text}"
                   </p>
                   <div>
-                    <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                    <p className="font-semibold" style={{ color: '#800020' }}>{testimonial.name}</p>
                     <p className="text-sm text-gray-500">{testimonial.location}</p>
                   </div>
                 </CardContent>
@@ -311,21 +304,22 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4" style={{ backgroundColor: '#1e293b' }}>
+      <section className="py-24 px-4" style={{ backgroundColor: '#800020' }}>
         <div className="container mx-auto max-w-4xl text-center">
           <h2 
             className="text-4xl lg:text-5xl font-bold mb-6 text-white"
-            style={{ fontFamily: "'Crimson Text', serif" }}
+            style={{ fontFamily: "'Playfair Display', serif" }}
           >
             Missing Home-Cooked Food?
           </h2>
-          <p className="text-xl text-gray-300 mb-10" style={{ lineHeight: '1.8' }}>
-            Subscribe to our weekly or monthly plans and enjoy traditional South Indian meals delivered to your doorstep.
+          <p className="text-xl text-gray-200 mb-10 leading-relaxed">
+            Subscribe to our Dabba Wala service and enjoy traditional South Indian meals delivered fresh to your doorstep every day.
           </p>
           <Link to="/subscriptions">
             <Button 
               size="lg"
-              className="bg-white text-gray-900 hover:bg-gray-100 transition-all duration-200 hover:-translate-y-1 shadow-md px-8 py-6 text-base"
+              className="bg-white text-lg px-10 py-6 font-semibold hover:bg-gray-100 transition-all duration-200"
+              style={{ color: '#800020' }}
             >
               View Subscription Plans
             </Button>
