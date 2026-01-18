@@ -240,6 +240,15 @@ const Home = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredDishes.map((dish) => (
               <Card key={dish.id} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 overflow-hidden">
+                {dish.image && (
+                  <div className="h-48 overflow-hidden">
+                    <img 
+                      src={dish.image} 
+                      alt={dish.name}
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                )}
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start mb-2">
                     <Badge 
