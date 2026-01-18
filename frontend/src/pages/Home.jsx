@@ -8,7 +8,13 @@ import { featuredDishes, testimonials } from '../mockData';
 
 const Home = () => {
   const getSpiceIndicator = (level) => {
-    return Array(level).fill('🌶️').join('');
+    return (
+      <div className="flex gap-0.5">
+        {Array(level).fill(0).map((_, i) => (
+          <Flame key={i} size={14} className="text-red-500 fill-red-500" />
+        ))}
+      </div>
+    );
   };
 
   return (
