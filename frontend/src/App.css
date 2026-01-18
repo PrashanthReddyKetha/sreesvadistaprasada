@@ -1,5 +1,5 @@
-/* Import Crimson Text font for headings */
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&display=swap');
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Lato:wght@300;400;700&display=swap');
 
 /* Reset and base styles */
 * {
@@ -10,6 +10,7 @@
 
 .App {
   min-height: 100vh;
+  background-color: #B8860B;
 }
 
 /* Container utilities */
@@ -45,6 +46,12 @@
   }
 }
 
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1536px;
+  }
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
@@ -52,11 +59,7 @@ html {
 
 /* Button hover effects */
 button {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-}
-
-button:hover {
-  transform: translateY(-1px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
 }
 
 /* Card hover effects */
@@ -65,14 +68,19 @@ button:hover {
 }
 
 .card-hover:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
 }
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Crimson Text', 'Times New Roman', serif;
+  font-family: 'Playfair Display', 'Times New Roman', serif;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Link transitions */
+a {
+  transition: color 0.2s ease;
 }
