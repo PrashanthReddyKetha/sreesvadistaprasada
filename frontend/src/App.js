@@ -4,6 +4,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
+import OurStory from "./pages/OurStory";
+import Svadista from "./pages/Svadista";
+import Prasada from "./pages/Prasada";
+import Menu from "./pages/Menu";
+import Subscriptions from "./pages/Subscriptions";
+import Catering from "./pages/Catering";
+import Contact from "./pages/Contact";
 
 function App() {
   return (
@@ -12,13 +19,13 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/story" element={<div className="pt-32 px-4 text-center"><h1 className="text-4xl font-bold">Our Story - Coming Soon</h1></div>} />
-          <Route path="/svadista" element={<div className="pt-32 px-4 text-center"><h1 className="text-4xl font-bold">Svadista - Coming Soon</h1></div>} />
-          <Route path="/prasada" element={<div className="pt-32 px-4 text-center"><h1 className="text-4xl font-bold">Prasada - Coming Soon</h1></div>} />
-          <Route path="/menu" element={<div className="pt-32 px-4 text-center"><h1 className="text-4xl font-bold">Menu - Coming Soon</h1></div>} />
-          <Route path="/subscriptions" element={<div className="pt-32 px-4 text-center"><h1 className="text-4xl font-bold">Subscriptions - Coming Soon</h1></div>} />
-          <Route path="/catering" element={<div className="pt-32 px-4 text-center"><h1 className="text-4xl font-bold">Catering - Coming Soon</h1></div>} />
-          <Route path="/contact" element={<div className="pt-32 px-4 text-center"><h1 className="text-4xl font-bold">Contact - Coming Soon</h1></div>} />
+          <Route path="/story" element={<OurStory />} />
+          <Route path="/svadista" element={<Svadista />} />
+          <Route path="/prasada" element={<Prasada />} />
+          <Route path="/menu" element={<Menu />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/catering" element={<Catering />} />
+          <Route path="/contact" element={<Contact />} />
         </Routes>
         <Footer />
       </BrowserRouter>
