@@ -21,12 +21,12 @@ const Header = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#800020' }}>
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <h1 className="text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'Crimson Text', serif", color: '#0f172a' }}>
+            <h1 className="text-2xl lg:text-3xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
               Sree Svadista Prasada
             </h1>
           </Link>
@@ -39,15 +39,15 @@ const Header = () => {
                 to={link.path}
                 className={`text-sm font-medium transition-colors duration-200 ${
                   isActive(link.path)
-                    ? 'text-gray-900 border-b-2 border-gray-900 pb-1'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'text-white border-b-2 border-white pb-1'
+                    : 'text-gray-200 hover:text-white'
                 }`}
               >
                 {link.name}
               </Link>
             ))}
             <Button
-              className="bg-gray-900 text-white hover:bg-gray-800 transition-all duration-200"
+              className="bg-white text-gray-900 hover:bg-gray-100 transition-all duration-200 font-semibold"
               onClick={() => alert('Order functionality will be available soon!')}
             >
               Order Now
@@ -56,7 +56,7 @@ const Header = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="lg:hidden p-2"
+            className="lg:hidden p-2 text-white"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -66,15 +66,15 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="lg:hidden py-4 border-t">
+          <nav className="lg:hidden py-4 border-t border-gray-400">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
                 className={`block py-3 text-sm font-medium transition-colors duration-200 ${
                   isActive(link.path)
-                    ? 'text-gray-900 font-semibold'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'text-white font-semibold'
+                    : 'text-gray-200 hover:text-white'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -82,7 +82,7 @@ const Header = () => {
               </Link>
             ))}
             <Button
-              className="w-full mt-4 bg-gray-900 text-white hover:bg-gray-800"
+              className="w-full mt-4 bg-white text-gray-900 hover:bg-gray-100"
               onClick={() => {
                 setIsMenuOpen(false);
                 alert('Order functionality will be available soon!');
