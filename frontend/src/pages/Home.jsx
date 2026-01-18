@@ -249,7 +249,7 @@ const Home = () => {
                     <Badge variant={dish.category === 'Non-Veg' ? 'destructive' : 'secondary'}>
                       {dish.category}
                     </Badge>
-                    <span className="text-sm">{getSpiceIndicator(dish.spiceLevel)}</span>
+                    {getSpiceIndicator(dish.spiceLevel)}
                   </div>
                   <CardTitle className="text-xl">{dish.name}</CardTitle>
                 </CardHeader>
