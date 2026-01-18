@@ -41,9 +41,13 @@ const Home = () => {
             <Link to="/svadista" className="group block">
               <div 
                 className="relative h-96 lg:h-[500px] rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
-                style={{ backgroundColor: '#FFD580' }}
+                style={{ 
+                  backgroundImage: 'url(https://images.unsplash.com/photo-1708782344490-9026aaa5eec7?crop=entropy&cs=srgb&fm=jpg&q=85)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                   <div className="flex items-center gap-3 mb-4">
                     <Flame size={40} className="text-red-400" />
@@ -70,9 +74,13 @@ const Home = () => {
             <Link to="/prasada" className="group block">
               <div 
                 className="relative h-96 lg:h-[500px] rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
-                style={{ backgroundColor: '#90EE90' }}
+                style={{ 
+                  backgroundImage: 'url(https://images.unsplash.com/photo-1625398407796-82650a8c135f?crop=entropy&cs=srgb&fm=jpg&q=85)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                   <div className="flex items-center gap-3 mb-4">
                     <Leaf size={40} className="text-green-300" />
