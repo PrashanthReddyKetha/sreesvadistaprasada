@@ -93,10 +93,10 @@ const HeroSlider = () => {
         </div>
       ))}
 
-      {/* Navigation Arrows */}
+      {/* Navigation Arrows - hidden on mobile to avoid text overlap */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
+        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full hidden sm:flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
         style={{ backgroundColor: 'rgba(128, 0, 32, 0.7)', backdropFilter: 'blur(4px)' }}
         aria-label="Previous slide"
         data-testid="hero-prev-btn"
@@ -105,7 +105,7 @@ const HeroSlider = () => {
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
+        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full hidden sm:flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
         style={{ backgroundColor: 'rgba(128, 0, 32, 0.7)', backdropFilter: 'blur(4px)' }}
         aria-label="Next slide"
         data-testid="hero-next-btn"

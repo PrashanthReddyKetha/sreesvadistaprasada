@@ -59,7 +59,7 @@ const Subscriptions = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
-      <section className="pt-[calc(36px+4rem)] md:pt-[calc(36px+5rem)] relative overflow-hidden" style={{ height: 'min(45vh, 360px)' }}>
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(45vh, 360px)' }}>
         <img
           src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
           alt="Dabba Wala Subscription"

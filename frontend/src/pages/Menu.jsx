@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, Leaf, ShoppingCart, ArrowRight } from 'lucide-react';
+import { Flame, Leaf, ShoppingCart, ArrowRight, Search } from 'lucide-react';
 import { menuItems } from '../mockData';
 
 const categories = [
@@ -15,6 +15,7 @@ const categories = [
 
 const Menu = () => {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const getAllDishes = () => {
     const all = [];
@@ -24,14 +25,20 @@ const Menu = () => {
     return all;
   };
 
-  const filtered = activeCategory === 'all' ? getAllDishes() : (menuItems[activeCategory] || []).map(item => ({ ...item, menuCategory: activeCategory }));
+  const getFilteredByCategory = () => {
+    return activeCategory === 'all' ? getAllDishes() : (menuItems[activeCategory] || []).map(item => ({ ...item, menuCategory: activeCategory }));
+  };
+
+  const filtered = getFilteredByCategory().filter(dish =>
+    !searchQuery.trim() || dish.name.toLowerCase().includes(searchQuery.toLowerCase()) || dish.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const isVeg = (cat) => ['veg', 'prasada', 'breakfast', 'podis'].includes(cat);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
-      <section className="pt-[calc(36px+4rem)] md:pt-[calc(36px+5rem)] relative overflow-hidden" style={{ height: 'min(45vh, 360px)' }}>
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(45vh, 360px)' }}>
         <img
           src="https://images.unsplash.com/photo-1742281258189-3b933879867a?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
           alt="Our Full Menu"
@@ -50,9 +57,23 @@ const Menu = () => {
         </div>
       </section>
 
-      {/* Sticky Filter */}
-      <div className="sticky top-[calc(36px+4rem)] md:top-[calc(36px+5rem)] z-30 py-3 px-4 md:px-8" style={{ backgroundColor: '#FDFBF7', borderBottom: '1px solid rgba(128,0,32,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} data-testid="menu-filters">
-        <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+      {/* Sticky Filter + Search */}
+      <div className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8" style={{ backgroundColor: '#FDFBF7', borderBottom: '1px solid rgba(128,0,32,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} data-testid="menu-filters">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search dishes..."
+                className="w-full pl-9 pr-4 py-2 rounded-full border border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors"
+                data-testid="menu-search"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {categories.map(cat => (
             <button
               key={cat.id}
@@ -66,6 +87,7 @@ const Menu = () => {
               {cat.name}
             </button>
           ))}
+          </div>
         </div>
       </div>
 

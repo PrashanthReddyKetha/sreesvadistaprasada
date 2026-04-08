@@ -12,7 +12,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
-      <section className="pt-[calc(36px+4rem)] md:pt-[calc(36px+5rem)] relative overflow-hidden" style={{ height: 'min(40vh, 320px)' }}>
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(40vh, 320px)' }}>
         <div className="absolute inset-0" style={{ backgroundColor: '#800020' }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
           <div className="max-w-xl">

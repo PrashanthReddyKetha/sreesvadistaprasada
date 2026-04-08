@@ -16,7 +16,7 @@ const Prasada = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
-      <section className="pt-[calc(36px+4rem)] md:pt-[calc(36px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
         <img
           src="https://images.unsplash.com/photo-1742281257687-092746ad6021?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
           alt="Sree Prasada"
@@ -52,7 +52,7 @@ const Prasada = () => {
       </div>
 
       {/* Sticky Filter */}
-      <div className="sticky top-[calc(36px+4rem)] md:top-[calc(36px+5rem)] z-30 py-3 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE', borderBottom: '1px solid rgba(74,124,89,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} data-testid="prasada-filters">
+      <div className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE', borderBottom: '1px solid rgba(74,124,89,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} data-testid="prasada-filters">
         <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {subcategories.map(cat => (
             <button

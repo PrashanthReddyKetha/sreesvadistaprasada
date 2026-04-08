@@ -3,6 +3,7 @@ import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import WhatsAppButton from "./components/WhatsAppButton";
 import Home from "./pages/Home";
 import OurStory from "./pages/OurStory";
 import Svadista from "./pages/Svadista";
@@ -13,6 +14,8 @@ import Catering from "./pages/Catering";
 import Contact from "./pages/Contact";
 import Breakfast from "./pages/Breakfast";
 import Snacks from "./pages/Snacks";
+import FAQ from "./pages/FAQ";
+import Gallery from "./pages/Gallery";
 
 function App() {
   return (
@@ -30,8 +33,11 @@ function App() {
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/catering" element={<Catering />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/gallery" element={<Gallery />} />
         </Routes>
         <Footer />
+        <WhatsAppButton />
       </BrowserRouter>
     </div>
   );

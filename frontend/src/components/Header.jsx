@@ -47,7 +47,14 @@ const Header = () => {
     { name: 'Dabba Wala', path: '/subscriptions' },
     { name: 'Our Story', path: '/story' },
     { name: 'Catering', path: '/catering' },
-    { name: 'Contact', path: '/contact' },
+    {
+      name: 'More',
+      dropdown: [
+        { name: 'Gallery', path: '/gallery' },
+        { name: 'FAQ', path: '/faq' },
+        { name: 'Contact', path: '/contact' },
+      ]
+    },
   ];
 
   return (
@@ -55,10 +62,11 @@ const Header = () => {
       {/* Notification Bar */}
       <div
         data-testid="notification-bar"
-        className="fixed top-0 left-0 right-0 z-50 py-2 px-4 text-center text-sm font-medium tracking-wide overflow-hidden"
+        className="fixed top-0 left-0 right-0 z-50 py-1.5 sm:py-2 px-4 text-center text-xs sm:text-sm font-medium tracking-wide overflow-hidden"
         style={{ backgroundColor: '#800020', color: '#FDFBF7' }}
       >
-        <span>Swagatam! Now serving authentic hot meals in Milton Keynes, Edinburgh & Glasgow | Free Delivery over £30</span>
+        <span className="hidden sm:inline">Swagatam! Now serving authentic hot meals in Milton Keynes, Edinburgh & Glasgow | Free Delivery over £30</span>
+        <span className="sm:hidden">Now serving Milton Keynes, Edinburgh & Glasgow | Free Delivery £30+</span>
       </div>
 
       {/* Header */}
@@ -70,7 +78,7 @@ const Header = () => {
             : ''
         }`}
         style={{
-          top: '36px',
+          top: '32px',
           backgroundColor: isScrolled ? 'rgba(253, 251, 247, 0.95)' : '#FDFBF7',
           borderBottom: '1px solid rgba(244, 196, 48, 0.2)'
         }}

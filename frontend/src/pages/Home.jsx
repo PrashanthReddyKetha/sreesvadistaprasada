@@ -1,11 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Leaf, Flame, Play, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Truck, Calendar } from 'lucide-react';
-import { featuredDishes, mealMoments, chefSpecial, images } from '../mockData';
+import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Truck, Calendar, MapPin, Search } from 'lucide-react';
+import { featuredDishes, mealMoments, chefSpecial, images, galleryImages, deliveryAreas } from '../mockData';
 import HeroSlider from '../components/HeroSlider';
 
 const Home = () => {
   const trendingRef = useRef(null);
+  const [postcode, setPostcode] = useState('');
+  const [postcodeResult, setPostcodeResult] = useState(null);
 
   const scrollTrending = (direction) => {
     if (trendingRef.current) {
@@ -17,11 +19,20 @@ const Home = () => {
     }
   };
 
+  const checkPostcode = (e) => {
+    e.preventDefault();
+    const pc = postcode.toUpperCase().trim();
+    if (pc.startsWith('MK')) setPostcodeResult({ area: deliveryAreas[0], match: true });
+    else if (pc.startsWith('EH')) setPostcodeResult({ area: deliveryAreas[1], match: true });
+    else if (pc.startsWith('G') && /^G\d/.test(pc)) setPostcodeResult({ area: deliveryAreas[2], match: true });
+    else setPostcodeResult({ area: deliveryAreas[3], match: true });
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
 
       {/* Hero Slider */}
-      <section className="pt-[calc(36px+4rem)] md:pt-[calc(36px+5rem)]">
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]">
         <HeroSlider />
       </section>
 
@@ -186,9 +197,18 @@ const Home = () => {
                   <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>
                     {dish.name}
                   </h3>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2">
+                  <p className="text-xs text-gray-500 leading-relaxed mb-2 line-clamp-2">
                     {dish.description}
                   </p>
+                  {dish.allergens && dish.allergens.length > 0 && dish.allergens[0] !== 'none' && (
+                    <div className="flex gap-1 mb-3">
+                      {dish.allergens.map(a => (
+                        <span key={a} className="px-1.5 py-0.5 rounded text-[10px] font-medium uppercase" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }}>
+                          {a}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <p className="text-xl font-bold" style={{ color: '#800020' }}>{dish.price}</p>
                     <button
@@ -360,43 +380,96 @@ const Home = () => {
       </section>
 
       {/* ============================================ */}
-      {/* THE SVADISTA CINEMA */}
+      {/* DELIVERY POSTCODE CHECKER */}
       {/* ============================================ */}
-      <section className="py-16 md:py-24 px-4 md:px-8" data-testid="svadista-cinema-section">
+      <section className="py-16 md:py-24 px-4 md:px-8" data-testid="postcode-checker-section">
         <div className="max-w-7xl mx-auto">
-          <div className="relative rounded-lg overflow-hidden group cursor-pointer" style={{ height: 'min(50vh, 450px)' }}>
-            <img
-              src={images.svadistaCinema}
-              alt="The Svadista Cinema - Watch us cook"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.8) 0%, rgba(45, 36, 34, 0.5) 50%, rgba(45, 36, 34, 0.3) 100%)' }} />
-
-            <div className="relative h-full flex items-center px-8 md:px-16">
-              <div className="max-w-lg">
-                <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#F4C430' }}>
-                  Watch the magic unfold
-                </p>
-                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-                  The Svadista Cinema
-                </h2>
-                <p className="text-sm text-gray-300 leading-relaxed mb-6 max-w-md">
-                  Slow-motion shots of tempering spices, steam rising from rice, curry being scooped. Traditional cooking methods that have been perfected over generations.
-                </p>
-                <button
-                  className="flex items-center gap-4 group/play"
-                  data-testid="cinema-play-btn"
-                >
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 group-hover/play:scale-110"
-                    style={{ backgroundColor: '#800020' }}
-                  >
-                    <Play className="text-white ml-1" size={24} fill="white" />
-                  </div>
-                  <span className="text-white font-semibold text-sm tracking-wide">Watch Our Story</span>
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Check your area</p>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                Do We Deliver to You?
+              </h2>
+              <p className="text-sm text-gray-600 leading-relaxed mb-6">
+                Enter your postcode to see what's available in your area. Full meals and subscriptions in Milton Keynes, Edinburgh & Glasgow. Snacks and pickles ship UK-wide.
+              </p>
+              <form onSubmit={checkPostcode} className="flex gap-2 mb-4" data-testid="postcode-form">
+                <div className="relative flex-1">
+                  <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={postcode}
+                    onChange={(e) => { setPostcode(e.target.value); setPostcodeResult(null); }}
+                    placeholder="e.g. MK9 2FP"
+                    className="w-full pl-10 pr-4 py-3 rounded-sm border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors"
+                    data-testid="postcode-input"
+                  />
+                </div>
+                <button type="submit" className="px-6 py-3 text-sm font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#800020' }} data-testid="postcode-check-btn">
+                  Check
                 </button>
+              </form>
+              {postcodeResult && (
+                <div className="p-4 rounded-lg text-sm" style={{ backgroundColor: postcodeResult.area.city === 'Rest of UK' ? '#FDF5E6' : '#F0FFF4', border: `1px solid ${postcodeResult.area.city === 'Rest of UK' ? 'rgba(184,134,11,0.3)' : 'rgba(74,124,89,0.3)'}` }} data-testid="postcode-result">
+                  <p className="font-bold mb-2" style={{ color: postcodeResult.area.city === 'Rest of UK' ? '#B8860B' : '#4A7C59' }}>
+                    {postcodeResult.area.city === 'Rest of UK' ? 'Snacks & Pickles available!' : `Great news! Full delivery to ${postcodeResult.area.city}!`}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                    <div><strong>Available:</strong> {postcodeResult.area.status}</div>
+                    <div><strong>Delivery:</strong> {postcodeResult.area.deliveryFee}</div>
+                    <div><strong>Min Order:</strong> {postcodeResult.area.minOrder}</div>
+                    <div><strong>Timing:</strong> {postcodeResult.area.timing}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Delivery Areas Table */}
+            <div className="rounded-lg bg-white p-6" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }}>
+              <h3 className="text-lg font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Delivery Areas</h3>
+              <div className="space-y-3">
+                {deliveryAreas.map((area) => (
+                  <div key={area.city} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: area.city === 'Milton Keynes' ? 'rgba(128,0,32,0.04)' : '#fafafa' }} data-testid={`delivery-area-${area.city.toLowerCase().replace(/\s/g, '-')}`}>
+                    <div>
+                      <p className="text-sm font-bold" style={{ color: area.city === 'Milton Keynes' ? '#800020' : '#2D2422' }}>
+                        {area.city} {area.city === 'Milton Keynes' && <span className="text-xs font-normal ml-1" style={{ color: '#B8860B' }}>(Main)</span>}
+                      </p>
+                      <p className="text-xs text-gray-500">{area.postcodes}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium" style={{ color: '#4A7C59' }}>{area.deliveryFee}</p>
+                      <p className="text-xs text-gray-400">{area.timing}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* GALLERY PREVIEW */}
+      {/* ============================================ */}
+      <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }} data-testid="gallery-preview-section">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>From our kitchens</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+              A Glimpse of Home
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {galleryImages.slice(0, 8).map(img => (
+              <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden group">
+                <img src={img.src} alt={img.alt} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-8">
+            <Link to="/gallery" className="inline-flex items-center gap-2 text-sm font-semibold tracking-wide transition-colors duration-200 hover:gap-3" style={{ color: '#800020' }} data-testid="view-gallery-link">
+              View Full Gallery <ArrowRight size={16} />
+            </Link>
           </div>
         </div>
       </section>
