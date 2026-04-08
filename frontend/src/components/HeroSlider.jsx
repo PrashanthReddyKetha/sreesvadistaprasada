@@ -43,9 +43,9 @@ const HeroSlider = () => {
             style={{ backgroundImage: `url(${slide.image})` }}
           />
 
-          {/* Gradient Overlay */}
+          {/* Gradient Overlay - Strong for readability */}
           <div className="absolute inset-0" style={{
-            background: 'linear-gradient(to right, rgba(45, 36, 34, 0.85) 0%, rgba(45, 36, 34, 0.6) 40%, rgba(45, 36, 34, 0.3) 70%, transparent 100%)'
+            background: 'linear-gradient(to right, rgba(45, 36, 34, 0.92) 0%, rgba(45, 36, 34, 0.8) 35%, rgba(45, 36, 34, 0.5) 65%, rgba(45, 36, 34, 0.3) 100%)'
           }} />
 
           {/* Bottom subtle grain */}

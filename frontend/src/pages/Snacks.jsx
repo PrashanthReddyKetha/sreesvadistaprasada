@@ -48,7 +48,7 @@ const Snacks = () => {
       <div className="py-3 px-4 md:px-8 text-center" style={{ backgroundColor: '#4A7C59', color: 'white' }}>
         <div className="flex items-center justify-center gap-2 text-sm font-medium">
           <Truck size={16} />
-          <span>Free UK-wide delivery on orders over £25 | Freshly packed and sealed for travel</span>
+          <span>Free UK-wide delivery on orders over £25 | Now serving Milton Keynes, Edinburgh & Glasgow</span>
         </div>
       </div>
 

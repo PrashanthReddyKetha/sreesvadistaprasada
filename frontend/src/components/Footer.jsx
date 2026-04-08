@@ -17,7 +17,7 @@ const Footer = () => {
               Authentic South Indian
             </span>
             <p className="text-sm leading-relaxed mb-4" style={{ color: '#A09890' }}>
-              From grandmother's kitchen to the UK — pure, divine, and truly home-style food. Prepared with devotion, served with love.
+              From grandmother's kitchen to the UK — pure, divine, and truly home-style food. Now proudly serving Milton Keynes, Edinburgh & Glasgow.
             </p>
             <p className="text-sm italic" style={{ color: '#F4C430' }}>
               "Finally, I am home."
@@ -75,7 +75,7 @@ const Footer = () => {
               <div className="flex items-start gap-3">
                 <MapPin size={16} className="mt-1 flex-shrink-0" style={{ color: '#F4C430' }} />
                 <p className="text-sm" style={{ color: '#A09890' }}>
-                  Edinburgh & Glasgow, Scotland, UK
+                  Milton Keynes, Edinburgh & Glasgow, UK
                 </p>
               </div>
               <div className="flex items-center gap-3">

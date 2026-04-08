@@ -3,26 +3,26 @@
 export const heroSlides = [
   {
     id: 1,
-    image: 'https://images.unsplash.com/photo-1742281258189-3b933879867a?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
+    image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
     title: "Welcome Home.",
     subtitle: "The authentic taste you missed, carried forward with love.",
-    description: "Now serving Edinburgh & Glasgow.",
+    description: "Now serving Milton Keynes, Edinburgh & Glasgow.",
     cta: "Explore Our Kitchen",
     link: "/menu"
   },
   {
     id: 2,
-    image: 'https://images.unsplash.com/photo-1742281257687-092746ad6021?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
-    title: "Divinity for the Soul.\nSpice for the Heart.",
-    subtitle: "Two separate kitchens, one authentic taste.",
+    image: 'https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
+    title: "Two Kitchens.\nOne Soul.",
+    subtitle: "Divinity for the soul. Spice for the heart.",
     description: "Prasada & Svadista — choose your world.",
     cta: "Discover Our Menus",
     link: "/menu"
   },
   {
     id: 3,
-    image: 'https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
-    title: "Your Daily Dose of Home.",
+    image: 'https://images.unsplash.com/photo-1727404679933-99daa2a7573a?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
+    title: "Your Daily Dose\nof Home.",
     subtitle: "Wholesome meal subscriptions delivered to your door.",
     description: "The Dabba Wala service — just like mother used to pack.",
     cta: "Start Your Subscription",
@@ -384,8 +384,8 @@ export const testimonials = [
   {
     id: 3,
     name: "Anitha Reddy",
-    location: "Edinburgh",
-    text: "As a student, the weekly subscription is a lifesaver. Tastes exactly like home food. Amma would be proud.",
+    location: "Milton Keynes",
+    text: "As a student in MK, the weekly subscription is a lifesaver. Tastes exactly like home food. Amma would be proud.",
     rating: 5
   }
 ];

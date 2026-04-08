@@ -110,7 +110,7 @@ const Home = () => {
           <div className="flex items-end justify-between mb-10">
             <div>
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>
-                What Edinburgh is Loving Right Now
+                What Our Cities are Loving Right Now
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                 Trending & Loved
@@ -537,8 +537,8 @@ const Home = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { name: 'Priya S.', location: 'Edinburgh', text: 'The pulihora reminded me of my grandmother\'s cooking. I cried happy tears. Finally, authentic Andhra food in the UK!' },
-              { name: 'Rajesh K.', location: 'Glasgow', text: 'The prasada is so pure and divine. Perfect for our weekly poojas. My mother-in-law gave it her stamp of approval!' },
-              { name: 'Anitha R.', location: 'Edinburgh', text: 'As a student, the weekly dabba is a lifesaver. Tastes exactly like home food. Amma would be proud.' },
+              { name: 'Rajesh K.', location: 'Milton Keynes', text: 'The prasada is so pure and divine. Perfect for our weekly poojas. My mother-in-law gave it her stamp of approval!' },
+              { name: 'Anitha R.', location: 'Glasgow', text: 'As a student, the weekly dabba is a lifesaver. Tastes exactly like home food. Amma would be proud.' },
             ].map((t, i) => (
               <div key={i} className="p-6 md:p-8 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} data-testid={`testimonial-${i}`}>
                 <div className="flex gap-1 mb-4 justify-center">

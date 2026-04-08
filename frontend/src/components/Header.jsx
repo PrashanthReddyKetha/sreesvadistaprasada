@@ -58,7 +58,7 @@ const Header = () => {
         className="fixed top-0 left-0 right-0 z-50 py-2 px-4 text-center text-sm font-medium tracking-wide overflow-hidden"
         style={{ backgroundColor: '#800020', color: '#FDFBF7' }}
       >
-        <span>Swagatam! Now serving authentic hot meals in Edinburgh & Glasgow | Free Delivery over £30</span>
+        <span>Swagatam! Now serving authentic hot meals in Milton Keynes, Edinburgh & Glasgow | Free Delivery over £30</span>
       </div>
 
       {/* Header */}

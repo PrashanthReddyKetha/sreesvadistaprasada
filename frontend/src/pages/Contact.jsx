@@ -1,254 +1,167 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { Label } from '../components/ui/label';
-import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Instagram, Facebook, Twitter, ArrowRight } from 'lucide-react';
 
 const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: ''
-  });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Thank you for contacting us! We will get back to you soon.');
-    console.log('Contact form:', formData);
+    alert('Thank you for reaching out! We will get back to you soon.');
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4" style={{ backgroundColor: '#800020' }}>
-        <div className="container mx-auto max-w-4xl text-center">
-          <h1 
-            className="text-5xl lg:text-6xl font-bold mb-6 text-white"
-            style={{ fontFamily: "'Playfair Display', serif", lineHeight: '1.2' }}
-          >
-            Get in Touch
-          </h1>
-          <p className="text-xl text-gray-200 leading-relaxed">
-            We'd love to hear from you. Whether you have a question about our menu, subscriptions, 
-            catering, or anything else, we're ready to answer.
-          </p>
+    <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
+      {/* Hero */}
+      <section className="pt-[calc(36px+4rem)] md:pt-[calc(36px+5rem)] relative overflow-hidden" style={{ height: 'min(40vh, 320px)' }}>
+        <div className="absolute inset-0" style={{ backgroundColor: '#800020' }} />
+        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
+          <div className="max-w-xl">
+            <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+              Get in Touch
+            </h1>
+            <p className="text-lg text-gray-200 leading-relaxed" data-testid="contact-hero-subtitle">
+              Questions, feedback, or just want to say hello? We'd love to hear from you.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Contact Info & Form */}
-      <section className="py-20 px-4" style={{ backgroundColor: '#FFFFF0' }}>
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Contact Information */}
-            <div>
-              <h2 
-                className="text-4xl font-bold mb-8"
-                style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
-              >
+      {/* Contact Grid */}
+      <section className="py-16 md:py-24 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-5 gap-10 md:gap-16">
+            {/* Contact Info */}
+            <div className="lg:col-span-2">
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Our details</p>
+              <h2 className="text-3xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                 Contact Information
               </h2>
 
-              <div className="space-y-8">
-                {/* Address */}
-                <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#800020' }}>
-                        <MapPin className="text-white" size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold mb-2" style={{ color: '#800020' }}>Visit Us</h3>
-                        <p className="text-gray-700 leading-relaxed">
-                          123 High Street<br />
-                          London, UK<br />
-                          SW1A 1AA
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+              <div className="space-y-6">
+                {/* Locations */}
+                <div className="flex items-start gap-4 p-5 rounded-lg bg-white" style={{ boxShadow: '0 2px 12px rgba(128,0,32,0.06)' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(128,0,32,0.08)' }}>
+                    <MapPin size={18} style={{ color: '#800020' }} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Our Locations</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      <strong style={{ color: '#800020' }}>Milton Keynes</strong> (Main Kitchen)<br />
+                      Central Milton Keynes, MK9<br /><br />
+                      Edinburgh, EH1<br />
+                      Glasgow, G1
+                    </p>
+                  </div>
+                </div>
 
-                {/* Phone */}
-                <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#800020' }}>
-                        <Phone className="text-white" size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold mb-2" style={{ color: '#800020' }}>Call Us</h3>
-                        <p className="text-gray-700 leading-relaxed">
-                          Restaurant: <a href="tel:+442012345678" className="hover:underline">+44 20 1234 5678</a><br />
-                          Catering: <a href="tel:+442012345679" className="hover:underline">+44 20 1234 5679</a><br />
-                          WhatsApp: <a href="https://wa.me/442012345678" className="hover:underline">+44 20 1234 5678</a>
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="flex items-start gap-4 p-5 rounded-lg bg-white" style={{ boxShadow: '0 2px 12px rgba(128,0,32,0.06)' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(128,0,32,0.08)' }}>
+                    <Phone size={18} style={{ color: '#800020' }} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Call Us</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Orders: <a href="tel:+442012345678" className="hover:underline" style={{ color: '#800020' }}>+44 20 1234 5678</a><br />
+                      Catering: <a href="tel:+442012345679" className="hover:underline" style={{ color: '#800020' }}>+44 20 1234 5679</a><br />
+                      WhatsApp: <a href="https://wa.me/442012345678" className="hover:underline" style={{ color: '#800020' }}>+44 20 1234 5678</a>
+                    </p>
+                  </div>
+                </div>
 
-                {/* Email */}
-                <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#800020' }}>
-                        <Mail className="text-white" size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold mb-2" style={{ color: '#800020' }}>Email Us</h3>
-                        <p className="text-gray-700 leading-relaxed">
-                          General: <a href="mailto:info@sreesvadista.co.uk" className="hover:underline">info@sreesvadista.co.uk</a><br />
-                          Catering: <a href="mailto:catering@sreesvadista.co.uk" className="hover:underline">catering@sreesvadista.co.uk</a><br />
-                          Support: <a href="mailto:support@sreesvadista.co.uk" className="hover:underline">support@sreesvadista.co.uk</a>
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="flex items-start gap-4 p-5 rounded-lg bg-white" style={{ boxShadow: '0 2px 12px rgba(128,0,32,0.06)' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(128,0,32,0.08)' }}>
+                    <Mail size={18} style={{ color: '#800020' }} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Email Us</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      General: <a href="mailto:hello@sreesvadista.co.uk" className="hover:underline" style={{ color: '#800020' }}>hello@sreesvadista.co.uk</a><br />
+                      Catering: <a href="mailto:catering@sreesvadista.co.uk" className="hover:underline" style={{ color: '#800020' }}>catering@sreesvadista.co.uk</a>
+                    </p>
+                  </div>
+                </div>
 
-                {/* Opening Hours */}
-                <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#800020' }}>
-                        <Clock className="text-white" size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold mb-2" style={{ color: '#800020' }}>Opening Hours</h3>
-                        <p className="text-gray-700 leading-relaxed">
-                          Monday - Friday: 11:00 AM - 10:00 PM<br />
-                          Saturday - Sunday: 10:00 AM - 11:00 PM<br />
-                          <span className="text-sm italic">Delivery available during all hours</span>
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                <div className="flex items-start gap-4 p-5 rounded-lg bg-white" style={{ boxShadow: '0 2px 12px rgba(128,0,32,0.06)' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(128,0,32,0.08)' }}>
+                    <Clock size={18} style={{ color: '#800020' }} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Hours</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Mon – Fri: 11am – 10pm<br />
+                      Sat – Sun: 10am – 11pm<br />
+                      <span className="text-xs italic" style={{ color: '#B8860B' }}>Delivery available during all hours</span>
+                    </p>
+                  </div>
+                </div>
 
-              {/* Social Media */}
-              <div className="mt-8">
-                <h3 className="text-xl font-semibold mb-4" style={{ color: '#800020' }}>Follow Us</h3>
-                <div className="flex gap-4">
-                  <a 
-                    href="#" 
-                    className="w-12 h-12 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity duration-200"
-                    style={{ backgroundColor: '#800020' }}
-                  >
-                    <Facebook className="text-white" size={24} />
-                  </a>
-                  <a 
-                    href="#" 
-                    className="w-12 h-12 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity duration-200"
-                    style={{ backgroundColor: '#800020' }}
-                  >
-                    <Instagram className="text-white" size={24} />
-                  </a>
-                  <a 
-                    href="#" 
-                    className="w-12 h-12 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity duration-200"
-                    style={{ backgroundColor: '#800020' }}
-                  >
-                    <Twitter className="text-white" size={24} />
-                  </a>
+                {/* Social */}
+                <div className="pt-2">
+                  <h4 className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: '#B8860B' }}>Follow Us</h4>
+                  <div className="flex gap-3">
+                    {[
+                      { icon: Instagram, label: 'Instagram' },
+                      { icon: Facebook, label: 'Facebook' },
+                      { icon: Twitter, label: 'Twitter' },
+                    ].map(({ icon: Icon, label }) => (
+                      <a key={label} href="#" className="w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 hover:bg-[#800020] hover:text-white" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }} aria-label={label} data-testid={`contact-social-${label.toLowerCase()}`}>
+                        <Icon size={18} />
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Contact Form */}
-            <div>
-              <h2 
-                className="text-4xl font-bold mb-8"
-                style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
-              >
-                Send Us a Message
+            <div className="lg:col-span-3">
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Send us a message</p>
+              <h2 className="text-3xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                We'd Love to Hear From You
               </h2>
 
-              <Card className="border-0 shadow-xl">
-                <CardContent className="pt-8">
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                      <Label htmlFor="name">Your Name *</Label>
-                      <Input 
-                        id="name"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className="mt-2"
-                        placeholder="Enter your full name"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="email">Email Address *</Label>
-                      <Input 
-                        id="email"
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="mt-2"
-                        placeholder="your.email@example.com"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input 
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="mt-2"
-                        placeholder="+44 20 xxxx xxxx"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="message">Your Message *</Label>
-                      <Textarea 
-                        id="message"
-                        required
-                        rows={6}
-                        value={formData.message}
-                        onChange={(e) => setFormData({...formData, message: e.target.value})}
-                        className="mt-2"
-                        placeholder="How can we help you?"
-                      />
-                    </div>
-
-                    <Button 
-                      type="submit"
-                      size="lg"
-                      className="w-full text-white text-lg py-6 font-semibold hover:opacity-90 transition-all duration-200"
-                      style={{ backgroundColor: '#800020' }}
-                    >
-                      Send Message
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Map Section (Placeholder) */}
-      <section className="py-20 px-4" style={{ backgroundColor: '#F5F5F5' }}>
-        <div className="container mx-auto max-w-6xl">
-          <h2 
-            className="text-4xl font-bold text-center mb-12"
-            style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
-          >
-            Find Us
-          </h2>
-          <div className="bg-gray-300 rounded-lg overflow-hidden" style={{ height: '400px' }}>
-            {/* Google Maps embed would go here */}
-            <div className="w-full h-full flex items-center justify-center text-gray-600">
-              <p>Map will be integrated here</p>
+              <form onSubmit={handleSubmit} className="rounded-lg bg-white p-6 md:p-8 space-y-5" style={{ boxShadow: '0 4px 24px rgba(128,0,32,0.08)' }} data-testid="contact-form">
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="text-sm font-semibold block mb-1.5" style={{ color: '#2D2422' }}>Your Name *</label>
+                    <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Full name"
+                      className="w-full p-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors" data-testid="contact-name" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold block mb-1.5" style={{ color: '#2D2422' }}>Email *</label>
+                    <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="you@example.com"
+                      className="w-full p-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors" data-testid="contact-email" />
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="text-sm font-semibold block mb-1.5" style={{ color: '#2D2422' }}>Phone</label>
+                    <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} placeholder="+44 xxx xxxx xxxx"
+                      className="w-full p-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors" data-testid="contact-phone" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold block mb-1.5" style={{ color: '#2D2422' }}>Subject</label>
+                    <select value={formData.subject} onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                      className="w-full p-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors bg-white" data-testid="contact-subject">
+                      <option value="">Select a topic</option>
+                      <option value="order">Order Enquiry</option>
+                      <option value="subscription">Subscription Question</option>
+                      <option value="catering">Catering Request</option>
+                      <option value="feedback">Feedback</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold block mb-1.5" style={{ color: '#2D2422' }}>Your Message *</label>
+                  <textarea required rows={5} value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} placeholder="How can we help you?"
+                    className="w-full p-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors resize-none" data-testid="contact-message" />
+                </div>
+                <button type="submit" className="w-full py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg" style={{ backgroundColor: '#800020' }} data-testid="contact-submit-btn">
+                  Send Message <ArrowRight size={16} className="inline ml-2" />
+                </button>
+              </form>
             </div>
           </div>
         </div>
