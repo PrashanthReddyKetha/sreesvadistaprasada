@@ -1,78 +1,72 @@
 # Sree Svadista Prasada - Product Requirements Document
 
 ## Original Problem Statement
-Build a premium website for "Sree Svadista Prasada" - an authentic South Indian food business serving Milton Keynes (main), Edinburgh & Glasgow, UK. Dual identity: **Sree Prasada** (divine pure veg) and **Sree Svadista** (rustic non-veg). Based on Master Design Brief PDF.
+Build a premium website for "Sree Svadista Prasada" - authentic South Indian food business serving **Milton Keynes** (main), Edinburgh & Glasgow, UK. Dual identity: **Sree Prasada** (divine pure veg) and **Sree Svadista** (rustic non-veg).
 
 ## Tech Stack
-React, TailwindCSS, Shadcn UI, Lucide React, FastAPI (pending), MongoDB (pending)
+React, TailwindCSS, Shadcn UI, Lucide React | FastAPI + MongoDB (pending)
 
-## Architecture
+## Architecture — 12 Pages
 ```
 /app/frontend/src/
-├── App.js (10 routes)
-├── App.css, index.css (design system)
-├── mockData.js (all mock data)
+├── App.js (12 routes)
 ├── components/
 │   ├── Header.jsx (notification bar + dropdown nav + cart/account)
-│   ├── Footer.jsx (4-column dark footer)
-│   └── HeroSlider.jsx (3-slide auto-advancing hero)
+│   ├── Footer.jsx (newsletter + 4-column footer)
+│   ├── HeroSlider.jsx (3-slide hero, mobile-safe)
+│   └── WhatsAppButton.jsx (floating green button)
 ├── pages/
-│   ├── Home.jsx (12+ sections)
-│   ├── Svadista.jsx (earthy red theme, sticky filters, spice meter)
-│   ├── Prasada.jsx (green theme, purity promise)
-│   ├── Breakfast.jsx (golden theme, tiffins/snacks)
-│   ├── Snacks.jsx (UK-wide shipping, pickles/podis)
-│   ├── Menu.jsx (combined view, 7 categories)
+│   ├── Home.jsx (hero, two worlds, trending w/allergens, chef's special, meal moments, dabba wala, postcode checker, delivery areas, gallery preview, offers, snacks, story teaser, testimonials)
+│   ├── Svadista.jsx, Prasada.jsx, Breakfast.jsx, Snacks.jsx, Menu.jsx (with search)
 │   ├── Subscriptions.jsx (4-step wizard)
-│   ├── OurStory.jsx (5 narrative sections)
-│   ├── Catering.jsx (services, enquiry form)
-│   ├── Contact.jsx (info cards, form, Milton Keynes main)
+│   ├── OurStory.jsx, Catering.jsx, Contact.jsx
+│   ├── FAQ.jsx (searchable accordion, 5 categories, 18 questions)
+│   └── Gallery.jsx (filterable grid, lightbox)
+├── mockData.js (dishes, plans, delivery areas, FAQ, gallery)
 ```
 
-## What's Implemented
+## Completed Features
 
-### Phase 1 — Homepage & Design System (Complete)
-- Notification bar, Header with dropdown nav/cart/account
-- 3-slide hero with dark moody images (excellent readability)
-- Two Worlds cards, Trending carousel, Chef's Special
-- Meal Moments, Dabba Wala 3-step, Svadista Cinema, Offers
-- Snacks UK-Wide, Our Story teaser, Testimonials, Footer
+### Phase 1 — Homepage & Design System
+- 3-slide hero (dark moody images, strong gradient, mobile arrows hidden)
+- Two Worlds cards, Trending carousel (w/allergen tags), Chef's Special
+- Meal Moments, Dabba Wala 3-step, Offers banner, Snacks UK-Wide
+- Story teaser, Testimonials, Footer w/newsletter
 
-### Phase 2 — Menu Page Overhaul (Complete)
-- Svadista: earthy red theme, spice meter, food images
-- Prasada: green theme, purity promise, sacred occasions
-- Breakfast (NEW): golden theme, tiffins/snacks
-- Snacks (NEW): UK-Wide shipping, pickles/podis/sweets
-- Menu: combined view with 7-category filter
+### Phase 2 — Menu Overhaul
+- Svadista (earthy red), Prasada (green), Breakfast (golden), Snacks (UK-wide)
+- Combined Menu with search + 7-category filter
 
-### Phase 3 — Subscription Wizard (Complete)
-- 4-step wizard: Duration → Box Type → Preferences → Summary
+### Phase 3 — Subscription Wizard
+- 4-step: Duration → Box Type → Preferences → Summary
 
-### Phase 4 — Page Polish + Milton Keynes (Complete)
-- Hero slider revamped with dark moody food images for readability
-- Milton Keynes added as main/highlighted location everywhere
-- Our Story redesigned: 5 sections (Beginning, Name Meaning, Two Worlds, Promise, Serving UK)
-- Catering redesigned: services cards, Why Choose Us, enquiry form
-- Contact redesigned: info cards (MK as Main Kitchen), form, social links
+### Phase 4 — Polish + Milton Keynes
+- Hero slider revamped, all pages polished, MK highlighted everywhere
 
-## Prioritized Backlog
-
-### P2 - Backend & Integration
-- [ ] MongoDB schemas (menu items, categories, subscriptions, catering requests, contacts)
-- [ ] FastAPI CRUD endpoints
-- [ ] Seed database with current mock data
-- [ ] Replace mocked data with live API calls
-- [ ] Wire up forms (contact, catering, subscription)
-
-### P3 - Future/Advanced
-- [ ] Cart & checkout functionality
-- [ ] User accounts & dashboard
-- [ ] Admin panel
-- [ ] Payment integration (Stripe/Razorpay)
-- [ ] Location intelligence (MK/Edinburgh/Glasgow = full menu, others = snacks)
+### Phase 5 — UX Enhancements (Latest)
+- Mobile hero arrow fix + compact notification bar
+- Floating WhatsApp button (all pages)
+- Newsletter signup in footer
+- Allergen tags on dish cards (nuts, dairy, sesame)
+- FAQ page: 5 categories, 18 Qs, searchable accordion
+- Gallery page: 6 filters, 12 images, lightbox
+- Delivery postcode checker + areas table on homepage
+- Menu search bar
+- "More" dropdown (Gallery, FAQ, Contact)
 
 ## Project Health
+- **Pages**: 12 routes, all working, all responsive
 - **Broken**: Nothing
 - **Mocked**: ALL frontend data
-- **Testing**: 100% pass rate across 57+ features (iterations 1-3)
-- **Pages**: 10 routes, all working, all responsive
+- **Testing**: 100% pass (iterations 1-4, 70+ features verified)
+
+## Backlog
+### P2 - Backend
+- [ ] MongoDB schemas + FastAPI endpoints
+- [ ] Wire up forms (contact, catering, subscription, newsletter)
+- [ ] Cart + ordering functionality
+
+### P3 - Future
+- [ ] User accounts, admin panel, payment integration
+- [ ] Weekly menu preview for subscribers
+- [ ] Blog/updates section
