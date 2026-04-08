@@ -1,0 +1,162 @@
+{
+  "project_name": "Sree Svadista Prasada",
+  "domain": "Food & Hospitality",
+  "theme": "light",
+  "archetype": "Organic & Earthy",
+  "emotional_tone": "Warm, Welcoming, Premium yet Homely, Nostalgic, Soulful",
+  "design_philosophy": {
+    "core_concept": "Nostalgia and emotional connection - 'Finally, I am home'. A DUAL IDENTITY brand serving authentic South Indian cuisine in Edinburgh & Glasgow.",
+    "visual_aesthetic": "Warm parchment textures, cultural props (brass vessels, clay pots, banana leaves), rich earthy tones. No flat SaaS looks. Uses organic shapes, subtle grain, and high-end editorial photography."
+  },
+  "colors": {
+    "primary": {
+      "hex": "#800020",
+      "name": "Deep Burgundy",
+      "usage": "Header, Footer, Primary CTAs, Key Typography highlights"
+    },
+    "background": {
+      "hex": "#FDFBF7",
+      "name": "Muted Ivory / Parchment",
+      "usage": "Main body background, card backgrounds"
+    },
+    "accent": {
+      "hex": "#F4C430",
+      "name": "Saffron Gold",
+      "usage": "Offers banners, Highlights, Active states, Subtle borders"
+    },
+    "dual_worlds": {
+      "prasada": {
+        "name": "Sree Prasada (Divine, Pure Vegetarian)",
+        "colors": {
+          "primary": "#E3A857",
+          "secondary": "#4A7C59",
+          "background": "#F9F6EE"
+        },
+        "description": "Turmeric Yellows, Fresh Banana Leaf Greens"
+      },
+      "svadista": {
+        "name": "Sree Svadista (Rustic, Spicy, Non-Vegetarian)",
+        "colors": {
+          "primary": "#8B3A3A",
+          "secondary": "#704214",
+          "background": "#FDF5E6"
+        },
+        "description": "Deep Earthy Reds, Clay Pot Browns, Spice tones"
+      }
+    },
+    "text": {
+      "primary": "#2D2422",
+      "secondary": "#5C4B47",
+      "inverse": "#FDFBF7"
+    }
+  },
+  "typography": {
+    "font_families": {
+      "headings": "Playfair Display, serif",
+      "body": "Lato, sans-serif"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-tight",
+      "h2": "text-3xl sm:text-4xl tracking-tight leading-snug",
+      "h3": "text-2xl sm:text-3xl tracking-tight",
+      "h4": "text-xl sm:text-2xl",
+      "body": "text-base sm:text-lg leading-relaxed",
+      "small": "text-sm uppercase tracking-[0.2em]"
+    },
+    "rules": "Never center headings by default. Use 'font-bold' or 'font-black' for Playfair Display selectively. Lato body should be lightweight and highly readable."
+  },
+  "layout_and_spacing": {
+    "spacing_scale": "Use generous padding: p-8, p-12, p-16, p-24.",
+    "container": "Max-width 7xl with mx-auto and px-4 md:px-8 for standard sections.",
+    "cards": "Cardless or extremely subtle borders (border-[#F4C430]/30). No heavy drop shadows. Use soft ambient shadows like shadow-[0_8px_32px_rgba(128,0,32,0.05)].",
+    "mobile_first": true
+  },
+  "components": {
+    "notification_bar": {
+      "style": "bg-primary text-inverse text-sm py-2 text-center font-body",
+      "content": "Swagatam! Now serving Edinburgh & Glasgow | Free Delivery over £30"
+    },
+    "header": {
+      "style": "sticky top-0 z-50 bg-background/90 backdrop-blur-xl border-b border-[#F4C430]/20 text-primary",
+      "elements": ["Logo", "Navigation Dropdowns", "Cart Icon (Lucide)", "User Icon (Lucide)"]
+    },
+    "hero_slider": {
+      "slides": [
+        {"title": "Welcome Home", "subtitle": "Authentic South Indian flavors."},
+        {"title": "Two Kitchens, One Soul", "subtitle": "Svadista & Prasada."},
+        {"title": "The Dabba Wala", "subtitle": "Nostalgia delivered to your doorstep."}
+      ],
+      "style": "h-[80vh] min-h-[600px] relative overflow-hidden text-inverse",
+      "overlay": "bg-black/40 (Ensure text readability)"
+    },
+    "two_worlds_section": {
+      "style": "grid grid-cols-1 md:grid-cols-2 gap-8 p-8 md:p-16",
+      "cards": "Large immersive image cards with rich textual overlay. Prasada (Green/Yellow tint), Svadista (Red/Brown tint)."
+    },
+    "meal_moments": {
+      "style": "flex flex-wrap justify-center gap-8 py-12",
+      "items": ["Breakfast", "Main Course", "Snacks", "Specials"],
+      "item_style": "flex flex-col items-center gap-3 w-24 h-24 rounded-full border-2 border-accent/50 text-primary p-4 hover:bg-accent/10 transition-colors"
+    },
+    "dabba_wala_guide": {
+      "style": "grid grid-cols-1 md:grid-cols-3 gap-8 text-center",
+      "steps": "3-step visual storytelling using vintage tiffin imagery and elegant typography."
+    }
+  },
+  "icons": {
+    "library": "lucide-react",
+    "rules": "Use for UI elements (cart, user, menu, arrows). No emojis allowed."
+  },
+  "media": {
+    "hero": [
+      {
+        "url": "https://images.unsplash.com/photo-1742281258189-3b933879867a",
+        "description": "Delicious indian meal served on a platter. Use for 'Welcome Home' slide."
+      },
+      {
+        "url": "https://images.pexels.com/photos/10219670/pexels-photo-10219670.jpeg",
+        "description": "South Indian biryani on banana leaf. Use for 'Dual Kitchen' slide."
+      },
+      {
+        "url": "https://images.pexels.com/photos/16052430/pexels-photo-16052430.jpeg",
+        "description": "Vintage metal tiffin carrier. Use for 'Dabba Wala' slide."
+      }
+    ],
+    "worlds": [
+      {
+        "url": "https://images.unsplash.com/photo-1742281257707-0c7f7e5ca9c6",
+        "description": "Indian thalis with rice. Use for Sree Prasada (Vegetarian) card."
+      },
+      {
+        "url": "https://images.pexels.com/photos/33947401/pexels-photo-33947401.jpeg",
+        "description": "Delicious chicken biryani in traditional clay pot. Use for Sree Svadista (Non-Vegetarian) card."
+      }
+    ],
+    "features": [
+      {
+        "url": "https://images.unsplash.com/photo-1768729340731-85e386e62529",
+        "description": "Elderly hands grinding spices. Use for Our Story / Spices section."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1662101875545-0b0cb8b7795b",
+        "description": "People cooking in kitchen. Use as thumbnail for Svadista Cinema."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0",
+        "description": "Delicious rice dish in clay bowl. Use for Chef's Special or Trending."
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Strictly adhere to the Deep Burgundy (#800020) and Muted Ivory (#FDFBF7) color scheme.",
+    "Implement 'Playfair Display' for headings and 'Lato' for body text. Apply 'tracking-tight' to large headings.",
+    "Use Lucide React for all icons. Emojis are strictly forbidden.",
+    "Build a sticky header with a notification bar at the very top.",
+    "Implement the hero section as a slider (e.g., using Framer Motion or Swiper) with 3 distinct slides and the provided images.",
+    "Create the 'Two Worlds' section as highly immersive, emotional cards mapping to the Prasada and Svadista aesthetics.",
+    "Ensure all interactive elements have a 'data-testid' attribute.",
+    "Design for Mobile First. Generous spacing and padding are critical to the premium feel.",
+    "For the 'Svadista Cinema' section, create a beautiful overlay over the cooking image with a prominent Play button (lucide-react).",
+    "Use raw HTML/Tailwind for structural layout to maintain creative freedom, using Shadcn only for complex interactive components if necessary (like Carousels or Dialogs)."
+  ]
+}
