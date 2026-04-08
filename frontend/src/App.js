@@ -11,6 +11,8 @@ import Menu from "./pages/Menu";
 import Subscriptions from "./pages/Subscriptions";
 import Catering from "./pages/Catering";
 import Contact from "./pages/Contact";
+import Breakfast from "./pages/Breakfast";
+import Snacks from "./pages/Snacks";
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
           <Route path="/svadista" element={<Svadista />} />
           <Route path="/prasada" element={<Prasada />} />
           <Route path="/menu" element={<Menu />} />
+          <Route path="/breakfast" element={<Breakfast />} />
+          <Route path="/snacks" element={<Snacks />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/catering" element={<Catering />} />
           <Route path="/contact" element={<Contact />} />

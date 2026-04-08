@@ -1,211 +1,135 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
-import { Flame, Leaf } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Flame, Leaf, ShoppingCart, ArrowRight } from 'lucide-react';
 import { menuItems } from '../mockData';
+
+const categories = [
+  { id: 'all', name: 'All Dishes' },
+  { id: 'nonVeg', name: 'Non-Veg' },
+  { id: 'veg', name: 'Vegetarian' },
+  { id: 'prasada', name: 'Prasada' },
+  { id: 'breakfast', name: 'Breakfast' },
+  { id: 'pickles', name: 'Pickles' },
+  { id: 'podis', name: 'Podis' }
+];
 
 const Menu = () => {
   const [activeCategory, setActiveCategory] = useState('all');
 
-  const categories = [
-    { id: 'all', name: 'All' },
-    { id: 'nonVeg', name: 'Non-Veg (Svadista)' },
-    { id: 'veg', name: 'Vegetarian' },
-    { id: 'prasada', name: 'Prasada (Pure Veg)' },
-    { id: 'breakfast', name: 'Breakfast' },
-    { id: 'pickles', name: 'Pickles' },
-    { id: 'podis', name: 'Podis' }
-  ];
-
-  const getSpiceIndicator = (level) => {
-    if (level === 0) return <span className="text-xs text-gray-500">Mild</span>;
-    return (
-      <div className="flex gap-0.5">
-        {Array(level).fill(0).map((_, i) => (
-          <Flame key={i} size={14} className="text-red-500 fill-red-500" />
-        ))}
-      </div>
-    );
-  };
-
   const getAllDishes = () => {
     const all = [];
-    Object.keys(menuItems).forEach(category => {
-      menuItems[category].forEach(item => {
-        all.push({ ...item, category });
-      });
+    Object.keys(menuItems).forEach(cat => {
+      menuItems[cat].forEach(item => all.push({ ...item, menuCategory: cat }));
     });
     return all;
   };
 
-  const getFilteredDishes = () => {
-    if (activeCategory === 'all') {
-      return getAllDishes();
-    }
-    return menuItems[activeCategory] || [];
-  };
+  const filtered = activeCategory === 'all' ? getAllDishes() : (menuItems[activeCategory] || []).map(item => ({ ...item, menuCategory: activeCategory }));
 
-  const filteredDishes = getFilteredDishes();
+  const isVeg = (cat) => ['veg', 'prasada', 'breakfast', 'podis'].includes(cat);
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4" style={{ backgroundColor: '#800020' }}>
-        <div className="container mx-auto max-w-4xl text-center">
-          <h1 
-            className="text-5xl lg:text-6xl font-bold mb-6 text-white"
-            style={{ fontFamily: "'Playfair Display', serif", lineHeight: '1.2' }}
-          >
-            Our Full Menu
-          </h1>
-          <p className="text-xl text-gray-200 leading-relaxed">
-            Explore our complete collection of traditional South Indian dishes, from bold non-veg curries 
-            to pure vegetarian prasada offerings.
-          </p>
-        </div>
-      </section>
-
-      {/* Category Filter */}
-      <section className="py-8 px-4 sticky top-20 z-40" style={{ backgroundColor: '#FFFFF0', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-wrap gap-3 justify-center">
-            {categories.map((category) => (
-              <Button
-                key={category.id}
-                onClick={() => setActiveCategory(category.id)}
-                variant={activeCategory === category.id ? 'default' : 'outline'}
-                className={`transition-all duration-200 ${
-                  activeCategory === category.id
-                    ? 'text-white'
-                    : 'text-gray-700 border-2 hover:border-gray-400'
-                }`}
-                style={activeCategory === category.id ? { backgroundColor: '#800020' } : {}}
-              >
-                {category.name}
-              </Button>
-            ))}
+    <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
+      {/* Hero */}
+      <section className="pt-[calc(36px+4rem)] md:pt-[calc(36px+5rem)] relative overflow-hidden" style={{ height: 'min(45vh, 360px)' }}>
+        <img
+          src="https://images.unsplash.com/photo-1742281258189-3b933879867a?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Our Full Menu"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)' }} />
+        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
+          <div className="max-w-xl">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+              Our Full Menu
+            </h1>
+            <p className="text-lg text-gray-200 leading-relaxed max-w-md">
+              Explore everything — from bold Svadista curries to divine Prasada offerings, breakfast tiffins to grandmother's pickles.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Menu Items */}
-      <section className="py-20 px-4" style={{ backgroundColor: '#F5F5F5' }}>
-        <div className="container mx-auto max-w-6xl">
-          <h2 
-            className="text-4xl font-bold text-center mb-4"
-            style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
-          >
-            {activeCategory === 'all' ? 'All Dishes' : categories.find(c => c.id === activeCategory)?.name}
-          </h2>
-          <p className="text-center text-gray-700 mb-12 leading-relaxed">
-            {filteredDishes.length} delicious options to choose from
-          </p>
+      {/* Sticky Filter */}
+      <div className="sticky top-[calc(36px+4rem)] md:top-[calc(36px+5rem)] z-30 py-3 px-4 md:px-8" style={{ backgroundColor: '#FDFBF7', borderBottom: '1px solid rgba(128,0,32,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} data-testid="menu-filters">
+        <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                activeCategory === cat.id ? 'text-white' : 'text-gray-600 hover:bg-[#800020]/10'
+              }`}
+              style={activeCategory === cat.id ? { backgroundColor: '#800020' } : {}}
+              data-testid={`menu-filter-${cat.id}`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDishes.map((dish) => (
-              <Card key={dish.id} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0">
-                <CardHeader>
-                  <div className="flex justify-between items-start mb-2">
-                    {dish.category === 'nonVeg' ? (
-                      <Badge variant="destructive" className="text-xs flex items-center gap-1">
-                        <Flame size={12} /> Non-Veg
-                      </Badge>
-                    ) : dish.category === 'prasada' ? (
-                      <Badge className="text-xs flex items-center gap-1 bg-green-100 text-green-800">
-                        <Leaf size={12} /> Prasada
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">
-                        {dish.category === 'veg' ? 'Veg' : dish.category.charAt(0).toUpperCase() + dish.category.slice(1)}
-                      </Badge>
-                    )}
-                    {getSpiceIndicator(dish.spiceLevel)}
+      {/* Results */}
+      <section className="py-12 md:py-16 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <p className="text-sm" style={{ color: '#5C4B47' }}>{filtered.length} items</p>
+            <div className="flex gap-4">
+              <Link to="/svadista" className="text-xs font-semibold transition-colors duration-200 hover:underline" style={{ color: '#8B3A3A' }}>Svadista Menu</Link>
+              <Link to="/prasada" className="text-xs font-semibold transition-colors duration-200 hover:underline" style={{ color: '#4A7C59' }}>Prasada Menu</Link>
+              <Link to="/breakfast" className="text-xs font-semibold transition-colors duration-200 hover:underline" style={{ color: '#B8860B' }}>Breakfast</Link>
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filtered.map((dish) => (
+              <div key={dish.id + dish.menuCategory} className="rounded-lg overflow-hidden bg-white card-hover group" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }} data-testid={`menu-dish-${dish.id}`}>
+                {dish.image && (
+                  <div className="relative h-40 overflow-hidden">
+                    <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+                    <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-sm border-2 flex items-center justify-center bg-white/90"
+                      style={{ borderColor: isVeg(dish.menuCategory) ? '#22c55e' : '#ef4444' }}>
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: isVeg(dish.menuCategory) ? '#22c55e' : '#ef4444' }} />
+                    </div>
                   </div>
-                  <CardTitle className="text-xl" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    {dish.name}
-                  </CardTitle>
-                  {dish.subcategory && (
-                    <p className="text-xs text-gray-500 mt-1">{dish.subcategory}</p>
+                )}
+                <div className="p-4">
+                  {dish.spiceLevel > 0 && (
+                    <div className="flex gap-0.5 mb-1.5">
+                      {Array(dish.spiceLevel).fill(0).map((_, i) => (
+                        <Flame key={i} size={10} className="text-red-500 fill-red-500" />
+                      ))}
+                    </div>
                   )}
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">{dish.description}</p>
-                  <p className="text-2xl font-bold" style={{ color: '#800020' }}>{dish.price}</p>
-                </CardContent>
-              </Card>
+                  <h3 className="text-sm font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
+                  <p className="text-xs text-gray-500 line-clamp-1 mb-2">{dish.description}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-base font-bold" style={{ color: '#800020' }}>{dish.price}</span>
+                    <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>
+                      <ShoppingCart size={11} /> Add
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
-
-          {filteredDishes.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-600 text-lg">No dishes found in this category.</p>
-            </div>
-          )}
+          {filtered.length === 0 && <p className="text-center text-gray-500 py-12">No items found.</p>}
         </div>
       </section>
 
-      {/* Legend Section */}
-      <section className="py-12 px-4" style={{ backgroundColor: '#FFFFF0' }}>
-        <div className="container mx-auto max-w-4xl">
-          <h3 
-            className="text-2xl font-bold text-center mb-8"
-            style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
-          >
-            Menu Legend
-          </h3>
-          <div className="grid md:grid-cols-3 gap-6 text-center">
-            <div>
-              <Flame size={32} className="mx-auto mb-3 text-red-500" />
-              <p className="font-semibold mb-2" style={{ color: '#800020' }}>Spice Level</p>
-              <p className="text-sm text-gray-600">Number of flames indicates heat level</p>
-            </div>
-            <div>
-              <Leaf size={32} className="mx-auto mb-3 text-green-600" />
-              <p className="font-semibold mb-2" style={{ color: '#800020' }}>Pure Veg (Prasada)</p>
-              <p className="text-sm text-gray-600">Temple-style vegetarian with complete purity</p>
-            </div>
-            <div>
-              <div className="w-8 h-8 rounded mx-auto mb-3 flex items-center justify-center bg-red-500">
-                <Flame size={20} className="text-white" />
-              </div>
-              <p className="font-semibold mb-2" style={{ color: '#800020' }}>Non-Veg</p>
-              <p className="text-sm text-gray-600">Traditional South Indian non-vegetarian dishes</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4" style={{ backgroundColor: '#800020' }}>
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 
-            className="text-4xl font-bold mb-6 text-white"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Ready to Order?
+      {/* CTA */}
+      <section className="py-16 px-4 md:px-8" style={{ backgroundColor: '#800020' }}>
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Want This Daily?
           </h2>
-          <p className="text-xl text-gray-200 mb-8 leading-relaxed">
-            Visit our restaurant, call for delivery, or subscribe to our meal plans
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg"
-              className="bg-white text-lg px-10 py-6 font-semibold hover:bg-gray-100 transition-all duration-200"
-              style={{ color: '#800020' }}
-              onClick={() => alert('Call us: +44 20 1234 5678')}
-            >
-              Order Now
-            </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              className="border-2 border-white text-white bg-transparent hover:bg-white text-lg px-10 py-6 font-semibold"
-              onClick={() => window.location.href = '/subscriptions'}
-            >
-              View Subscriptions
-            </Button>
-          </div>
+          <p className="text-gray-200 mb-8 leading-relaxed">Subscribe to the Dabba Wala service for wholesome meals delivered to your door.</p>
+          <Link to="/subscriptions">
+            <button className="px-8 py-3.5 text-sm font-semibold tracking-wide uppercase rounded-sm transition-all duration-300 hover:shadow-lg" style={{ backgroundColor: '#F4C430', color: '#2D2422' }} data-testid="menu-subscribe-cta">
+              Start Your Subscription <ArrowRight size={16} className="inline ml-2" />
+            </button>
+          </Link>
         </div>
       </section>
     </div>

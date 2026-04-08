@@ -39,10 +39,11 @@ const Header = () => {
       dropdown: [
         { name: 'Prasada (Pure Veg)', path: '/prasada' },
         { name: 'Svadista (Non-Veg)', path: '/svadista' },
-        { name: 'Breakfast', path: '/menu' },
+        { name: 'Breakfast', path: '/breakfast' },
+        { name: 'Full Menu', path: '/menu' },
       ]
     },
-    { name: 'Snacks & Pickles', path: '/menu' },
+    { name: 'Snacks & Pickles', path: '/snacks' },
     { name: 'Dabba Wala', path: '/subscriptions' },
     { name: 'Our Story', path: '/story' },
     { name: 'Catering', path: '/catering' },
