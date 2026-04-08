@@ -1,86 +1,113 @@
-/* Import fonts */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Lato:wght@300;400;700&display=swap');
-
-/* Reset and base styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* App-level styles for Sree Svadista Prasada */
 
 .App {
   min-height: 100vh;
-  background-color: #B8860B;
+  background-color: var(--ivory, #FDFBF7);
 }
 
-/* Container utilities */
-.container {
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+/* Smooth transitions for interactive elements */
+button, a {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease, opacity 0.2s ease, color 0.2s ease;
 }
 
-@media (min-width: 640px) {
-  .container {
-    max-width: 640px;
-  }
+button:hover {
+  transform: translateY(-1px);
 }
 
-@media (min-width: 768px) {
-  .container {
-    max-width: 768px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container {
-    max-width: 1024px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .container {
-    max-width: 1280px;
-  }
-}
-
-@media (min-width: 1536px) {
-  .container {
-    max-width: 1536px;
-  }
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Button hover effects */
-button {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+button:active {
+  transform: translateY(0);
 }
 
 /* Card hover effects */
 .card-hover {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
 
 .card-hover:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(128, 0, 32, 0.08);
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Playfair Display', 'Times New Roman', serif;
+/* Image zoom on hover */
+.img-zoom {
+  transition: transform 0.6s ease;
 }
 
-body {
-  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+.img-zoom:hover {
+  transform: scale(1.05);
 }
 
-/* Link transitions */
-a {
-  transition: color 0.2s ease;
+/* Grain texture overlay */
+.grain-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Section divider */
+.section-divider {
+  width: 60px;
+  height: 3px;
+  background-color: var(--saffron, #F4C430);
+  margin: 0 auto;
+}
+
+/* Notification bar scroll animation */
+.notification-scroll {
+  animation: marquee 30s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Hero slide text animation */
+.hero-text-enter {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.dropdown-trigger:hover .dropdown-menu,
+.dropdown-menu:hover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Outlined button with hover fill */
+.btn-outlined {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  border: 2px solid #800020;
+  color: #800020;
+  background-color: transparent;
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn-outlined:hover {
+  background-color: #800020;
+  color: white;
+  box-shadow: 0 4px 16px rgba(128, 0, 32, 0.2);
+}
+
+.btn-outlined:hover svg {
+  color: white;
 }

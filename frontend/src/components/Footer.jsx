@@ -1,113 +1,130 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Phone, Mail, MapPin, Instagram, Facebook, Twitter } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="pt-16 pb-8" style={{ backgroundColor: '#800020', color: 'white' }}>
-      <div className="container mx-auto px-4 lg:px-8">
+    <footer style={{ backgroundColor: '#2D2422', color: '#FDFBF7' }}>
+      {/* Main Footer */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pt-16 pb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* About Section */}
+          {/* Brand */}
           <div>
-            <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h3 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
               Sree Svadista Prasada
             </h3>
-            <p className="text-gray-200 text-sm leading-relaxed mb-4">
-              Traditional South Indian homely food in the UK. From grandmother's kitchen to your plate – pure, divine, and truly home-style.
+            <span className="text-xs tracking-[0.2em] uppercase block mb-4" style={{ color: '#F4C430' }}>
+              Authentic South Indian
+            </span>
+            <p className="text-sm leading-relaxed mb-4" style={{ color: '#A09890' }}>
+              From grandmother's kitchen to the UK — pure, divine, and truly home-style food. Prepared with devotion, served with love.
             </p>
-            <p className="text-sm text-gray-300 italic">
-              Food prepared with devotion, just like at home.
+            <p className="text-sm italic" style={{ color: '#F4C430' }}>
+              "Finally, I am home."
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>Quick Links</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/story" className="text-gray-200 hover:text-white text-sm transition-colors duration-200">
-                  Our Story
-                </Link>
-              </li>
-              <li>
-                <Link to="/menu" className="text-gray-200 hover:text-white text-sm transition-colors duration-200">
-                  Full Menu
-                </Link>
-              </li>
-              <li>
-                <Link to="/subscriptions" className="text-gray-200 hover:text-white text-sm transition-colors duration-200">
-                  Subscription Plans
-                </Link>
-              </li>
-              <li>
-                <Link to="/catering" className="text-gray-200 hover:text-white text-sm transition-colors duration-200">
-                  Catering Services
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-gray-200 hover:text-white text-sm transition-colors duration-200">
-                  Contact Us
-                </Link>
-              </li>
+            <h4 className="text-base font-semibold mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
+              Quick Links
+            </h4>
+            <ul className="space-y-3">
+              {[
+                { name: 'Our Story', path: '/story' },
+                { name: 'Full Menu', path: '/menu' },
+                { name: 'Prasada (Pure Veg)', path: '/prasada' },
+                { name: 'Svadista (Non-Veg)', path: '/svadista' },
+                { name: 'Dabba Wala Subscriptions', path: '/subscriptions' },
+              ].map((link) => (
+                <li key={link.path + link.name}>
+                  <Link
+                    to={link.path}
+                    className="text-sm transition-colors duration-200 hover:text-white"
+                    style={{ color: '#A09890' }}
+                    data-testid={`footer-link-${link.name.toLowerCase().replace(/[\s()]/g, '-')}`}
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Services */}
           <div>
-            <h4 className="text-lg font-semibold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>Our Services</h4>
-            <ul className="space-y-2 text-sm text-gray-200">
-              <li>Dine-in Restaurant</li>
-              <li>Weekly Meal Subscriptions</li>
-              <li>Monthly Meal Plans</li>
-              <li>Catering for Functions</li>
-              <li>Corporate Dabba Wala</li>
+            <h4 className="text-base font-semibold mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
+              Our Services
+            </h4>
+            <ul className="space-y-3 text-sm" style={{ color: '#A09890' }}>
+              <li>Daily Meal Subscriptions</li>
+              <li>Weekly & Monthly Plans</li>
+              <li>Corporate Catering</li>
               <li>Temple Prasada Catering</li>
+              <li>UK-Wide Snacks & Pickles</li>
+              <li>Event Catering</li>
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact */}
           <div>
-            <h4 className="text-lg font-semibold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>Contact Us</h4>
-            <div className="space-y-3">
-              <div className="flex items-start space-x-3">
-                <MapPin size={18} className="mt-1 flex-shrink-0" />
-                <p className="text-sm text-gray-200">
-                  123 High Street, London, UK
+            <h4 className="text-base font-semibold mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
+              Get in Touch
+            </h4>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <MapPin size={16} className="mt-1 flex-shrink-0" style={{ color: '#F4C430' }} />
+                <p className="text-sm" style={{ color: '#A09890' }}>
+                  Edinburgh & Glasgow, Scotland, UK
                 </p>
               </div>
-              <div className="flex items-center space-x-3">
-                <Phone size={18} className="flex-shrink-0" />
-                <p className="text-sm text-gray-200">+44 20 1234 5678</p>
+              <div className="flex items-center gap-3">
+                <Phone size={16} className="flex-shrink-0" style={{ color: '#F4C430' }} />
+                <p className="text-sm" style={{ color: '#A09890' }}>+44 20 1234 5678</p>
               </div>
-              <div className="flex items-center space-x-3">
-                <Mail size={18} className="flex-shrink-0" />
-                <p className="text-sm text-gray-200">info@sreesvadista.co.uk</p>
+              <div className="flex items-center gap-3">
+                <Mail size={16} className="flex-shrink-0" style={{ color: '#F4C430' }} />
+                <p className="text-sm" style={{ color: '#A09890' }}>hello@sreesvadista.co.uk</p>
               </div>
             </div>
 
-            {/* Social Media */}
+            {/* Social */}
             <div className="mt-6">
-              <h5 className="text-sm font-semibold mb-3">Follow Us</h5>
-              <div className="flex space-x-4">
-                <a href="#" className="text-gray-200 hover:text-white transition-colors duration-200">
-                  <Facebook size={20} />
-                </a>
-                <a href="#" className="text-gray-200 hover:text-white transition-colors duration-200">
-                  <Instagram size={20} />
-                </a>
-                <a href="#" className="text-gray-200 hover:text-white transition-colors duration-200">
-                  <Twitter size={20} />
-                </a>
+              <h5 className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: '#F4C430' }}>Follow Us</h5>
+              <div className="flex gap-3">
+                {[
+                  { icon: Instagram, label: 'Instagram' },
+                  { icon: Facebook, label: 'Facebook' },
+                  { icon: Twitter, label: 'Twitter' },
+                ].map(({ icon: Icon, label }) => (
+                  <a
+                    key={label}
+                    href="#"
+                    className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 hover:bg-[#800020]"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#A09890' }}
+                    aria-label={label}
+                    data-testid={`footer-social-${label.toLowerCase()}`}
+                  >
+                    <Icon size={16} />
+                  </a>
+                ))}
               </div>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-400 pt-8 text-center">
-          <p className="text-sm text-gray-300">
-            © 2025 Sree Svadista Prasada. All rights reserved.
+        <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <p className="text-xs" style={{ color: '#A09890' }}>
+            &copy; 2026 Sree Svadista Prasada. All rights reserved.
           </p>
+          <div className="flex gap-6">
+            <Link to="/contact" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>
+              Contact Us
+            </Link>
+            <span className="text-xs" style={{ color: '#A09890' }}>Privacy Policy</span>
+            <span className="text-xs" style={{ color: '#A09890' }}>Terms of Service</span>
+          </div>
         </div>
       </div>
     </footer>

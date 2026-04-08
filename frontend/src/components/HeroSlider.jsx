@@ -1,98 +1,133 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { heroSlides } from '../mockData';
 
 const HeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const slides = [
-    {
-      id: 1,
-      image: 'https://images.unsplash.com/photo-1758874960394-afd9ead46eba?crop=entropy&cs=srgb&fm=jpg&q=85',
-      title: "Welcome Home",
-      subtitle: "The authentic taste you missed, carried forward with love.",
-      description: "Now serving Edinburgh & Glasgow.",
-      cta: "Explore Our Kitchen",
-      link: "/menu"
-    }
-  ];
+  const goToSlide = useCallback((index) => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setCurrentSlide(index);
+    setTimeout(() => setIsTransitioning(false), 800);
+  }, [isTransitioning]);
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-  };
+  const nextSlide = useCallback(() => {
+    goToSlide((currentSlide + 1) % heroSlides.length);
+  }, [currentSlide, goToSlide]);
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  };
+  const prevSlide = useCallback(() => {
+    goToSlide((currentSlide - 1 + heroSlides.length) % heroSlides.length);
+  }, [currentSlide, goToSlide]);
+
+  useEffect(() => {
+    const timer = setInterval(nextSlide, 6000);
+    return () => clearInterval(timer);
+  }, [nextSlide]);
 
   return (
-    <div className="relative w-full" style={{ height: '600px' }}>
-      {slides.map((slide, index) => (
+    <div data-testid="hero-slider" className="relative w-full overflow-hidden" style={{ height: 'min(80vh, 700px)' }}>
+      {heroSlides.map((slide, index) => (
         <div
           key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentSlide ? 'opacity-100' : 'opacity-0'
+          className={`absolute inset-0 ease-in-out ${
+            index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
           }`}
+          style={{ transition: 'all 800ms ease-in-out' }}
         >
-          <div 
-            className="w-full h-full bg-cover bg-center relative"
-            style={{ 
-              backgroundImage: `url(${slide.image})`,
-              backgroundColor: '#FFFFF0'
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
-            <div className="container mx-auto h-full flex items-center px-4 lg:px-8 relative z-10">
-              <div className="max-w-2xl text-white">
-                <h1 
-                  className="text-5xl lg:text-7xl font-bold mb-4"
-                  style={{ fontFamily: "'Playfair Display', serif", lineHeight: '1.2' }}
+          {/* Background Image */}
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${slide.image})` }}
+          />
+
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0" style={{
+            background: 'linear-gradient(to right, rgba(45, 36, 34, 0.85) 0%, rgba(45, 36, 34, 0.6) 40%, rgba(45, 36, 34, 0.3) 70%, transparent 100%)'
+          }} />
+
+          {/* Bottom subtle grain */}
+          <div className="absolute inset-0 grain-overlay" />
+
+          {/* Content */}
+          <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
+            <div
+              className={`max-w-xl transition-all duration-700 ${
+                index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+              }`}
+              style={{ transitionDelay: index === currentSlide ? '300ms' : '0ms' }}
+            >
+              {/* Decorative line */}
+              <div className="w-12 h-0.5 mb-6" style={{ backgroundColor: '#F4C430' }} />
+
+              <h1
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 text-white leading-tight tracking-tight whitespace-pre-line"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+                data-testid={`hero-title-${slide.id}`}
+              >
+                {slide.title}
+              </h1>
+
+              <p className="text-lg md:text-xl mb-2 font-medium" style={{ color: '#F4C430' }}>
+                {slide.subtitle}
+              </p>
+
+              <p className="text-base md:text-lg mb-8 text-gray-300 leading-relaxed">
+                {slide.description}
+              </p>
+
+              <Link to={slide.link}>
+                <button
+                  className="group px-8 py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg"
+                  style={{ backgroundColor: '#800020' }}
+                  data-testid={`hero-cta-${slide.id}`}
                 >
-                  {slide.title}
-                </h1>
-                <p className="text-xl lg:text-2xl mb-3 font-medium" style={{ color: '#B8860B' }}>
-                  {slide.subtitle}
-                </p>
-                <p className="text-lg mb-8">
-                  {slide.description}
-                </p>
-                <Link to={slide.link}>
-                  <Button 
-                    size="lg"
-                    className="text-white text-base px-8 py-6 font-semibold hover:opacity-90 transition-all duration-200"
-                    style={{ backgroundColor: '#800020' }}
-                  >
-                    {slide.cta}
-                  </Button>
-                </Link>
-              </div>
+                  {slide.cta}
+                  <ChevronRight size={16} className="inline ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                </button>
+              </Link>
             </div>
           </div>
         </div>
       ))}
 
       {/* Navigation Arrows */}
-      {slides.length > 1 && (
-        <>
+      <button
+        onClick={prevSlide}
+        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
+        style={{ backgroundColor: 'rgba(128, 0, 32, 0.7)', backdropFilter: 'blur(4px)' }}
+        aria-label="Previous slide"
+        data-testid="hero-prev-btn"
+      >
+        <ChevronLeft size={20} />
+      </button>
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
+        style={{ backgroundColor: 'rgba(128, 0, 32, 0.7)', backdropFilter: 'blur(4px)' }}
+        aria-label="Next slide"
+        data-testid="hero-next-btn"
+      >
+        <ChevronRight size={20} />
+      </button>
+
+      {/* Slide Indicators */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+        {heroSlides.map((_, index) => (
           <button
-            onClick={prevSlide}
-            className="absolute left-4 lg:left-8 top-1/2 -translate-y-1/2 text-white p-3 rounded-full hover:bg-opacity-80 transition-all duration-200 z-20"
-            style={{ backgroundColor: '#800020' }}
-            aria-label="Previous slide"
-          >
-            <ChevronLeft size={32} />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 text-white p-3 rounded-full hover:bg-opacity-80 transition-all duration-200 z-20"
-            style={{ backgroundColor: '#800020' }}
-            aria-label="Next slide"
-          >
-            <ChevronRight size={32} />
-          </button>
-        </>
-      )}
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`h-1 rounded-full transition-all duration-500 ${
+              index === currentSlide ? 'w-8' : 'w-3'
+            }`}
+            style={{ backgroundColor: index === currentSlide ? '#F4C430' : 'rgba(255,255,255,0.4)' }}
+            aria-label={`Go to slide ${index + 1}`}
+            data-testid={`hero-indicator-${index}`}
+          />
+        ))}
+      </div>
     </div>
   );
 };
