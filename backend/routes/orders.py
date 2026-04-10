@@ -28,7 +28,7 @@ async def create_order(payload: OrderCreate, current_user: Optional[dict] = Depe
     user_id = current_user["sub"] if current_user else payload.user_id
 
     order = Order(
-        **payload.model_dump(),
+        **payload.model_dump(exclude={'user_id'}),
         subtotal=subtotal,
         delivery_fee=delivery_fee,
         total=total,
