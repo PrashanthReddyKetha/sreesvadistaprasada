@@ -11,6 +11,7 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [toast, setToast] = useState(null);
+  const [cartOpen, setCartOpen] = useState(false);
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = cartItems.reduce((sum, item) => {
@@ -49,7 +50,7 @@ export const CartProvider = ({ children }) => {
   const clearCart = useCallback(() => setCartItems([]), []);
 
   return (
-    <CartContext.Provider value={{ cartItems, cartCount, cartTotal, addToCart, removeFromCart, updateQuantity, clearCart, toast }}>
+    <CartContext.Provider value={{ cartItems, cartCount, cartTotal, addToCart, removeFromCart, updateQuantity, clearCart, toast, cartOpen, setCartOpen }}>
       {children}
     </CartContext.Provider>
   );

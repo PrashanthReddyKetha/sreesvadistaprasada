@@ -4,12 +4,14 @@ import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Tru
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '../mockData';
 import HeroSlider from '../components/HeroSlider';
 import api from '../api';
+import { useCart } from '../context/CartContext';
 
 const Home = () => {
   const trendingRef = useRef(null);
   const [postcode, setPostcode] = useState('');
   const [postcodeResult, setPostcodeResult] = useState(null);
   const [postcodeLoading, setPostcodeLoading] = useState(false);
+  const { addToCart } = useCart();
 
   const scrollTrending = (direction) => {
     if (trendingRef.current) {
@@ -218,6 +220,7 @@ const Home = () => {
                   <div className="flex justify-between items-center">
                     <p className="text-xl font-bold" style={{ color: '#800020' }}>{dish.price}</p>
                     <button
+                      onClick={() => addToCart(dish)}
                       className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md"
                       style={{ backgroundColor: '#800020' }}
                       data-testid={`add-to-cart-${dish.id}`}
@@ -286,6 +289,7 @@ const Home = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold" style={{ color: '#800020' }}>{chefSpecial.price}</span>
                     <button
+                      onClick={() => addToCart(chefSpecial)}
                       className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md"
                       style={{ backgroundColor: '#800020' }}
                       data-testid="chef-special-add-btn"

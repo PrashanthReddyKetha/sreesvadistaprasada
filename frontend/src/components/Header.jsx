@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User, ChevronDown } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { cartCount, setCartOpen } = useCart();
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const location = useLocation();
@@ -162,14 +164,17 @@ const Header = () => {
                   className="relative p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5"
                   data-testid="cart-button"
                   style={{ color: '#800020' }}
+                  onClick={() => setCartOpen(true)}
                 >
                   <ShoppingCart size={20} />
-                  <span
-                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-                    style={{ backgroundColor: '#F4C430' }}
-                  >
-                    0
-                  </span>
+                  {cartCount > 0 && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                      style={{ backgroundColor: '#F4C430' }}
+                    >
+                      {cartCount}
+                    </span>
+                  )}
                 </button>
                 <button
                   className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5"
@@ -187,14 +192,17 @@ const Header = () => {
                 className="relative p-2 rounded-full"
                 data-testid="mobile-cart-button"
                 style={{ color: '#800020' }}
+                onClick={() => setCartOpen(true)}
               >
                 <ShoppingCart size={20} />
-                <span
-                  className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-                  style={{ backgroundColor: '#F4C430' }}
-                >
-                  0
-                </span>
+                {cartCount > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                    style={{ backgroundColor: '#F4C430' }}
+                  >
+                    {cartCount}
+                  </span>
+                )}
               </button>
               <button
                 className="p-2 rounded-md"

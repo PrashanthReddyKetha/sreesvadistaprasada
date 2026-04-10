@@ -1,9 +1,12 @@
 import React from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { CartProvider } from "./context/CartContext";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
+import CartToast from "./components/CartToast";
+import CartDrawer from "./components/CartDrawer";
 import Home from "./pages/Home";
 import OurStory from "./pages/OurStory";
 import Svadista from "./pages/Svadista";
@@ -19,27 +22,31 @@ import Gallery from "./pages/Gallery";
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Header />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/story" element={<OurStory />} />
-          <Route path="/svadista" element={<Svadista />} />
-          <Route path="/prasada" element={<Prasada />} />
-          <Route path="/menu" element={<Menu />} />
-          <Route path="/breakfast" element={<Breakfast />} />
-          <Route path="/snacks" element={<Snacks />} />
-          <Route path="/subscriptions" element={<Subscriptions />} />
-          <Route path="/catering" element={<Catering />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/gallery" element={<Gallery />} />
-        </Routes>
-        <Footer />
-        <WhatsAppButton />
-      </BrowserRouter>
-    </div>
+    <CartProvider>
+      <div className="App">
+        <BrowserRouter>
+          <Header />
+          <CartDrawer />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/story" element={<OurStory />} />
+            <Route path="/svadista" element={<Svadista />} />
+            <Route path="/prasada" element={<Prasada />} />
+            <Route path="/menu" element={<Menu />} />
+            <Route path="/breakfast" element={<Breakfast />} />
+            <Route path="/snacks" element={<Snacks />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/catering" element={<Catering />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/gallery" element={<Gallery />} />
+          </Routes>
+          <Footer />
+          <WhatsAppButton />
+          <CartToast />
+        </BrowserRouter>
+      </div>
+    </CartProvider>
   );
 }
 
