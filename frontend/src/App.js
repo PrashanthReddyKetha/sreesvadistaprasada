@@ -25,6 +25,7 @@ import Gallery from "./pages/Gallery";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
 import ItemDetail from "./pages/ItemDetail";
+import Checkout from "./pages/Checkout";
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "placeholder";
 
@@ -59,6 +60,7 @@ function App() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/item/:itemId" element={<ItemDetail />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
