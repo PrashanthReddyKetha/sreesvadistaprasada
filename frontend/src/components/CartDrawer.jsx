@@ -44,23 +44,40 @@ function DeliveryBar({ total }) {
 }
 
 /* ── Upsell suggestions ───────────────────────────────────────────────────── */
+// What each category pairs well with (ordered by priority)
+const COMPLEMENTS = {
+  nonVeg:    ['pickles', 'podis', 'veg', 'prasada'],
+  veg:       ['pickles', 'podis', 'nonVeg', 'prasada'],
+  prasada:   ['pickles', 'podis', 'veg', 'nonVeg'],
+  breakfast: ['snacks', 'pickles', 'podis'],
+  snacks:    ['pickles', 'podis', 'breakfast'],
+  pickles:   ['nonVeg', 'veg', 'prasada'],
+  podis:     ['nonVeg', 'veg', 'prasada'],
+};
+
+function scoreComplement(item, cartCategories) {
+  let best = 99;
+  for (const cat of cartCategories) {
+    const list = COMPLEMENTS[cat] || [];
+    const idx = list.indexOf(item.category);
+    if (idx !== -1 && idx < best) best = idx;
+  }
+  return best; // lower = better match
+}
+
 function UpsellRow({ cartItems, onAdd }) {
   const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
     api.get('/menu?available=true')
       .then(r => {
-        const cartIds = new Set(cartItems.map(i => i.id));
-        // Prefer pickles/podis as add-ons, then anything not in cart
+        const cartIds   = new Set(cartItems.map(i => i.id));
+        const cartCats  = [...new Set(cartItems.map(i => i.category))];
         const candidates = r.data
           .filter(i => !cartIds.has(i.id))
-          .sort((a, b) => {
-            const priority = ['pickles', 'podis'];
-            const ap = priority.indexOf(a.category);
-            const bp = priority.indexOf(b.category);
-            if (ap !== bp) return (bp === -1 ? -1 : 1) - (ap === -1 ? -1 : 1);
-            return a.price - b.price;
-          })
+          .map(i => ({ ...i, _score: scoreComplement(i, cartCats) }))
+          .filter(i => i._score < 99)          // only items that genuinely complement
+          .sort((a, b) => a._score - b._score || a.price - b.price)
           .slice(0, 4);
         setSuggestions(candidates);
       })
@@ -420,6 +437,24 @@ const CartDrawer = () => {
         {/* ── CHECKOUT ─────────────────────────────────────────────────── */}
         {step === 'checkout' && (
           <>
+            {/* Free delivery nudge */}
+            {cartTotal < FREE_DELIVERY_THRESHOLD && (
+              <div className="flex-shrink-0 flex items-center justify-between px-5 py-2.5 border-b"
+                style={{ backgroundColor: '#FFFBEB', borderColor: 'rgba(128,0,32,0.08)' }}>
+                <div className="flex items-center gap-1.5">
+                  <Truck size={13} style={{ color: '#B8860B' }} />
+                  <span className="text-xs text-gray-600">
+                    Add <strong style={{ color: '#800020' }}>{fmt(FREE_DELIVERY_THRESHOLD - cartTotal)}</strong> more for free delivery
+                  </span>
+                </div>
+                <button onClick={() => setStep('cart')}
+                  className="text-xs font-semibold hover:underline flex-shrink-0 ml-2"
+                  style={{ color: '#800020' }}>
+                  + Add items
+                </button>
+              </div>
+            )}
+
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
 
               {/* Order summary toggle */}
