@@ -233,7 +233,7 @@ function OverviewTab({ orders, subs, pending, active, delivered, totalSpent, act
           )}
         </div>
         {recentOrders.length === 0 ? (
-          <EmptyState icon={ShoppingBag} message="No orders yet" sub="Your orders will appear here once you place one." />
+          <EmptyState icon={ShoppingBag} message="No orders yet" sub="Your orders will appear here once you place one." link="/svadista" linkLabel="Browse Menu & Order" />
         ) : (
           <div className="space-y-3">
             {recentOrders.map(o => <OrderCard key={o.id} order={o} compact />)}
@@ -259,7 +259,7 @@ function OrdersTab({ orders, reload, expandedOrder, setExpandedOrder }) {
   };
 
   if (orders.length === 0) {
-    return <EmptyState icon={ShoppingBag} message="No orders yet" sub="Browse our menus and place your first order." />;
+    return <EmptyState icon={ShoppingBag} message="No orders yet" sub="Browse our menus and place your first order." link="/svadista" linkLabel="Browse Menu & Order" />;
   }
 
   return (
@@ -404,7 +404,7 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
 /* ══ Subscriptions ════════════════════════════════════ */
 function SubsTab({ subs }) {
   if (subs.length === 0) {
-    return <EmptyState icon={Calendar} message="No Dabba Wala subscription" sub="Sign up for our weekly meal plan and never worry about cooking again." />;
+    return <EmptyState icon={Calendar} message="No Dabba Wala subscription" sub="Sign up for our weekly meal plan and never worry about cooking again." link="/subscriptions" linkLabel="Subscribe to Dabba Wala" />;
   }
 
   return (
@@ -549,7 +549,7 @@ function AccountTab({ user, login }) {
 }
 
 /* ══ Empty State ════════════════════════════════════════ */
-function EmptyState({ icon: Icon, message, sub }) {
+function EmptyState({ icon: Icon, message, sub, link, linkLabel }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'rgba(128,0,32,0.08)' }}>
@@ -557,6 +557,13 @@ function EmptyState({ icon: Icon, message, sub }) {
       </div>
       <p className="font-semibold" style={{ color: '#3D2B1F' }}>{message}</p>
       <p className="text-sm text-center max-w-xs" style={{ color: '#9C7B6B' }}>{sub}</p>
+      {link && (
+        <a href={link}
+          className="mt-1 px-5 py-2.5 text-sm font-semibold text-white rounded-xl transition-all hover:shadow-md"
+          style={{ backgroundColor: '#800020' }}>
+          {linkLabel}
+        </a>
+      )}
     </div>
   );
 }
@@ -648,7 +655,8 @@ function EnquiriesTab({ enquiries, reload }) {
 
         {list.length === 0 ? (
           <EmptyState icon={MessageSquare} message="No enquiries yet"
-            sub="Messages you send via the Contact page will appear here." />
+            sub="Have a question or special request? Get in touch with us."
+            link="/contact" linkLabel="Send an Enquiry" />
         ) : (
           <div className="space-y-3">
             {list.map(enq => (
