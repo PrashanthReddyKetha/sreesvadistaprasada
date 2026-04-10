@@ -464,7 +464,81 @@ const NewsletterTab = ({ newsletter }) => (
 const CATEGORIES = ['nonVeg','veg','prasada','breakfast','pickles','podis'];
 const CAT_LABELS  = { nonVeg:'Non-Veg', veg:'Veg', prasada:'Prasada', breakfast:'Breakfast', pickles:'Pickles', podis:'Podis' };
 
-const BLANK_ITEM = { name:'', description:'', price:'', category:'nonVeg', subcategory:'', spice_level:0, is_veg:false, available:true, featured:false, image:'', tag:'', allergens:[] };
+const BLANK_ITEM = { name:'', description:'', price:'', category:'nonVeg', subcategory:'', spice_level:0, is_veg:false, available:true, featured:false, image:'', tag:'', allergens:[], faqs:[], pairs_with:[] };
+
+const ALLERGEN_LIST = ['gluten','dairy','eggs','nuts','sesame','mustard','soy','celery'];
+
+const AllergenPicker = ({ value=[], onChange }) => (
+  <div className="flex flex-wrap gap-2">
+    {ALLERGEN_LIST.map(a => (
+      <label key={a} className="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
+        style={{ backgroundColor:value.includes(a)?'#FEF3C7':'#F3F4F6', color:value.includes(a)?'#92400E':'#374151' }}>
+        <input type="checkbox" className="hidden" checked={value.includes(a)}
+          onChange={e=>onChange(e.target.checked?[...value,a]:value.filter(x=>x!==a))} />
+        {a}
+      </label>
+    ))}
+  </div>
+);
+
+const FaqEditor = ({ value=[], onChange }) => (
+  <div className="space-y-3">
+    {value.map((faq, i) => (
+      <div key={i} className="rounded-xl p-3 space-y-2" style={{ backgroundColor:'rgba(128,0,32,0.03)', border:'1px solid rgba(128,0,32,0.1)' }}>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold" style={{ color:'#800020' }}>FAQ {i+1}</span>
+          <button type="button" onClick={() => onChange(value.filter((_,j)=>j!==i))}
+            className="text-gray-400 hover:text-red-500"><X size={14} /></button>
+        </div>
+        <input value={faq.q} onChange={e=>{ const v=[...value]; v[i]={...v[i],q:e.target.value}; onChange(v); }}
+          placeholder="Question" className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} />
+        <textarea rows={2} value={faq.a} onChange={e=>{ const v=[...value]; v[i]={...v[i],a:e.target.value}; onChange(v); }}
+          placeholder="Answer" className="w-full border rounded-lg px-3 py-2 text-sm resize-none" style={{ borderColor:'#d1d5db' }} />
+      </div>
+    ))}
+    <button type="button" onClick={() => onChange([...value, {q:'',a:''}])}
+      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all"
+      style={{ borderColor:'rgba(128,0,32,0.3)', color:'#800020' }}>
+      <Plus size={13} /> Add FAQ
+    </button>
+  </div>
+);
+
+const PairsWithPicker = ({ value=[], onChange, allItems, currentId }) => {
+  const [search, setSearch] = useState('');
+  const filtered = allItems.filter(i => i.id !== currentId && i.name.toLowerCase().includes(search.toLowerCase())).slice(0, 8);
+  return (
+    <div className="space-y-2">
+      <input value={search} onChange={e=>setSearch(e.target.value)}
+        placeholder="Search items to pair with…" className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} />
+      {search && filtered.length > 0 && (
+        <div className="rounded-xl border overflow-hidden" style={{ borderColor:'#d1d5db' }}>
+          {filtered.map(i => (
+            <button key={i.id} type="button" onClick={() => { if(!value.includes(i.id)) onChange([...value,i.id]); setSearch(''); }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center justify-between">
+              <span>{i.name}</span>
+              <span className="text-xs text-gray-400 capitalize">{i.category}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {value.map(id => {
+            const item = allItems.find(i=>i.id===id);
+            return item ? (
+              <span key={id} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+                style={{ backgroundColor:'rgba(128,0,32,0.08)', color:'#800020' }}>
+                {item.name}
+                <button type="button" onClick={()=>onChange(value.filter(x=>x!==id))}><X size={11}/></button>
+              </span>
+            ) : null;
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const MenuTab = () => {
   const [items, setItems]         = useState([]);
@@ -477,6 +551,7 @@ const MenuTab = () => {
   const [adding, setAdding]       = useState(false);
   const [addForm, setAddForm]     = useState(BLANK_ITEM);
   const [addSaving, setAddSaving] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -502,7 +577,30 @@ const MenuTab = () => {
       image: item.image || '',
       tag: item.tag || '',
       allergens: item.allergens || [],
+      faqs: item.faqs || [],
+      pairs_with: item.pairs_with || [],
     });
+  };
+
+  const aiEnhance = async (form, setForm) => {
+    setAiLoading(true); setMsg('');
+    try {
+      const res = await api.post('/menu/ai/enhance', {
+        name: form.name, category: form.category,
+        is_veg: form.is_veg, spice_level: form.spice_level,
+      });
+      setForm(p => ({
+        ...p,
+        description: res.data.description || p.description,
+        allergens: res.data.allergens?.length ? res.data.allergens : p.allergens,
+        tag: res.data.tag || p.tag,
+        faqs: res.data.faqs?.length ? res.data.faqs : p.faqs,
+      }));
+      setMsg('AI filled in description, allergens, FAQs and tag!');
+      setTimeout(() => setMsg(''), 3000);
+    } catch(e) {
+      setMsg(e.response?.data?.detail || 'AI unavailable. Set ANTHROPIC_API_KEY on Render.');
+    } finally { setAiLoading(false); }
   };
 
   const save = async (id) => {
@@ -640,11 +738,28 @@ const MenuTab = () => {
               </label>
             ))}
           </div>
-          <div className="flex gap-2">
+          {/* Pairs With */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Pairs Well With</label>
+            <PairsWithPicker value={addForm.pairs_with||[]} onChange={v=>setAddForm(p=>({...p,pairs_with:v}))} allItems={items} currentId={null} />
+          </div>
+
+          {/* Custom FAQs */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Custom FAQs</label>
+            <FaqEditor value={addForm.faqs||[]} onChange={v=>setAddForm(p=>({...p,faqs:v}))} />
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
             <button onClick={addItem} disabled={addSaving}
               className="flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
               style={{ backgroundColor:'#800020' }}>
               <Plus size={14} /> {addSaving?'Adding…':'Add to Menu'}
+            </button>
+            <button type="button" onClick={()=>aiEnhance(addForm, setAddForm)} disabled={aiLoading || !addForm.name}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60"
+              style={{ backgroundColor:'#1565C0', color:'white' }}>
+              {aiLoading ? <RefreshCw size={14} className="animate-spin"/> : '✨'} AI Auto-fill
             </button>
             <button onClick={()=>{ setAdding(false); setMsg(''); }} className="px-4 py-2 rounded-lg text-sm border font-semibold" style={{ borderColor:'#d1d5db', color:'#5C4B47' }}>
               Cancel
@@ -732,11 +847,29 @@ const MenuTab = () => {
                     </label>
                   ))}
                 </div>
-                <div className="flex gap-2">
+
+                {/* Pairs With */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Pairs Well With <span className="normal-case font-normal">(shown on item page)</span></label>
+                  <PairsWithPicker value={editForm.pairs_with||[]} onChange={v=>setEditForm(p=>({...p,pairs_with:v}))} allItems={items} currentId={item.id} />
+                </div>
+
+                {/* Custom FAQs */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Custom FAQs <span className="normal-case font-normal">(shown first on item page)</span></label>
+                  <FaqEditor value={editForm.faqs||[]} onChange={v=>setEditForm(p=>({...p,faqs:v}))} />
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
                   <button onClick={()=>save(item.id)} disabled={saving}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
                     style={{ backgroundColor:'#800020' }}>
                     <Save size={14} /> {saving?'Saving…':'Save Changes'}
+                  </button>
+                  <button type="button" onClick={()=>aiEnhance(editForm, setEditForm)} disabled={aiLoading}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
+                    style={{ backgroundColor:'#1565C0', color:'white' }}>
+                    {aiLoading ? <RefreshCw size={14} className="animate-spin"/> : '✨'} AI Auto-fill
                   </button>
                   <button onClick={()=>setEditingId(null)} className="px-4 py-2 rounded-lg text-sm border font-semibold" style={{ borderColor:'#d1d5db', color:'#5C4B47' }}>
                     Cancel

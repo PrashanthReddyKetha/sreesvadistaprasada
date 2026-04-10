@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from datetime import datetime
+import os, json
 from database import db
 from models import MenuItem, MenuItemCreate, MenuItemUpdate, MenuCategory, Review, ReviewCreate
 from auth import require_admin, get_current_user, get_optional_user
@@ -77,7 +78,62 @@ async def delete_menu_item(item_id: str, _: dict = Depends(require_admin)):
     return {"message": "Menu item deleted"}
 
 
-# ── Reviews ──────────────────────────────────────────────────────────────────
+# ── AI Enhance ───────────────────────────────────────────────────────────────
+
+@router.post("/ai/enhance", dependencies=[Depends(require_admin)])
+async def ai_enhance_item(payload: dict):
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="AI features not configured. Set ANTHROPIC_API_KEY in Render environment.")
+
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=api_key)
+
+        name     = payload.get("name", "")
+        category = payload.get("category", "")
+        is_veg   = payload.get("is_veg", True)
+        spice    = payload.get("spice_level", 0)
+
+        prompt = f"""You are helping manage "Sree Svadista Prasada", an authentic South Indian restaurant in the UK.
+
+Generate content for this menu item:
+- Name: {name}
+- Category: {category} ({'Vegetarian' if is_veg else 'Non-Vegetarian'})
+- Spice Level: {spice}/5
+
+Return ONLY valid JSON with exactly these keys:
+{{
+  "description": "2-3 sentence authentic, appetizing description that highlights origin, cooking method and taste",
+  "allergens": ["list only applicable ones from: gluten, dairy, eggs, nuts, sesame, mustard, soy, celery"],
+  "tag": "short marketing label e.g. Chef's Special, Best Seller, Village Recipe, New (pick most fitting or empty string)",
+  "faqs": [
+    {{"q": "customer question specific to this dish", "a": "helpful answer"}},
+    {{"q": "another relevant question", "a": "helpful answer"}},
+    {{"q": "third question about ingredients/preparation", "a": "helpful answer"}}
+  ]
+}}"""
+
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        raw = message.content[0].text.strip()
+        # Strip markdown fences if present
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        result = json.loads(raw.strip())
+        return result
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="AI returned invalid response. Try again.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
+
+
+# ── Reviews ───────────────────────────────────────────────────────────────────
 
 @router.get("/{item_id}/reviews")
 async def get_reviews(item_id: str):

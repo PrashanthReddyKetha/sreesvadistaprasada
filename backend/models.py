@@ -106,6 +106,8 @@ class MenuItemCreate(BaseModel):
     featured: bool = False
     allergens: List[str] = []
     tag: Optional[str] = None
+    faqs: List[dict] = []
+    pairs_with: List[str] = []
 
 
 class MenuItemUpdate(BaseModel):
@@ -121,6 +123,8 @@ class MenuItemUpdate(BaseModel):
     featured: Optional[bool] = None
     allergens: Optional[List[str]] = None
     tag: Optional[str] = None
+    faqs: Optional[List[dict]] = None
+    pairs_with: Optional[List[str]] = None
 
 
 class MenuItem(MenuItemCreate):

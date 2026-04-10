@@ -1,6 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); }, [pathname]);
+  return null;
+}
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import Header from "./components/Header";
@@ -31,6 +37,7 @@ function App() {
     <CartProvider>
       <div className="App">
         <BrowserRouter>
+          <ScrollToTop />
           <Header />
           <CartDrawer />
           <AuthModal />

@@ -139,6 +139,8 @@ export default function ItemDetail() {
   const [openFaq, setOpenFaq] = useState(null);
   const [activeTab, setActiveTab] = useState('about');
 
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [itemId]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -154,11 +156,22 @@ export default function ItemDetail() {
 
       const cats = COMPLEMENTS[it.category] || [];
       const promises = [api.get(`/menu?category=${it.category}&available=true`)];
-      if (cats[0]) promises.push(api.get(`/menu?category=${cats[0]}&available=true`));
 
-      const [simRes, compRes] = await Promise.all(promises);
+      // If item has manual pairs_with, fetch those specific items; otherwise fetch by category
+      if (it.pairs_with?.length > 0) {
+        promises.push(...it.pairs_with.slice(0, 6).map(id => api.get(`/menu/${id}`)));
+      } else if (cats[0]) {
+        promises.push(api.get(`/menu?category=${cats[0]}&available=true`));
+      }
+
+      const [simRes, ...pairResults] = await Promise.all(promises);
       setSimilar(simRes.data.filter(i => i.id !== itemId).slice(0, 8));
-      if (compRes) setGoesWith(compRes.data.slice(0, 6));
+
+      if (it.pairs_with?.length > 0) {
+        setGoesWith(pairResults.map(r => r.data).filter(Boolean));
+      } else if (pairResults[0]) {
+        setGoesWith(pairResults[0].data.slice(0, 6));
+      }
     } catch (e) {
       if (e.response?.status === 404) setNotFound(true);
     } finally { setLoading(false); }
@@ -201,7 +214,12 @@ export default function ItemDetail() {
 
   const avgRating = reviews.length ? reviews.reduce((s,r) => s+r.rating, 0) / reviews.length : 0;
   const ratingDist = [5,4,3,2,1].map(n => ({ n, count: reviews.filter(r => r.rating === n).length }));
-  const faqs = [...(CATEGORY_FAQS[item?.category] || []), ...GENERAL_FAQS];
+  // Custom item FAQs first, then category FAQs, then general
+  const faqs = [
+    ...(item?.faqs?.filter(f => f.q && f.a) || []),
+    ...(CATEGORY_FAQS[item?.category] || []),
+    ...GENERAL_FAQS,
+  ];
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center pt-24" style={{ backgroundColor:'#FAF8F4' }}>
