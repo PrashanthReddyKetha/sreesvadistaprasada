@@ -547,6 +547,7 @@ const MenuTab = () => {
   const [editForm, setEditForm]   = useState({});
   const [saving, setSaving]       = useState(false);
   const [filter, setFilter]       = useState('all');
+  const [search, setSearch]       = useState('');
   const [msg, setMsg]             = useState('');
   const [adding, setAdding]       = useState(false);
   const [addForm, setAddForm]     = useState(BLANK_ITEM);
@@ -638,7 +639,9 @@ const MenuTab = () => {
     finally { setAddSaving(false); }
   };
 
-  const filtered = filter === 'all' ? items : items.filter(i => i.category === filter);
+  const filtered = items
+    .filter(i => filter === 'all' || i.category === filter)
+    .filter(i => !search || i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()));
 
   if (loading) return <div className="flex justify-center py-16"><RefreshCw size={28} className="animate-spin" style={{ color:'#800020' }} /></div>;
 
@@ -657,12 +660,34 @@ const MenuTab = () => {
             </button>
           ))}
         </div>
-        <button onClick={()=>{ setAdding(true); setEditingId(null); }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white"
-          style={{ backgroundColor:'#800020' }}>
-          <Plus size={15} /> Add New Item
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search items…"
+              className="pl-8 pr-3 py-2 rounded-lg text-sm border outline-none focus:ring-2 focus:ring-[#800020]/30"
+              style={{ borderColor:'rgba(128,0,32,0.25)', width:'180px', color:'#3D2B1F' }}
+            />
+            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <X size={13} />
+              </button>
+            )}
+          </div>
+          <button onClick={()=>{ setAdding(true); setEditingId(null); setSearch(''); }}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white whitespace-nowrap"
+            style={{ backgroundColor:'#800020' }}>
+            <Plus size={15} /> Add New Item
+          </button>
+        </div>
       </div>
+      {search && (
+        <p className="text-xs" style={{ color:'#9C7B6B' }}>
+          {filtered.length} result{filtered.length !== 1 ? 's' : ''} for "<strong>{search}</strong>"
+        </p>
+      )}
 
       {/* Add New Item form */}
       {adding && (
