@@ -1,6 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 from pathlib import Path
+import certifi
 import os
 
 ROOT_DIR = Path(__file__).parent
@@ -11,8 +12,7 @@ DB_NAME = os.environ['DB_NAME']
 
 client = AsyncIOMotorClient(
     MONGO_URL,
-    tls=True,
-    tlsAllowInvalidCertificates=True,
+    tlsCAFile=certifi.where(),
     serverSelectionTimeoutMS=30000,
 )
 db = client[DB_NAME]
