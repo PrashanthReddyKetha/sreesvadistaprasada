@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
+from typing import List
 from database import db
 from models import UserCreate, UserLogin, UserUpdate, User, UserInDB, TokenResponse
-from auth import hash_password, verify_password, create_access_token, get_current_user
+from auth import hash_password, verify_password, create_access_token, get_current_user, require_admin
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -45,6 +46,12 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     if not doc:
         raise HTTPException(status_code=404, detail="User not found")
     return User(**doc)
+
+
+@router.get("/users", response_model=List[User])
+async def get_all_users(_: dict = Depends(require_admin)):
+    docs = await db.users.find({}, {"_id": 0, "password_hash": 0}).sort("created_at", -1).to_list(1000)
+    return docs
 
 
 @router.put("/me", response_model=User)

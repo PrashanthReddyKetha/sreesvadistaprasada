@@ -21,6 +21,7 @@ import Breakfast from "./pages/Breakfast";
 import Snacks from "./pages/Snacks";
 import FAQ from "./pages/FAQ";
 import Gallery from "./pages/Gallery";
+import Admin from "./pages/Admin";
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
           <Footer />
           <WhatsAppButton />

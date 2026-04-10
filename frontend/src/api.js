@@ -4,4 +4,10 @@ const api = axios.create({
   baseURL: (process.env.REACT_APP_BACKEND_URL || 'https://svadista-backend.onrender.com') + '/api',
 });
 
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('ssp_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
 export default api;
