@@ -15,7 +15,7 @@ export const CartProvider = ({ children }) => {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = cartItems.reduce((sum, item) => {
-    const price = parseFloat(item.price.replace('£', ''));
+    const price = parseFloat(String(item.price).replace('£', '')) || 0;
     return sum + price * item.quantity;
   }, 0);
 
