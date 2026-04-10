@@ -61,6 +61,33 @@ const AuthModal = () => {
   const [googleOtp, setGoogleOtp] = useState('');
   const [googleStep, setGoogleStep] = useState(null); // null | 'phone' | 'otp'
 
+  // ── Google sign-in (must be called unconditionally before any early return) ──
+  const googleLogin = useGoogleLogin({
+    flow: 'implicit',
+    onSuccess: async (tokenResponse) => {
+      setError(''); setLoading(true);
+      try {
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        }).then(r => r.json());
+
+        const res = await api.post('/auth/google', { credential: tokenResponse.access_token, userinfo: userInfo });
+
+        if (res.data.needs_phone) {
+          setGoogleData({ credential: tokenResponse.access_token, ...res.data });
+          setGoogleStep('phone');
+          setTab('register');
+        } else {
+          login(res.data.user, res.data.access_token);
+          setAuthOpen(false);
+        }
+      } catch (err) {
+        setError(err.response?.data?.detail || 'Google sign-in failed. Please try again.');
+      } finally { setLoading(false); }
+    },
+    onError: () => setError('Google sign-in was cancelled or failed.'),
+  });
+
   if (!authOpen) return null;
 
   const reset = () => {
@@ -122,34 +149,6 @@ const AuthModal = () => {
     } finally { setLoading(false); }
   };
 
-  /* ── Google sign-in ──────────────────────────────────────────────────── */
-  const googleLogin = useGoogleLogin({
-    flow: 'implicit',
-    onSuccess: async (tokenResponse) => {
-      setError(''); setLoading(true);
-      try {
-        // Exchange access token for ID token info via userinfo endpoint
-        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        }).then(r => r.json());
-
-        // Send to backend with the access token as credential
-        const res = await api.post('/auth/google', { credential: tokenResponse.access_token, userinfo: userInfo });
-
-        if (res.data.needs_phone) {
-          setGoogleData({ credential: tokenResponse.access_token, ...res.data });
-          setGoogleStep('phone');
-          setTab('register'); // show Google phone step in register panel
-        } else {
-          login(res.data.user, res.data.access_token);
-          close();
-        }
-      } catch (err) {
-        setError(err.response?.data?.detail || 'Google sign-in failed. Please try again.');
-      } finally { setLoading(false); }
-    },
-    onError: () => setError('Google sign-in was cancelled or failed.'),
-  });
 
   const handleGoogleSendOtp = async () => {
     if (!googlePhone) { setError('Please enter your phone number.'); return; }
