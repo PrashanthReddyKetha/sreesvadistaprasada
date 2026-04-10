@@ -181,9 +181,9 @@ const Header = () => {
                 {user ? (
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold hidden xl:block max-w-[100px] truncate" style={{ color: '#800020' }}>{user.name}</span>
-                    <button onClick={logout} className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5 text-xs font-semibold" style={{ color: '#800020' }} data-testid="logout-button" title="Sign out">
+                    <Link to="/dashboard" className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" style={{ color: '#800020' }} data-testid="dashboard-button" title="My Account">
                       <User size={20} />
-                    </button>
+                    </Link>
                   </div>
                 ) : (
                   <button onClick={() => setAuthOpen(true)} className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" data-testid="account-button" style={{ color: '#800020' }} title="Sign in">
@@ -269,7 +269,7 @@ const Header = () => {
               ))}
               {user ? (
                 <div className="mt-3 flex items-center justify-between px-3 py-3 rounded-md" style={{ border: '1px solid rgba(128,0,32,0.2)' }}>
-                  <span className="text-sm font-medium" style={{ color: '#800020' }}><User size={14} className="inline mr-1" />{user.name}</span>
+                  <Link to="/dashboard" className="text-sm font-medium" style={{ color: '#800020' }}><User size={14} className="inline mr-1" />{user.name}</Link>
                   <button onClick={logout} className="text-xs font-semibold" style={{ color: '#800020' }}>Sign Out</button>
                 </div>
               ) : (
