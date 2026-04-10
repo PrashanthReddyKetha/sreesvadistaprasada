@@ -261,6 +261,25 @@ async def google_complete(payload: GoogleCompleteRequest):
     return TokenResponse(access_token=token, user=User(**user.model_dump()))
 
 
+# ── Email / Phone availability checks ────────────────────────────────────────
+
+@router.get("/check-email")
+async def check_email(email: str):
+    doc = await db.users.find_one({"email": email.lower().strip()}, {"_id": 0, "google_id": 1, "password_hash": 1})
+    if not doc:
+        return {"exists": False}
+    return {
+        "exists": True,
+        "has_password": bool(doc.get("password_hash")),
+        "has_google": bool(doc.get("google_id")),
+    }
+
+@router.get("/check-phone")
+async def check_phone(phone: str):
+    doc = await db.users.find_one({"phone": phone.strip()}, {"_id": 0, "id": 1})
+    return {"exists": bool(doc)}
+
+
 # ── Me / Users ─────────────────────────────────────────────────────────────────
 
 @router.get("/me", response_model=User)
