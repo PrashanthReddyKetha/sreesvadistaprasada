@@ -14,8 +14,8 @@ const Snacks = () => {
 
   useEffect(() => {
     Promise.all([
-      api.get('/menu?category=pickles'),
-      api.get('/menu?category=podis'),
+      api.get('/menu?category=pickles&available=true'),
+      api.get('/menu?category=podis&available=true'),
     ]).then(([pickles, podis]) => {
       setAllItems([
         ...pickles.data.map(i => ({ ...i, type: 'Pickles' })),

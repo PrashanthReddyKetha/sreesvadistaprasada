@@ -13,7 +13,7 @@ const Svadista = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    api.get('/menu?category=nonVeg')
+    api.get('/menu?category=nonVeg&available=true')
       .then(res => setItems(res.data))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));

@@ -22,7 +22,7 @@ const Menu = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    api.get('/menu')
+    api.get('/menu?available=true')
       .then(res => setAllDishes(res.data))
       .catch(err => console.error('Failed to load menu:', err))
       .finally(() => setLoading(false));

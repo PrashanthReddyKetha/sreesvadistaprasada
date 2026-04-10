@@ -13,7 +13,7 @@ const Breakfast = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    api.get('/menu?category=breakfast')
+    api.get('/menu?category=breakfast&available=true')
       .then(res => setItems(res.data))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));

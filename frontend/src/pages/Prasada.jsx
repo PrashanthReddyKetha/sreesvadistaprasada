@@ -14,8 +14,8 @@ const Prasada = () => {
 
   useEffect(() => {
     Promise.all([
-      api.get('/menu?category=prasada'),
-      api.get('/menu?category=veg'),
+      api.get('/menu?category=prasada&available=true'),
+      api.get('/menu?category=veg&available=true'),
     ]).then(([prasada, veg]) => {
       setAllItems([...prasada.data, ...veg.data]);
     }).catch(err => console.error(err))

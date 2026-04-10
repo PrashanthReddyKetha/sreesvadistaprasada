@@ -11,7 +11,7 @@ router = APIRouter(prefix="/menu", tags=["menu"])
 async def get_menu(
     category: Optional[MenuCategory] = Query(None),
     featured: Optional[bool] = Query(None),
-    available: Optional[bool] = Query(True),
+    available: Optional[bool] = Query(None),
     search: Optional[str] = Query(None),
 ):
     query = {}

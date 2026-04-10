@@ -180,6 +180,11 @@ const Header = () => {
                 </button>
                 {user ? (
                   <div className="flex items-center gap-2">
+                    {user.role === 'admin' && (
+                      <Link to="/admin" className="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-[#800020]/10" style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.3)' }}>
+                        Admin
+                      </Link>
+                    )}
                     <span className="text-xs font-semibold hidden xl:block max-w-[100px] truncate" style={{ color: '#800020' }}>{user.name}</span>
                     <Link to="/dashboard" className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" style={{ color: '#800020' }} data-testid="dashboard-button" title="My Account">
                       <User size={20} />
