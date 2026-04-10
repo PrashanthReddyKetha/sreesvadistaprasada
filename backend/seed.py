@@ -473,9 +473,6 @@ async def create_indexes():
     await db.contact_messages.create_index("id", unique=True)
     await db.catering_enquiries.create_index("id", unique=True)
     await db.newsletter.create_index("email", unique=True)
-    # OTP records auto-expire after expires_at
-    await db.otp_records.create_index("expires_at", expireAfterSeconds=0)
-    await db.otp_records.create_index("phone")
     print("Indexes created.")
 
 

@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   X, Eye, EyeOff, User, Mail, Phone, Lock,
-  CheckCircle, RefreshCw, Shield, AlertCircle, Info
+  CheckCircle, Shield, AlertCircle, Info
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { auth } from '../firebase';
 import api from '../api';
 
 /* ── Google SVG ─────────────────────────────────────────────────────────── */
@@ -188,6 +190,10 @@ const AuthModal = () => {
   const [googleStep, setGoogleStep]   = useState(null); // null | 'phone' | 'otp'
   const [googleError, setGoogleError] = useState('');
 
+  // Firebase refs (must be unconditional)
+  const recaptchaRef   = useRef(null);
+  const confirmationRef = useRef(null);
+
   /* ── Google hook (must be unconditional) ─────────────────────────────── */
   const googleLogin = useGoogleLogin({
     flow: 'implicit',
@@ -214,6 +220,23 @@ const AuthModal = () => {
 
   if (!authOpen) return null;
 
+  /* ── reCAPTCHA helpers ───────────────────────────────────────────────── */
+  const getRecaptcha = () => {
+    if (!auth) return null;
+    if (!recaptchaRef.current) {
+      recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {},
+      });
+    }
+    return recaptchaRef.current;
+  };
+
+  const clearRecaptcha = () => {
+    try { recaptchaRef.current?.clear(); } catch (_) {}
+    recaptchaRef.current = null;
+  };
+
   /* ── Helpers ─────────────────────────────────────────────────────────── */
   const reset = () => {
     setTab('login'); setStep(1); setLoading(false); setOtpLoading(false); setCountdown(0);
@@ -222,6 +245,8 @@ const AuthModal = () => {
     setEmailStatus(null); setPhoneStatus(null); setNameError(''); setPhoneError(''); setPwError('');
     setGoogleCred(null); setGoogleEmail(''); setGoogleName(''); setGooglePhone('');
     setGoogleOtp(''); setGoogleStep(null); setGoogleError('');
+    confirmationRef.current = null;
+    clearRecaptcha();
   };
 
   const close = () => { setAuthOpen(false); reset(); };
@@ -260,9 +285,7 @@ const AuthModal = () => {
     if (!name.trim() || name.trim().split(' ').length < 2) {
       setNameError('Please enter your full name (first and last).'); ok = false;
     } else setNameError('');
-    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-      ok = false;
-    }
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) { ok = false; }
     if (emailStatus === 'taken' || emailStatus === 'taken_google') { ok = false; }
     if (!phone.trim() || phone.trim().length < 10) {
       setPhoneError('Please enter a valid phone number.'); ok = false;
@@ -290,32 +313,58 @@ const AuthModal = () => {
   const handleSendOtp = async (e) => {
     e?.preventDefault();
     if (!validateStep1()) return;
+    if (!auth) {
+      setRegError('Phone verification is not configured yet. Please try again later or contact support.');
+      return;
+    }
     setRegError(''); setOtpLoading(true);
+    clearRecaptcha();
     try {
-      await api.post(`/auth/send-otp?phone=${encodeURIComponent(phone.trim())}`);
+      const verifier = getRecaptcha();
+      const result = await signInWithPhoneNumber(auth, phone.trim(), verifier);
+      confirmationRef.current = result;
       setStep(2);
       startCountdown();
     } catch (err) {
-      setRegError(err.response?.data?.detail || 'Failed to send OTP. Please check your number.');
+      clearRecaptcha();
+      const msg = err.code === 'auth/invalid-phone-number'
+        ? 'Invalid phone number. Use international format e.g. +44 7700 900000.'
+        : err.code === 'auth/too-many-requests'
+        ? 'Too many attempts. Please wait a few minutes and try again.'
+        : err.message || 'Failed to send verification code. Please try again.';
+      setRegError(msg);
     } finally { setOtpLoading(false); }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     if (otp.length !== 6) { setRegError('Please enter the full 6-digit code.'); return; }
+    if (!confirmationRef.current) { setRegError('Session expired. Please go back and try again.'); return; }
     setRegError(''); setLoading(true);
     try {
-      const res = await api.post(`/auth/register?otp=${otp}`, {
-        name: name.trim(), email: email.trim().toLowerCase(), phone: phone.trim(), password: pw,
+      const result = await confirmationRef.current.confirm(otp);
+      const firebaseToken = await result.user.getIdToken();
+      const res = await api.post('/auth/register', {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        password: pw,
+        firebase_token: firebaseToken,
       });
       login(res.data.user, res.data.access_token);
       close();
     } catch (err) {
-      const detail = err.response?.data?.detail || '';
-      if (detail.toLowerCase().includes('email already')) {
-        setRegError(''); setStep(1); setEmailStatus('taken');
+      if (err.code === 'auth/invalid-verification-code') {
+        setRegError('Incorrect code. Please check and try again.');
+      } else if (err.code === 'auth/code-expired') {
+        setRegError('Code has expired. Please go back and request a new one.');
       } else {
-        setRegError(detail || 'Registration failed. Please try again.');
+        const detail = err.response?.data?.detail || '';
+        if (detail.toLowerCase().includes('email already')) {
+          setRegError(''); setStep(1); setEmailStatus('taken');
+        } else {
+          setRegError(detail || 'Registration failed. Please try again.');
+        }
       }
     } finally { setLoading(false); }
   };
@@ -324,28 +373,52 @@ const AuthModal = () => {
     if (!googlePhone.trim() || googlePhone.trim().length < 10) {
       setGoogleError('Please enter a valid phone number.'); return;
     }
+    if (!auth) {
+      setGoogleError('Phone verification is not configured yet. Please contact support.');
+      return;
+    }
     setGoogleError(''); setOtpLoading(true);
+    clearRecaptcha();
     try {
-      await api.post(`/auth/send-otp?phone=${encodeURIComponent(googlePhone.trim())}`);
+      const verifier = getRecaptcha();
+      const result = await signInWithPhoneNumber(auth, googlePhone.trim(), verifier);
+      confirmationRef.current = result;
       setGoogleStep('otp');
       startCountdown();
     } catch (err) {
-      setGoogleError(err.response?.data?.detail || 'Failed to send OTP.');
+      clearRecaptcha();
+      const msg = err.code === 'auth/invalid-phone-number'
+        ? 'Invalid phone number. Use international format e.g. +44 7700 900000.'
+        : err.code === 'auth/too-many-requests'
+        ? 'Too many attempts. Please wait a few minutes.'
+        : err.message || 'Failed to send code. Please try again.';
+      setGoogleError(msg);
     } finally { setOtpLoading(false); }
   };
 
   const handleGoogleComplete = async (e) => {
     e.preventDefault();
     if (googleOtp.length !== 6) { setGoogleError('Please enter the full 6-digit code.'); return; }
+    if (!confirmationRef.current) { setGoogleError('Session expired. Please go back and try again.'); return; }
     setGoogleError(''); setLoading(true);
     try {
+      const result = await confirmationRef.current.confirm(googleOtp);
+      const firebaseToken = await result.user.getIdToken();
       const res = await api.post('/auth/google/complete', {
-        credential: googleCred, phone: googlePhone.trim(), otp: googleOtp,
+        credential: googleCred,
+        phone: googlePhone.trim(),
+        firebase_token: firebaseToken,
       });
       login(res.data.user, res.data.access_token);
       close();
     } catch (err) {
-      setGoogleError(err.response?.data?.detail || 'Verification failed. Please try again.');
+      if (err.code === 'auth/invalid-verification-code') {
+        setGoogleError('Incorrect code. Please check and try again.');
+      } else if (err.code === 'auth/code-expired') {
+        setGoogleError('Code has expired. Please go back and request a new one.');
+      } else {
+        setGoogleError(err.response?.data?.detail || 'Verification failed. Please try again.');
+      }
     } finally { setLoading(false); }
   };
 
@@ -375,6 +448,9 @@ const AuthModal = () => {
 
   return (
     <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center p-4" onClick={close}>
+      {/* Invisible reCAPTCHA container */}
+      <div id="recaptcha-container" />
+
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] flex flex-col"
         onClick={e => e.stopPropagation()}>
 
@@ -470,7 +546,6 @@ const AuthModal = () => {
                 </div>
               )}
 
-              {/* Full name */}
               <Field label="Full Name" icon={User} name="fullname" autoComplete="name"
                 placeholder="First and last name"
                 value={name} onChange={v => { setName(v); setNameError(''); }}
@@ -478,7 +553,6 @@ const AuthModal = () => {
                 hint="We use this for your orders and receipts"
               />
 
-              {/* Email with live check */}
               <div>
                 <Field label="Email address" icon={Mail} type="email" name="email" autoComplete="email"
                   placeholder="you@example.com"
@@ -501,7 +575,6 @@ const AuthModal = () => {
                 )}
               </div>
 
-              {/* Phone with live check */}
               <div>
                 <Field label="Mobile Number" icon={Phone} type="tel" name="phone" autoComplete="tel"
                   placeholder="+44 7700 900000"
@@ -510,11 +583,10 @@ const AuthModal = () => {
                   onBlur={() => checkPhone(phone)}
                   error={phoneError || (phoneStatus === 'taken' ? 'This number is already linked to an account.' : '')}
                   success={phoneStatus === 'free' ? 'Number is available' : ''} required
-                  hint="Used to send your order OTP verification"
+                  hint="We'll send a one-time verification code via SMS"
                 />
               </div>
 
-              {/* Password with strength */}
               <div>
                 <Field label="Password" icon={Lock}
                   type={showPw ? 'text' : 'password'} name="new-password" autoComplete="new-password"
@@ -541,7 +613,6 @@ const AuthModal = () => {
                 )}
               </div>
 
-              {/* Terms */}
               <label className="flex items-start gap-2.5 cursor-pointer pt-1">
                 <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
                   terms ? 'border-[#800020] bg-[#800020]' : 'border-gray-300'
@@ -611,7 +682,7 @@ const AuthModal = () => {
                       {otpLoading ? 'Sending…' : 'Resend code'}
                     </button>
                 }
-                <button type="button" onClick={() => { setStep(1); setOtp(''); setRegError(''); }}
+                <button type="button" onClick={() => { setStep(1); setOtp(''); setRegError(''); confirmationRef.current = null; }}
                   className="block w-full text-xs text-gray-400 hover:text-gray-600 transition-colors">
                   ← Change my details
                 </button>
@@ -684,6 +755,10 @@ const AuthModal = () => {
                       {otpLoading ? 'Sending…' : 'Resend code'}
                     </button>
                 }
+                <button type="button" onClick={() => { setGoogleStep('phone'); setGoogleOtp(''); setGoogleError(''); confirmationRef.current = null; }}
+                  className="block w-full text-xs text-gray-400 hover:text-gray-600 transition-colors mt-2">
+                  ← Change number
+                </button>
               </div>
             </form>
           )}

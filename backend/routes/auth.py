@@ -1,119 +1,91 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
-import random
 import os
+import json
 import logging
-from datetime import datetime, timedelta
 from database import db
 from models import (
     UserCreate, UserLogin, UserUpdate, User, UserInDB, TokenResponse,
-    OTPRecord, GoogleAuthRequest, GoogleCompleteRequest,
+    GoogleAuthRequest, GoogleCompleteRequest,
 )
 from auth import hash_password, verify_password, create_access_token, get_current_user, require_admin
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-OTP_EXPIRY_MINUTES = 5
-MAX_OTP_ATTEMPTS = 3
+# ── Firebase Admin ─────────────────────────────────────────────────────────────
 
+_firebase_app = None
 
-# ── SMS helper ─────────────────────────────────────────────────────────────────
-
-def send_sms_otp(phone: str, otp: str) -> bool:
-    """Send OTP via Twilio. Returns True on success, False if not configured."""
-    sid   = os.environ.get("TWILIO_ACCOUNT_SID")
-    token = os.environ.get("TWILIO_AUTH_TOKEN")
-    from_ = os.environ.get("TWILIO_PHONE_NUMBER")
-    if not all([sid, token, from_]):
-        logger.warning(f"[DEV] OTP for {phone}: {otp}  (Twilio not configured)")
-        return True   # treat as success in dev
+def _get_firebase_app():
+    global _firebase_app
+    if _firebase_app is not None:
+        return _firebase_app
+    service_account_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
+    if not service_account_json:
+        return None
     try:
-        from twilio.rest import Client
-        Client(sid, token).messages.create(
-            body=f"Your Sree Svadista Prasada verification code is: {otp}. Valid for {OTP_EXPIRY_MINUTES} minutes.",
-            from_=from_,
-            to=phone,
-        )
-        return True
+        import firebase_admin
+        from firebase_admin import credentials
+        cred = credentials.Certificate(json.loads(service_account_json))
+        try:
+            _firebase_app = firebase_admin.initialize_app(cred)
+        except ValueError:
+            _firebase_app = firebase_admin.get_app()
+        return _firebase_app
     except Exception as e:
-        logger.error(f"Twilio error: {e}")
-        return False
+        logger.error(f"Firebase init error: {e}")
+        return None
 
 
-# ── OTP endpoints ──────────────────────────────────────────────────────────────
-
-@router.post("/send-otp")
-async def send_otp(phone: str):
-    """Generate and send a 6-digit OTP to the given phone number."""
-    # Rate-limit: max 3 OTPs per phone in the last 5 minutes
-    recent = await db.otp_records.count_documents({
-        "phone": phone,
-        "created_at": {"$gte": datetime.utcnow() - timedelta(minutes=5)},
-    })
-    if recent >= 3:
-        raise HTTPException(status_code=429, detail="Too many OTP requests. Please wait a few minutes.")
-
-    otp = str(random.randint(100000, 999999))
-    record = OTPRecord(
-        phone=phone,
-        otp=otp,
-        expires_at=datetime.utcnow() + timedelta(minutes=OTP_EXPIRY_MINUTES),
-    )
-    await db.otp_records.insert_one(record.model_dump())
-
-    if not send_sms_otp(phone, otp):
-        raise HTTPException(status_code=500, detail="Failed to send OTP. Please try again.")
-
-    return {"message": "OTP sent successfully"}
+def verify_firebase_phone_token(token: str) -> str | None:
+    """
+    Verify a Firebase ID token from phone auth.
+    Returns the verified phone number, or None in dev mode (Firebase not configured).
+    Raises HTTPException if token is invalid.
+    """
+    app = _get_firebase_app()
+    if not app:
+        logger.warning("[DEV] FIREBASE_SERVICE_ACCOUNT_JSON not set — skipping phone token verification.")
+        return None   # Dev mode: trust the phone number the client sent
+    try:
+        from firebase_admin import auth as firebase_auth
+        decoded = firebase_auth.verify_id_token(token, app=app)
+        phone = decoded.get("phone_number")
+        if not phone:
+            raise HTTPException(status_code=400, detail="Token does not contain a verified phone number.")
+        return phone
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Firebase token verification error: {e}")
+        raise HTTPException(status_code=401, detail="Phone verification failed. Please try again.")
 
 
-@router.post("/verify-otp")
-async def verify_otp_endpoint(phone: str, otp: str):
-    """Verify OTP without registering (used for phone-only check)."""
-    record = await db.otp_records.find_one(
-        {"phone": phone, "expires_at": {"$gt": datetime.utcnow()}},
-        sort=[("created_at", -1)],
-    )
-    if not record:
-        raise HTTPException(status_code=400, detail="OTP expired or not found. Please request a new one.")
-    if record["attempts"] >= MAX_OTP_ATTEMPTS:
-        raise HTTPException(status_code=400, detail="Too many wrong attempts. Please request a new OTP.")
-    if record["otp"] != otp:
-        await db.otp_records.update_one({"_id": record["_id"]}, {"$inc": {"attempts": 1}})
-        remaining = MAX_OTP_ATTEMPTS - record["attempts"] - 1
-        raise HTTPException(status_code=400, detail=f"Incorrect OTP. {remaining} attempt(s) remaining.")
-
-    # Delete used OTP
-    await db.otp_records.delete_one({"_id": record["_id"]})
-    return {"verified": True}
-
-
-# ── Register (with OTP verification) ──────────────────────────────────────────
+# ── Register ───────────────────────────────────────────────────────────────────
 
 @router.post("/register", response_model=TokenResponse)
-async def register(payload: UserCreate, otp: str):
+async def register(payload: UserCreate):
     existing = await db.users.find_one({"email": payload.email}, {"_id": 0})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Verify OTP before creating account
     if not payload.phone:
         raise HTTPException(status_code=400, detail="Phone number is required")
+    if not payload.firebase_token:
+        raise HTTPException(status_code=400, detail="Phone verification is required")
 
-    record = await db.otp_records.find_one(
-        {"phone": payload.phone, "expires_at": {"$gt": datetime.utcnow()}},
-        sort=[("created_at", -1)],
-    )
-    if not record:
-        raise HTTPException(status_code=400, detail="OTP expired or not found. Please request a new one.")
-    if record["attempts"] >= MAX_OTP_ATTEMPTS:
-        raise HTTPException(status_code=400, detail="Too many wrong attempts. Request a new OTP.")
-    if record["otp"] != otp:
-        await db.otp_records.update_one({"_id": record["_id"]}, {"$inc": {"attempts": 1}})
-        raise HTTPException(status_code=400, detail="Incorrect OTP.")
+    # Verify Firebase phone token
+    verified_phone = verify_firebase_phone_token(payload.firebase_token)
 
-    await db.otp_records.delete_one({"_id": record["_id"]})
+    # In production, confirm the verified phone matches what the user claimed
+    if verified_phone and verified_phone != payload.phone:
+        raise HTTPException(status_code=400, detail="Phone number does not match the verified number.")
+
+    # Check phone not already taken
+    phone_exists = await db.users.find_one({"phone": payload.phone}, {"_id": 0, "id": 1})
+    if phone_exists:
+        raise HTTPException(status_code=400, detail="Phone number is already registered.")
 
     user = UserInDB(
         name=payload.name,
@@ -149,13 +121,10 @@ async def login(payload: UserLogin):
 
 async def _verify_google_token(credential: str) -> dict:
     """
-    Verify Google credential. Supports both:
-    - Access token: fetch userinfo from Google API
-    - ID token: verify locally (requires GOOGLE_CLIENT_ID)
-    Returns dict with at least: sub, email, name
+    Verify Google credential via userinfo endpoint (access token from implicit flow)
+    or ID token verification as fallback.
     """
     import httpx
-    # Try userinfo endpoint first (works with access token from implicit flow)
     try:
         async with httpx.AsyncClient() as client:
             r = await client.get(
@@ -168,7 +137,6 @@ async def _verify_google_token(credential: str) -> dict:
     except Exception:
         pass
 
-    # Fall back to ID token verification
     client_id = os.environ.get("GOOGLE_CLIENT_ID")
     if not client_id:
         raise HTTPException(status_code=500, detail="Google sign-in is not configured.")
@@ -184,9 +152,9 @@ async def _verify_google_token(credential: str) -> dict:
 @router.post("/google")
 async def google_auth(payload: GoogleAuthRequest):
     """
-    Verify Google ID token.
-    - Existing user → return JWT (log in).
-    - New user → return needs_phone=True so frontend collects phone + OTP.
+    Verify Google credential.
+    - Existing user → return JWT.
+    - New user → return needs_phone=True so frontend collects phone + Firebase OTP.
     """
     google_payload = await _verify_google_token(payload.credential)
 
@@ -194,12 +162,10 @@ async def google_auth(payload: GoogleAuthRequest):
     email     = google_payload["email"]
     name      = google_payload.get("name", email.split("@")[0])
 
-    # Check if user exists (by google_id or email)
     doc = await db.users.find_one(
         {"$or": [{"google_id": google_id}, {"email": email}]}, {"_id": 0}
     )
     if doc:
-        # Link google_id if not already linked
         if not doc.get("google_id"):
             await db.users.update_one({"email": email}, {"$set": {"google_id": google_id}})
             doc["google_id"] = google_id
@@ -207,18 +173,13 @@ async def google_auth(payload: GoogleAuthRequest):
         token = create_access_token(user.id, user.role.value)
         return TokenResponse(access_token=token, user=user)
 
-    # New user — need phone verification before creating account
-    return {
-        "needs_phone": True,
-        "google_name": name,
-        "google_email": email,
-    }
+    return {"needs_phone": True, "google_name": name, "google_email": email}
 
 
 @router.post("/google/complete", response_model=TokenResponse)
 async def google_complete(payload: GoogleCompleteRequest):
     """
-    Called after a new Google user verifies their phone via OTP.
+    Called after a new Google user verifies their phone via Firebase OTP.
     Creates the account and returns a JWT.
     """
     google_payload = await _verify_google_token(payload.credential)
@@ -226,27 +187,22 @@ async def google_complete(payload: GoogleCompleteRequest):
     email     = google_payload["email"]
     name      = google_payload.get("name", email.split("@")[0])
 
-    # Check not already registered
+    # If already registered (race condition), just log them in
     existing = await db.users.find_one({"email": email}, {"_id": 0})
     if existing:
         user = User(**existing)
         token = create_access_token(user.id, user.role.value)
         return TokenResponse(access_token=token, user=user)
 
-    # Verify OTP
-    record = await db.otp_records.find_one(
-        {"phone": payload.phone, "expires_at": {"$gt": datetime.utcnow()}},
-        sort=[("created_at", -1)],
-    )
-    if not record:
-        raise HTTPException(status_code=400, detail="OTP expired or not found. Please request a new one.")
-    if record["attempts"] >= MAX_OTP_ATTEMPTS:
-        raise HTTPException(status_code=400, detail="Too many wrong attempts. Request a new OTP.")
-    if record["otp"] != payload.otp:
-        await db.otp_records.update_one({"_id": record["_id"]}, {"$inc": {"attempts": 1}})
-        raise HTTPException(status_code=400, detail="Incorrect OTP.")
+    # Verify Firebase phone token
+    verified_phone = verify_firebase_phone_token(payload.firebase_token)
+    if verified_phone and verified_phone != payload.phone:
+        raise HTTPException(status_code=400, detail="Phone number does not match the verified number.")
 
-    await db.otp_records.delete_one({"_id": record["_id"]})
+    # Check phone not already taken
+    phone_exists = await db.users.find_one({"phone": payload.phone}, {"_id": 0, "id": 1})
+    if phone_exists:
+        raise HTTPException(status_code=400, detail="Phone number is already registered to another account.")
 
     user = UserInDB(
         name=name,
@@ -261,7 +217,7 @@ async def google_complete(payload: GoogleCompleteRequest):
     return TokenResponse(access_token=token, user=User(**user.model_dump()))
 
 
-# ── Email / Phone availability checks ────────────────────────────────────────
+# ── Email / Phone availability checks ─────────────────────────────────────────
 
 @router.get("/check-email")
 async def check_email(email: str):
@@ -273,6 +229,7 @@ async def check_email(email: str):
         "has_password": bool(doc.get("password_hash")),
         "has_google": bool(doc.get("google_id")),
     }
+
 
 @router.get("/check-phone")
 async def check_phone(phone: str):

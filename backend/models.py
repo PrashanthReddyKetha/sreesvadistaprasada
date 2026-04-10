@@ -58,6 +58,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     phone: Optional[str] = None
+    firebase_token: Optional[str] = None  # Firebase phone verification token
 
 
 class UserLogin(BaseModel):
@@ -93,26 +94,15 @@ class TokenResponse(BaseModel):
     user: User
 
 
-# --- OTP ---
-
-class OTPRecord(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    phone: str
-    otp: str
-    attempts: int = 0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    expires_at: datetime
-
-
 # --- Google Auth ---
 
 class GoogleAuthRequest(BaseModel):
-    credential: str          # Google ID token from frontend
+    credential: str          # Google access token from frontend
 
 class GoogleCompleteRequest(BaseModel):
-    credential: str          # Original Google ID token
+    credential: str          # Original Google access token
     phone: str               # Phone number user entered
-    otp: str                 # OTP they received
+    firebase_token: str      # Firebase phone verification token
 
 
 # --- Menu ---
