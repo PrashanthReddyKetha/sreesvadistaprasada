@@ -482,30 +482,39 @@ async def create_admin_user():
     import uuid
     from datetime import datetime
 
+    # Primary admin from env vars
+    admins_to_seed = []
+
     email = os.environ.get("ADMIN_EMAIL")
     password = os.environ.get("ADMIN_PASSWORD")
-    if not email or not password:
-        return
+    if email and password:
+        admins_to_seed.append((email, password, "Admin"))
 
-    existing = await db.users.find_one({"email": email})
-    if existing:
-        # Always ensure role=admin and password is up to date
-        await db.users.update_one(
-            {"email": email},
-            {"$set": {"role": "admin", "password_hash": hash_password(password)}},
-        )
-        print(f"Admin user updated: {email}")
-        return
+    # Secondary admin from env vars (optional)
+    email2 = os.environ.get("ADMIN_EMAIL_2")
+    password2 = os.environ.get("ADMIN_PASSWORD_2")
+    if email2 and password2:
+        admins_to_seed.append((email2, password2, "Admin"))
 
-    admin = {
-        "id": str(uuid.uuid4()),
-        "name": "Admin",
-        "email": email,
-        "phone": None,
-        "address": None,
-        "role": "admin",
-        "password_hash": hash_password(password),
-        "created_at": datetime.utcnow().isoformat(),
-    }
-    await db.users.insert_one(admin)
-    print(f"Admin user created: {email}")
+    for adm_email, adm_password, adm_name in admins_to_seed:
+        existing = await db.users.find_one({"email": adm_email})
+        if existing:
+            await db.users.update_one(
+                {"email": adm_email},
+                {"$set": {"role": "admin", "password_hash": hash_password(adm_password)}},
+            )
+            print(f"Admin user updated: {adm_email}")
+            continue
+
+        admin = {
+            "id": str(uuid.uuid4()),
+            "name": adm_name,
+            "email": adm_email,
+            "phone": None,
+            "address": None,
+            "role": "admin",
+            "password_hash": hash_password(adm_password),
+            "created_at": datetime.utcnow().isoformat(),
+        }
+        await db.users.insert_one(admin)
+        print(f"Admin user created: {adm_email}")
