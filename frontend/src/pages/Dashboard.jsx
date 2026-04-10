@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -89,13 +89,22 @@ export default function Dashboard() {
             </h1>
             <p className="text-sm mt-0.5" style={{ color: '#9C7B6B' }}>Here's everything about your account</p>
           </div>
-          <button
-            onClick={() => { logout(); navigate('/'); }}
-            className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg transition-colors hover:bg-[#800020]/10"
-            style={{ color: '#800020' }}
-          >
-            <LogOut size={15} /> Sign Out
-          </button>
+          <div className="flex items-center gap-2">
+            {user.role === 'admin' && (
+              <Link to="/admin"
+                className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg font-semibold transition-colors"
+                style={{ backgroundColor: '#800020', color: '#FDFBF7' }}>
+                <LayoutDashboard size={15} /> Admin Panel
+              </Link>
+            )}
+            <button
+              onClick={() => { logout(); navigate('/'); }}
+              className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg transition-colors hover:bg-[#800020]/10"
+              style={{ color: '#800020' }}
+            >
+              <LogOut size={15} /> Sign Out
+            </button>
+          </div>
         </div>
 
         {/* ── Tabs ── */}

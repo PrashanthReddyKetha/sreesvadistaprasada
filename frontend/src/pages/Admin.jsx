@@ -464,6 +464,8 @@ const NewsletterTab = ({ newsletter }) => (
 const CATEGORIES = ['nonVeg','veg','prasada','breakfast','pickles','podis'];
 const CAT_LABELS  = { nonVeg:'Non-Veg', veg:'Veg', prasada:'Prasada', breakfast:'Breakfast', pickles:'Pickles', podis:'Podis' };
 
+const BLANK_ITEM = { name:'', description:'', price:'', category:'nonVeg', spice_level:0, is_veg:false, available:true, featured:false, image:'', tag:'' };
+
 const MenuTab = () => {
   const [items, setItems]         = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -472,6 +474,9 @@ const MenuTab = () => {
   const [saving, setSaving]       = useState(false);
   const [filter, setFilter]       = useState('all');
   const [msg, setMsg]             = useState('');
+  const [adding, setAdding]       = useState(false);
+  const [addForm, setAddForm]     = useState(BLANK_ITEM);
+  const [addSaving, setAddSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -519,24 +524,112 @@ const MenuTab = () => {
     await load();
   };
 
+  const addItem = async () => {
+    if (!addForm.name || !addForm.description || !addForm.price) { setMsg('Name, description and price are required.'); return; }
+    setAddSaving(true);
+    try {
+      await api.post('/menu', { ...addForm, price: parseFloat(addForm.price), spice_level: parseInt(addForm.spice_level) });
+      setMsg('Item added!');
+      setAdding(false);
+      setAddForm(BLANK_ITEM);
+      await load();
+      setTimeout(() => setMsg(''), 2000);
+    } catch (e) { setMsg(e.response?.data?.detail || 'Failed to add item.'); }
+    finally { setAddSaving(false); }
+  };
+
   const filtered = filter === 'all' ? items : items.filter(i => i.category === filter);
 
   if (loading) return <div className="flex justify-center py-16"><RefreshCw size={28} className="animate-spin" style={{ color:'#800020' }} /></div>;
 
   return (
     <div className="space-y-4">
-      {msg && <div className="p-3 rounded-lg text-sm font-semibold" style={{ backgroundColor: msg==='Saved!'?'#DCFCE7':'#FEE2E2', color: msg==='Saved!'?'#166534':'#991B1B' }}>{msg}</div>}
+      {msg && <div className="p-3 rounded-lg text-sm font-semibold" style={{ backgroundColor: msg.includes('!')?'#DCFCE7':'#FEE2E2', color: msg.includes('!')?'#166534':'#991B1B' }}>{msg}</div>}
 
-      {/* Category filter */}
-      <div className="flex gap-2 flex-wrap">
-        {['all',...CATEGORIES].map(c=>(
-          <button key={c} onClick={()=>setFilter(c)}
-            className="px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-all"
-            style={{ backgroundColor:filter===c?'#800020':'white', color:filter===c?'white':'#5C4B47', border:'1px solid rgba(128,0,32,0.2)' }}>
-            {c==='all'?`All (${items.length})`:CAT_LABELS[c]+` (${items.filter(i=>i.category===c).length})`}
-          </button>
-        ))}
+      {/* Top bar */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex gap-2 flex-wrap">
+          {['all',...CATEGORIES].map(c=>(
+            <button key={c} onClick={()=>setFilter(c)}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-all"
+              style={{ backgroundColor:filter===c?'#800020':'white', color:filter===c?'white':'#5C4B47', border:'1px solid rgba(128,0,32,0.2)' }}>
+              {c==='all'?`All (${items.length})`:CAT_LABELS[c]+` (${items.filter(i=>i.category===c).length})`}
+            </button>
+          ))}
+        </div>
+        <button onClick={()=>{ setAdding(true); setEditingId(null); }}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+          style={{ backgroundColor:'#800020' }}>
+          <Plus size={15} /> Add New Item
+        </button>
       </div>
+
+      {/* Add New Item form */}
+      {adding && (
+        <div className="bg-white rounded-xl p-5 space-y-4" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.08)', border:'2px solid rgba(128,0,32,0.2)' }}>
+          <div className="flex items-center justify-between">
+            <p className="font-bold" style={{ color:'#800020', fontFamily:"'Playfair Display',serif" }}>Add New Menu Item</p>
+            <button onClick={()=>{ setAdding(false); setMsg(''); }}><X size={18} className="text-gray-400 hover:text-gray-600" /></button>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Name *</label>
+              <input value={addForm.name} onChange={e=>setAddForm(p=>({...p,name:e.target.value}))}
+                className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} placeholder="e.g. Hyderabadi Biryani" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Price (£) *</label>
+              <input type="number" step="0.01" value={addForm.price} onChange={e=>setAddForm(p=>({...p,price:e.target.value}))}
+                className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} placeholder="12.99" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Description *</label>
+              <textarea rows={3} value={addForm.description} onChange={e=>setAddForm(p=>({...p,description:e.target.value}))}
+                className="w-full border rounded-lg px-3 py-2 text-sm resize-none" style={{ borderColor:'#d1d5db' }} placeholder="Describe the dish..." />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Category</label>
+              <select value={addForm.category} onChange={e=>setAddForm(p=>({...p,category:e.target.value}))}
+                className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }}>
+                {CATEGORIES.map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Spice Level (0–5)</label>
+              <input type="number" min={0} max={5} value={addForm.spice_level} onChange={e=>setAddForm(p=>({...p,spice_level:e.target.value}))}
+                className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Image URL</label>
+              <input value={addForm.image} onChange={e=>setAddForm(p=>({...p,image:e.target.value}))}
+                className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} placeholder="https://..." />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Tag</label>
+              <input value={addForm.tag} onChange={e=>setAddForm(p=>({...p,tag:e.target.value}))}
+                className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} placeholder="e.g. Best Seller, New" />
+            </div>
+          </div>
+          <div className="flex gap-6 flex-wrap">
+            {[['is_veg','Vegetarian'],['available','Available on site'],['featured','Featured on homepage']].map(([key,label])=>(
+              <label key={key} className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={addForm[key]} onChange={e=>setAddForm(p=>({...p,[key]:e.target.checked}))} className="w-4 h-4 accent-[#800020]" />
+                <span className="text-sm text-gray-700">{label}</span>
+              </label>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button onClick={addItem} disabled={addSaving}
+              className="flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
+              style={{ backgroundColor:'#800020' }}>
+              <Plus size={14} /> {addSaving?'Adding…':'Add to Menu'}
+            </button>
+            <button onClick={()=>{ setAdding(false); setMsg(''); }} className="px-4 py-2 rounded-lg text-sm border font-semibold" style={{ borderColor:'#d1d5db', color:'#5C4B47' }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4">
         {filtered.map(item=>(
