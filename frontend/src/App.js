@@ -1,6 +1,9 @@
 import React, { useEffect } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -33,6 +36,7 @@ import ItemDetail from "./pages/ItemDetail";
 
 function App() {
   return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
     <AuthProvider>
     <CartProvider>
       <div className="App">
@@ -65,6 +69,7 @@ function App() {
       </div>
     </CartProvider>
     </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 
