@@ -256,6 +256,15 @@ const AuthModal = () => {
     const t = setInterval(() => setCountdown(c => { if (c <= 1) { clearInterval(t); return 0; } return c - 1; }), 1000);
   };
 
+  /* ── UK phone normaliser → E.164 ────────────────────────────────────── */
+  const toE164UK = (raw) => {
+    const digits = raw.replace(/[\s\-().]/g, '');
+    if (digits.startsWith('+44')) return digits;
+    if (digits.startsWith('44'))  return '+' + digits;
+    if (digits.startsWith('0'))   return '+44' + digits.slice(1);
+    return '+44' + digits; // assume UK if no prefix
+  };
+
   /* ── Field validators ────────────────────────────────────────────────── */
   const checkEmail = async (val) => {
     const v = val.trim().toLowerCase();
@@ -321,7 +330,7 @@ const AuthModal = () => {
     clearRecaptcha();
     try {
       const verifier = getRecaptcha();
-      const result = await signInWithPhoneNumber(auth, phone.trim(), verifier);
+      const result = await signInWithPhoneNumber(auth, toE164UK(phone.trim()), verifier);
       confirmationRef.current = result;
       setStep(2);
       startCountdown();
@@ -347,7 +356,7 @@ const AuthModal = () => {
       const res = await api.post('/auth/register', {
         name: name.trim(),
         email: email.trim().toLowerCase(),
-        phone: phone.trim(),
+        phone: toE164UK(phone.trim()),
         password: pw,
         firebase_token: firebaseToken,
       });
@@ -381,7 +390,7 @@ const AuthModal = () => {
     clearRecaptcha();
     try {
       const verifier = getRecaptcha();
-      const result = await signInWithPhoneNumber(auth, googlePhone.trim(), verifier);
+      const result = await signInWithPhoneNumber(auth, toE164UK(googlePhone.trim()), verifier);
       confirmationRef.current = result;
       setGoogleStep('otp');
       startCountdown();
@@ -406,7 +415,7 @@ const AuthModal = () => {
       const firebaseToken = await result.user.getIdToken();
       const res = await api.post('/auth/google/complete', {
         credential: googleCred,
-        phone: googlePhone.trim(),
+        phone: toE164UK(googlePhone.trim()),
         firebase_token: firebaseToken,
       });
       login(res.data.user, res.data.access_token);
@@ -577,13 +586,13 @@ const AuthModal = () => {
 
               <div>
                 <Field label="Mobile Number" icon={Phone} type="tel" name="phone" autoComplete="tel"
-                  placeholder="+44 7700 900000"
+                  placeholder="07700 900000"
                   value={phone}
                   onChange={v => { setPhone(v); setPhoneStatus(null); setPhoneError(''); }}
                   onBlur={() => checkPhone(phone)}
                   error={phoneError || (phoneStatus === 'taken' ? 'This number is already linked to an account.' : '')}
                   success={phoneStatus === 'free' ? 'Number is available' : ''} required
-                  hint="We'll send a one-time verification code via SMS"
+                  hint="UK number — start with 07 or +44"
                 />
               </div>
 
@@ -705,9 +714,9 @@ const AuthModal = () => {
               )}
 
               <Field label="Mobile Number" icon={Phone} type="tel" name="phone" autoComplete="tel"
-                placeholder="+44 7700 900000"
+                placeholder="07700 900000"
                 value={googlePhone} onChange={setGooglePhone} required
-                hint="We'll send a one-time code to verify your number"
+                hint="UK number — start with 07 or +44"
               />
 
               <button onClick={handleGoogleSendOtp} disabled={otpLoading || !googlePhone.trim()}
