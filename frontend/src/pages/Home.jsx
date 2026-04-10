@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Truck, Calendar, MapPin, Search } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '../mockData';
 import HeroSlider from '../components/HeroSlider';
@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext';
 
 const Home = () => {
   const trendingRef = useRef(null);
+  const navigate = useNavigate();
   const [postcode, setPostcode] = useState('');
   const [postcodeResult, setPostcodeResult] = useState(null);
   const [postcodeLoading, setPostcodeLoading] = useState(false);
@@ -173,15 +174,16 @@ const Home = () => {
               const isVeg = isLive ? dish.is_veg : dish.category !== 'Non-Veg';
               const spice = isLive ? (dish.spice_level || 0) : (dish.spiceLevel || 0);
               const price = isLive ? `£${dish.price?.toFixed(2)}` : dish.price;
+              const itemPath = isLive ? `/item/${dish.id}` : null;
               return (
               <div
                 key={dish.id}
                 className="flex-shrink-0 w-72 md:w-80 rounded-lg overflow-hidden group card-hover bg-white"
-                style={{ boxShadow: '0 4px 20px rgba(128, 0, 32, 0.06)' }}
+                style={{ boxShadow: '0 4px 20px rgba(128, 0, 32, 0.06)', cursor: itemPath ? 'pointer' : 'default' }}
+                onClick={() => itemPath && navigate(itemPath)}
                 data-testid={`trending-dish-${dish.id}`}
               >
-                {/* Image — clicking goes to item page (only for live API items) */}
-                <Link to={isLive ? `/item/${dish.id}` : '#'} className="block relative h-48 overflow-hidden">
+                <div className="block relative h-48 overflow-hidden">
                   <img
                     src={dish.image}
                     alt={dish.name}
@@ -207,7 +209,7 @@ const Home = () => {
                       </div>
                     )}
                   </div>
-                </Link>
+                </div>
                 <div className="p-5">
                   <div className="flex items-center gap-1 mb-2">
                     {Array(spice).fill(0).map((_, i) => (
@@ -215,11 +217,9 @@ const Home = () => {
                     ))}
                     {spice === 0 && <span className="text-xs text-gray-400">Mild</span>}
                   </div>
-                  <Link to={isLive ? `/item/${dish.id}` : '#'}>
-                    <h3 className="text-lg font-bold mb-1 hover:underline" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>
-                      {dish.name}
-                    </h3>
-                  </Link>
+                  <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>
+                    {dish.name}
+                  </h3>
                   <p className="text-xs text-gray-500 leading-relaxed mb-2 line-clamp-2">
                     {dish.description}
                   </p>
@@ -235,7 +235,7 @@ const Home = () => {
                   <div className="flex justify-between items-center">
                     <p className="text-xl font-bold" style={{ color: '#800020' }}>{price}</p>
                     <button
-                      onClick={() => addToCart(dish)}
+                      onClick={(e) => { e.stopPropagation(); addToCart(dish); }}
                       className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md"
                       style={{ backgroundColor: '#800020' }}
                       data-testid={`add-to-cart-${dish.id}`}

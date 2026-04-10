@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, ShoppingCart, ArrowRight, Search } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import MenuLoader from '../components/MenuLoader';
 import api from '../api';
 
 const categories = [
@@ -10,8 +11,10 @@ const categories = [
   { id: 'veg', name: 'Vegetarian' },
   { id: 'prasada', name: 'Prasada' },
   { id: 'breakfast', name: 'Breakfast' },
+  { id: 'streetFood', name: 'Street Food' },
+  { id: 'drinks', name: 'Drinks' },
   { id: 'pickles', name: 'Pickles' },
-  { id: 'podis', name: 'Podis' }
+  { id: 'podis', name: 'Podis' },
 ];
 
 const Menu = () => {
@@ -105,7 +108,7 @@ const Menu = () => {
           </div>
 
           {loading ? (
-            <div className="text-center py-20 text-gray-400">Loading menu...</div>
+            <MenuLoader color="#800020" />
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filtered.map((dish) => (
@@ -128,7 +131,9 @@ const Menu = () => {
                         ))}
                       </div>
                     )}
-                    <h3 className="text-sm font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
+                    <Link to={`/item/${dish.id}`}>
+                      <h3 className="text-sm font-bold mb-1 hover:underline" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
+                    </Link>
                     <p className="text-xs text-gray-500 line-clamp-1 mb-2">{dish.description}</p>
                     <div className="flex justify-between items-center">
                       <span className="text-base font-bold" style={{ color: '#800020' }}>£{dish.price.toFixed(2)}</span>
