@@ -1,35 +1,261 @@
-import React, { useState } from 'react';
-import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, ChevronDown, ChevronUp,
+  User, Mail, Phone, MapPin, CheckCircle, Truck, Tag, Zap, Edit2, FileText
+} from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
+const FREE_DELIVERY_THRESHOLD = 30;
+const DELIVERY_FEE = 3.99;
+
+/* ── helpers ─────────────────────────────────────────────────────────────── */
+const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
+const fmt   = (n)   => `£${n.toFixed(2)}`;
+
+/* ── Free delivery progress bar ──────────────────────────────────────────── */
+function DeliveryBar({ total }) {
+  const remaining = FREE_DELIVERY_THRESHOLD - total;
+  const pct = Math.min((total / FREE_DELIVERY_THRESHOLD) * 100, 100);
+  const isFree = total >= FREE_DELIVERY_THRESHOLD;
+
+  return (
+    <div className="px-6 py-3 border-b" style={{ backgroundColor: isFree ? '#F0FFF4' : '#FFFBEB', borderColor: 'rgba(128,0,32,0.08)' }}>
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-1.5">
+          <Truck size={13} style={{ color: isFree ? '#166534' : '#B8860B' }} />
+          {isFree ? (
+            <span className="text-xs font-semibold" style={{ color: '#166534' }}>You've unlocked free delivery!</span>
+          ) : (
+            <span className="text-xs font-medium text-gray-600">
+              Add <strong style={{ color: '#800020' }}>{fmt(remaining)}</strong> more for free delivery
+            </span>
+          )}
+        </div>
+        {!isFree && <span className="text-[10px] text-gray-400">{fmt(DELIVERY_FEE)} fee</span>}
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden bg-gray-200">
+        <div className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, backgroundColor: isFree ? '#166534' : '#B8860B' }} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Upsell suggestions ───────────────────────────────────────────────────── */
+function UpsellRow({ cartItems, onAdd }) {
+  const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    api.get('/menu?available=true')
+      .then(r => {
+        const cartIds = new Set(cartItems.map(i => i.id));
+        // Prefer pickles/podis as add-ons, then anything not in cart
+        const candidates = r.data
+          .filter(i => !cartIds.has(i.id))
+          .sort((a, b) => {
+            const priority = ['pickles', 'podis'];
+            const ap = priority.indexOf(a.category);
+            const bp = priority.indexOf(b.category);
+            if (ap !== bp) return (bp === -1 ? -1 : 1) - (ap === -1 ? -1 : 1);
+            return a.price - b.price;
+          })
+          .slice(0, 4);
+        setSuggestions(candidates);
+      })
+      .catch(() => {});
+  }, [cartItems]);
+
+  if (suggestions.length === 0) return null;
+
+  return (
+    <div className="px-6 py-4 border-b" style={{ borderColor: 'rgba(128,0,32,0.08)', backgroundColor: '#FDFBF7' }}>
+      <div className="flex items-center gap-1.5 mb-3">
+        <Zap size={13} style={{ color: '#B8860B' }} />
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#B8860B' }}>Frequently added together</p>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+        {suggestions.map(item => (
+          <div key={item.id} className="flex-shrink-0 w-28 rounded-xl overflow-hidden border group"
+            style={{ borderColor: 'rgba(128,0,32,0.12)', backgroundColor: 'white' }}>
+            {item.image && (
+              <div className="h-16 overflow-hidden">
+                <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              </div>
+            )}
+            <div className="p-2">
+              <p className="text-[10px] font-semibold leading-tight mb-1 line-clamp-2" style={{ color: '#2D2422' }}>{item.name}</p>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold" style={{ color: '#800020' }}>{fmt(item.price)}</span>
+                <button onClick={() => onAdd(item)}
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
+                  style={{ backgroundColor: '#800020' }}>
+                  <Plus size={10} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Order summary (in checkout) ─────────────────────────────────────────── */
+function OrderSummary({ cartItems, cartTotal, collapsed, onToggle }) {
+  const deliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  const grandTotal = cartTotal + deliveryFee;
+
+  return (
+    <div className="border rounded-xl overflow-hidden" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }}>
+      <button onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-3"
+        style={{ borderBottom: collapsed ? 'none' : '1px solid rgba(128,0,32,0.1)' }}>
+        <div className="flex items-center gap-2">
+          <ShoppingBag size={14} style={{ color: '#800020' }} />
+          <span className="text-sm font-semibold" style={{ color: '#800020' }}>
+            {cartItems.length} item{cartItems.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold" style={{ color: '#800020' }}>{fmt(grandTotal)}</span>
+          {collapsed ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronUp size={14} className="text-gray-400" />}
+        </div>
+      </button>
+
+      {!collapsed && (
+        <div className="px-4 py-3 space-y-2.5">
+          {cartItems.map(item => (
+            <div key={item.id} className="flex items-center gap-3">
+              {item.image && <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold truncate" style={{ color: '#2D2422' }}>{item.name}</p>
+                <p className="text-[10px] text-gray-400">Qty: {item.quantity}</p>
+              </div>
+              <span className="text-xs font-bold flex-shrink-0" style={{ color: '#800020' }}>
+                {fmt(price(item.price) * item.quantity)}
+              </span>
+            </div>
+          ))}
+          <div className="pt-2 mt-2 space-y-1.5 border-t" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>Subtotal</span><span>{fmt(cartTotal)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="flex items-center gap-1 text-gray-500">
+                <Truck size={11} /> Delivery
+              </span>
+              {deliveryFee === 0
+                ? <span className="font-semibold" style={{ color: '#166534' }}>Free</span>
+                : <span className="text-gray-600">{fmt(deliveryFee)}</span>
+              }
+            </div>
+            <div className="flex justify-between text-sm font-bold pt-1 border-t" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
+              <span style={{ color: '#2D2422' }}>Total</span>
+              <span style={{ color: '#800020' }}>{fmt(grandTotal)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Pre-filled field ─────────────────────────────────────────────────────── */
+function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange, locked, hint }) {
+  return (
+    <div>
+      <label className="text-xs font-semibold block mb-1" style={{ color: '#5C4B47' }}>{label}</label>
+      <div className="relative">
+        {Icon && <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />}
+        <input
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="w-full pl-9 pr-4 py-2.5 rounded-lg border-2 text-sm focus:outline-none transition-colors"
+          style={{
+            borderColor: locked ? 'rgba(22,101,52,0.3)' : value ? 'rgba(128,0,32,0.3)' : '#E5E7EB',
+            backgroundColor: locked ? 'rgba(22,101,52,0.04)' : 'white',
+            color: '#2D2422',
+          }}
+        />
+        {locked && <CheckCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#166534' }} />}
+      </div>
+      {hint && <p className="text-[10px] mt-0.5" style={{ color: '#9C7B6B' }}>{hint}</p>}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
 const CartDrawer = () => {
-  const { cartItems, cartCount, cartTotal, cartOpen, setCartOpen, updateQuantity, removeFromCart, clearCart } = useCart();
-  const [step, setStep] = useState('cart'); // 'cart' | 'checkout' | 'success'
-  const [form, setForm] = useState({ name: '', email: '', phone: '', line1: '', city: '', postcode: '' });
+  const { cartItems, cartCount, cartTotal, cartOpen, setCartOpen, updateQuantity, removeFromCart, clearCart, addToCart } = useCart();
+  const { user, setAuthOpen } = useAuth();
+
+  const [step, setStep]           = useState('cart');
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]         = useState('');
+  const [orderId, setOrderId]     = useState('');
+
+  const [form, setForm] = useState({
+    name: '', email: '', phone: '',
+    line1: '', line2: '', city: '', postcode: '',
+    notes: '',
+  });
+
+  // Pre-fill from user account whenever user or step changes
+  useEffect(() => {
+    if (user) {
+      setForm(f => ({
+        ...f,
+        name:  f.name  || user.name  || '',
+        email: f.email || user.email || '',
+        phone: f.phone || user.phone || '',
+        line1: f.line1 || user.address?.line1 || '',
+        line2: f.line2 || user.address?.line2 || '',
+        city:  f.city  || user.address?.city  || '',
+        postcode: f.postcode || user.address?.postcode || '',
+      }));
+    }
+  }, [user, step]);
+
+  const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
+
+  const deliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  const grandTotal  = cartTotal + deliveryFee;
 
   const handleOrder = async () => {
     setError('');
-    if (!form.name || !form.email || !form.phone || !form.line1 || !form.city || !form.postcode) {
+    const required = ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
+    if (required.some(k => !form[k].trim())) {
       setError('Please fill in all required fields.');
       return;
     }
     setSubmitting(true);
     try {
-      await api.post('/orders', {
-        customer_name: form.name,
-        customer_email: form.email,
-        customer_phone: form.phone,
+      const res = await api.post('/orders', {
+        customer_name:    form.name,
+        customer_email:   form.email,
+        customer_phone:   form.phone,
         items: cartItems.map(i => ({
           menu_item_id: i.id,
           name: i.name,
-          price: parseFloat(String(i.price).replace('£', '')),
+          price: price(i.price),
           quantity: i.quantity,
         })),
-        delivery_address: { line1: form.line1, city: form.city, postcode: form.postcode },
+        delivery_address: {
+          line1: form.line1,
+          line2: form.line2 || undefined,
+          city:  form.city,
+          postcode: form.postcode,
+        },
+        special_instructions: form.notes || undefined,
+        delivery_fee: deliveryFee,
+        total: grandTotal,
       });
+      setOrderId(res.data?.id?.slice(-6).toUpperCase() || '');
       setStep('success');
       clearCart();
     } catch {
@@ -48,81 +274,141 @@ const CartDrawer = () => {
 
   return (
     <>
-      {/* Backdrop */}
       <div className="fixed inset-0 z-[200] bg-black/50" onClick={handleClose} />
-
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 bottom-0 z-[201] w-full max-w-md flex flex-col bg-white shadow-2xl" style={{ fontFamily: 'inherit' }}>
+      <div className="fixed right-0 top-0 bottom-0 z-[201] w-full max-w-md flex flex-col bg-white shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'rgba(128,0,32,0.12)' }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
+          style={{ borderColor: 'rgba(128,0,32,0.12)', background: step === 'success' ? 'white' : 'linear-gradient(135deg, #800020 0%, #5C0018 100%)' }}>
           <div className="flex items-center gap-2">
-            <ShoppingBag size={20} style={{ color: '#800020' }} />
-            <h2 className="text-lg font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-              {step === 'success' ? 'Order Placed!' : step === 'checkout' ? 'Checkout' : `Your Cart (${cartCount})`}
+            <ShoppingBag size={18} className={step === 'success' ? '' : 'text-white'} style={step === 'success' ? { color: '#800020' } : {}} />
+            <h2 className="text-base font-bold" style={{ fontFamily: "'Playfair Display', serif", color: step === 'success' ? '#800020' : 'white' }}>
+              {step === 'success' ? 'Order Confirmed!' : step === 'checkout' ? 'Checkout' : `Your Basket (${cartCount})`}
             </h2>
           </div>
-          <button onClick={handleClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors" style={{ color: '#5C4B47' }}>
+          <button onClick={handleClose} className="p-1.5 rounded-full transition-colors" style={{ color: step === 'success' ? '#5C4B47' : 'rgba(255,255,255,0.8)' }}>
             <X size={20} />
           </button>
         </div>
 
-        {/* Success */}
+        {/* ── SUCCESS ─────────────────────────────────────────────────── */}
         {step === 'success' && (
-          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: '#F0FFF4' }}>
-              <ShoppingBag size={36} style={{ color: '#4A7C59' }} />
+          <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-5" style={{ background: 'linear-gradient(135deg, #800020, #5C0018)' }}>
+              <CheckCircle size={38} className="text-white" />
             </div>
-            <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#4A7C59' }}>Thank You!</h3>
-            <p className="text-gray-600 mb-6 leading-relaxed">Your order has been received. We'll confirm it via email shortly.</p>
-            <button onClick={handleClose} className="px-8 py-3 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>
+            <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+              Thank You{user ? `, ${user.name.split(' ')[0]}` : ''}!
+            </h3>
+            {orderId && (
+              <div className="mb-3 px-4 py-2 rounded-xl text-sm font-semibold" style={{ backgroundColor: '#FEF9C3', color: '#854D0E' }}>
+                Order #{orderId}
+              </div>
+            )}
+            <p className="text-gray-600 mb-2 leading-relaxed text-sm">
+              Your order has been received and is being reviewed. We'll send a confirmation to <strong>{form.email}</strong>.
+            </p>
+            <p className="text-xs text-gray-400 mb-8">Estimated preparation time: 30–45 minutes</p>
+            <button onClick={handleClose}
+              className="px-8 py-3 text-sm font-semibold text-white rounded-xl"
+              style={{ backgroundColor: '#800020' }}>
               Continue Shopping
             </button>
           </div>
         )}
 
-        {/* Cart Items */}
+        {/* ── CART ────────────────────────────────────────────────────── */}
         {step === 'cart' && (
           <>
             {cartItems.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center px-6 text-center text-gray-400">
-                <ShoppingBag size={48} className="mb-3 opacity-30" />
-                <p className="text-sm">Your cart is empty.</p>
-                <button onClick={handleClose} className="mt-4 text-sm font-semibold" style={{ color: '#800020' }}>Browse Menu →</button>
+                <ShoppingBag size={48} className="mb-3 opacity-20" />
+                <p className="text-sm font-medium text-gray-500 mb-1">Your basket is empty</p>
+                <p className="text-xs text-gray-400 mb-4">Add some delicious South Indian food!</p>
+                <button onClick={handleClose} className="text-sm font-semibold" style={{ color: '#800020' }}>
+                  Browse Menu →
+                </button>
               </div>
             ) : (
               <>
-                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-                  {cartItems.map(item => (
-                    <div key={item.id} className="flex items-center gap-4 pb-4 border-b last:border-0" style={{ borderColor: '#f0ebe6' }}>
-                      {item.image && (
-                        <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold truncate" style={{ color: '#2D2422' }}>{item.name}</p>
-                        <p className="text-sm font-semibold mt-0.5" style={{ color: '#800020' }}>{item.price}</p>
+                {/* Delivery bar */}
+                <DeliveryBar total={cartTotal} />
+
+                {/* Items list */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="px-6 py-4 space-y-3">
+                    {cartItems.map(item => (
+                      <div key={item.id} className="flex items-center gap-3 pb-3 border-b last:border-0" style={{ borderColor: '#f0ebe6' }}>
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
+                        ) : (
+                          <div className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(128,0,32,0.08)' }}>
+                            <ShoppingBag size={20} style={{ color: '#800020', opacity: 0.4 }} />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold leading-tight" style={{ color: '#2D2422' }}>{item.name}</p>
+                          <p className="text-sm font-bold mt-0.5" style={{ color: '#800020' }}>
+                            {fmt(price(item.price) * item.quantity)}
+                            {item.quantity > 1 && <span className="text-xs font-normal text-gray-400 ml-1">({fmt(price(item.price))} each)</span>}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <button onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="w-7 h-7 rounded-full border flex items-center justify-center transition-colors hover:bg-[#800020] hover:text-white hover:border-[#800020]"
+                            style={{ borderColor: '#ddd' }}>
+                            <Minus size={11} />
+                          </button>
+                          <span className="w-5 text-center text-sm font-bold" style={{ color: '#2D2422' }}>{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="w-7 h-7 rounded-full border flex items-center justify-center transition-colors hover:bg-[#800020] hover:text-white hover:border-[#800020]"
+                            style={{ borderColor: '#ddd' }}>
+                            <Plus size={11} />
+                          </button>
+                          <button onClick={() => removeFromCart(item.id)} className="ml-1 text-gray-300 hover:text-red-400 transition-colors">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors" style={{ borderColor: '#ddd' }}>
-                          <Minus size={12} />
-                        </button>
-                        <span className="w-6 text-center text-sm font-bold">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-7 h-7 rounded-full border flex items-center justify-center hover:bg-gray-50 transition-colors" style={{ borderColor: '#ddd' }}>
-                          <Plus size={12} />
-                        </button>
-                        <button onClick={() => removeFromCart(item.id)} className="ml-1 text-gray-300 hover:text-red-400 transition-colors">
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="px-6 py-4 border-t" style={{ borderColor: 'rgba(128,0,32,0.12)', backgroundColor: '#FDFBF7' }}>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-sm text-gray-500">Subtotal</span>
-                    <span className="text-lg font-bold" style={{ color: '#800020' }}>£{cartTotal.toFixed(2)}</span>
+                    ))}
                   </div>
-                  <button onClick={() => setStep('checkout')} className="w-full py-3.5 text-sm font-semibold text-white rounded-sm flex items-center justify-center gap-2 hover:shadow-md transition-all" style={{ backgroundColor: '#800020' }}>
+
+                  {/* Upsell */}
+                  <UpsellRow cartItems={cartItems} onAdd={addToCart} />
+                </div>
+
+                {/* Footer */}
+                <div className="flex-shrink-0 px-6 py-4 border-t space-y-3" style={{ borderColor: 'rgba(128,0,32,0.12)', backgroundColor: '#FDFBF7' }}>
+                  {/* Price breakdown */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Subtotal</span><span>{fmt(cartTotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="flex items-center gap-1 text-gray-500"><Truck size={11} /> Delivery</span>
+                      {deliveryFee === 0
+                        ? <span className="font-semibold text-xs" style={{ color: '#166534' }}>Free</span>
+                        : <span className="text-gray-500">{fmt(deliveryFee)}</span>
+                      }
+                    </div>
+                    <div className="flex justify-between font-bold pt-1 border-t" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
+                      <span style={{ color: '#2D2422' }}>Total</span>
+                      <span style={{ color: '#800020' }}>{fmt(grandTotal)}</span>
+                    </div>
+                  </div>
+
+                  {/* Guest nudge */}
+                  {!user && (
+                    <button onClick={() => { handleClose(); setAuthOpen(true); }}
+                      className="w-full py-2 text-xs font-semibold rounded-lg border flex items-center justify-center gap-1.5 transition-colors hover:bg-[#800020]/5"
+                      style={{ borderColor: 'rgba(128,0,32,0.3)', color: '#800020' }}>
+                      <User size={12} /> Sign in to auto-fill your details
+                    </button>
+                  )}
+
+                  <button onClick={() => setStep('checkout')}
+                    className="w-full py-3.5 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+                    style={{ backgroundColor: '#800020' }}>
                     Proceed to Checkout <ArrowRight size={16} />
                   </button>
                 </div>
@@ -131,42 +417,102 @@ const CartDrawer = () => {
           </>
         )}
 
-        {/* Checkout Form */}
+        {/* ── CHECKOUT ─────────────────────────────────────────────────── */}
         {step === 'checkout' && (
           <>
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-              <p className="text-xs text-gray-500 mb-2">Order total: <strong style={{ color: '#800020' }}>£{cartTotal.toFixed(2)}</strong> · {cartCount} item{cartCount !== 1 ? 's' : ''}</p>
-              {[
-                { label: 'Full Name *', key: 'name', type: 'text', placeholder: 'Your name' },
-                { label: 'Email *', key: 'email', type: 'email', placeholder: 'you@example.com' },
-                { label: 'Phone *', key: 'phone', type: 'tel', placeholder: '+44 xxx xxxx xxxx' },
-                { label: 'Address Line 1 *', key: 'line1', type: 'text', placeholder: '123 High Street' },
-                { label: 'City *', key: 'city', type: 'text', placeholder: 'Milton Keynes' },
-                { label: 'Postcode *', key: 'postcode', type: 'text', placeholder: 'MK9 1AB' },
-              ].map(({ label, key, type, placeholder }) => (
-                <div key={key}>
-                  <label className="text-xs font-semibold block mb-1" style={{ color: '#2D2422' }}>{label}</label>
-                  <input
-                    type={type}
-                    placeholder={placeholder}
-                    value={form[key]}
-                    onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
-                    className="w-full p-2.5 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors"
-                  />
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+
+              {/* Order summary toggle */}
+              <OrderSummary
+                cartItems={cartItems}
+                cartTotal={cartTotal}
+                collapsed={summaryOpen}
+                onToggle={() => setSummaryOpen(o => !o)}
+              />
+
+              {/* Delivery details section */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <MapPin size={14} style={{ color: '#800020' }} />
+                  <p className="text-sm font-bold" style={{ color: '#800020' }}>Delivery Details</p>
+                  {user && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold ml-auto"
+                      style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
+                      Auto-filled from your account
+                    </span>
+                  )}
                 </div>
-              ))}
-              {error && <p className="text-xs font-medium p-3 rounded-lg" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{error}</p>}
+
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Full Name *" icon={User} value={form.name} onChange={set('name')}
+                      placeholder="Your name" locked={!!user?.name && form.name === user.name} />
+                    <Field label="Phone *" icon={Phone} type="tel" value={form.phone} onChange={set('phone')}
+                      placeholder="+44..." locked={!!user?.phone && form.phone === user.phone} />
+                  </div>
+                  <Field label="Email *" icon={Mail} type="email" value={form.email} onChange={set('email')}
+                    placeholder="you@example.com" locked={!!user?.email && form.email === user.email}
+                    hint={user ? 'Order confirmation will be sent here' : ''} />
+                  <Field label="Address Line 1 *" icon={MapPin} value={form.line1} onChange={set('line1')}
+                    placeholder="123 High Street" />
+                  <Field label="Address Line 2" icon={null} value={form.line2} onChange={set('line2')}
+                    placeholder="Flat / Apartment (optional)" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="City *" icon={null} value={form.city} onChange={set('city')} placeholder="Milton Keynes" />
+                    <Field label="Postcode *" icon={null} value={form.postcode} onChange={set('postcode')} placeholder="MK9 1AB" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="text-xs font-semibold block mb-1 flex items-center gap-1" style={{ color: '#5C4B47' }}>
+                  <FileText size={12} /> Delivery Notes <span className="font-normal text-gray-400">(optional)</span>
+                </label>
+                <textarea value={form.notes} onChange={e => set('notes')(e.target.value)}
+                  placeholder="e.g. Leave at the door, ring bell twice…"
+                  rows={2}
+                  className="w-full px-3 py-2.5 rounded-lg border-2 text-sm resize-none focus:outline-none focus:border-[#800020] transition-colors"
+                  style={{ borderColor: '#E5E7EB', color: '#2D2422' }}
+                />
+              </div>
+
+              {error && (
+                <p className="text-xs font-medium p-3 rounded-xl" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{error}</p>
+              )}
+
+              {/* Trust badges */}
+              <div className="flex items-center gap-4 py-2">
+                {[['🔒', 'Secure order'], ['⚡', '30–45 min'], ['🍛', 'Freshly made']].map(([icon, label]) => (
+                  <div key={label} className="flex-1 text-center">
+                    <span className="text-lg block">{icon}</span>
+                    <span className="text-[10px] text-gray-400">{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="px-6 py-4 border-t space-y-2" style={{ borderColor: 'rgba(128,0,32,0.12)', backgroundColor: '#FDFBF7' }}>
-              <button onClick={handleOrder} disabled={submitting} className="w-full py-3.5 text-sm font-semibold text-white rounded-sm flex items-center justify-center gap-2 hover:shadow-md transition-all disabled:opacity-60" style={{ backgroundColor: '#800020' }}>
-                {submitting ? 'Placing Order...' : 'Place Order'}
+
+            {/* Sticky footer */}
+            <div className="flex-shrink-0 px-6 py-4 border-t space-y-2" style={{ borderColor: 'rgba(128,0,32,0.12)', backgroundColor: '#FDFBF7' }}>
+              <div className="flex justify-between text-sm font-bold mb-2">
+                <span style={{ color: '#2D2422' }}>Total to pay</span>
+                <span style={{ color: '#800020' }}>{fmt(grandTotal)}</span>
+              </div>
+              <button onClick={handleOrder} disabled={submitting}
+                className="w-full py-4 text-sm font-bold text-white rounded-xl flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-60"
+                style={{ backgroundColor: '#800020' }}>
+                {submitting
+                  ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Placing Order…</>
+                  : <>Place Order · {fmt(grandTotal)}</>
+                }
               </button>
-              <button onClick={() => setStep('cart')} className="w-full py-2 text-sm font-medium" style={{ color: '#800020' }}>
-                ← Back to Cart
+              <button onClick={() => setStep('cart')} className="w-full py-2 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                ← Back to basket
               </button>
             </div>
           </>
         )}
+
       </div>
     </>
   );
