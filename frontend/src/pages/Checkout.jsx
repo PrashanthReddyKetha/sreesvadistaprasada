@@ -553,7 +553,7 @@ const Checkout = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
 
           {/* ── LEFT: Form ───────────────────────────────────────────── */}
