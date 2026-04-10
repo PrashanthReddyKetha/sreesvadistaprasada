@@ -433,7 +433,12 @@ const Home = () => {
             <div className="rounded-lg bg-white p-6" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }}>
               <h3 className="text-lg font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Delivery Areas</h3>
               <div className="space-y-3">
-                {deliveryAreas.map((area) => (
+                {[
+                  { city: 'Milton Keynes', postcodes: 'MK1–MK19', deliveryFee: 'Free over £30', timing: '45–60 min' },
+                  { city: 'Edinburgh', postcodes: 'EH1–EH17', deliveryFee: 'Free over £30', timing: '45–60 min' },
+                  { city: 'Glasgow', postcodes: 'G1–G46', deliveryFee: 'Free over £30', timing: '45–60 min' },
+                  { city: 'Rest of UK', postcodes: 'Snacks & Pickles only', deliveryFee: 'Free over £25', timing: '2–3 days' },
+                ].map((area) => (
                   <div key={area.city} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: area.city === 'Milton Keynes' ? 'rgba(128,0,32,0.04)' : '#fafafa' }} data-testid={`delivery-area-${area.city.toLowerCase().replace(/\s/g, '-')}`}>
                     <div>
                       <p className="text-sm font-bold" style={{ color: area.city === 'Milton Keynes' ? '#800020' : '#2D2422' }}>
