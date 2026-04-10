@@ -44,6 +44,8 @@ const Header = () => {
         { name: 'Prasada (Pure Veg)', path: '/prasada' },
         { name: 'Svadista (Non-Veg)', path: '/svadista' },
         { name: 'Breakfast', path: '/breakfast' },
+        { name: 'Street Food', path: '/street-food' },
+        { name: 'Drinks', path: '/drinks' },
         { name: 'Full Menu', path: '/menu' },
       ]
     },

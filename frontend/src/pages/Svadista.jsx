@@ -1,27 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, ShoppingCart, Star, ArrowRight } from 'lucide-react';
+import { Flame, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import api from '../api';
 
-const subcategories = ['All', 'Starters', 'Curries', 'Biriyanis'];
+const TABS = ['All', 'Starters', 'Indo-Chinese', 'Egg Specials', 'Curries', 'Biryani'];
+
+const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
+
+function SpiceBar({ level }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1,2,3,4].map(i => (
+        <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: i <= level ? '#800020' : '#e5e7eb' }} />
+      ))}
+    </div>
+  );
+}
 
 const Svadista = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('All');
+  const [activeTab, setActiveTab] = useState('All');
   const { addToCart } = useCart();
 
   useEffect(() => {
     api.get('/menu?category=nonVeg&available=true')
-      .then(res => setItems(res.data))
-      .catch(err => console.error(err))
+      .then(r => setItems(r.data))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = activeFilter === 'All'
-    ? items
-    : items.filter(d => d.subcategory === activeFilter);
+  const filtered = activeTab === 'All' ? items : items.filter(i => i.subcategory === activeTab);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
@@ -32,7 +42,7 @@ const Svadista = () => {
           alt="Sree Svadista"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(139,58,58,0.92) 0%, rgba(112,66,20,0.8) 50%, rgba(139,58,58,0.6) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(92,0,24,0.8) 50%, rgba(128,0,32,0.6) 100%)' }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
           <div className="max-w-xl">
             <div className="flex items-center gap-2 mb-3">
@@ -42,96 +52,77 @@ const Svadista = () => {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Sree Svadista
             </h1>
-            <p className="text-lg text-gray-200 leading-relaxed mb-1">Bold, rustic, village-style.</p>
-            <p className="text-sm text-gray-300 leading-relaxed max-w-md">
-              For those who grew up on Sunday chicken curry and festival mutton biriyani. Authentic village recipes, slow-cooked to perfection.
+            <p className="text-lg text-red-100 leading-relaxed mb-1">Bold, rustic, village-style.</p>
+            <p className="text-sm text-red-200 leading-relaxed max-w-md">
+              Starters, biryanis, rich curries and egg specials. Slow-cooked with Andhra soul.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Sticky Filter */}
-      <div className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8" style={{ backgroundColor: '#FDF5E6', borderBottom: '1px solid rgba(139,58,58,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} data-testid="svadista-filters">
+      {/* Sticky tabs */}
+      <div className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8"
+        style={{ backgroundColor: '#FDF5E6', borderBottom: '1px solid rgba(128,0,32,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
         <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {subcategories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveFilter(cat)}
-              className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                activeFilter === cat ? 'text-white' : 'text-gray-600 hover:bg-[#8B3A3A]/10'
-              }`}
-              style={activeFilter === cat ? { backgroundColor: '#8B3A3A' } : {}}
-              data-testid={`filter-${cat.toLowerCase()}`}
-            >
-              {cat}
+          {TABS.map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
+              style={{
+                backgroundColor: activeTab === tab ? '#800020' : 'transparent',
+                color: activeTab === tab ? 'white' : '#374151',
+              }}>
+              {tab}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Menu Grid */}
+      {/* Grid */}
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
-          <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} dishes</p>
-          {loading ? <div className="text-center py-20 text-gray-400">Loading...</div> : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map(dish => (
-              <div key={dish.id} className="rounded-lg overflow-hidden bg-white card-hover group" style={{ boxShadow: '0 4px 20px rgba(139,58,58,0.06)' }} data-testid={`svadista-dish-${dish.id}`}>
-                <div className="relative h-48 overflow-hidden">
-                  <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                  <div className="absolute top-3 right-3 w-5 h-5 rounded-sm border-2 border-red-500 flex items-center justify-center bg-white/90">
-                    <div className="w-2 h-2 rounded-full bg-red-500" />
+          {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} dishes</p>}
+          {loading ? (
+            <div className="text-center py-20 text-gray-400">Loading…</div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filtered.map(dish => (
+                <div key={dish.id} className="rounded-xl overflow-hidden bg-white group transition-all duration-300 hover:-translate-y-1"
+                  style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.08)', border: '1px solid rgba(128,0,32,0.08)' }}>
+                  <div className="relative h-44 overflow-hidden">
+                    {dish.image
+                      ? <img src={dish.image} alt={dish.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      : <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: '#FFF5F5' }}><Flame size={32} className="text-red-200" /></div>
+                    }
+                    {dish.tag && (
+                      <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-1 rounded-full text-white"
+                        style={{ backgroundColor: 'rgba(128,0,32,0.85)' }}>{dish.tag}</span>
+                    )}
                   </div>
-                  <span className="absolute top-3 left-3 px-2 py-1 rounded-sm text-xs font-medium text-white" style={{ backgroundColor: '#8B3A3A' }}>
-                    {dish.subcategory}
-                  </span>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex gap-0.5">
-                      {Array(5).fill(0).map((_, i) => (
-                        <Flame key={i} size={12} className={i < dish.spice_level ? 'text-red-500 fill-red-500' : 'text-gray-200'} />
-                      ))}
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <Link to={`/item/${dish.id}`}>
+                        <h3 className="font-bold text-sm leading-snug hover:underline" style={{ color: '#800020' }}>{dish.name}</h3>
+                      </Link>
+                      <span className="text-sm font-bold flex-shrink-0" style={{ color: '#800020' }}>{fmt(dish.price)}</span>
                     </div>
-                    <span className="text-xs text-gray-400">
-                      {dish.spice_level <= 1 ? 'Mild' : dish.spice_level <= 2 ? 'Medium' : dish.spice_level <= 3 ? 'Spicy' : 'Very Spicy'}
-                    </span>
-                  </div>
-                  <Link to={`/item/${dish.id}`} className="hover:underline">
-                    <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
-                  </Link>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2">{dish.description}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold" style={{ color: '#8B3A3A' }}>£{dish.price.toFixed(2)}</span>
-                    <div className="flex items-center gap-2">
-                      <Link to={`/item/${dish.id}`} className="text-xs font-semibold px-3 py-1.5 rounded-sm" style={{ color:'#8B3A3A', border:'1px solid #8B3A3A' }}>Details</Link>
-                      <button onClick={() => addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` })} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#8B3A3A' }} data-testid={`svadista-add-${dish.id}`}>
-                        <ShoppingCart size={13} /> Add
-                      </button>
-                    </div>
+                    {dish.spice_level > 0 && <div className="mb-2"><SpiceBar level={dish.spice_level} /></div>}
+                    {dish.description && (
+                      <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3">{dish.description}</p>
+                    )}
+                    <button
+                      onClick={() => addToCart({ id: dish.id, name: dish.name, price: dish.price, image: dish.image, category: dish.category })}
+                      className="w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
+                      style={{ backgroundColor: '#800020' }}>
+                      <ShoppingCart size={13} /> Add to Basket
+                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           )}
-          {!loading && filtered.length === 0 && <p className="text-center text-gray-500 py-12">No dishes found in this category.</p>}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 px-4 md:px-8" style={{ backgroundColor: '#8B3A3A' }}>
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-            Craving Bold Flavors?
-          </h2>
-          <p className="text-gray-200 mb-8 leading-relaxed">Subscribe to the Svadista Dabba for daily non-veg homely meals.</p>
-          <Link to="/subscriptions">
-            <button className="px-8 py-3.5 text-sm font-semibold tracking-wide uppercase rounded-sm transition-all duration-300 hover:shadow-lg" style={{ backgroundColor: '#F4C430', color: '#2D2422' }} data-testid="svadista-subscribe-cta">
-              Start Your Subscription <ArrowRight size={16} className="inline ml-2" />
-            </button>
-          </Link>
+          {!loading && filtered.length === 0 && (
+            <div className="text-center py-20 text-gray-400">No items in this category yet.</div>
+          )}
         </div>
       </section>
     </div>
