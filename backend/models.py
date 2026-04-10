@@ -215,6 +215,7 @@ class ContactMessageCreate(BaseModel):
     phone: Optional[str] = None
     subject: str
     message: str
+    user_id: Optional[str] = None
 
 
 class ContactMessage(ContactMessageCreate):
@@ -232,11 +233,41 @@ class CateringEnquiryCreate(BaseModel):
     guest_count: int
     food_preference: str
     additional_details: Optional[str] = None
+    user_id: Optional[str] = None
 
 
 class CateringEnquiry(CateringEnquiryCreate):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: EnquiryStatus = EnquiryStatus.new
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+# --- Enquiry Threads ---
+
+class EnquiryMessageCreate(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+
+
+class EnquiryMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    enquiry_id: str
+    enquiry_type: str  # "contact" | "catering"
+    sender: str        # "admin" | "customer"
+    sender_name: str
+    text: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    read_by_admin: bool = False
+    read_by_customer: bool = False
+
+
+class Notification(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    title: str
+    body: str
+    enquiry_id: str
+    enquiry_type: str
+    read: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 

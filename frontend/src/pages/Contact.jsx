@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Instagram, Facebook, Twitter, ArrowRight } from 'lucide-react';
 import api from '../api';
+import { useAuth } from '../context/AuthContext';
 
 const Contact = () => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [status, setStatus] = useState(null); // 'loading' | 'success' | 'error'
 
@@ -10,7 +12,7 @@ const Contact = () => {
     e.preventDefault();
     setStatus('loading');
     try {
-      await api.post('/enquiries/contact', formData);
+      await api.post('/enquiries/contact', { ...formData, user_id: user?.id || null });
       setStatus('success');
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
     } catch {

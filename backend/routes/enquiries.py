@@ -1,17 +1,20 @@
 from fastapi import APIRouter, HTTPException, Depends
-from typing import List
+from typing import List, Optional
+from datetime import datetime
 from database import db
 from models import (
     ContactMessage, ContactMessageCreate,
     CateringEnquiry, CateringEnquiryCreate,
     NewsletterSubscription, NewsletterCreate,
+    EnquiryMessage, EnquiryMessageCreate,
+    Notification,
 )
-from auth import require_admin
+from auth import require_admin, get_current_user, get_optional_user
 
 router = APIRouter(prefix="/enquiries", tags=["enquiries"])
 
 
-# --- Contact ---
+# ── Contact ───────────────────────────────────────────────────────────────────
 
 @router.post("/contact", response_model=ContactMessage)
 async def submit_contact(payload: ContactMessageCreate):
@@ -37,7 +40,7 @@ async def update_contact_status(msg_id: str, status: str, _: dict = Depends(requ
     return {"message": "Status updated"}
 
 
-# --- Catering ---
+# ── Catering ──────────────────────────────────────────────────────────────────
 
 @router.post("/catering", response_model=CateringEnquiry)
 async def submit_catering(payload: CateringEnquiryCreate):
@@ -63,7 +66,7 @@ async def update_catering_status(enquiry_id: str, status: str, _: dict = Depends
     return {"message": "Status updated"}
 
 
-# --- Newsletter ---
+# ── Newsletter ─────────────────────────────────────────────────────────────────
 
 @router.post("/newsletter", response_model=NewsletterSubscription)
 async def subscribe_newsletter(payload: NewsletterCreate):
@@ -84,3 +87,210 @@ async def subscribe_newsletter(payload: NewsletterCreate):
 async def get_newsletter_subscribers(_: dict = Depends(require_admin)):
     docs = await db.newsletter.find({"active": True}, {"_id": 0}).to_list(1000)
     return docs
+
+
+# ── My Enquiries (customer) ────────────────────────────────────────────────────
+
+@router.get("/my")
+async def get_my_enquiries(current_user: dict = Depends(get_current_user)):
+    uid = current_user["sub"]
+    user_doc = await db.users.find_one({"id": uid}, {"email": 1})
+    email = user_doc["email"] if user_doc else None
+
+    query = {"$or": [{"user_id": uid}, {"email": email}]} if email else {"user_id": uid}
+
+    contact = await db.contact_messages.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    catering = await db.catering_enquiries.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+
+    for enq in contact:
+        enq["unread"] = await db.enquiry_messages.count_documents({
+            "enquiry_id": enq["id"], "sender": "admin", "read_by_customer": False
+        })
+    for enq in catering:
+        enq["unread"] = await db.enquiry_messages.count_documents({
+            "enquiry_id": enq["id"], "sender": "admin", "read_by_customer": False
+        })
+
+    return {"contact": contact, "catering": catering}
+
+
+# ── Notifications (customer) ───────────────────────────────────────────────────
+
+@router.get("/notifications/unread-count")
+async def get_notif_unread_count(current_user: dict = Depends(get_current_user)):
+    count = await db.notifications.count_documents({"user_id": current_user["sub"], "read": False})
+    return {"count": count}
+
+
+@router.get("/notifications")
+async def get_notifications(current_user: dict = Depends(get_current_user)):
+    notifs = await db.notifications.find(
+        {"user_id": current_user["sub"]}, {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    return notifs
+
+
+@router.put("/notifications/read-all")
+async def mark_all_notifs_read(current_user: dict = Depends(get_current_user)):
+    await db.notifications.update_many(
+        {"user_id": current_user["sub"], "read": False}, {"$set": {"read": True}}
+    )
+    return {"ok": True}
+
+
+@router.put("/notifications/{notif_id}/read")
+async def mark_notif_read(notif_id: str, current_user: dict = Depends(get_current_user)):
+    await db.notifications.update_one(
+        {"id": notif_id, "user_id": current_user["sub"]}, {"$set": {"read": True}}
+    )
+    return {"ok": True}
+
+
+# ── Admin unread count ─────────────────────────────────────────────────────────
+
+@router.get("/admin/unread-count")
+async def admin_unread_count(_: dict = Depends(require_admin)):
+    count = await db.enquiry_messages.count_documents({"sender": "customer", "read_by_admin": False})
+    return {"count": count}
+
+
+# ── Thread: get messages ───────────────────────────────────────────────────────
+
+@router.get("/{enq_type}/{enq_id}/messages")
+async def get_messages(
+    enq_type: str,
+    enq_id: str,
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    if enq_type not in ("contact", "catering"):
+        raise HTTPException(status_code=400, detail="Invalid enquiry type")
+
+    collection = db.contact_messages if enq_type == "contact" else db.catering_enquiries
+    enquiry = await collection.find_one({"id": enq_id}, {"_id": 0})
+    if not enquiry:
+        raise HTTPException(status_code=404, detail="Enquiry not found")
+
+    is_admin = current_user and current_user.get("role") == "admin"
+
+    if is_admin:
+        # Mark all customer messages as read by admin
+        await db.enquiry_messages.update_many(
+            {"enquiry_id": enq_id, "sender": "customer", "read_by_admin": False},
+            {"$set": {"read_by_admin": True}},
+        )
+    else:
+        if not current_user:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        uid = current_user["sub"]
+        user_doc = await db.users.find_one({"id": uid}, {"email": 1})
+        email = user_doc["email"] if user_doc else None
+        if enquiry.get("user_id") != uid and enquiry.get("email") != email:
+            raise HTTPException(status_code=403, detail="Access denied")
+        # Mark admin messages as read by customer
+        await db.enquiry_messages.update_many(
+            {"enquiry_id": enq_id, "sender": "admin", "read_by_customer": False},
+            {"$set": {"read_by_customer": True}},
+        )
+        # Mark notifications as read
+        await db.notifications.update_many(
+            {"user_id": uid, "enquiry_id": enq_id}, {"$set": {"read": True}}
+        )
+
+    messages = await db.enquiry_messages.find(
+        {"enquiry_id": enq_id}, {"_id": 0}
+    ).sort("created_at", 1).to_list(500)
+
+    return messages
+
+
+# ── Thread: admin sends message ────────────────────────────────────────────────
+
+@router.post("/{enq_type}/{enq_id}/messages")
+async def admin_send_message(
+    enq_type: str,
+    enq_id: str,
+    payload: EnquiryMessageCreate,
+    _: dict = Depends(require_admin),
+):
+    if enq_type not in ("contact", "catering"):
+        raise HTTPException(status_code=400, detail="Invalid enquiry type")
+
+    collection = db.contact_messages if enq_type == "contact" else db.catering_enquiries
+    enquiry = await collection.find_one({"id": enq_id}, {"_id": 0})
+    if not enquiry:
+        raise HTTPException(status_code=404, detail="Enquiry not found")
+
+    msg = EnquiryMessage(
+        enquiry_id=enq_id,
+        enquiry_type=enq_type,
+        sender="admin",
+        sender_name="Sree Svadista Prasada",
+        text=payload.text,
+    )
+    await db.enquiry_messages.insert_one(msg.model_dump())
+
+    # Auto-update status to contacted
+    if enquiry.get("status") == "new":
+        await collection.update_one({"id": enq_id}, {"$set": {"status": "contacted"}})
+
+    # Find customer user_id
+    customer_uid = enquiry.get("user_id")
+    if not customer_uid:
+        user_doc = await db.users.find_one({"email": enquiry.get("email")}, {"id": 1})
+        if user_doc:
+            customer_uid = user_doc["id"]
+
+    # Create in-app notification for customer
+    if customer_uid:
+        preview = payload.text if len(payload.text) <= 80 else payload.text[:77] + "…"
+        notif = Notification(
+            user_id=customer_uid,
+            title="Reply to your enquiry",
+            body=preview,
+            enquiry_id=enq_id,
+            enquiry_type=enq_type,
+        )
+        await db.notifications.insert_one(notif.model_dump())
+
+    return msg.model_dump()
+
+
+# ── Thread: customer replies ───────────────────────────────────────────────────
+
+@router.post("/{enq_type}/{enq_id}/reply")
+async def customer_reply(
+    enq_type: str,
+    enq_id: str,
+    payload: EnquiryMessageCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    if enq_type not in ("contact", "catering"):
+        raise HTTPException(status_code=400, detail="Invalid enquiry type")
+
+    collection = db.contact_messages if enq_type == "contact" else db.catering_enquiries
+    enquiry = await collection.find_one({"id": enq_id}, {"_id": 0})
+    if not enquiry:
+        raise HTTPException(status_code=404, detail="Enquiry not found")
+
+    uid = current_user["sub"]
+    user_doc = await db.users.find_one({"id": uid}, {"email": 1, "name": 1})
+    email = user_doc["email"] if user_doc else None
+
+    if enquiry.get("user_id") != uid and enquiry.get("email") != email:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # Reopen if resolved
+    if enquiry.get("status") == "resolved":
+        await collection.update_one({"id": enq_id}, {"$set": {"status": "contacted"}})
+
+    sender_name = user_doc["name"] if user_doc else enquiry.get("name", "Customer")
+    msg = EnquiryMessage(
+        enquiry_id=enq_id,
+        enquiry_type=enq_type,
+        sender="customer",
+        sender_name=sender_name,
+        text=payload.text,
+    )
+    await db.enquiry_messages.insert_one(msg.model_dump())
+
+    return msg.model_dump()

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
@@ -6,7 +6,8 @@ import {
   ShoppingBag, Users, Package, Mail, MessageSquare, Bell,
   TrendingUp, Clock, CheckCircle, XCircle, RefreshCw,
   ChevronDown, ChevronRight, Edit2, Save, X, Plus,
-  Utensils, LayoutDashboard, Eye, EyeOff, Flame, Leaf
+  Utensils, LayoutDashboard, Eye, EyeOff, Flame, Leaf,
+  ArrowLeft, Send, CheckCheck, AlertCircle
 } from 'lucide-react';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -331,95 +332,233 @@ const UsersTab = ({ users }) => (
 );
 
 // ─── Enquiries ────────────────────────────────────────────────────────────────
-const EnquiriesTab = ({ contacts, catering, onStatusUpdate }) => {
-  const [sub, setSub] = useState('contact');
-  const [updatingId, setUpdatingId] = useState(null);
-  const [expanded, setExpanded] = useState(null);
-  const ENQUIRY_STATUSES = ['new','contacted','resolved'];
-  const handle = async (type, id, status) => {
-    setUpdatingId(id);
-    await onStatusUpdate(type, id, status);
-    setUpdatingId(null);
+const STATUS_ACTIONS = {
+  new:       { next:'contacted', label:'Mark Contacted',  color:'#1D4ED8' },
+  contacted: { next:'resolved',  label:'Mark Resolved',   color:'#166534' },
+  resolved:  { next:'contacted', label:'Reopen',          color:'#92400E' },
+};
+
+const EnquiriesTab = ({ contacts, catering, onStatusUpdate, reload }) => {
+  const [sub, setSub]               = useState('contact');
+  const [selected, setSelected]     = useState(null); // { type, enq }
+  const [messages, setMessages]     = useState([]);
+  const [msgLoading, setMsgLoading] = useState(false);
+  const [replyText, setReplyText]   = useState('');
+  const [sending, setSending]       = useState(false);
+  const [statusBusy, setStatusBusy] = useState(false);
+  const pollRef = useRef(null);
+
+  const openConversation = useCallback(async (type, enq) => {
+    setSelected({ type, enq });
+    setMessages([]);
+    setReplyText('');
+    setMsgLoading(true);
+    try {
+      const res = await api.get(`/enquiries/${type}/${enq.id}/messages`);
+      setMessages(res.data);
+    } finally { setMsgLoading(false); }
+  }, []);
+
+  // Poll for new messages every 6s while open
+  useEffect(() => {
+    if (!selected) { clearInterval(pollRef.current); return; }
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await api.get(`/enquiries/${selected.type}/${selected.enq.id}/messages`);
+        setMessages(res.data);
+      } catch {}
+    }, 6000);
+    return () => clearInterval(pollRef.current);
+  }, [selected]);
+
+  const sendReply = async () => {
+    if (!replyText.trim() || !selected) return;
+    setSending(true);
+    try {
+      const res = await api.post(`/enquiries/${selected.type}/${selected.enq.id}/messages`, { text: replyText.trim() });
+      setMessages(m => [...m, res.data]);
+      setReplyText('');
+      // Refresh list to update unread counts
+      reload();
+    } catch (e) {
+      alert(e.response?.data?.detail || 'Failed to send');
+    } finally { setSending(false); }
   };
-  return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        {[['contact','Contact Messages',contacts],['catering','Catering Enquiries',catering]].map(([key,label,data])=>(
-          <button key={key} onClick={()=>setSub(key)}
-            className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all"
-            style={{ backgroundColor:sub===key?'#800020':'white', color:sub===key?'white':'#800020', border:'1px solid #800020' }}>
-            {label} ({data.length})
-          </button>
-        ))}
-      </div>
-      {sub==='contact' && (
+
+  const changeStatus = async (newStatus) => {
+    if (!selected) return;
+    setStatusBusy(true);
+    try {
+      await onStatusUpdate(selected.type, selected.enq.id, newStatus);
+      setSelected(s => ({ ...s, enq: { ...s.enq, status: newStatus } }));
+      reload();
+    } finally { setStatusBusy(false); }
+  };
+
+  // ── List view ──────────────────────────────────────────────────────────────
+  if (!selected) {
+    const list = sub === 'contact' ? contacts : catering;
+    return (
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          {[['contact','Contact Messages',contacts],['catering','Catering Enquiries',catering]].map(([key,label,data])=>(
+            <button key={key} onClick={()=>setSub(key)}
+              className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all"
+              style={{ backgroundColor:sub===key?'#800020':'white', color:sub===key?'white':'#800020', border:'1px solid #800020' }}>
+              {label} ({data.length})
+            </button>
+          ))}
+        </div>
+
         <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
-          {contacts.length===0 ? <p className="text-center text-gray-400 py-16">No contact messages yet.</p> : (
+          {list.length === 0 ? (
+            <p className="text-center text-gray-400 py-16">No {sub === 'contact' ? 'contact messages' : 'catering enquiries'} yet.</p>
+          ) : (
             <div className="divide-y">
-              {contacts.map(c=>(
-                <div key={c.id} className="p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1 flex-wrap">
-                        <p className="font-semibold text-gray-900">{c.name}</p>
-                        <Badge status={c.status} />
-                        <span className="text-xs text-gray-400">{fmt(c.created_at)}</span>
-                      </div>
-                      <p className="text-xs text-gray-500 mb-1">{c.email} {c.phone&&`· ${c.phone}`}</p>
-                      <p className="text-sm font-medium text-gray-700 mb-1">Subject: {c.subject}</p>
-                      <p className={`text-sm text-gray-600 ${expanded===c.id?'':'line-clamp-2'}`}>{c.message}</p>
-                      {c.message?.length>100 && (
-                        <button onClick={()=>setExpanded(expanded===c.id?null:c.id)} className="text-xs mt-1 font-medium" style={{ color:'#800020' }}>
-                          {expanded===c.id?'Show less':'Read more'}
-                        </button>
-                      )}
+              {list.map(enq => {
+                const isContact = sub === 'contact';
+                return (
+                  <div key={enq.id}
+                    className="p-5 cursor-pointer hover:bg-[#800020]/[0.03] transition-colors flex items-start gap-4"
+                    onClick={() => openConversation(sub, enq)}>
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm"
+                      style={{ backgroundColor:'#800020' }}>
+                      {enq.name?.charAt(0).toUpperCase()}
                     </div>
-                    <select value={c.status} onChange={e=>handle('contact',c.id,e.target.value)} disabled={updatingId===c.id}
-                      className="text-xs border rounded-lg px-2 py-1.5 font-semibold"
-                      style={{ borderColor:'#800020', color:'#800020', backgroundColor:'#FDFBF7' }}>
-                      {ENQUIRY_STATUSES.map(s=><option key={s} value={s}>{s}</option>)}
-                    </select>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <p className="font-semibold text-gray-900">{enq.name}</p>
+                        <Badge status={enq.status} />
+                        {isContact && enq.subject && (
+                          <span className="text-xs text-gray-500">· {enq.subject}</span>
+                        )}
+                        {!isContact && (
+                          <span className="text-xs text-gray-500 capitalize">· {enq.event_type} · {enq.guest_count} guests</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mb-1">{enq.email}{enq.phone ? ` · ${enq.phone}` : ''}</p>
+                      <p className="text-sm text-gray-600 line-clamp-1">
+                        {isContact ? enq.message : enq.additional_details || `Event on ${fmtDate(enq.event_date)}`}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <span className="text-xs text-gray-400 whitespace-nowrap">{fmt(enq.created_at)}</span>
+                      <ChevronRight size={16} className="text-gray-300" />
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Conversation view ──────────────────────────────────────────────────────
+  const { type, enq } = selected;
+  const action = STATUS_ACTIONS[enq.status];
+  const isContact = type === 'contact';
+
+  return (
+    <div className="flex flex-col h-full" style={{ minHeight: '70vh' }}>
+      {/* Conversation header */}
+      <div className="bg-white rounded-xl mb-3 p-4 flex items-start gap-4" style={{ boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
+        <button onClick={() => setSelected(null)}
+          className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0">
+          <ArrowLeft size={18} style={{ color:'#800020' }} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            <h3 className="font-bold text-gray-900">{enq.name}</h3>
+            <Badge status={enq.status} />
+            <span className="text-xs text-gray-400 capitalize">{type} enquiry</span>
+          </div>
+          <p className="text-sm text-gray-500">{enq.email}{enq.phone ? ` · ${enq.phone}` : ''}</p>
+          {isContact && enq.subject && <p className="text-sm font-medium mt-0.5" style={{ color:'#800020' }}>Re: {enq.subject}</p>}
+          {!isContact && <p className="text-sm text-gray-500 mt-0.5">{enq.event_type} · {enq.guest_count} guests · {fmtDate(enq.event_date)}</p>}
+        </div>
+        {action && (
+          <button onClick={() => changeStatus(action.next)} disabled={statusBusy}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex-shrink-0 disabled:opacity-50 whitespace-nowrap"
+            style={{ borderColor: action.color, color: action.color }}>
+            {statusBusy ? '…' : action.label}
+          </button>
+        )}
+      </div>
+
+      {/* Original message card */}
+      <div className="bg-white rounded-xl p-4 mb-3 border-l-4" style={{ boxShadow:'0 1px 6px rgba(0,0,0,0.05)', borderLeftColor:'#B8860B' }}>
+        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color:'#B8860B' }}>Original Message · {fmt(enq.created_at)}</p>
+        {isContact ? (
+          <p className="text-sm text-gray-700 leading-relaxed">{enq.message}</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
+            <div><span className="font-medium">Event:</span> {enq.event_type}</div>
+            <div><span className="font-medium">Date:</span> {fmtDate(enq.event_date)}</div>
+            <div><span className="font-medium">Guests:</span> {enq.guest_count}</div>
+            <div><span className="font-medium">Preference:</span> {enq.food_preference}</div>
+            {enq.additional_details && <div className="col-span-2"><span className="font-medium">Notes:</span> {enq.additional_details}</div>}
+          </div>
+        )}
+      </div>
+
+      {/* Message thread */}
+      <div className="flex-1 bg-white rounded-xl p-4 mb-3 overflow-y-auto space-y-3" style={{ boxShadow:'0 1px 6px rgba(0,0,0,0.05)', maxHeight:'340px' }}>
+        {msgLoading ? (
+          <div className="flex justify-center py-6"><RefreshCw size={20} className="animate-spin text-gray-400" /></div>
+        ) : messages.length === 0 ? (
+          <p className="text-center text-gray-400 text-sm py-6">No replies yet. Start the conversation below.</p>
+        ) : (
+          messages.map(msg => {
+            const isAdmin = msg.sender === 'admin';
+            return (
+              <div key={msg.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isAdmin ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}
+                  style={{ backgroundColor: isAdmin ? '#800020' : '#F3F4F6', color: isAdmin ? 'white' : '#1F2937' }}>
+                  <p className={`text-[10px] font-semibold mb-1 ${isAdmin ? 'text-[#F4C430]' : 'text-gray-500'}`}>
+                    {msg.sender_name}
+                  </p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                  <p className={`text-[10px] mt-1.5 ${isAdmin ? 'text-white/60' : 'text-gray-400'}`}>
+                    {fmt(msg.created_at)}
+                    {isAdmin && msg.read_by_customer && <CheckCheck size={10} className="inline ml-1" />}
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Reply box */}
+      <div className="bg-white rounded-xl p-3 flex gap-2 items-end" style={{ boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
+        <textarea
+          value={replyText}
+          onChange={e => setReplyText(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); } }}
+          placeholder="Type your reply… (Enter to send, Shift+Enter for new line)"
+          rows={2}
+          className="flex-1 resize-none rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#800020]/30"
+          style={{ borderColor:'rgba(128,0,32,0.2)', color:'#3D2B1F' }}
+        />
+        <button onClick={sendReply} disabled={sending || !replyText.trim()}
+          className="p-3 rounded-xl text-white flex-shrink-0 disabled:opacity-40 transition-opacity"
+          style={{ backgroundColor:'#800020' }}>
+          {sending ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
+        </button>
+      </div>
+
+      {enq.status === 'resolved' && (
+        <p className="text-xs text-center mt-2 flex items-center justify-center gap-1" style={{ color:'#166534' }}>
+          <CheckCircle size={12} /> This enquiry is resolved. Replying will reopen it automatically.
+        </p>
       )}
-      {sub==='catering' && (
-        <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
-          {catering.length===0 ? <p className="text-center text-gray-400 py-16">No catering enquiries yet.</p> : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead style={{ backgroundColor:'#FDFBF7' }}>
-                  <tr>{['Customer','Event','Date','Guests','Preference','Details','Status','Action'].map(h=>(
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                  ))}</tr>
-                </thead>
-                <tbody>
-                  {catering.map(c=>(
-                    <tr key={c.id} className="border-t hover:bg-gray-50" style={{ borderColor:'#f9f6ee' }}>
-                      <td className="px-4 py-3"><p className="font-medium whitespace-nowrap">{c.name}</p><p className="text-xs text-gray-400">{c.email}</p></td>
-                      <td className="px-4 py-3 capitalize">{c.event_type}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs">{fmtDate(c.event_date)}</td>
-                      <td className="px-4 py-3 text-center">{c.guest_count}</td>
-                      <td className="px-4 py-3 capitalize text-xs">{c.food_preference}</td>
-                      <td className="px-4 py-3 text-xs text-gray-500 max-w-[150px] truncate">{c.additional_details||'—'}</td>
-                      <td className="px-4 py-3"><Badge status={c.status} /></td>
-                      <td className="px-4 py-3">
-                        <select value={c.status} onChange={e=>handle('catering',c.id,e.target.value)} disabled={updatingId===c.id}
-                          className="text-xs border rounded-lg px-2 py-1.5 font-semibold"
-                          style={{ borderColor:'#800020', color:'#800020', backgroundColor:'#FDFBF7' }}>
-                          {ENQUIRY_STATUSES.map(s=><option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+      {!enq.user_id && (
+        <p className="text-xs text-center mt-1 flex items-center justify-center gap-1 text-amber-600">
+          <AlertCircle size={12} /> Customer not registered — they won't receive in-app notifications, but can still view this thread if they log in with the same email.
+        </p>
       )}
     </div>
   );
@@ -1077,7 +1216,7 @@ const Admin = () => {
               {activeTab==='subscriptions' && <SubscriptionsTab subscriptions={data.subscriptions} onStatusUpdate={handleStatusUpdate} />}
               {activeTab==='menu'          && <MenuTab />}
               {activeTab==='users'         && <UsersTab users={data.users} />}
-              {activeTab==='enquiries'     && <EnquiriesTab contacts={data.contacts} catering={data.catering} onStatusUpdate={handleStatusUpdate} />}
+              {activeTab==='enquiries'     && <EnquiriesTab contacts={data.contacts} catering={data.catering} onStatusUpdate={handleStatusUpdate} reload={fetchAll} />}
               {activeTab==='newsletter'    && <NewsletterTab newsletter={data.newsletter} />}
             </>
           )}
