@@ -394,8 +394,7 @@ const Checkout = () => {
         const r = await fetch(`https://api.getaddress.io/find/${encodeURIComponent(pc.trim())}?api-key=${apiKey}&expand=true`);
         if (r.status === 404 || r.status === 429 || !r.ok) {
           // getAddress.io failed — fall back to postcodes.io for city
-          const ok = await fallbackPostcodeIo(pc);
-          if (!ok) setPcError('Postcode not found. Please enter your address manually.');
+          await fallbackPostcodeIo(pc);
           return;
         }
         const data = await r.json();
@@ -409,8 +408,7 @@ const Checkout = () => {
         }
         setAddressOptions(addrs); setAddressDropdown(true);
       } else {
-        const ok = await fallbackPostcodeIo(pc);
-        if (!ok) setPcError('Postcode not found. Please enter your address manually.');
+        await fallbackPostcodeIo(pc);
       }
     } catch {
       await fallbackPostcodeIo(pc);
@@ -620,18 +618,13 @@ const Checkout = () => {
                       onBlur={() => { clearTimeout(pcDebounceRef.current); lookupPostcode(form.postcode); }}
                       className="w-full pl-9 pr-10 py-2.5 rounded-xl border-2 text-sm uppercase focus:outline-none transition-colors"
                       style={{
-                        borderColor: pcError ? '#FCA5A5' : form.postcode ? 'rgba(128,0,32,0.3)' : '#E5E7EB',
+                        borderColor: form.postcode ? 'rgba(128,0,32,0.3)' : '#E5E7EB',
                         color: '#2D2422',
                       }}
                     />
                     {pcLookingUp && <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" />}
                     {!pcLookingUp && form.line1 && <CheckCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#166534' }} />}
                   </div>
-                  {pcError && (
-                    <p className="text-xs mt-1 flex items-center gap-1" style={{ color: '#B45309' }}>
-                      <span>⚠</span> {pcError}
-                    </p>
-                  )}
 
                   {addressDropdown && addressOptions.length > 0 && (
                     <div className="mt-1.5 border-2 rounded-xl overflow-hidden shadow-lg"
