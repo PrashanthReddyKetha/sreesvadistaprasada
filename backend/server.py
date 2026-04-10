@@ -25,9 +25,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Sree Svadista Prasada API", version="1.0.0", lifespan=lifespan)
 
+_origins_env = os.environ.get("CORS_ORIGINS", "")
+_default_origins = [
+    "https://sreesvadistaprasada.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:3001",
+]
+allow_origins = [o.strip() for o in _origins_env.split(",") if o.strip()] or _default_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
