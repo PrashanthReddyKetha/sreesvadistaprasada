@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, ShoppingCart, ArrowRight, Sparkles } from 'lucide-react';
-import { menuItems } from '../mockData';
+import { useCart } from '../context/CartContext';
+import api from '../api';
 
 const subcategories = ['All', 'Rice', 'Prasadam Specials', 'Curries'];
 
 const Prasada = () => {
+  const [allItems, setAllItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
+  const { addToCart } = useCart();
 
-  const allItems = [...menuItems.prasada, ...menuItems.veg];
+  useEffect(() => {
+    Promise.all([
+      api.get('/menu?category=prasada'),
+      api.get('/menu?category=veg'),
+    ]).then(([prasada, veg]) => {
+      setAllItems([...prasada.data, ...veg.data]);
+    }).catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, []);
+
   const filtered = activeFilter === 'All'
     ? allItems
     : allItems.filter(d => d.subcategory === activeFilter);
@@ -74,6 +87,7 @@ const Prasada = () => {
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} dishes</p>
+          {loading ? <div className="text-center py-20 text-gray-400">Loading...</div> : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map(dish => (
               <div key={dish.id} className="rounded-lg overflow-hidden bg-white card-hover group" style={{ boxShadow: '0 4px 20px rgba(74,124,89,0.06)' }} data-testid={`prasada-dish-${dish.id}`}>
@@ -88,21 +102,21 @@ const Prasada = () => {
                   </span>
                 </div>
                 <div className="p-5">
-                  {dish.spiceLevel === 0 ? (
+                  {dish.spice_level === 0 ? (
                     <span className="text-xs font-medium mb-2 inline-block" style={{ color: '#4A7C59' }}>Mild & Pure</span>
                   ) : (
                     <div className="flex items-center gap-1 mb-2">
-                      {Array(dish.spiceLevel).fill(0).map((_, i) => (
+                      {Array(dish.spice_level).fill(0).map((_, i) => (
                         <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#4A7C59' }} />
                       ))}
-                      <span className="text-xs text-gray-400 ml-1">{dish.spiceLevel <= 1 ? 'Mild' : 'Medium'}</span>
+                      <span className="text-xs text-gray-400 ml-1">{dish.spice_level <= 1 ? 'Mild' : 'Medium'}</span>
                     </div>
                   )}
                   <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
                   <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2">{dish.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold" style={{ color: '#4A7C59' }}>{dish.price}</span>
-                    <button className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#4A7C59' }} data-testid={`prasada-add-${dish.id}`}>
+                    <span className="text-xl font-bold" style={{ color: '#4A7C59' }}>£{dish.price.toFixed(2)}</span>
+                    <button onClick={() => addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` })} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#4A7C59' }} data-testid={`prasada-add-${dish.id}`}>
                       <ShoppingCart size={13} /> Add
                     </button>
                   </div>
@@ -110,7 +124,8 @@ const Prasada = () => {
               </div>
             ))}
           </div>
-          {filtered.length === 0 && <p className="text-center text-gray-500 py-12">No dishes found in this category.</p>}
+          )}
+          {!loading && filtered.length === 0 && <p className="text-center text-gray-500 py-12">No dishes found in this category.</p>}
         </div>
       </section>
 

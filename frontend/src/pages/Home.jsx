@@ -1,13 +1,15 @@
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Truck, Calendar, MapPin, Search } from 'lucide-react';
-import { featuredDishes, mealMoments, chefSpecial, images, galleryImages, deliveryAreas } from '../mockData';
+import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '../mockData';
 import HeroSlider from '../components/HeroSlider';
+import api from '../api';
 
 const Home = () => {
   const trendingRef = useRef(null);
   const [postcode, setPostcode] = useState('');
   const [postcodeResult, setPostcodeResult] = useState(null);
+  const [postcodeLoading, setPostcodeLoading] = useState(false);
 
   const scrollTrending = (direction) => {
     if (trendingRef.current) {
@@ -19,13 +21,17 @@ const Home = () => {
     }
   };
 
-  const checkPostcode = (e) => {
+  const checkPostcode = async (e) => {
     e.preventDefault();
-    const pc = postcode.toUpperCase().trim();
-    if (pc.startsWith('MK')) setPostcodeResult({ area: deliveryAreas[0], match: true });
-    else if (pc.startsWith('EH')) setPostcodeResult({ area: deliveryAreas[1], match: true });
-    else if (pc.startsWith('G') && /^G\d/.test(pc)) setPostcodeResult({ area: deliveryAreas[2], match: true });
-    else setPostcodeResult({ area: deliveryAreas[3], match: true });
+    setPostcodeLoading(true);
+    try {
+      const res = await api.post('/delivery/check', { postcode });
+      setPostcodeResult(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPostcodeLoading(false);
+    }
   };
 
   return (
@@ -405,20 +411,20 @@ const Home = () => {
                     data-testid="postcode-input"
                   />
                 </div>
-                <button type="submit" className="px-6 py-3 text-sm font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#800020' }} data-testid="postcode-check-btn">
-                  Check
+                <button type="submit" disabled={postcodeLoading} className="px-6 py-3 text-sm font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#800020' }} data-testid="postcode-check-btn">
+                  {postcodeLoading ? '...' : 'Check'}
                 </button>
               </form>
               {postcodeResult && (
-                <div className="p-4 rounded-lg text-sm" style={{ backgroundColor: postcodeResult.area.city === 'Rest of UK' ? '#FDF5E6' : '#F0FFF4', border: `1px solid ${postcodeResult.area.city === 'Rest of UK' ? 'rgba(184,134,11,0.3)' : 'rgba(74,124,89,0.3)'}` }} data-testid="postcode-result">
-                  <p className="font-bold mb-2" style={{ color: postcodeResult.area.city === 'Rest of UK' ? '#B8860B' : '#4A7C59' }}>
-                    {postcodeResult.area.city === 'Rest of UK' ? 'Snacks & Pickles available!' : `Great news! Full delivery to ${postcodeResult.area.city}!`}
+                <div className="p-4 rounded-lg text-sm" style={{ backgroundColor: postcodeResult.service_type === 'snacks_only' ? '#FDF5E6' : '#F0FFF4', border: `1px solid ${postcodeResult.service_type === 'snacks_only' ? 'rgba(184,134,11,0.3)' : 'rgba(74,124,89,0.3)'}` }} data-testid="postcode-result">
+                  <p className="font-bold mb-2" style={{ color: postcodeResult.service_type === 'snacks_only' ? '#B8860B' : '#4A7C59' }}>
+                    {postcodeResult.message}
                   </p>
                   <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                    <div><strong>Available:</strong> {postcodeResult.area.status}</div>
-                    <div><strong>Delivery:</strong> {postcodeResult.area.deliveryFee}</div>
-                    <div><strong>Min Order:</strong> {postcodeResult.area.minOrder}</div>
-                    <div><strong>Timing:</strong> {postcodeResult.area.timing}</div>
+                    <div><strong>Delivery:</strong> {postcodeResult.delivery_fee === 0 ? 'Free' : `£${postcodeResult.delivery_fee}`}</div>
+                    <div><strong>Min Order:</strong> £{postcodeResult.min_order}</div>
+                    <div><strong>Timing:</strong> {postcodeResult.estimated_time}</div>
+                    <div><strong>Service:</strong> {postcodeResult.service_type === 'full' ? 'Full Menu' : 'Snacks & Pickles'}</div>
                   </div>
                 </div>
               )}

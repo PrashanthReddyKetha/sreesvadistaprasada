@@ -1,14 +1,32 @@
 import React, { useState } from 'react';
 import { Users, Briefcase, Heart, Calendar, ArrowRight, Phone, Star, Sparkles } from 'lucide-react';
+import api from '../api';
 
 const Catering = () => {
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', eventType: '', eventDate: '', guests: '', foodType: '', message: ''
   });
+  const [status, setStatus] = useState(null); // 'loading' | 'success' | 'error'
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Thank you for your enquiry! We will contact you within 24 hours.');
+    setStatus('loading');
+    try {
+      await api.post('/enquiries/catering', {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        event_type: formData.eventType,
+        event_date: formData.eventDate,
+        guest_count: parseInt(formData.guests, 10),
+        food_preference: formData.foodType,
+        additional_details: formData.message,
+      });
+      setStatus('success');
+      setFormData({ name: '', email: '', phone: '', eventType: '', eventDate: '', guests: '', foodType: '', message: '' });
+    } catch {
+      setStatus('error');
+    }
   };
 
   return (
@@ -187,8 +205,18 @@ const Catering = () => {
               <textarea rows={4} value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} placeholder="Menu preferences, dietary requirements..."
                 className="w-full p-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors resize-none" data-testid="catering-message" />
             </div>
-            <button type="submit" className="w-full py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg" style={{ backgroundColor: '#800020' }} data-testid="catering-submit-btn">
-              Submit Enquiry
+            {status === 'success' && (
+              <div className="p-4 rounded-lg text-sm font-medium" style={{ backgroundColor: '#F0FFF4', color: '#4A7C59' }}>
+                Thank you! We'll contact you within 24 hours.
+              </div>
+            )}
+            {status === 'error' && (
+              <div className="p-4 rounded-lg text-sm font-medium" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>
+                Something went wrong. Please try again.
+              </div>
+            )}
+            <button type="submit" disabled={status === 'loading'} className="w-full py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg disabled:opacity-60" style={{ backgroundColor: '#800020' }} data-testid="catering-submit-btn">
+              {status === 'loading' ? 'Submitting...' : 'Submit Enquiry'}
             </button>
           </form>
         </div>

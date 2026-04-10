@@ -1,17 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, ShoppingCart, ArrowRight, Package, Truck } from 'lucide-react';
-import { menuItems } from '../mockData';
+import { useCart } from '../context/CartContext';
+import api from '../api';
 
-const categories = ['All', 'Pickles', 'Podis', 'Sweets'];
+const categories = ['All', 'Pickles', 'Podis'];
 
 const Snacks = () => {
+  const [allItems, setAllItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
+  const { addToCart } = useCart();
 
-  const allItems = [
-    ...menuItems.pickles.map(i => ({ ...i, type: 'Pickles' })),
-    ...menuItems.podis.map(i => ({ ...i, type: 'Podis' })),
-  ];
+  useEffect(() => {
+    Promise.all([
+      api.get('/menu?category=pickles'),
+      api.get('/menu?category=podis'),
+    ]).then(([pickles, podis]) => {
+      setAllItems([
+        ...pickles.data.map(i => ({ ...i, type: 'Pickles' })),
+        ...podis.data.map(i => ({ ...i, type: 'Podis' })),
+      ]);
+    }).catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = activeFilter === 'All'
     ? allItems
@@ -75,6 +87,7 @@ const Snacks = () => {
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} products</p>
+          {loading ? <div className="text-center py-20 text-gray-400">Loading...</div> : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filtered.map(item => (
               <div key={item.id} className="rounded-lg overflow-hidden bg-white card-hover group" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }} data-testid={`snack-item-${item.id}`}>
@@ -87,9 +100,9 @@ const Snacks = () => {
                   </div>
                 )}
                 <div className="p-5">
-                  {item.spiceLevel > 0 && (
+                  {item.spice_level > 0 && (
                     <div className="flex gap-0.5 mb-2">
-                      {Array(item.spiceLevel).fill(0).map((_, i) => (
+                      {Array(item.spice_level).fill(0).map((_, i) => (
                         <Flame key={i} size={11} className="text-red-500 fill-red-500" />
                       ))}
                     </div>
@@ -97,8 +110,8 @@ const Snacks = () => {
                   <h3 className="text-base font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{item.name}</h3>
                   <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2">{item.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold" style={{ color: '#800020' }}>{item.price}</span>
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#800020' }} data-testid={`snack-add-${item.id}`}>
+                    <span className="text-lg font-bold" style={{ color: '#800020' }}>£{item.price.toFixed(2)}</span>
+                    <button onClick={() => addToCart({ ...item, price: `£${item.price.toFixed(2)}` })} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#800020' }} data-testid={`snack-add-${item.id}`}>
                       <ShoppingCart size={12} /> Add
                     </button>
                   </div>
@@ -106,7 +119,8 @@ const Snacks = () => {
               </div>
             ))}
           </div>
-          {filtered.length === 0 && <p className="text-center text-gray-500 py-12">No products in this category yet.</p>}
+          )}
+          {!loading && filtered.length === 0 && <p className="text-center text-gray-500 py-12">No products in this category yet.</p>}
         </div>
       </section>
 

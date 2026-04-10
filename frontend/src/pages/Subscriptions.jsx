@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, ArrowRight, ArrowLeft, Calendar, Leaf, Flame, Sparkles, Package } from 'lucide-react';
-import { subscriptionPlans } from '../mockData';
+import api from '../api';
 
 const steps = [
   { num: 1, label: 'Duration' },
@@ -39,6 +39,8 @@ const Subscriptions = () => {
   const [selectedBox, setSelectedBox] = useState(null);
   const [selectedPrefs, setSelectedPrefs] = useState([]);
   const [startDate, setStartDate] = useState('');
+  const [customer, setCustomer] = useState({ name: '', email: '', phone: '', line1: '', line2: '', city: '', postcode: '' });
+  const [submitStatus, setSubmitStatus] = useState(null); // 'loading' | 'success' | 'error'
 
   const togglePref = (id) => {
     setSelectedPrefs(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
@@ -47,7 +49,32 @@ const Subscriptions = () => {
   const canProceed = () => {
     if (currentStep === 1) return selectedDuration !== null;
     if (currentStep === 2) return selectedBox !== null;
+    if (currentStep === 3) return !!startDate;
     return true;
+  };
+
+  const handleConfirm = async () => {
+    setSubmitStatus('loading');
+    try {
+      await api.post('/subscriptions', {
+        customer_name: customer.name,
+        customer_email: customer.email,
+        customer_phone: customer.phone,
+        plan: selectedDuration,
+        box_type: selectedBox,
+        preferences: selectedPrefs,
+        start_date: startDate,
+        delivery_address: {
+          line1: customer.line1,
+          line2: customer.line2 || undefined,
+          city: customer.city,
+          postcode: customer.postcode,
+        },
+      });
+      setSubmitStatus('success');
+    } catch {
+      setSubmitStatus('error');
+    }
   };
 
   const goNext = () => { if (canProceed() && currentStep < 4) setCurrentStep(currentStep + 1); };
@@ -231,11 +258,12 @@ const Subscriptions = () => {
               </div>
 
               <div className="max-w-sm">
-                <label className="text-sm font-semibold block mb-2" style={{ color: '#2D2422' }}>Preferred Start Date</label>
+                <label className="text-sm font-semibold block mb-2" style={{ color: '#2D2422' }}>Preferred Start Date *</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
+                  required
                   className="w-full p-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors"
                   data-testid="start-date-input"
                 />
@@ -291,20 +319,60 @@ const Subscriptions = () => {
                   </div>
                 )}
 
-                <div className="pt-3 flex items-center justify-between">
+                <div className="py-3" style={{ borderBottom: '1px solid #f0ebe6' }}>
+                  <p className="text-xs text-gray-500 mb-3">Your Details</p>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {[
+                      { label: 'Full Name *', key: 'name', type: 'text', placeholder: 'Your name' },
+                      { label: 'Email *', key: 'email', type: 'email', placeholder: 'you@example.com' },
+                      { label: 'Phone *', key: 'phone', type: 'tel', placeholder: '+44 xxx xxxx xxxx' },
+                      { label: 'Address Line 1 *', key: 'line1', type: 'text', placeholder: '123 High Street' },
+                      { label: 'Address Line 2', key: 'line2', type: 'text', placeholder: 'Flat / Apartment (optional)' },
+                      { label: 'City *', key: 'city', type: 'text', placeholder: 'Milton Keynes' },
+                      { label: 'Postcode *', key: 'postcode', type: 'text', placeholder: 'MK9 1AB' },
+                    ].map(({ label, key, type, placeholder }) => (
+                      <div key={key}>
+                        <label className="text-xs font-semibold block mb-1" style={{ color: '#2D2422' }}>{label}</label>
+                        <input
+                          type={type}
+                          placeholder={placeholder}
+                          value={customer[key]}
+                          onChange={e => setCustomer(prev => ({ ...prev, [key]: e.target.value }))}
+                          className="w-full p-2.5 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors"
+                          data-testid={`subscription-${key}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-3 flex items-center justify-between flex-wrap gap-4">
                   <div>
                     <p className="text-sm text-gray-500">Total</p>
                     <p className="text-3xl font-bold" style={{ color: '#800020' }}>{selectedDurationData?.price}</p>
                     <p className="text-xs" style={{ color: '#B8860B' }}>{selectedDurationData?.perMeal}</p>
                   </div>
-                  <button
-                    className="px-8 py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg"
-                    style={{ backgroundColor: '#800020' }}
-                    onClick={() => alert('Thank you! Your subscription request has been received. We will contact you to confirm.')}
-                    data-testid="confirm-subscription-btn"
-                  >
-                    Confirm Subscription
-                  </button>
+                  <div className="flex flex-col items-end gap-2">
+                    {submitStatus === 'success' && (
+                      <p className="text-sm font-medium px-4 py-2 rounded-lg" style={{ backgroundColor: '#F0FFF4', color: '#4A7C59' }}>
+                        Subscription confirmed! We'll be in touch soon.
+                      </p>
+                    )}
+                    {submitStatus === 'error' && (
+                      <p className="text-sm font-medium px-4 py-2 rounded-lg" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>
+                        Something went wrong. Please try again.
+                      </p>
+                    )}
+                    <button
+                      className="px-8 py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg disabled:opacity-60"
+                      style={{ backgroundColor: '#800020' }}
+                      onClick={handleConfirm}
+                      disabled={submitStatus === 'loading' || submitStatus === 'success' || !customer.name || !customer.email || !customer.phone || !customer.line1 || !customer.city || !customer.postcode}
+                      data-testid="confirm-subscription-btn"
+                    >
+                      {submitStatus === 'loading' ? 'Confirming...' : 'Confirm Subscription'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

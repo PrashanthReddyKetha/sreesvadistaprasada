@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, Leaf, ShoppingCart, ArrowRight, Search } from 'lucide-react';
-import { menuItems } from '../mockData';
+import { Flame, ShoppingCart, ArrowRight, Search } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import api from '../api';
 
 const categories = [
   { id: 'all', name: 'All Dishes' },
@@ -14,26 +15,26 @@ const categories = [
 ];
 
 const Menu = () => {
+  const [allDishes, setAllDishes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const { addToCart } = useCart();
 
-  const getAllDishes = () => {
-    const all = [];
-    Object.keys(menuItems).forEach(cat => {
-      menuItems[cat].forEach(item => all.push({ ...item, menuCategory: cat }));
-    });
-    return all;
-  };
+  useEffect(() => {
+    api.get('/menu')
+      .then(res => setAllDishes(res.data))
+      .catch(err => console.error('Failed to load menu:', err))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const getFilteredByCategory = () => {
-    return activeCategory === 'all' ? getAllDishes() : (menuItems[activeCategory] || []).map(item => ({ ...item, menuCategory: activeCategory }));
-  };
-
-  const filtered = getFilteredByCategory().filter(dish =>
-    !searchQuery.trim() || dish.name.toLowerCase().includes(searchQuery.toLowerCase()) || dish.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const isVeg = (cat) => ['veg', 'prasada', 'breakfast', 'podis'].includes(cat);
+  const filtered = allDishes
+    .filter(dish => activeCategory === 'all' || dish.category === activeCategory)
+    .filter(dish =>
+      !searchQuery.trim() ||
+      dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dish.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
@@ -103,40 +104,44 @@ const Menu = () => {
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filtered.map((dish) => (
-              <div key={dish.id + dish.menuCategory} className="rounded-lg overflow-hidden bg-white card-hover group" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }} data-testid={`menu-dish-${dish.id}`}>
-                {dish.image && (
-                  <div className="relative h-40 overflow-hidden">
-                    <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
-                    <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-sm border-2 flex items-center justify-center bg-white/90"
-                      style={{ borderColor: isVeg(dish.menuCategory) ? '#22c55e' : '#ef4444' }}>
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: isVeg(dish.menuCategory) ? '#22c55e' : '#ef4444' }} />
-                    </div>
-                  </div>
-                )}
-                <div className="p-4">
-                  {dish.spiceLevel > 0 && (
-                    <div className="flex gap-0.5 mb-1.5">
-                      {Array(dish.spiceLevel).fill(0).map((_, i) => (
-                        <Flame key={i} size={10} className="text-red-500 fill-red-500" />
-                      ))}
+          {loading ? (
+            <div className="text-center py-20 text-gray-400">Loading menu...</div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filtered.map((dish) => (
+                <div key={dish.id} className="rounded-lg overflow-hidden bg-white card-hover group" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }} data-testid={`menu-dish-${dish.id}`}>
+                  {dish.image && (
+                    <div className="relative h-40 overflow-hidden">
+                      <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+                      <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-sm border-2 flex items-center justify-center bg-white/90"
+                        style={{ borderColor: dish.is_veg ? '#22c55e' : '#ef4444' }}>
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dish.is_veg ? '#22c55e' : '#ef4444' }} />
+                      </div>
                     </div>
                   )}
-                  <h3 className="text-sm font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
-                  <p className="text-xs text-gray-500 line-clamp-1 mb-2">{dish.description}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-base font-bold" style={{ color: '#800020' }}>{dish.price}</span>
-                    <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>
-                      <ShoppingCart size={11} /> Add
-                    </button>
+                  <div className="p-4">
+                    {dish.spice_level > 0 && (
+                      <div className="flex gap-0.5 mb-1.5">
+                        {Array(dish.spice_level).fill(0).map((_, i) => (
+                          <Flame key={i} size={10} className="text-red-500 fill-red-500" />
+                        ))}
+                      </div>
+                    )}
+                    <h3 className="text-sm font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
+                    <p className="text-xs text-gray-500 line-clamp-1 mb-2">{dish.description}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-base font-bold" style={{ color: '#800020' }}>£{dish.price.toFixed(2)}</span>
+                      <button onClick={() => addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` })} className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>
+                        <ShoppingCart size={11} /> Add
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          {filtered.length === 0 && <p className="text-center text-gray-500 py-12">No items found.</p>}
+              ))}
+            </div>
+          )}
+          {!loading && filtered.length === 0 && <p className="text-center text-gray-500 py-12">No items found.</p>}
         </div>
       </section>
 

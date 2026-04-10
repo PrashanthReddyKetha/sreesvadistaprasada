@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Instagram, Facebook, Twitter, ArrowRight } from 'lucide-react';
+import api from '../api';
 
 const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
+  const [status, setStatus] = useState(null); // 'loading' | 'success' | 'error'
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Thank you for reaching out! We will get back to you soon.');
+    setStatus('loading');
+    try {
+      await api.post('/enquiries/contact', formData);
+      setStatus('success');
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    } catch {
+      setStatus('error');
+    }
   };
 
   return (
@@ -158,8 +167,18 @@ const Contact = () => {
                   <textarea required rows={5} value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} placeholder="How can we help you?"
                     className="w-full p-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors resize-none" data-testid="contact-message" />
                 </div>
-                <button type="submit" className="w-full py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg" style={{ backgroundColor: '#800020' }} data-testid="contact-submit-btn">
-                  Send Message <ArrowRight size={16} className="inline ml-2" />
+                {status === 'success' && (
+                  <div className="p-4 rounded-lg text-sm font-medium" style={{ backgroundColor: '#F0FFF4', color: '#4A7C59' }}>
+                    Thank you! We'll get back to you soon.
+                  </div>
+                )}
+                {status === 'error' && (
+                  <div className="p-4 rounded-lg text-sm font-medium" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>
+                    Something went wrong. Please try again.
+                  </div>
+                )}
+                <button type="submit" disabled={status === 'loading'} className="w-full py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg disabled:opacity-60" style={{ backgroundColor: '#800020' }} data-testid="contact-submit-btn">
+                  {status === 'loading' ? 'Sending...' : <><span>Send Message</span> <ArrowRight size={16} className="inline ml-2" /></>}
                 </button>
               </form>
             </div>
