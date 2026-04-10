@@ -222,6 +222,12 @@ const CartDrawer = () => {
     notes: '',
   });
 
+  // Address lookup state
+  const [pcLookingUp, setPcLookingUp]     = useState(false);
+  const [pcError, setPcError]             = useState('');
+  const [addressOptions, setAddressOptions] = useState([]);
+  const [addressDropdown, setAddressDropdown] = useState(false);
+
   // Pre-fill from user account whenever user or step changes
   useEffect(() => {
     if (user) {
@@ -239,6 +245,44 @@ const CartDrawer = () => {
   }, [user, step]);
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
+
+  const lookupPostcode = async (pc) => {
+    const clean = pc.replace(/\s/g, '').toUpperCase();
+    if (clean.length < 5) return;
+    setPcError(''); setPcLookingUp(true); setAddressOptions([]); setAddressDropdown(false);
+    const apiKey = process.env.REACT_APP_GETADDRESS_API_KEY;
+    try {
+      if (apiKey) {
+        // Full address lookup via getAddress.io
+        const r = await fetch(`https://api.getaddress.io/find/${encodeURIComponent(pc.trim())}?api-key=${apiKey}&expand=true`);
+        if (r.status === 404) { setPcError('Postcode not found. Please check and try again.'); return; }
+        if (!r.ok) throw new Error();
+        const data = await r.json();
+        const addrs = (data.addresses || []).map(a => ({
+          label: [a.line_1, a.line_2, a.town_or_city].filter(Boolean).join(', '),
+          line1: a.line_1 || '',
+          line2: a.line_2 || '',
+          city:  a.town_or_city || '',
+        }));
+        if (addrs.length === 0) { setPcError('No addresses found for this postcode.'); return; }
+        setAddressOptions(addrs);
+        setAddressDropdown(true);
+      } else {
+        // Free fallback: postcodes.io — just auto-fills city
+        const r = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(pc.trim())}`);
+        if (!r.ok) { setPcError('Postcode not found. Please check and try again.'); return; }
+        const data = await r.json();
+        const city = data.result?.admin_district || data.result?.parliamentary_constituency || '';
+        if (city) setForm(f => ({ ...f, city: f.city || city }));
+      }
+    } catch { setPcError('Could not look up postcode. Please enter your address manually.'); }
+    finally { setPcLookingUp(false); }
+  };
+
+  const selectAddress = (addr) => {
+    setForm(f => ({ ...f, line1: addr.line1, line2: addr.line2, city: addr.city }));
+    setAddressDropdown(false);
+  };
 
   const deliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const grandTotal  = cartTotal + deliveryFee;
@@ -479,6 +523,7 @@ const CartDrawer = () => {
                 </div>
 
                 <div className="space-y-3">
+                  {/* Contact */}
                   <div className="grid grid-cols-2 gap-3">
                     <Field label="Full Name *" icon={User} value={form.name} onChange={set('name')}
                       placeholder="Your name" locked={!!user?.name && form.name === user.name} />
@@ -488,14 +533,60 @@ const CartDrawer = () => {
                   <Field label="Email *" icon={Mail} type="email" value={form.email} onChange={set('email')}
                     placeholder="you@example.com" locked={!!user?.email && form.email === user.email}
                     hint={user ? 'Order confirmation will be sent here' : ''} />
-                  <Field label="Address Line 1 *" icon={MapPin} value={form.line1} onChange={set('line1')}
-                    placeholder="123 High Street" />
-                  <Field label="Address Line 2" icon={null} value={form.line2} onChange={set('line2')}
-                    placeholder="Flat / Apartment (optional)" />
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="City *" icon={null} value={form.city} onChange={set('city')} placeholder="Milton Keynes" />
-                    <Field label="Postcode *" icon={null} value={form.postcode} onChange={set('postcode')} placeholder="MK9 1AB" />
+
+                  {/* Postcode first */}
+                  <div>
+                    <label className="text-xs font-semibold block mb-1" style={{ color: '#5C4B47' }}>
+                      Postcode * <span className="font-normal text-gray-400">— we'll find your address</span>
+                    </label>
+                    <div className="relative">
+                      <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text" placeholder="e.g. MK9 1AB"
+                        value={form.postcode}
+                        onChange={e => { set('postcode')(e.target.value.toUpperCase()); setPcError(''); setAddressDropdown(false); }}
+                        onBlur={() => lookupPostcode(form.postcode)}
+                        className="w-full pl-9 pr-10 py-2.5 rounded-lg border-2 text-sm focus:outline-none transition-colors uppercase"
+                        style={{ borderColor: pcError ? '#FCA5A5' : form.postcode ? 'rgba(128,0,32,0.3)' : '#E5E7EB', color: '#2D2422' }}
+                      />
+                      {pcLookingUp && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" />
+                      )}
+                      {!pcLookingUp && form.line1 && (
+                        <CheckCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#166534' }} />
+                      )}
+                    </div>
+                    {pcError && <p className="text-[10px] mt-0.5" style={{ color: '#EF4444' }}>{pcError}</p>}
+
+                    {/* Address dropdown */}
+                    {addressDropdown && addressOptions.length > 0 && (
+                      <div className="mt-1.5 border-2 rounded-lg overflow-hidden shadow-lg"
+                        style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: 'white', maxHeight: '180px', overflowY: 'auto' }}>
+                        <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider bg-gray-50" style={{ color: '#9C7B6B' }}>
+                          {addressOptions.length} addresses found — select yours
+                        </p>
+                        {addressOptions.map((addr, i) => (
+                          <button key={i} type="button" onClick={() => selectAddress(addr)}
+                            className="w-full text-left px-3 py-2 text-xs border-t hover:bg-[#800020]/5 transition-colors"
+                            style={{ borderColor: 'rgba(128,0,32,0.06)', color: '#2D2422' }}>
+                            {addr.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
+
+                  {/* Address fields — shown after postcode entered */}
+                  {form.postcode.replace(/\s/g,'').length >= 5 && (
+                    <>
+                      <Field label="Address Line 1 *" icon={MapPin} value={form.line1} onChange={set('line1')}
+                        placeholder="123 High Street" locked={!!form.line1 && !addressDropdown} />
+                      <Field label="Address Line 2" icon={null} value={form.line2} onChange={set('line2')}
+                        placeholder="Flat / Apartment (optional)" />
+                      <Field label="Town / City *" icon={null} value={form.city} onChange={set('city')}
+                        placeholder="Milton Keynes" locked={!!form.city && !addressDropdown} />
+                    </>
+                  )}
                 </div>
               </div>
 
