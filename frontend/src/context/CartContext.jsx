@@ -1,6 +1,14 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 const CartContext = createContext();
+const STORAGE_KEY = 'ssp_cart';
+
+const loadCart = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch { return []; }
+};
 
 export const useCart = () => {
   const context = useContext(CartContext);
@@ -9,9 +17,16 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState(loadCart);
   const [toast, setToast] = useState(null);
   const [cartOpen, setCartOpen] = useState(false);
+
+  // Persist cart to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
+    } catch {}
+  }, [cartItems]);
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = cartItems.reduce((sum, item) => {
@@ -47,7 +62,10 @@ export const CartProvider = ({ children }) => {
     }
   }, []);
 
-  const clearCart = useCallback(() => setCartItems([]), []);
+  const clearCart = useCallback(() => {
+    setCartItems([]);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  }, []);
 
   return (
     <CartContext.Provider value={{ cartItems, cartCount, cartTotal, addToCart, removeFromCart, updateQuantity, clearCart, toast, cartOpen, setCartOpen }}>

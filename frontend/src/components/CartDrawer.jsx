@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, ChevronDown, ChevronUp,
-  User, Mail, Phone, MapPin, CheckCircle, Truck, Tag, Zap, Edit2, FileText
+  User, Mail, Phone, MapPin, CheckCircle, Truck, Tag, Zap, Edit2, FileText,
+  Lock, Eye, EyeOff, LogIn, UserPlus
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -208,7 +209,7 @@ function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange,
 /* ══════════════════════════════════════════════════════════════════════════ */
 const CartDrawer = () => {
   const { cartItems, cartCount, cartTotal, cartOpen, setCartOpen, updateQuantity, removeFromCart, clearCart, addToCart } = useCart();
-  const { user, setAuthOpen } = useAuth();
+  const { user, login, setAuthOpen } = useAuth();
 
   const [step, setStep]           = useState('cart');
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -344,7 +345,7 @@ const CartDrawer = () => {
           <div className="flex items-center gap-2">
             <ShoppingBag size={18} className={step === 'success' ? '' : 'text-white'} style={step === 'success' ? { color: '#800020' } : {}} />
             <h2 className="text-base font-bold" style={{ fontFamily: "'Playfair Display', serif", color: step === 'success' ? '#800020' : 'white' }}>
-              {step === 'success' ? 'Order Confirmed!' : step === 'checkout' ? 'Checkout' : step === 'browse' ? 'Add More Items' : `Your Basket (${cartCount})`}
+              {step === 'success' ? 'Order Confirmed!' : step === 'checkout' ? 'Checkout' : step === 'browse' ? 'Add More Items' : step === 'guest_prompt' ? 'How would you like to proceed?' : `Your Basket (${cartCount})`}
             </h2>
           </div>
           <button onClick={handleClose} className="p-1.5 rounded-full transition-colors" style={{ color: step === 'success' ? '#5C4B47' : 'rgba(255,255,255,0.8)' }}>
@@ -458,16 +459,7 @@ const CartDrawer = () => {
                     </div>
                   </div>
 
-                  {/* Guest nudge */}
-                  {!user && (
-                    <button onClick={() => { handleClose(); setAuthOpen(true); }}
-                      className="w-full py-2 text-xs font-semibold rounded-lg border flex items-center justify-center gap-1.5 transition-colors hover:bg-[#800020]/5"
-                      style={{ borderColor: 'rgba(128,0,32,0.3)', color: '#800020' }}>
-                      <User size={12} /> Sign in to auto-fill your details
-                    </button>
-                  )}
-
-                  <button onClick={() => setStep('checkout')}
+                  <button onClick={() => setStep(user ? 'checkout' : 'guest_prompt')}
                     className="w-full py-3.5 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-2 hover:shadow-lg transition-all"
                     style={{ backgroundColor: '#800020' }}>
                     Proceed to Checkout <ArrowRight size={16} />
@@ -639,6 +631,16 @@ const CartDrawer = () => {
           </>
         )}
 
+        {/* ── GUEST PROMPT ─────────────────────────────────────────── */}
+        {step === 'guest_prompt' && (
+          <GuestPrompt
+            onSignedIn={() => setStep('checkout')}
+            onGuest={() => setStep('checkout')}
+            onRegister={() => { handleClose(); setAuthOpen(true); }}
+            login={login}
+          />
+        )}
+
         {/* ── BROWSE ───────────────────────────────────────────────── */}
         {step === 'browse' && (
           <BrowseMenu
@@ -653,6 +655,99 @@ const CartDrawer = () => {
     </>
   );
 };
+
+/* ── Guest prompt ─────────────────────────────────────────────────────────── */
+function GuestPrompt({ onSignedIn, onGuest, onRegister, login }) {
+  const [email, setEmail]     = useState('');
+  const [pw, setPw]           = useState('');
+  const [showPw, setShowPw]   = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState('');
+
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    setError(''); setLoading(true);
+    try {
+      const res = await api.post('/auth/login', { email, password: pw });
+      login(res.data.user, res.data.access_token);
+      onSignedIn();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Invalid email or password.');
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+
+      {/* Sign in block */}
+      <div className="rounded-2xl border-2 p-5 space-y-4" style={{ borderColor: 'rgba(128,0,32,0.15)' }}>
+        <div className="flex items-center gap-2">
+          <LogIn size={16} style={{ color: '#800020' }} />
+          <p className="text-sm font-bold" style={{ color: '#800020' }}>Sign in for faster checkout</p>
+        </div>
+        <p className="text-xs text-gray-500">Your saved address and details will be filled in automatically.</p>
+
+        <form onSubmit={handleSignIn} className="space-y-3">
+          {error && (
+            <p className="text-xs p-2.5 rounded-lg" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{error}</p>
+          )}
+          <div className="relative">
+            <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type="email" placeholder="Email address" value={email}
+              onChange={e => setEmail(e.target.value)} required autoComplete="email"
+              className="w-full pl-9 pr-3 py-2.5 rounded-lg border-2 text-sm focus:outline-none transition-colors"
+              style={{ borderColor: email ? 'rgba(128,0,32,0.3)' : '#E5E7EB', color: '#2D2422' }} />
+          </div>
+          <div className="relative">
+            <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type={showPw ? 'text' : 'password'} placeholder="Password" value={pw}
+              onChange={e => setPw(e.target.value)} required autoComplete="current-password"
+              className="w-full pl-9 pr-10 py-2.5 rounded-lg border-2 text-sm focus:outline-none transition-colors"
+              style={{ borderColor: pw ? 'rgba(128,0,32,0.3)' : '#E5E7EB', color: '#2D2422' }} />
+            <button type="button" onClick={() => setShowPw(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
+            </button>
+          </div>
+          <button type="submit" disabled={loading}
+            className="w-full py-3 text-sm font-bold text-white rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-md disabled:opacity-60"
+            style={{ backgroundColor: '#800020' }}>
+            {loading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Signing in…</> : 'Sign In & Continue'}
+          </button>
+        </form>
+      </div>
+
+      {/* Register block */}
+      <div className="rounded-2xl border-2 p-5" style={{ borderColor: 'rgba(128,0,32,0.1)', backgroundColor: '#FDFBF7' }}>
+        <div className="flex items-center gap-2 mb-2">
+          <UserPlus size={16} style={{ color: '#800020' }} />
+          <p className="text-sm font-bold" style={{ color: '#800020' }}>New here?</p>
+        </div>
+        <p className="text-xs text-gray-500 mb-3">Create an account to track orders, save your address, and get exclusive offers.</p>
+        <button onClick={onRegister}
+          className="w-full py-2.5 text-sm font-semibold rounded-xl border-2 transition-all hover:bg-[#800020]/5"
+          style={{ borderColor: '#800020', color: '#800020' }}>
+          Create Account
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-gray-200" />
+        <span className="text-xs text-gray-400">or</span>
+        <div className="flex-1 h-px bg-gray-200" />
+      </div>
+
+      {/* Guest */}
+      <button onClick={onGuest}
+        className="w-full py-3 text-sm font-semibold rounded-xl border-2 flex items-center justify-center gap-2 transition-all hover:bg-gray-50"
+        style={{ borderColor: '#E5E7EB', color: '#5C4B47' }}>
+        Continue as Guest <ArrowRight size={14} />
+      </button>
+      <p className="text-center text-[10px] text-gray-400">You can still track your order using your email address.</p>
+    </div>
+  );
+}
 
 /* ── Inline menu browser ──────────────────────────────────────────────────── */
 const CATEGORY_LABELS = {
