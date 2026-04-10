@@ -121,7 +121,7 @@ function UpsellRow({ cartItems, onAdd }) {
 }
 
 /* ── Order summary (in checkout) ─────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, collapsed, onToggle }) {
+function OrderSummary({ cartItems, cartTotal, collapsed, onToggle, updateQuantity, removeFromCart }) {
   const deliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const grandTotal = cartTotal + deliveryFee;
 
@@ -135,6 +135,7 @@ function OrderSummary({ cartItems, cartTotal, collapsed, onToggle }) {
           <span className="text-sm font-semibold" style={{ color: '#800020' }}>
             {cartItems.length} item{cartItems.length !== 1 ? 's' : ''}
           </span>
+          <span className="text-[10px] text-gray-400 font-normal">(tap to edit)</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold" style={{ color: '#800020' }}>{fmt(grandTotal)}</span>
@@ -143,17 +144,28 @@ function OrderSummary({ cartItems, cartTotal, collapsed, onToggle }) {
       </button>
 
       {!collapsed && (
-        <div className="px-4 py-3 space-y-2.5">
+        <div className="px-4 py-3 space-y-3">
           {cartItems.map(item => (
             <div key={item.id} className="flex items-center gap-3">
               {item.image && <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />}
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold truncate" style={{ color: '#2D2422' }}>{item.name}</p>
-                <p className="text-[10px] text-gray-400">Qty: {item.quantity}</p>
+                <p className="text-xs font-bold mt-0.5" style={{ color: '#800020' }}>{fmt(price(item.price) * item.quantity)}</p>
               </div>
-              <span className="text-xs font-bold flex-shrink-0" style={{ color: '#800020' }}>
-                {fmt(price(item.price) * item.quantity)}
-              </span>
+              {/* Quantity controls */}
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                  className="w-6 h-6 rounded-full border flex items-center justify-center transition-colors hover:bg-[#800020] hover:text-white hover:border-[#800020]"
+                  style={{ borderColor: '#ddd', color: '#5C4B47' }}>
+                  {item.quantity === 1 ? <Trash2 size={10} /> : <Minus size={10} />}
+                </button>
+                <span className="w-5 text-center text-xs font-bold" style={{ color: '#2D2422' }}>{item.quantity}</span>
+                <button onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  className="w-6 h-6 rounded-full border flex items-center justify-center transition-colors hover:bg-[#800020] hover:text-white hover:border-[#800020]"
+                  style={{ borderColor: '#ddd', color: '#5C4B47' }}>
+                  <Plus size={10} />
+                </button>
+              </div>
             </div>
           ))}
           <div className="pt-2 mt-2 space-y-1.5 border-t" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
@@ -499,6 +511,8 @@ const CartDrawer = () => {
                 cartTotal={cartTotal}
                 collapsed={summaryOpen}
                 onToggle={() => setSummaryOpen(o => !o)}
+                updateQuantity={updateQuantity}
+                removeFromCart={removeFromCart}
               />
 
               {/* Delivery details section */}
