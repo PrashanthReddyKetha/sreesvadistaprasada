@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: (process.env.REACT_APP_BACKEND_URL || '') + '/api',
+  baseURL: (process.env.REACT_APP_BACKEND_URL || 'https://svadista-backend.onrender.com') + '/api',
 });
 
 export default api;

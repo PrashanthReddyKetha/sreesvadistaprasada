@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User, ChevronDown } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartCount, setCartOpen } = useCart();
+  const { user, logout, setAuthOpen } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const location = useLocation();
@@ -176,13 +178,18 @@ const Header = () => {
                     </span>
                   )}
                 </button>
-                <button
-                  className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5"
-                  data-testid="account-button"
-                  style={{ color: '#800020' }}
-                >
-                  <User size={20} />
-                </button>
+                {user ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold hidden xl:block max-w-[100px] truncate" style={{ color: '#800020' }}>{user.name}</span>
+                    <button onClick={logout} className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5 text-xs font-semibold" style={{ color: '#800020' }} data-testid="logout-button" title="Sign out">
+                      <User size={20} />
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setAuthOpen(true)} className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" data-testid="account-button" style={{ color: '#800020' }} title="Sign in">
+                    <User size={20} />
+                  </button>
+                )}
               </div>
             </nav>
 
@@ -260,14 +267,20 @@ const Header = () => {
                   </Link>
                 )
               ))}
-              <button
-                className="w-full mt-3 py-3 text-sm font-medium rounded-md"
-                style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.2)' }}
-                data-testid="mobile-account-button"
-              >
-                <User size={16} className="inline mr-2" />
-                My Account
-              </button>
+              {user ? (
+                <div className="mt-3 flex items-center justify-between px-3 py-3 rounded-md" style={{ border: '1px solid rgba(128,0,32,0.2)' }}>
+                  <span className="text-sm font-medium" style={{ color: '#800020' }}><User size={14} className="inline mr-1" />{user.name}</span>
+                  <button onClick={logout} className="text-xs font-semibold" style={{ color: '#800020' }}>Sign Out</button>
+                </div>
+              ) : (
+                <button onClick={() => { setIsMenuOpen(false); setAuthOpen(true); }}
+                  className="w-full mt-3 py-3 text-sm font-medium rounded-md"
+                  style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.2)' }}
+                  data-testid="mobile-account-button">
+                  <User size={16} className="inline mr-2" />
+                  Sign In / Register
+                </button>
+              )}
             </nav>
           )}
         </div>

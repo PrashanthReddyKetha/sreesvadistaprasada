@@ -2,11 +2,13 @@ import React from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./context/CartContext";
+import { AuthProvider } from "./context/AuthContext";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 import CartToast from "./components/CartToast";
 import CartDrawer from "./components/CartDrawer";
+import AuthModal from "./components/AuthModal";
 import Home from "./pages/Home";
 import OurStory from "./pages/OurStory";
 import Svadista from "./pages/Svadista";
@@ -22,11 +24,13 @@ import Gallery from "./pages/Gallery";
 
 function App() {
   return (
+    <AuthProvider>
     <CartProvider>
       <div className="App">
         <BrowserRouter>
           <Header />
           <CartDrawer />
+          <AuthModal />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/story" element={<OurStory />} />
@@ -47,6 +51,7 @@ function App() {
         </BrowserRouter>
       </div>
     </CartProvider>
+    </AuthProvider>
   );
 }
 
