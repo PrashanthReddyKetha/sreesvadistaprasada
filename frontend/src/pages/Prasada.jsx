@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, ShoppingCart, Star, Flame } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import MenuLoader from '../components/MenuLoader';
 import api from '../api';
 
 const TABS = ['All', 'Starters & Snacks', 'Indo-Chinese', 'Curries & Dal', 'Rice Specials', 'Biryani & Rice'];
@@ -82,7 +83,7 @@ const Prasada = () => {
         <div className="max-w-7xl mx-auto">
           {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} dishes</p>}
           {loading ? (
-            <div className="text-center py-20 text-gray-400">Loading…</div>
+            <MenuLoader color="#166534" />
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filtered.map(dish => (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Droplets } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import MenuLoader from '../components/MenuLoader';
 import api from '../api';
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
@@ -49,7 +50,7 @@ const Drinks = () => {
         <div className="max-w-7xl mx-auto">
           {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{items.length} drinks</p>}
           {loading ? (
-            <div className="text-center py-20 text-gray-400">Loading…</div>
+            <MenuLoader color="#7E22CE" />
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {items.map(drink => (
