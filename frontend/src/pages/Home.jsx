@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Truck, Calendar, MapPin, Search } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '../mockData';
@@ -12,6 +12,13 @@ const Home = () => {
   const [postcodeResult, setPostcodeResult] = useState(null);
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const { addToCart } = useCart();
+  const [liveItems, setLiveItems] = useState([]);
+
+  useEffect(() => {
+    api.get('/menu?available=true&featured=true')
+      .then(r => setLiveItems(r.data))
+      .catch(() => {}); // silently fall back to mockData
+  }, []);
 
   const scrollTrending = (direction) => {
     if (trendingRef.current) {
@@ -161,14 +168,20 @@ const Home = () => {
             className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {featuredDishes.map((dish) => (
+            {(liveItems.length > 0 ? liveItems : featuredDishes).map((dish) => {
+              const isLive = liveItems.length > 0;
+              const isVeg = isLive ? dish.is_veg : dish.category !== 'Non-Veg';
+              const spice = isLive ? (dish.spice_level || 0) : (dish.spiceLevel || 0);
+              const price = isLive ? `£${dish.price?.toFixed(2)}` : dish.price;
+              return (
               <div
                 key={dish.id}
                 className="flex-shrink-0 w-72 md:w-80 rounded-lg overflow-hidden group card-hover bg-white"
                 style={{ boxShadow: '0 4px 20px rgba(128, 0, 32, 0.06)' }}
                 data-testid={`trending-dish-${dish.id}`}
               >
-                <div className="relative h-48 overflow-hidden">
+                {/* Image — clicking goes to item page (only for live API items) */}
+                <Link to={isLive ? `/item/${dish.id}` : '#'} className="block relative h-48 overflow-hidden">
                   <img
                     src={dish.image}
                     alt={dish.name}
@@ -178,13 +191,13 @@ const Home = () => {
                   {dish.tag && (
                     <span
                       className="absolute top-3 left-3 px-2.5 py-1 rounded-sm text-xs font-semibold text-white"
-                      style={{ backgroundColor: dish.type === 'svadista' ? '#8B3A3A' : '#4A7C59' }}
+                      style={{ backgroundColor: dish.tag === 'New' ? '#1D4ED8' : '#8B3A3A' }}
                     >
                       {dish.tag}
                     </span>
                   )}
                   <div className="absolute top-3 right-3">
-                    {dish.category === 'Non-Veg' ? (
+                    {!isVeg ? (
                       <div className="w-5 h-5 rounded-sm border-2 border-red-500 flex items-center justify-center">
                         <div className="w-2 h-2 rounded-full bg-red-500" />
                       </div>
@@ -194,22 +207,24 @@ const Home = () => {
                       </div>
                     )}
                   </div>
-                </div>
+                </Link>
                 <div className="p-5">
                   <div className="flex items-center gap-1 mb-2">
-                    {Array(dish.spiceLevel).fill(0).map((_, i) => (
+                    {Array(spice).fill(0).map((_, i) => (
                       <Flame key={i} size={12} className="text-red-500 fill-red-500" />
                     ))}
-                    {dish.spiceLevel === 0 && <span className="text-xs text-gray-400">Mild</span>}
+                    {spice === 0 && <span className="text-xs text-gray-400">Mild</span>}
                   </div>
-                  <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>
-                    {dish.name}
-                  </h3>
+                  <Link to={isLive ? `/item/${dish.id}` : '#'}>
+                    <h3 className="text-lg font-bold mb-1 hover:underline" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>
+                      {dish.name}
+                    </h3>
+                  </Link>
                   <p className="text-xs text-gray-500 leading-relaxed mb-2 line-clamp-2">
                     {dish.description}
                   </p>
                   {dish.allergens && dish.allergens.length > 0 && dish.allergens[0] !== 'none' && (
-                    <div className="flex gap-1 mb-3">
+                    <div className="flex gap-1 mb-3 flex-wrap">
                       {dish.allergens.map(a => (
                         <span key={a} className="px-1.5 py-0.5 rounded text-[10px] font-medium uppercase" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }}>
                           {a}
@@ -218,7 +233,7 @@ const Home = () => {
                     </div>
                   )}
                   <div className="flex justify-between items-center">
-                    <p className="text-xl font-bold" style={{ color: '#800020' }}>{dish.price}</p>
+                    <p className="text-xl font-bold" style={{ color: '#800020' }}>{price}</p>
                     <button
                       onClick={() => addToCart(dish)}
                       className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md"
@@ -230,7 +245,8 @@ const Home = () => {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="text-center mt-8">

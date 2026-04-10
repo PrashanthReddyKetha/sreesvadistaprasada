@@ -85,7 +85,7 @@ export default function Dashboard() {
   const activeSub = subs.find(s => s.status === 'active');
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-4" style={{ backgroundColor: '#FAF8F4' }}>
+    <div className="min-h-screen pt-24 md:pt-28 pb-16 px-4" style={{ backgroundColor: '#FAF8F4' }}>
       <div className="max-w-5xl mx-auto">
 
         {/* ── Header ── */}
