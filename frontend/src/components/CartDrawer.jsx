@@ -23,7 +23,7 @@ const CartDrawer = () => {
         customer_email: form.email,
         customer_phone: form.phone,
         items: cartItems.map(i => ({
-          item_id: i.id,
+          menu_item_id: i.id,
           name: i.name,
           price: parseFloat(String(i.price).replace('£', '')),
           quantity: i.quantity,
