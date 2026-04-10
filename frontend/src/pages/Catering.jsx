@@ -230,9 +230,9 @@ const Catering = () => {
             Need Immediate Assistance?
           </h2>
           <p className="text-gray-300 mb-6">Call us directly to discuss your catering needs.</p>
-          <a href="tel:+442012345678">
+          <a href="tel:+447307119962">
             <button className="px-8 py-3.5 text-sm font-semibold tracking-wide uppercase rounded-sm transition-all duration-300 hover:shadow-lg" style={{ backgroundColor: '#F4C430', color: '#2D2422' }} data-testid="catering-call-btn">
-              Call +44 20 1234 5678
+              Call +44 73 0711 9962
             </button>
           </a>
         </div>

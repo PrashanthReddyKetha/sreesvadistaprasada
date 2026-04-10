@@ -71,9 +71,9 @@ const Contact = () => {
                   <div>
                     <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Call Us</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      Orders: <a href="tel:+442012345678" className="hover:underline" style={{ color: '#800020' }}>+44 20 1234 5678</a><br />
-                      Catering: <a href="tel:+442012345679" className="hover:underline" style={{ color: '#800020' }}>+44 20 1234 5679</a><br />
-                      WhatsApp: <a href="https://wa.me/442012345678" className="hover:underline" style={{ color: '#800020' }}>+44 20 1234 5678</a>
+                      Orders: <a href="tel:+447307119962" className="hover:underline" style={{ color: '#800020' }}>+44 73 0711 9962</a><br />
+                      Catering: <a href="tel:+447307119962" className="hover:underline" style={{ color: '#800020' }}>+44 73 0711 9962</a><br />
+                      WhatsApp: <a href="https://wa.me/447307119962" className="hover:underline" style={{ color: '#800020' }}>+44 73 0711 9962</a>
                     </p>
                   </div>
                 </div>
@@ -110,11 +110,11 @@ const Contact = () => {
                   <h4 className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: '#B8860B' }}>Follow Us</h4>
                   <div className="flex gap-3">
                     {[
-                      { icon: Instagram, label: 'Instagram' },
-                      { icon: Facebook, label: 'Facebook' },
-                      { icon: Twitter, label: 'Twitter' },
-                    ].map(({ icon: Icon, label }) => (
-                      <a key={label} href="#" className="w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 hover:bg-[#800020] hover:text-white" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }} aria-label={label} data-testid={`contact-social-${label.toLowerCase()}`}>
+                      { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/sreesvadistaprasada/' },
+                      { icon: Facebook, label: 'Facebook', href: '#' },
+                      { icon: Twitter, label: 'Twitter', href: '#' },
+                    ].map(({ icon: Icon, label, href }) => (
+                      <a key={label} href={href} target={href !== '#' ? '_blank' : undefined} rel="noopener noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 hover:bg-[#800020] hover:text-white" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }} aria-label={label} data-testid={`contact-social-${label.toLowerCase()}`}>
                         <Icon size={18} />
                       </a>
                     ))}

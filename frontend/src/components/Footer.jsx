@@ -133,7 +133,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Phone size={16} className="flex-shrink-0" style={{ color: '#F4C430' }} />
-                <p className="text-sm" style={{ color: '#A09890' }}>+44 20 1234 5678</p>
+                <p className="text-sm" style={{ color: '#A09890' }}>+44 73 0711 9962</p>
               </div>
               <div className="flex items-center gap-3">
                 <Mail size={16} className="flex-shrink-0" style={{ color: '#F4C430' }} />
@@ -146,13 +146,15 @@ const Footer = () => {
               <h5 className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: '#F4C430' }}>Follow Us</h5>
               <div className="flex gap-3">
                 {[
-                  { icon: Instagram, label: 'Instagram' },
-                  { icon: Facebook, label: 'Facebook' },
-                  { icon: Twitter, label: 'Twitter' },
-                ].map(({ icon: Icon, label }) => (
+                  { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/sreesvadistaprasada/' },
+                  { icon: Facebook, label: 'Facebook', href: '#' },
+                  { icon: Twitter, label: 'Twitter', href: '#' },
+                ].map(({ icon: Icon, label, href }) => (
                   <a
                     key={label}
-                    href="#"
+                    href={href}
+                    target={href !== '#' ? '_blank' : undefined}
+                    rel="noopener noreferrer"
                     className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 hover:bg-[#800020]"
                     style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#A09890' }}
                     aria-label={label}

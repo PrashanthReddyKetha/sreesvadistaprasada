@@ -462,7 +462,7 @@ export const faqData = [
     category: 'Payment & General',
     items: [
       { q: 'What payment methods do you accept?', a: 'We accept all major credit/debit cards, Apple Pay, Google Pay, and bank transfers. Cash on delivery available in Milton Keynes.' },
-      { q: 'How do I contact you?', a: 'Call us at +44 20 1234 5678, WhatsApp the same number, or email hello@sreesvadista.co.uk. You can also use the contact form on our website.' },
+      { q: 'How do I contact you?', a: 'Call us at +44 73 0711 9962, WhatsApp the same number, or email hello@sreesvadista.co.uk. You can also use the contact form on our website.' },
     ]
   }
 ];

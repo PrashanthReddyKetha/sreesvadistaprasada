@@ -102,12 +102,12 @@ const FAQ = () => {
           </h2>
           <p className="text-sm text-gray-600 mb-6">We're always happy to help. Reach out to us anytime.</p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <a href="https://wa.me/442012345678" target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.me/447307119962" target="_blank" rel="noopener noreferrer">
               <button className="px-6 py-3 text-sm font-semibold text-white rounded-sm transition-all duration-300 hover:shadow-lg" style={{ backgroundColor: '#25D366' }} data-testid="faq-whatsapp-btn">
                 WhatsApp Us
               </button>
             </a>
-            <a href="tel:+442012345678">
+            <a href="tel:+447307119962">
               <button className="btn-outlined" data-testid="faq-call-btn">
                 Call Us
               </button>
