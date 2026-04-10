@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, ChevronDown, ChevronUp,
   User, Mail, Phone, MapPin, CheckCircle, Truck, Tag, Zap, Edit2, FileText,
@@ -236,6 +236,7 @@ const CartDrawer = () => {
   });
 
   // Address lookup state
+  const pcDebounceRef = useRef(null);
   const [pcLookingUp, setPcLookingUp]     = useState(false);
   const [pcError, setPcError]             = useState('');
   const [addressOptions, setAddressOptions] = useState([]);
@@ -550,8 +551,17 @@ const CartDrawer = () => {
                       <input
                         type="text" placeholder="e.g. MK9 1AB"
                         value={form.postcode}
-                        onChange={e => { set('postcode')(e.target.value.toUpperCase()); setPcError(''); setAddressDropdown(false); }}
-                        onBlur={() => lookupPostcode(form.postcode)}
+                        onChange={e => {
+                          const val = e.target.value.toUpperCase();
+                          set('postcode')(val);
+                          setPcError(''); setAddressDropdown(false);
+                          clearTimeout(pcDebounceRef.current);
+                          const clean = val.replace(/\s/g, '');
+                          if (clean.length >= 5) {
+                            pcDebounceRef.current = setTimeout(() => lookupPostcode(val), 600);
+                          }
+                        }}
+                        onBlur={() => { clearTimeout(pcDebounceRef.current); lookupPostcode(form.postcode); }}
                         className="w-full pl-9 pr-10 py-2.5 rounded-lg border-2 text-sm focus:outline-none transition-colors uppercase"
                         style={{ borderColor: pcError ? '#FCA5A5' : form.postcode ? 'rgba(128,0,32,0.3)' : '#E5E7EB', color: '#2D2422' }}
                       />
