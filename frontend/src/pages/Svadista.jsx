@@ -98,13 +98,18 @@ const Svadista = () => {
                       {dish.spice_level <= 1 ? 'Mild' : dish.spice_level <= 2 ? 'Medium' : dish.spice_level <= 3 ? 'Spicy' : 'Very Spicy'}
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
+                  <Link to={`/item/${dish.id}`} className="hover:underline">
+                    <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
+                  </Link>
                   <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2">{dish.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-xl font-bold" style={{ color: '#8B3A3A' }}>£{dish.price.toFixed(2)}</span>
-                    <button onClick={() => addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` })} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#8B3A3A' }} data-testid={`svadista-add-${dish.id}`}>
-                      <ShoppingCart size={13} /> Add
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <Link to={`/item/${dish.id}`} className="text-xs font-semibold px-3 py-1.5 rounded-sm" style={{ color:'#8B3A3A', border:'1px solid #8B3A3A' }}>Details</Link>
+                      <button onClick={() => addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` })} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#8B3A3A' }} data-testid={`svadista-add-${dish.id}`}>
+                        <ShoppingCart size={13} /> Add
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

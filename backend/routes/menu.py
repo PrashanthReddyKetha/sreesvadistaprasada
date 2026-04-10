@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
+from datetime import datetime
 from database import db
-from models import MenuItem, MenuItemCreate, MenuItemUpdate, MenuCategory
-from auth import require_admin
+from models import MenuItem, MenuItemCreate, MenuItemUpdate, MenuCategory, Review, ReviewCreate
+from auth import require_admin, get_current_user, get_optional_user
 
 router = APIRouter(prefix="/menu", tags=["menu"])
 
@@ -74,3 +75,66 @@ async def delete_menu_item(item_id: str, _: dict = Depends(require_admin)):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Menu item not found")
     return {"message": "Menu item deleted"}
+
+
+# ── Reviews ──────────────────────────────────────────────────────────────────
+
+@router.get("/{item_id}/reviews")
+async def get_reviews(item_id: str):
+    reviews = await db.reviews.find({"menu_item_id": item_id}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return reviews
+
+
+@router.post("/{item_id}/reviews", response_model=Review)
+async def add_review(item_id: str, payload: ReviewCreate, current_user: dict = Depends(get_current_user)):
+    item = await db.menu_items.find_one({"id": item_id})
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    existing = await db.reviews.find_one({"menu_item_id": item_id, "user_id": current_user["sub"]})
+    if existing:
+        raise HTTPException(status_code=400, detail="You have already reviewed this item")
+    user_doc = await db.users.find_one({"id": current_user["sub"]}, {"name": 1})
+    user_name = user_doc["name"] if user_doc else "Customer"
+    review = Review(
+        menu_item_id=item_id,
+        user_id=current_user["sub"],
+        user_name=user_name,
+        rating=payload.rating,
+        comment=payload.comment,
+    )
+    await db.reviews.insert_one(review.model_dump())
+    return review
+
+
+# ── Likes & Social ────────────────────────────────────────────────────────────
+
+@router.post("/{item_id}/like")
+async def toggle_like(item_id: str, current_user: dict = Depends(get_current_user)):
+    existing = await db.menu_likes.find_one({"menu_item_id": item_id, "user_id": current_user["sub"]})
+    if existing:
+        await db.menu_likes.delete_one({"menu_item_id": item_id, "user_id": current_user["sub"]})
+        return {"liked": False}
+    await db.menu_likes.insert_one({
+        "menu_item_id": item_id,
+        "user_id": current_user["sub"],
+        "created_at": datetime.utcnow().isoformat(),
+    })
+    return {"liked": True}
+
+
+@router.get("/{item_id}/social")
+async def get_item_social(item_id: str, current_user: Optional[dict] = Depends(get_optional_user)):
+    likes = await db.menu_likes.count_documents({"menu_item_id": item_id})
+    # Count how many orders contain this item
+    order_count = await db.orders.count_documents({"items.menu_item_id": item_id})
+    user_liked = False
+    user_reviewed = False
+    if current_user:
+        user_liked = bool(await db.menu_likes.find_one({"menu_item_id": item_id, "user_id": current_user["sub"]}))
+        user_reviewed = bool(await db.reviews.find_one({"menu_item_id": item_id, "user_id": current_user["sub"]}))
+    return {
+        "likes": likes,
+        "order_count": order_count,
+        "user_liked": user_liked,
+        "user_reviewed": user_reviewed,
+    }

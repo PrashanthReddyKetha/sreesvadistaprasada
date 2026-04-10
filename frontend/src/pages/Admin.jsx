@@ -464,7 +464,7 @@ const NewsletterTab = ({ newsletter }) => (
 const CATEGORIES = ['nonVeg','veg','prasada','breakfast','pickles','podis'];
 const CAT_LABELS  = { nonVeg:'Non-Veg', veg:'Veg', prasada:'Prasada', breakfast:'Breakfast', pickles:'Pickles', podis:'Podis' };
 
-const BLANK_ITEM = { name:'', description:'', price:'', category:'nonVeg', spice_level:0, is_veg:false, available:true, featured:false, image:'', tag:'' };
+const BLANK_ITEM = { name:'', description:'', price:'', category:'nonVeg', subcategory:'', spice_level:0, is_veg:false, available:true, featured:false, image:'', tag:'', allergens:[] };
 
 const MenuTab = () => {
   const [items, setItems]         = useState([]);
@@ -494,12 +494,14 @@ const MenuTab = () => {
       description: item.description,
       price: item.price,
       category: item.category,
+      subcategory: item.subcategory || '',
       spice_level: item.spice_level,
       is_veg: item.is_veg,
       available: item.available,
       featured: item.featured,
       image: item.image || '',
       tag: item.tag || '',
+      allergens: item.allergens || [],
     });
   };
 
@@ -609,6 +611,26 @@ const MenuTab = () => {
               <input value={addForm.tag} onChange={e=>setAddForm(p=>({...p,tag:e.target.value}))}
                 className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} placeholder="e.g. Best Seller, New" />
             </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Subcategory</label>
+              <input value={addForm.subcategory||''} onChange={e=>setAddForm(p=>({...p,subcategory:e.target.value}))}
+                className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} placeholder="e.g. Starters, Curries" />
+            </div>
+          </div>
+          {/* Allergens */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Allergens <span className="normal-case font-normal">(click to select)</span></label>
+            <div className="flex flex-wrap gap-2">
+              {['gluten','dairy','eggs','nuts','sesame','mustard','soy','celery'].map(a=>(
+                <label key={a} className="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
+                  style={{ backgroundColor:(addForm.allergens||[]).includes(a)?'#FEF3C7':'#F3F4F6', color:(addForm.allergens||[]).includes(a)?'#92400E':'#374151' }}>
+                  <input type="checkbox" className="hidden"
+                    checked={(addForm.allergens||[]).includes(a)}
+                    onChange={e=>setAddForm(p=>({...p, allergens: e.target.checked?[...(p.allergens||[]),a]:(p.allergens||[]).filter(x=>x!==a)}))} />
+                  {a}
+                </label>
+              ))}
+            </div>
           </div>
           <div className="flex gap-6 flex-wrap">
             {[['is_veg','Vegetarian'],['available','Available on site'],['featured','Featured on homepage']].map(([key,label])=>(
@@ -678,6 +700,27 @@ const MenuTab = () => {
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Tag (e.g. Best Seller)</label>
                     <input value={editForm.tag} onChange={e=>setEditForm(p=>({...p,tag:e.target.value}))}
                       className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Subcategory</label>
+                    <input value={editForm.subcategory||''} onChange={e=>setEditForm(p=>({...p,subcategory:e.target.value}))}
+                      placeholder="e.g. Starters, Curries, Biriyanis"
+                      className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} />
+                  </div>
+                </div>
+                {/* Allergens */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Allergens</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['gluten','dairy','eggs','nuts','sesame','mustard','soy','celery'].map(a=>(
+                      <label key={a} className="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
+                        style={{ backgroundColor:(editForm.allergens||[]).includes(a)?'#FEF3C7':'#F3F4F6', color:(editForm.allergens||[]).includes(a)?'#92400E':'#374151', border:'1px solid transparent' }}>
+                        <input type="checkbox" className="hidden"
+                          checked={(editForm.allergens||[]).includes(a)}
+                          onChange={e=>setEditForm(p=>({...p, allergens: e.target.checked ? [...(p.allergens||[]),a] : (p.allergens||[]).filter(x=>x!==a)}))} />
+                        {a}
+                      </label>
+                    ))}
                   </div>
                 </div>
                 {/* Toggles */}

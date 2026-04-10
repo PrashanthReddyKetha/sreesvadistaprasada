@@ -23,6 +23,7 @@ import FAQ from "./pages/FAQ";
 import Gallery from "./pages/Gallery";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
+import ItemDetail from "./pages/ItemDetail";
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/item/:itemId" element={<ItemDetail />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>

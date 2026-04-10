@@ -128,6 +128,23 @@ class MenuItem(MenuItemCreate):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+# --- Reviews ---
+
+class ReviewCreate(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    comment: str = Field(min_length=5, max_length=1000)
+
+
+class Review(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    menu_item_id: str
+    user_id: str
+    user_name: str
+    rating: int
+    comment: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 # --- Orders ---
 
 class OrderItem(BaseModel):
