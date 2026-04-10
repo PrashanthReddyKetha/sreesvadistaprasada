@@ -344,7 +344,7 @@ const CartDrawer = () => {
           <div className="flex items-center gap-2">
             <ShoppingBag size={18} className={step === 'success' ? '' : 'text-white'} style={step === 'success' ? { color: '#800020' } : {}} />
             <h2 className="text-base font-bold" style={{ fontFamily: "'Playfair Display', serif", color: step === 'success' ? '#800020' : 'white' }}>
-              {step === 'success' ? 'Order Confirmed!' : step === 'checkout' ? 'Checkout' : `Your Basket (${cartCount})`}
+              {step === 'success' ? 'Order Confirmed!' : step === 'checkout' ? 'Checkout' : step === 'browse' ? 'Add More Items' : `Your Basket (${cartCount})`}
             </h2>
           </div>
           <button onClick={handleClose} className="p-1.5 rounded-full transition-colors" style={{ color: step === 'success' ? '#5C4B47' : 'rgba(255,255,255,0.8)' }}>
@@ -491,7 +491,7 @@ const CartDrawer = () => {
                     Add <strong style={{ color: '#800020' }}>{fmt(FREE_DELIVERY_THRESHOLD - cartTotal)}</strong> more for free delivery
                   </span>
                 </div>
-                <button onClick={() => setStep('cart')}
+                <button onClick={() => setStep('browse')}
                   className="text-xs font-semibold hover:underline flex-shrink-0 ml-2"
                   style={{ color: '#800020' }}>
                   + Add items
@@ -639,9 +639,119 @@ const CartDrawer = () => {
           </>
         )}
 
+        {/* ── BROWSE ───────────────────────────────────────────────── */}
+        {step === 'browse' && (
+          <BrowseMenu
+            cartItems={cartItems}
+            onAdd={(item) => { addToCart(item); }}
+            onBack={() => setStep('checkout')}
+            cartTotal={cartTotal}
+          />
+        )}
+
       </div>
     </>
   );
 };
+
+/* ── Inline menu browser ──────────────────────────────────────────────────── */
+const CATEGORY_LABELS = {
+  nonVeg: 'Non-Veg', veg: 'Veg', prasada: 'Prasada',
+  breakfast: 'Breakfast', snacks: 'Snacks & Pickles', pickles: 'Pickles', podis: 'Podis',
+};
+
+function BrowseMenu({ cartItems, onAdd, onBack, cartTotal }) {
+  const [allItems, setAllItems]   = useState([]);
+  const [activeCat, setActiveCat] = useState('all');
+  const [loading, setLoading]     = useState(true);
+  const cartIds = new Set(cartItems.map(i => i.id));
+  const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - cartTotal);
+
+  useEffect(() => {
+    api.get('/menu?available=true')
+      .then(r => setAllItems(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const categories = ['all', ...Object.keys(CATEGORY_LABELS).filter(c =>
+    allItems.some(i => i.category === c)
+  )];
+
+  const shown = activeCat === 'all' ? allItems : allItems.filter(i => i.category === activeCat);
+
+  return (
+    <>
+      {/* Free delivery progress */}
+      {remaining > 0 && (
+        <div className="flex-shrink-0 px-5 py-2.5 border-b text-xs text-gray-600 flex items-center gap-1.5"
+          style={{ backgroundColor: '#FFFBEB', borderColor: 'rgba(128,0,32,0.08)' }}>
+          <Truck size={13} style={{ color: '#B8860B' }} />
+          Add <strong style={{ color: '#800020' }} className="mx-0.5">{fmt(remaining)}</strong> more to unlock free delivery
+        </div>
+      )}
+      {remaining === 0 && (
+        <div className="flex-shrink-0 px-5 py-2.5 border-b text-xs font-semibold flex items-center gap-1.5"
+          style={{ backgroundColor: '#F0FFF4', borderColor: 'rgba(128,0,32,0.08)', color: '#166534' }}>
+          <Truck size={13} /> Free delivery unlocked!
+        </div>
+      )}
+
+      {/* Category filter tabs */}
+      <div className="flex-shrink-0 flex gap-2 px-4 py-2.5 overflow-x-auto border-b"
+        style={{ borderColor: 'rgba(128,0,32,0.08)', scrollbarWidth: 'none' }}>
+        {categories.map(cat => (
+          <button key={cat} onClick={() => setActiveCat(cat)}
+            className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+            style={{
+              backgroundColor: activeCat === cat ? '#800020' : 'rgba(128,0,32,0.06)',
+              color: activeCat === cat ? 'white' : '#800020',
+            }}>
+            {cat === 'all' ? 'All' : CATEGORY_LABELS[cat] || cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Items list */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+        {loading && (
+          <div className="flex justify-center py-10">
+            <span className="w-6 h-6 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" />
+          </div>
+        )}
+        {!loading && shown.map(item => {
+          const inCart = cartIds.has(item.id);
+          return (
+            <div key={item.id} className="flex items-center gap-3 p-2.5 rounded-xl border transition-all"
+              style={{ borderColor: inCart ? 'rgba(128,0,32,0.2)' : 'rgba(128,0,32,0.08)', backgroundColor: inCart ? 'rgba(128,0,32,0.03)' : 'white' }}>
+              {item.image && (
+                <img src={item.image} alt={item.name} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#2D2422' }}>{item.name}</p>
+                <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{item.description}</p>
+                <p className="text-sm font-bold mt-0.5" style={{ color: '#800020' }}>{fmt(price(item.price))}</p>
+              </div>
+              <button onClick={() => onAdd(item)}
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95"
+                style={{ backgroundColor: '#800020' }}>
+                <Plus size={15} />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Back to checkout */}
+      <div className="flex-shrink-0 px-5 py-4 border-t" style={{ borderColor: 'rgba(128,0,32,0.12)', backgroundColor: '#FDFBF7' }}>
+        <button onClick={onBack}
+          className="w-full py-3.5 text-sm font-bold text-white rounded-xl flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+          style={{ backgroundColor: '#800020' }}>
+          Back to Checkout <ArrowRight size={16} />
+        </button>
+      </div>
+    </>
+  );
+}
 
 export default CartDrawer;
