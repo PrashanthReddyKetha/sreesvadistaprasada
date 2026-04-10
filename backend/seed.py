@@ -489,6 +489,12 @@ async def create_admin_user():
 
     existing = await db.users.find_one({"email": email})
     if existing:
+        # Always ensure role=admin and password is up to date
+        await db.users.update_one(
+            {"email": email},
+            {"$set": {"role": "admin", "password_hash": hash_password(password)}},
+        )
+        print(f"Admin user updated: {email}")
         return
 
     admin = {
