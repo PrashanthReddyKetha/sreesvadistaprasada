@@ -372,6 +372,18 @@ const Checkout = () => {
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
+  // Fallback: postcodes.io for city auto-fill
+  const fallbackPostcodeIo = async (pc) => {
+    try {
+      const r = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(pc.trim())}`);
+      if (!r.ok) return false;
+      const data = await r.json();
+      const city = data.result?.admin_district || data.result?.parliamentary_constituency || '';
+      if (city) setForm(f => ({ ...f, city: f.city || city }));
+      return true;
+    } catch { return false; }
+  };
+
   const lookupPostcode = useCallback(async (pc) => {
     const clean = pc.replace(/\s/g, '').toUpperCase();
     if (clean.length < 5) return;
@@ -380,25 +392,31 @@ const Checkout = () => {
     try {
       if (apiKey) {
         const r = await fetch(`https://api.getaddress.io/find/${encodeURIComponent(pc.trim())}?api-key=${apiKey}&expand=true`);
-        if (r.status === 404) { setPcError('Postcode not found.'); return; }
-        if (!r.ok) throw new Error();
+        if (r.status === 404 || r.status === 429 || !r.ok) {
+          // getAddress.io failed — fall back to postcodes.io for city
+          const ok = await fallbackPostcodeIo(pc);
+          if (!ok) setPcError('Postcode not found. Please enter your address manually.');
+          return;
+        }
         const data = await r.json();
         const addrs = (data.addresses || []).map(a => ({
           label: [a.line_1, a.line_2, a.town_or_city].filter(Boolean).join(', '),
           line1: a.line_1 || '', line2: a.line_2 || '', city: a.town_or_city || '',
         }));
-        if (addrs.length === 0) { setPcError('No addresses found for this postcode.'); return; }
+        if (addrs.length === 0) {
+          await fallbackPostcodeIo(pc); // at least fill city
+          return;
+        }
         setAddressOptions(addrs); setAddressDropdown(true);
       } else {
-        const r = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(pc.trim())}`);
-        if (!r.ok) { setPcError('Postcode not found.'); return; }
-        const data = await r.json();
-        const city = data.result?.admin_district || data.result?.parliamentary_constituency || '';
-        if (city) setForm(f => ({ ...f, city: f.city || city }));
+        const ok = await fallbackPostcodeIo(pc);
+        if (!ok) setPcError('Postcode not found. Please enter your address manually.');
       }
-    } catch { setPcError('Could not look up postcode. Enter address manually.'); }
+    } catch {
+      await fallbackPostcodeIo(pc);
+    }
     finally { setPcLookingUp(false); }
-  }, []);
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectAddress = (addr) => {
     setForm(f => ({ ...f, line1: addr.line1, line2: addr.line2, city: addr.city }));
@@ -609,7 +627,11 @@ const Checkout = () => {
                     {pcLookingUp && <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" />}
                     {!pcLookingUp && form.line1 && <CheckCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#166534' }} />}
                   </div>
-                  {pcError && <p className="text-xs mt-1" style={{ color: '#EF4444' }}>{pcError}</p>}
+                  {pcError && (
+                    <p className="text-xs mt-1 flex items-center gap-1" style={{ color: '#B45309' }}>
+                      <span>⚠</span> {pcError}
+                    </p>
+                  )}
 
                   {addressDropdown && addressOptions.length > 0 && (
                     <div className="mt-1.5 border-2 rounded-xl overflow-hidden shadow-lg"
