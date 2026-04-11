@@ -92,18 +92,18 @@ const Header = () => {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex items-center justify-between h-[68px] md:h-20">
+          <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-2 group" data-testid="logo-link">
-              <LogoMark size={73} className="w-14 h-14 md:w-[73px] md:h-[73px] object-contain flex-shrink-0" />
-              <div className="flex flex-col">
+              <LogoMark size={73} className="w-12 h-12 md:w-[73px] md:h-[73px] object-contain flex-shrink-0" />
+              <div className="flex flex-col justify-center gap-[2px]">
                 <h1
-                  className="text-lg md:text-2xl font-bold tracking-tight leading-tight"
+                  className="text-[15px] md:text-2xl font-bold tracking-tight leading-none"
                   style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
                 >
                   Sree Svadista Prasada
                 </h1>
-                <span className="hidden md:block text-xs tracking-[0.2em] uppercase" style={{ color: '#B8860B' }}>
+                <span className="text-[8px] md:text-xs tracking-[0.18em] md:tracking-[0.2em] uppercase leading-none" style={{ color: '#B8860B' }}>
                   Authentic South Indian
                 </span>
               </div>
@@ -205,7 +205,7 @@ const Header = () => {
             </nav>
 
             {/* Mobile Controls */}
-            <div className="flex items-center gap-2 lg:hidden">
+            <div className="flex items-center gap-1 lg:hidden">
               <button
                 className="relative p-2 rounded-full"
                 data-testid="mobile-cart-button"
