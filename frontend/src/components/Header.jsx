@@ -92,18 +92,18 @@ const Header = () => {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
+          <div className="flex items-center justify-between h-[74px] md:h-20">
             {/* Logo */}
-            <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-2 group" data-testid="logo-link">
-              <LogoMark size={73} className="w-12 h-12 md:w-[73px] md:h-[73px] object-contain flex-shrink-0" />
-              <div className="flex flex-col justify-center gap-[2px]">
+            <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-2.5 group" data-testid="logo-link">
+              <LogoMark size={73} className="w-14 h-14 md:w-[73px] md:h-[73px] object-contain flex-shrink-0" />
+              <div className="flex flex-col justify-center gap-[3px]">
                 <h1
-                  className="text-[15px] md:text-2xl font-bold tracking-tight leading-none"
+                  className="text-[17px] md:text-2xl font-bold tracking-tight leading-none"
                   style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
                 >
                   Sree Svadista Prasada
                 </h1>
-                <span className="text-[8px] md:text-xs tracking-[0.18em] md:tracking-[0.2em] uppercase leading-none" style={{ color: '#B8860B' }}>
+                <span className="text-[9px] md:text-xs tracking-[0.18em] md:tracking-[0.2em] uppercase leading-none" style={{ color: '#B8860B' }}>
                   Authentic South Indian
                 </span>
               </div>
@@ -241,7 +241,7 @@ const Header = () => {
       {isMenuOpen && (
         <div
           className="lg:hidden fixed left-0 right-0 bottom-0 overflow-y-auto"
-          style={{ top: '100px', backgroundColor: '#FDFBF7', zIndex: 55, borderTop: '2px solid rgba(244,196,48,0.3)', touchAction: 'manipulation', WebkitOverflowScrolling: 'touch' }}
+          style={{ top: '106px', backgroundColor: '#FDFBF7', zIndex: 55, borderTop: '2px solid rgba(244,196,48,0.3)', touchAction: 'manipulation', WebkitOverflowScrolling: 'touch' }}
           data-testid="mobile-nav"
         >
           <nav className="px-5 py-4 pb-12">
