@@ -200,6 +200,11 @@ class Order(OrderCreate):
 
 # --- Subscriptions ---
 
+class DeliverySlot(BaseModel):
+    day: str   # monday | tuesday | wednesday | thursday | friday
+    time: str  # lunch | dinner
+
+
 class SubscriptionCreate(BaseModel):
     customer_name: str
     customer_email: EmailStr
@@ -207,6 +212,7 @@ class SubscriptionCreate(BaseModel):
     plan: str          # weekly | monthly | family
     box_type: str      # prasada | svadista | mixed
     preferences: List[str] = []
+    delivery_slots: List[DeliverySlot] = []
     start_date: str
     delivery_address: Address
     user_id: Optional[str] = None

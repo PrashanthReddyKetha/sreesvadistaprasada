@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, ArrowLeft, Send, CheckCheck } from 'lucide-react';
+import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, ArrowLeft, Send, CheckCheck, PauseCircle, PlayCircle, Sun, Moon, Leaf, Flame, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -152,7 +152,7 @@ export default function Dashboard() {
           <>
             {activeTab === 'overview'      && <OverviewTab orders={orders} subs={subs} pending={pending} active={active} delivered={delivered} totalSpent={totalSpent} activeSub={activeSub} setActiveTab={setActiveTab} unreadEnquiries={unreadCount} />}
             {activeTab === 'orders'        && <OrdersTab orders={orders} reload={load} expandedOrder={expandedOrder} setExpandedOrder={setExpandedOrder} />}
-            {activeTab === 'subscriptions' && <SubsTab subs={subs} />}
+            {activeTab === 'subscriptions' && <SubsTab subs={subs} reload={load} />}
             {activeTab === 'enquiries'     && <EnquiriesTab enquiries={enquiries} reload={load} />}
             {activeTab === 'account'       && <AccountTab user={user} login={login} />}
           </>
@@ -402,52 +402,186 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
 }
 
 /* ══ Subscriptions ════════════════════════════════════ */
-function SubsTab({ subs }) {
+const BOX_META = {
+  prasada:  { icon: Leaf,     color: '#4A7C59', label: 'Prasada Box' },
+  svadista: { icon: Flame,    color: '#8B3A3A', label: 'Svadista Box' },
+  mixed:    { icon: Sparkles, color: '#B8860B', label: 'Mixed Box' },
+};
+
+function SubsTab({ subs, reload }) {
+  const [updating, setUpdating] = useState(null); // sub id being updated
+  const [cancelStep, setCancelStep] = useState(null); // null | {id} | {id, reason}
+  const [cancelReason, setCancelReason] = useState('');
+
+  const CANCEL_REASONS = ['Too expensive', 'Moving away', 'Lifestyle change', 'Not enough variety', 'Quality issue', 'Other'];
+
+  const updateStatus = async (id, status) => {
+    setUpdating(id);
+    try {
+      await api.put(`/subscriptions/${id}/status`, { status });
+      await reload();
+    } catch {}
+    setUpdating(null);
+    setCancelStep(null);
+  };
+
   if (subs.length === 0) {
     return <EmptyState icon={Calendar} message="No Dabba Wala subscription" sub="Sign up for our weekly meal plan and never worry about cooking again." link="/subscriptions" linkLabel="Subscribe to Dabba Wala" />;
   }
 
   return (
-    <div className="space-y-4">
-      {subs.map(s => (
-        <div key={s.id} className="rounded-2xl p-5 shadow-sm" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(244,196,48,0.2)' }}>
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="font-bold text-lg" style={{ color: '#800020', fontFamily: "'Playfair Display', serif" }}>
-                {s.plan.charAt(0).toUpperCase() + s.plan.slice(1)} Plan
-              </p>
-              <p className="text-sm" style={{ color: '#9C7B6B' }}>Since {fmt(s.created_at)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xl font-bold" style={{ color: '#800020' }}>£{s.price}</p>
-              <StatusBadge status={s.status} />
-            </div>
-          </div>
+    <div className="space-y-5">
+      {subs.map(s => {
+        const boxMeta = BOX_META[s.box_type] || BOX_META.prasada;
+        const BoxIcon = boxMeta.icon;
+        const isActive = s.status === 'active';
+        const isPaused = s.status === 'paused';
+        const isCancelled = s.status === 'cancelled';
+        const addr = s.delivery_address;
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              ['Box Type', s.box_type],
-              ['Meals / Week', s.meals_per_week || '—'],
-              ['People', s.people || '—'],
-              ['Preferences', s.dietary_preferences?.join(', ') || 'None'],
-              ['Delivery Day', s.preferred_delivery_day || '—'],
-              ['Delivery Address', s.delivery_address || '—'],
-            ].map(([k, v]) => (
-              <div key={k} className="rounded-xl p-3" style={{ backgroundColor: 'rgba(128,0,32,0.04)' }}>
-                <p className="text-[10px] uppercase tracking-widest font-semibold mb-0.5" style={{ color: '#B8860B' }}>{k}</p>
-                <p className="text-sm font-medium" style={{ color: '#3D2B1F' }}>{v}</p>
+        return (
+          <div key={s.id} className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(244,196,48,0.2)', backgroundColor: '#FDFBF7' }}>
+
+            {/* Header band */}
+            <div className="p-5" style={{ background: isCancelled ? '#f3f4f6' : 'linear-gradient(135deg, #800020 0%, #5C0015 100%)' }}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: isCancelled ? '#9CA3AF' : 'rgba(244,196,48,0.8)' }}>Dabba Wala</p>
+                  <p className="text-xl font-bold mb-0.5" style={{ color: isCancelled ? '#6B7280' : 'white', fontFamily: "'Playfair Display', serif" }}>
+                    {s.plan?.charAt(0).toUpperCase() + s.plan?.slice(1)} Plan
+                  </p>
+                  <p className="text-sm" style={{ color: isCancelled ? '#9CA3AF' : 'rgba(255,255,255,0.7)' }}>Since {fmt(s.created_at)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold" style={{ color: isCancelled ? '#6B7280' : 'white' }}>£{s.price}</p>
+                  <StatusBadge status={s.status} />
+                </div>
               </div>
-            ))}
-          </div>
-
-          {s.special_requests && (
-            <div className="mt-3 p-3 rounded-xl" style={{ backgroundColor: 'rgba(128,0,32,0.04)' }}>
-              <p className="text-[10px] uppercase tracking-widest font-semibold mb-0.5" style={{ color: '#B8860B' }}>Special Requests</p>
-              <p className="text-sm italic" style={{ color: '#5C4B47' }}>{s.special_requests}</p>
             </div>
-          )}
-        </div>
-      ))}
+
+            {/* Body */}
+            <div className="p-5">
+              {/* Box type + delivery address */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                <div className="rounded-xl p-3 flex items-center gap-2" style={{ backgroundColor: `${boxMeta.color}10` }}>
+                  <BoxIcon size={16} style={{ color: boxMeta.color }} />
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: '#B8860B' }}>Box</p>
+                    <p className="text-sm font-medium" style={{ color: boxMeta.color }}>{boxMeta.label}</p>
+                  </div>
+                </div>
+
+                {s.start_date && (
+                  <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(128,0,32,0.04)' }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold mb-0.5" style={{ color: '#B8860B' }}>Starts</p>
+                    <p className="text-sm font-medium" style={{ color: '#3D2B1F' }}>{new Date(s.start_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                  </div>
+                )}
+
+                {addr && (
+                  <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(128,0,32,0.04)' }}>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold mb-0.5" style={{ color: '#B8860B' }}>Delivering to</p>
+                    <p className="text-sm font-medium" style={{ color: '#3D2B1F' }}>{typeof addr === 'string' ? addr : `${addr.city}, ${addr.postcode}`}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Delivery slots */}
+              {s.delivery_slots?.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#B8860B' }}>Delivery Days</p>
+                  <div className="flex flex-wrap gap-2">
+                    {s.delivery_slots.map((slot, i) => (
+                      <span key={i} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }}>
+                        {slot.time === 'lunch' ? <Sun size={10} /> : <Moon size={10} />}
+                        {slot.day?.charAt(0).toUpperCase() + slot.day?.slice(1)} · {slot.time === 'lunch' ? 'Lunch' : 'Dinner'}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Preferences */}
+              {s.preferences?.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#B8860B' }}>Preferences</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {s.preferences.map(p => (
+                      <span key={p} className="px-2.5 py-1 rounded-full text-xs" style={{ backgroundColor: 'rgba(128,0,32,0.06)', color: '#800020' }}>{p}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              {!isCancelled && (
+                <div className="flex gap-2 flex-wrap pt-2" style={{ borderTop: '1px solid rgba(128,0,32,0.08)' }}>
+                  {isActive && (
+                    <button
+                      onClick={() => updateStatus(s.id, 'paused')}
+                      disabled={updating === s.id}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                      style={{ backgroundColor: '#FEF9C3', color: '#854D0E' }}>
+                      <PauseCircle size={14} /> {updating === s.id ? 'Pausing…' : 'Pause Subscription'}
+                    </button>
+                  )}
+                  {isPaused && (
+                    <button
+                      onClick={() => updateStatus(s.id, 'active')}
+                      disabled={updating === s.id}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                      style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
+                      <PlayCircle size={14} /> {updating === s.id ? 'Resuming…' : 'Resume Deliveries'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setCancelStep({ id: s.id })}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                    style={{ backgroundColor: '#FEE2E2', color: '#991B1B' }}>
+                    <XCircle size={14} /> Cancel
+                  </button>
+                </div>
+              )}
+
+              {/* Cancel flow */}
+              {cancelStep?.id === s.id && (
+                <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.15)' }}>
+                  {!cancelStep.confirm ? (
+                    <>
+                      <p className="text-sm font-semibold mb-1" style={{ color: '#991B1B' }}>Cancel subscription?</p>
+                      <p className="text-xs text-gray-500 mb-3">Your current week's meals will still be delivered. Cancellation takes effect from next week.</p>
+                      <p className="text-xs font-medium text-gray-600 mb-2">Reason (optional):</p>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        {CANCEL_REASONS.map(r => (
+                          <button key={r} onClick={() => setCancelReason(r)}
+                            className="text-xs px-3 py-2 rounded-lg text-left transition-all"
+                            style={{ backgroundColor: cancelReason === r ? '#FEE2E2' : 'white', border: `1px solid ${cancelReason === r ? '#DC2626' : '#e5e7eb'}`, color: cancelReason === r ? '#991B1B' : '#5C4B47' }}>
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => updateStatus(s.id, 'cancelled')}
+                          disabled={updating === s.id}
+                          className="px-5 py-2 text-xs font-semibold text-white rounded-lg"
+                          style={{ backgroundColor: '#DC2626' }}>
+                          {updating === s.id ? 'Cancelling…' : 'Confirm Cancellation'}
+                        </button>
+                        <button onClick={() => { setCancelStep(null); setCancelReason(''); }}
+                          className="px-5 py-2 text-xs font-semibold rounded-lg border"
+                          style={{ color: '#6B7280', borderColor: '#e5e7eb' }}>
+                          Keep Subscription
+                        </button>
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
