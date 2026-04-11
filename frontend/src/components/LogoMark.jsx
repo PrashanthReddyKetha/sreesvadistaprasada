@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 // Loads the real logo (background-removed PNG) from /logo.png.
 // Falls back to the SVG mark if the file is missing.
-const LogoMark = ({ size = 64 }) => {
+const LogoMark = ({ size = 64, className = '' }) => {
   const [error, setError] = useState(false);
 
   if (!error) {
@@ -10,14 +10,10 @@ const LogoMark = ({ size = 64 }) => {
       <img
         src="/logo.png"
         alt="Sree Svadista Prasada"
-        width={size}
-        height={size}
         onError={() => setError(true)}
-        style={{
-          width: size,
-          height: size,
-          objectFit: 'contain',
-          flexShrink: 0,
+        className={className || undefined}
+        style={className ? { objectFit: 'contain', flexShrink: 0 } : {
+          width: size, height: size, objectFit: 'contain', flexShrink: 0,
         }}
       />
     );
