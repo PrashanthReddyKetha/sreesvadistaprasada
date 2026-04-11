@@ -65,8 +65,10 @@ const Menu = () => {
         </div>
       </section>
 
+      {/* Anchor for tab scroll */}
+      <div id="section-tabs-anchor" />
       {/* Sticky Filter + Search */}
-      <div className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8" style={{ backgroundColor: '#FDFBF7', borderBottom: '1px solid rgba(128,0,32,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} data-testid="menu-filters">
+      <div id="section-tabs" className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8" style={{ backgroundColor: '#FDFBF7', borderBottom: '1px solid rgba(128,0,32,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} data-testid="menu-filters">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-3">
             <div className="relative flex-1 max-w-sm">
@@ -85,7 +87,7 @@ const Menu = () => {
           {categories.map(cat => (
             <button
               key={cat.id}
-              onClick={() => { setActiveCategory(cat.id); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              onClick={() => { setActiveCategory(cat.id); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
               className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                 activeCategory === cat.id ? 'text-white' : 'text-gray-600 hover:bg-[#800020]/10'
               }`}

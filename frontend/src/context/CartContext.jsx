@@ -18,49 +18,60 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(loadCart);
-  const [toast, setToast] = useState(null);
-  const [cartOpen, setCartOpen] = useState(false);
+  const [toast, setToast]         = useState(null);
+  const [cartOpen, setCartOpen]   = useState(false);
+  const toastTimer = React.useRef(null);
 
-  // Persist cart to localStorage on every change
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
-    } catch {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems)); } catch {}
   }, [cartItems]);
 
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const cartTotal = cartItems.reduce((sum, item) => {
-    const price = parseFloat(String(item.price).replace('£', '')) || 0;
-    return sum + price * item.quantity;
-  }, 0);
-
-  const showToast = useCallback((item) => {
-    setToast({ name: item.name, price: item.price });
-    setTimeout(() => setToast(null), 2500);
+  const showToast = useCallback((t) => {
+    clearTimeout(toastTimer.current);
+    setToast(t);
+    toastTimer.current = setTimeout(() => setToast(null), 2800);
   }, []);
+
+  const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
+  const cartTotal = cartItems.reduce((sum, i) => {
+    return sum + (parseFloat(String(i.price).replace('£', '')) || 0) * i.quantity;
+  }, 0);
 
   const addToCart = useCallback((item) => {
     setCartItems(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
+        showToast({ type: 'update', name: item.name, qty: existing.quantity + 1 });
         return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
+      showToast({ type: 'add', name: item.name, price: item.price });
       return [...prev, { ...item, quantity: 1 }];
     });
-    showToast(item);
   }, [showToast]);
 
   const removeFromCart = useCallback((id) => {
-    setCartItems(prev => prev.filter(i => i.id !== id));
-  }, []);
+    setCartItems(prev => {
+      const item = prev.find(i => i.id === id);
+      if (item) showToast({ type: 'remove', name: item.name });
+      return prev.filter(i => i.id !== id);
+    });
+  }, [showToast]);
 
   const updateQuantity = useCallback((id, quantity) => {
     if (quantity <= 0) {
-      setCartItems(prev => prev.filter(i => i.id !== id));
+      setCartItems(prev => {
+        const item = prev.find(i => i.id === id);
+        if (item) showToast({ type: 'remove', name: item.name });
+        return prev.filter(i => i.id !== id);
+      });
     } else {
-      setCartItems(prev => prev.map(i => i.id === id ? { ...i, quantity } : i));
+      setCartItems(prev => {
+        const item = prev.find(i => i.id === id);
+        if (item) showToast({ type: 'update', name: item.name, qty: quantity });
+        return prev.map(i => i.id === id ? { ...i, quantity } : i);
+      });
     }
-  }, []);
+  }, [showToast]);
 
   const clearCart = useCallback(() => {
     setCartItems([]);
@@ -68,7 +79,11 @@ export const CartProvider = ({ children }) => {
   }, []);
 
   return (
-    <CartContext.Provider value={{ cartItems, cartCount, cartTotal, addToCart, removeFromCart, updateQuantity, clearCart, toast, cartOpen, setCartOpen }}>
+    <CartContext.Provider value={{
+      cartItems, cartCount, cartTotal,
+      addToCart, removeFromCart, updateQuantity, clearCart,
+      toast, cartOpen, setCartOpen,
+    }}>
       {children}
     </CartContext.Provider>
   );
