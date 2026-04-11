@@ -151,10 +151,10 @@ const HeroSlider = () => {
         </div>
       ))}
 
-      {/* Navigation Arrows — visible on all screen sizes */}
+      {/* Navigation Arrows — desktop only, swipe handles mobile */}
       <button
         onClick={() => handleArrowClick(prevSlide)}
-        className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
+        className="absolute left-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full hidden md:flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
         style={{ backgroundColor: 'rgba(128, 0, 32, 0.7)', backdropFilter: 'blur(4px)' }}
         aria-label="Previous slide"
         data-testid="hero-prev-btn"
@@ -163,7 +163,7 @@ const HeroSlider = () => {
       </button>
       <button
         onClick={() => handleArrowClick(nextSlide)}
-        className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
+        className="absolute right-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full hidden md:flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
         style={{ backgroundColor: 'rgba(128, 0, 32, 0.7)', backdropFilter: 'blur(4px)' }}
         aria-label="Next slide"
         data-testid="hero-next-btn"

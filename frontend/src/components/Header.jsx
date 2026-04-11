@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User, ChevronDown } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -254,15 +255,14 @@ const Header = () => {
                     {openDropdown === item.name && (
                       <div className="pl-4 pb-2 space-y-1">
                         {item.dropdown.map((sub) => (
-                          <Link
+                          <button
                             key={sub.path + sub.name}
-                            to={sub.path}
-                            className="block py-2 text-sm"
+                            className="block w-full text-left py-2 text-sm"
                             style={{ color: '#800020' }}
-                            onClick={() => { setIsMenuOpen(false); setOpenDropdown(null); }}
+                            onClick={() => { setIsMenuOpen(false); setOpenDropdown(null); navigate(sub.path); }}
                           >
                             {sub.name}
-                          </Link>
+                          </button>
                         ))}
                       </div>
                     )}
