@@ -257,25 +257,22 @@ const Header = () => {
                       {item.name}
                       <ChevronDown size={18} style={{ transform: openDropdown === item.name ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
                     </button>
-                    {openDropdown === item.name && (
-                      <div className="pl-4 py-1">
-                        {item.dropdown.map((sub) => (
-                          <button
-                            key={sub.path}
-                            className="block w-full text-left py-2 text-sm border-b"
-                            style={{ color: isActive(sub.path) ? '#B8860B' : '#333', borderColor: 'rgba(244,196,48,0.15)', touchAction: 'manipulation' }}
-                            onClick={() => {
-                              navigate(sub.path);
-                              setIsMenuOpen(false);
-                              setOpenDropdown(null);
-                              window.scrollTo({ top: 0, behavior: 'instant' });
-                            }}
-                          >
-                            {sub.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    <div
+                      className="pl-4 py-1 overflow-hidden transition-all duration-200"
+                      style={{ maxHeight: openDropdown === item.name ? '500px' : '0px', opacity: openDropdown === item.name ? 1 : 0 }}
+                    >
+                      {item.dropdown.map((sub) => (
+                        <Link
+                          key={sub.path}
+                          to={sub.path}
+                          className="block py-2 text-sm border-b"
+                          style={{ color: isActive(sub.path) ? '#B8860B' : '#333', borderColor: 'rgba(244,196,48,0.15)', touchAction: 'manipulation' }}
+                          onClick={() => { setIsMenuOpen(false); setOpenDropdown(null); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <Link
