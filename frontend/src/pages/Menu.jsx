@@ -4,6 +4,7 @@ import { Flame, ShoppingCart, ArrowRight, Search } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import MenuLoader from '../components/MenuLoader';
 import api from '../api';
+import { getCached, setCached } from '../lib/menuCache';
 
 const categories = [
   { id: 'all', name: 'All Dishes' },
@@ -25,8 +26,11 @@ const Menu = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
+    const key = 'all';
+    const cached = getCached(key);
+    if (cached) { setAllDishes(cached); setLoading(false); }
     api.get('/menu?available=true')
-      .then(res => setAllDishes(res.data))
+      .then(res => { setAllDishes(res.data); setCached(key, res.data); })
       .catch(err => console.error('Failed to load menu:', err))
       .finally(() => setLoading(false));
   }, []);
@@ -81,7 +85,7 @@ const Menu = () => {
           {categories.map(cat => (
             <button
               key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => { setActiveCategory(cat.id); window.scrollTo({ top: 0, behavior: 'instant' }); }}
               className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                 activeCategory === cat.id ? 'text-white' : 'text-gray-600 hover:bg-[#800020]/10'
               }`}

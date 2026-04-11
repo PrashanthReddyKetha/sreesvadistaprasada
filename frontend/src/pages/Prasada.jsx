@@ -4,6 +4,7 @@ import { Leaf, ShoppingCart, Star, Flame } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import MenuLoader from '../components/MenuLoader';
 import api from '../api';
+import { getCached, setCached } from '../lib/menuCache';
 
 const TABS = ['All', 'Starters & Evening Delights', 'Indo-Chinese', 'Curries & Dal', '🪔 Naivedyam', 'Biryani & Rice'];
 
@@ -34,8 +35,11 @@ const Prasada = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
+    const key = 'veg';
+    const cached = getCached(key);
+    if (cached) { setItems(cached); setLoading(false); }
     api.get('/menu?category=veg&available=true')
-      .then(r => setItems(r.data))
+      .then(r => { setItems(r.data); setCached(key, r.data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -80,7 +84,7 @@ const Prasada = () => {
         style={{ backgroundColor: '#F0FFF4', borderBottom: '1px solid rgba(22,101,52,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
         <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {TABS.map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
+            <button key={tab} onClick={() => { setActiveTab(tab); window.scrollTo({ top: 0, behavior: 'instant' }); }}
               className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
               style={{
                 backgroundColor: activeTab === tab ? '#166534' : 'transparent',

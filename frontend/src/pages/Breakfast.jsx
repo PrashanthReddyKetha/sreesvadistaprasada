@@ -4,6 +4,7 @@ import { Sun, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import MenuLoader from '../components/MenuLoader';
 import api from '../api';
+import { getCached, setCached } from '../lib/menuCache';
 
 const TABS = ['All', 'Idli & Vada', 'Dosas', 'Others'];
 
@@ -26,8 +27,11 @@ const Breakfast = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
+    const key = 'breakfast';
+    const cached = getCached(key);
+    if (cached) { setItems(cached); setLoading(false); }
     api.get('/menu?category=breakfast&available=true')
-      .then(r => setItems(r.data))
+      .then(r => { setItems(r.data); setCached(key, r.data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -66,7 +70,7 @@ const Breakfast = () => {
         style={{ backgroundColor: '#FFFBEB', borderBottom: '1px solid rgba(180,101,11,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
         <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {TABS.map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
+            <button key={tab} onClick={() => { setActiveTab(tab); window.scrollTo({ top: 0, behavior: 'instant' }); }}
               className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
               style={{
                 backgroundColor: activeTab === tab ? '#B45309' : 'transparent',

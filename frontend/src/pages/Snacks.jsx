@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Flame, ShoppingCart, ArrowRight, Package, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import api from '../api';
+import { getCached, setCached } from '../lib/menuCache';
 
 const categories = ['All', 'Pickles', 'Podis'];
 
@@ -13,14 +14,19 @@ const Snacks = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
+    const key = 'snacks';
+    const cached = getCached(key);
+    if (cached) { setAllItems(cached); setLoading(false); }
     Promise.all([
       api.get('/menu?category=pickles&available=true'),
       api.get('/menu?category=podis&available=true'),
     ]).then(([pickles, podis]) => {
-      setAllItems([
+      const data = [
         ...pickles.data.map(i => ({ ...i, type: 'Pickles' })),
         ...podis.data.map(i => ({ ...i, type: 'Podis' })),
-      ]);
+      ];
+      setAllItems(data);
+      setCached(key, data);
     }).catch(err => console.error(err))
       .finally(() => setLoading(false));
   }, []);
@@ -70,7 +76,7 @@ const Snacks = () => {
           {categories.map(cat => (
             <button
               key={cat}
-              onClick={() => setActiveFilter(cat)}
+              onClick={() => { setActiveFilter(cat); window.scrollTo({ top: 0, behavior: 'instant' }); }}
               className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                 activeFilter === cat ? 'text-white' : 'text-gray-600 hover:bg-[#800020]/10'
               }`}

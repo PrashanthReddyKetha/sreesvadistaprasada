@@ -33,7 +33,7 @@ const Gallery = () => {
           {categories.map(cat => (
             <button
               key={cat}
-              onClick={() => setActiveFilter(cat)}
+              onClick={() => { setActiveFilter(cat); window.scrollTo({ top: 0, behavior: 'instant' }); }}
               className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                 activeFilter === cat ? 'text-white' : 'text-gray-600 hover:bg-[#800020]/10'
               }`}
