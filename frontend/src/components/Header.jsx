@@ -241,7 +241,7 @@ const Header = () => {
       {isMenuOpen && (
         <div
           className="lg:hidden fixed left-0 right-0 bottom-0 overflow-y-auto"
-          style={{ top: '100px', backgroundColor: '#FDFBF7', zIndex: 55, borderTop: '2px solid rgba(244,196,48,0.3)' }}
+          style={{ top: '100px', backgroundColor: '#FDFBF7', zIndex: 55, borderTop: '2px solid rgba(244,196,48,0.3)', touchAction: 'manipulation', WebkitOverflowScrolling: 'touch' }}
           data-testid="mobile-nav"
         >
           <nav className="px-5 py-4 pb-12">
@@ -265,7 +265,7 @@ const Header = () => {
                             to={sub.path}
                             onClick={() => { setIsMenuOpen(false); setOpenDropdown(null); window.scrollTo({ top: 0, behavior: 'instant' }); }}
                             className="block py-2 text-sm border-b"
-                            style={{ color: isActive(sub.path) ? '#B8860B' : '#333', borderColor: 'rgba(244,196,48,0.15)' }}
+                            style={{ color: isActive(sub.path) ? '#B8860B' : '#333', borderColor: 'rgba(244,196,48,0.15)', touchAction: 'manipulation' }}
                           >
                             {sub.name}
                           </Link>
