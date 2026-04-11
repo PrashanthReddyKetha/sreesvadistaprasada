@@ -8,11 +8,11 @@ import api from '../api';
 const TABS = ['All', 'Starters & Evening Delights', 'Indo-Chinese', 'Curries & Dal', '🪔 Naivedyam', 'Biryani & Rice'];
 
 const SECTION_MESSAGES = {
-  'Starters & Evening Delights': 'Begin with a spark.',
-  'Indo-Chinese': 'East meets South.',
-  'Curries & Dal': 'Comfort, slow-cooked.',
-  '🪔 Naivedyam': 'Offered with devotion.',
-  'Biryani & Rice': 'Fragrant. Festive. Full.',
+  'Starters & Evening Delights': { icon: '🌿', text: 'Light bites and crispy evening delights — the perfect way to begin.' },
+  'Indo-Chinese': { icon: '🥢', text: 'Desi-Chinese fusion with a South Indian soul — bold, tangy, utterly addictive.' },
+  'Curries & Dal': { icon: '🫕', text: 'Slow-cooked gravies and lentils, simmered in generations-old spice blends.' },
+  '🪔 Naivedyam': { icon: '🪔', text: 'Sacred rice offerings, prepared with devotion.' },
+  'Biryani & Rice': { icon: '🌾', text: 'Fragrant long-grain rice layered with spices, herbs, and wholesome vegetables.' },
 };
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
@@ -95,12 +95,13 @@ const Prasada = () => {
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {!loading && SECTION_MESSAGES[activeTab] && (
-            <div className="mb-10 text-center">
-              <p className="inline-block text-sm md:text-base italic"
-                style={{ color: '#5a1a2e', fontFamily: "'Playfair Display', serif", letterSpacing: '0.02em', lineHeight: '1.6' }}>
-                ✦&ensp;{SECTION_MESSAGES[activeTab]}&ensp;✦
+            <div className="mb-10 -mx-4 md:-mx-8 px-6 md:px-16 py-6 text-center"
+              style={{ background: 'linear-gradient(to right, rgba(254,243,199,0.5), rgba(253,230,138,0.25), rgba(254,243,199,0.5))' }}>
+              <span className="text-2xl leading-none">{SECTION_MESSAGES[activeTab].icon}</span>
+              <p className="mt-2 text-base md:text-lg italic"
+                style={{ color: '#78350f', fontFamily: "'Playfair Display', serif", letterSpacing: '0.02em', lineHeight: '1.7' }}>
+                {SECTION_MESSAGES[activeTab].text}
               </p>
-              <div className="mt-3 mx-auto w-24 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(128,0,32,0.4), transparent)' }} />
             </div>
           )}
           {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} dishes</p>}
