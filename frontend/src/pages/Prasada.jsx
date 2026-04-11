@@ -95,9 +95,13 @@ const Prasada = () => {
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {!loading && SECTION_MESSAGES[activeTab] && (
-            <div className="mb-6 px-4 py-3 rounded-xl text-sm italic text-center"
-              style={{ backgroundColor: 'rgba(22,101,52,0.07)', color: '#166534', border: '1px solid rgba(22,101,52,0.12)' }}>
-              {SECTION_MESSAGES[activeTab]}
+            <div className="mb-10 flex items-center gap-4">
+              <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(128,0,32,0.25))' }} />
+              <p className="text-center text-sm md:text-base italic px-2 shrink-0"
+                style={{ color: '#800020', fontFamily: "'Playfair Display', serif", maxWidth: '520px', lineHeight: '1.7', letterSpacing: '0.01em' }}>
+                {SECTION_MESSAGES[activeTab]}
+              </p>
+              <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(128,0,32,0.25))' }} />
             </div>
           )}
           {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} dishes</p>}
