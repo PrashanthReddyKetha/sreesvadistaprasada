@@ -58,7 +58,7 @@ const Prasada = () => {
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(22,101,52,0.92) 0%, rgba(15,118,110,0.8) 50%, rgba(22,101,52,0.6) 100%)' }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-end md:items-center pb-8 md:pb-0"
-          style={{ paddingTop: 'calc(32px + 4rem)' }}>
+          style={{ paddingTop: 'calc(32px + 68px)' }}>
           <div className="max-w-xl">
             <div className="flex items-center gap-2 mb-3">
               <Leaf size={18} className="text-green-300" />

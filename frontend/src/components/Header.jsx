@@ -92,18 +92,18 @@ const Header = () => {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
+          <div className="flex items-center justify-between h-[68px] md:h-20">
             {/* Logo */}
-            <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-end gap-2 group" data-testid="logo-link">
-              <LogoMark size={73} className="w-11 h-11 md:w-[73px] md:h-[73px] object-contain flex-shrink-0" />
-              <div className="flex flex-col pb-1">
+            <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-2 group" data-testid="logo-link">
+              <LogoMark size={73} className="w-14 h-14 md:w-[73px] md:h-[73px] object-contain flex-shrink-0" />
+              <div className="flex flex-col">
                 <h1
-                  className="text-xl md:text-2xl font-bold tracking-tight leading-tight"
+                  className="text-lg md:text-2xl font-bold tracking-tight leading-tight"
                   style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
                 >
                   Sree Svadista Prasada
                 </h1>
-                <span className="text-xs tracking-[0.2em] uppercase" style={{ color: '#B8860B' }}>
+                <span className="hidden md:block text-xs tracking-[0.2em] uppercase" style={{ color: '#B8860B' }}>
                   Authentic South Indian
                 </span>
               </div>
@@ -255,14 +255,14 @@ const Header = () => {
                     {openDropdown === item.name && (
                       <div className="pl-4 pb-2 space-y-1">
                         {item.dropdown.map((sub) => (
-                          <button
+                          <Link
                             key={sub.path + sub.name}
-                            className="block w-full text-left py-2 text-sm"
+                            to={sub.path}
+                            className="block py-3 text-sm font-medium"
                             style={{ color: '#800020' }}
-                            onClick={() => { navigate(sub.path); setIsMenuOpen(false); setOpenDropdown(null); }}
                           >
                             {sub.name}
-                          </button>
+                          </Link>
                         ))}
                       </div>
                     )}
