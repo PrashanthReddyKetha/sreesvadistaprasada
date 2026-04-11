@@ -5,15 +5,23 @@ import { useCart } from '../context/CartContext';
 import MenuLoader from '../components/MenuLoader';
 import api from '../api';
 
-const TABS = ['All', 'Starters & Snacks', 'Indo-Chinese', 'Curries & Dal', 'Rice Specials', 'Biryani & Rice'];
+const TABS = ['All', 'Starters & Evening Delights', 'Indo-Chinese', 'Curries & Dal', '🪔 Naivedyam', 'Biryani & Rice'];
+
+const SECTION_MESSAGES = {
+  'Starters & Evening Delights': 'Light bites and crispy evening delights — the perfect way to begin.',
+  'Indo-Chinese': 'Desi-Chinese fusion with a South Indian soul — bold, tangy, and totally addictive.',
+  'Curries & Dal': 'Slow-cooked gravies and lentils, simmered patiently in generations-old spice blends.',
+  '🪔 Naivedyam': 'Sacred rice offerings, prepared with devotion.',
+  'Biryani & Rice': 'Fragrant long-grain rice layered with spices, herbs, and wholesome vegetables.',
+};
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
 function SpiceBar({ level }) {
   return (
-    <div className="flex gap-0.5">
-      {[1,2,3,4].map(i => (
-        <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: i <= level ? '#800020' : '#e5e7eb' }} />
+    <div className="flex gap-0.5 items-center">
+      {Array(level).fill(0).map((_, i) => (
+        <Flame key={i} size={12} className="text-red-500 fill-red-500" />
       ))}
     </div>
   );
@@ -32,7 +40,12 @@ const Prasada = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = activeTab === 'All' ? items : items.filter(i => i.subcategory === activeTab);
+  const SUBCATEGORY_MAP = {
+    'Starters & Evening Delights': 'Starters & Snacks',
+    '🪔 Naivedyam': 'Rice Specials',
+  };
+  const subcategoryKey = SUBCATEGORY_MAP[activeTab] || activeTab;
+  const filtered = activeTab === 'All' ? items : items.filter(i => i.subcategory === subcategoryKey);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
@@ -81,6 +94,12 @@ const Prasada = () => {
       {/* Grid */}
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
+          {!loading && SECTION_MESSAGES[activeTab] && (
+            <div className="mb-6 px-4 py-3 rounded-xl text-sm italic text-center"
+              style={{ backgroundColor: 'rgba(22,101,52,0.07)', color: '#166534', border: '1px solid rgba(22,101,52,0.12)' }}>
+              {SECTION_MESSAGES[activeTab]}
+            </div>
+          )}
           {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} dishes</p>}
           {loading ? (
             <MenuLoader color="#166534" />
