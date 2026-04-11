@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { heroSlides } from '../mockData';
@@ -6,36 +6,81 @@ import { heroSlides } from '../mockData';
 const HeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
+  const timerRef = useRef(null);
 
   const goToSlide = useCallback((index) => {
     if (isTransitioning) return;
     setIsTransitioning(true);
-    setCurrentSlide(index);
-    setTimeout(() => setIsTransitioning(false), 800);
+    // Wrap around infinitely
+    const total = heroSlides.length;
+    setCurrentSlide(((index % total) + total) % total);
+    setTimeout(() => setIsTransitioning(false), 700);
   }, [isTransitioning]);
 
   const nextSlide = useCallback(() => {
-    goToSlide((currentSlide + 1) % heroSlides.length);
+    goToSlide(currentSlide + 1);
   }, [currentSlide, goToSlide]);
 
   const prevSlide = useCallback(() => {
-    goToSlide((currentSlide - 1 + heroSlides.length) % heroSlides.length);
+    goToSlide(currentSlide - 1);
   }, [currentSlide, goToSlide]);
 
-  useEffect(() => {
-    const timer = setInterval(nextSlide, 6000);
-    return () => clearInterval(timer);
+  // Auto-advance every 3.5 s
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(nextSlide, 3500);
   }, [nextSlide]);
 
+  useEffect(() => {
+    resetTimer();
+    return () => clearInterval(timerRef.current);
+  }, [resetTimer]);
+
+  // Touch handlers
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) nextSlide();
+      else prevSlide();
+      resetTimer();
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
+  const handleArrowClick = (fn) => {
+    fn();
+    resetTimer();
+  };
+
   return (
-    <div data-testid="hero-slider" className="relative w-full overflow-hidden" style={{ height: 'min(80vh, 700px)' }}>
+    <div
+      data-testid="hero-slider"
+      className="relative w-full overflow-hidden select-none"
+      style={{ height: 'min(80vh, 700px)' }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {heroSlides.map((slide, index) => (
         <div
           key={slide.id}
-          className={`absolute inset-0 ease-in-out ${
+          className={`absolute inset-0 ${
             index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
           }`}
-          style={{ transition: 'all 800ms ease-in-out' }}
+          style={{ transition: 'all 700ms ease-in-out' }}
         >
           {/* Background Image */}
           <div
@@ -43,12 +88,11 @@ const HeroSlider = () => {
             style={{ backgroundImage: `url(${slide.image})` }}
           />
 
-          {/* Gradient Overlay - Strong for readability */}
+          {/* Gradient Overlay */}
           <div className="absolute inset-0" style={{
             background: 'linear-gradient(to right, rgba(45, 36, 34, 0.92) 0%, rgba(45, 36, 34, 0.8) 35%, rgba(45, 36, 34, 0.5) 65%, rgba(45, 36, 34, 0.3) 100%)'
           }} />
 
-          {/* Bottom subtle grain */}
           <div className="absolute inset-0 grain-overlay" />
 
           {/* Content */}
@@ -57,9 +101,8 @@ const HeroSlider = () => {
               className={`max-w-xl transition-all duration-700 ${
                 index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
               }`}
-              style={{ transitionDelay: index === currentSlide ? '300ms' : '0ms' }}
+              style={{ transitionDelay: index === currentSlide ? '250ms' : '0ms' }}
             >
-              {/* Decorative line */}
               <div className="w-12 h-0.5 mb-6" style={{ backgroundColor: '#F4C430' }} />
 
               <h1
@@ -93,24 +136,24 @@ const HeroSlider = () => {
         </div>
       ))}
 
-      {/* Navigation Arrows - hidden on mobile to avoid text overlap */}
+      {/* Navigation Arrows — visible on all screen sizes */}
       <button
-        onClick={prevSlide}
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full hidden sm:flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
+        onClick={() => handleArrowClick(prevSlide)}
+        className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
         style={{ backgroundColor: 'rgba(128, 0, 32, 0.7)', backdropFilter: 'blur(4px)' }}
         aria-label="Previous slide"
         data-testid="hero-prev-btn"
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={18} />
       </button>
       <button
-        onClick={nextSlide}
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full hidden sm:flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
+        onClick={() => handleArrowClick(nextSlide)}
+        className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white z-20 transition-all duration-300 hover:scale-110"
         style={{ backgroundColor: 'rgba(128, 0, 32, 0.7)', backdropFilter: 'blur(4px)' }}
         aria-label="Next slide"
         data-testid="hero-next-btn"
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={18} />
       </button>
 
       {/* Slide Indicators */}
@@ -118,7 +161,7 @@ const HeroSlider = () => {
         {heroSlides.map((_, index) => (
           <button
             key={index}
-            onClick={() => goToSlide(index)}
+            onClick={() => { goToSlide(index); resetTimer(); }}
             className={`h-1 rounded-full transition-all duration-500 ${
               index === currentSlide ? 'w-8' : 'w-3'
             }`}

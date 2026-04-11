@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User, ChevronDown } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import LogoMark from './LogoMark';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -49,7 +50,7 @@ const Header = () => {
         { name: 'Full Menu', path: '/menu' },
       ]
     },
-    { name: 'Snacks & Pickles', path: '/snacks' },
+    { name: 'Hot, Sweet & Pickles', path: '/snacks' },
     { name: 'Dabba Wala', path: '/subscriptions' },
     { name: 'Our Story', path: '/story' },
     { name: 'Catering', path: '/catering' },
@@ -71,8 +72,8 @@ const Header = () => {
         className="fixed top-0 left-0 right-0 z-50 py-1.5 sm:py-2 px-4 text-center text-xs sm:text-sm font-medium tracking-wide overflow-hidden"
         style={{ backgroundColor: '#800020', color: '#FDFBF7' }}
       >
-        <span className="hidden sm:inline">Swagatam! Now serving authentic hot meals in Milton Keynes, Edinburgh & Glasgow | Free Delivery over £30</span>
-        <span className="sm:hidden">Now serving Milton Keynes, Edinburgh & Glasgow | Free Delivery £30+</span>
+        <span className="hidden sm:inline">Swagatam! Now serving authentic hot meals in Milton Keynes, Edinburgh &amp; Glasgow &nbsp;|&nbsp; Take away available &nbsp;|&nbsp; Free Delivery over £30</span>
+        <span className="sm:hidden">Take away available &nbsp;|&nbsp; Free Delivery £30+</span>
       </div>
 
       {/* Header */}
@@ -92,10 +93,11 @@ const Header = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-2 group" data-testid="logo-link">
+            <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-3 group" data-testid="logo-link">
+              <LogoMark size={42} />
               <div className="flex flex-col">
                 <h1
-                  className="text-xl md:text-2xl font-bold tracking-tight"
+                  className="text-xl md:text-2xl font-bold tracking-tight leading-tight"
                   style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
                 >
                   Sree Svadista Prasada

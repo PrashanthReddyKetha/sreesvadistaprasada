@@ -17,7 +17,7 @@ export const heroSlides = [
     subtitle: "Divinity for the soul. Spice for the heart.",
     description: "Prasada & Svadista — choose your world.",
     cta: "Discover Our Menus",
-    link: "/menu"
+    link: "/#two-worlds"
   },
   {
     id: 3,
@@ -110,7 +110,7 @@ export const mealMoments = [
     id: 1,
     name: 'Breakfast',
     image: 'https://images.unsplash.com/photo-1694849789325-914b71ab4075?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
-    link: '/menu'
+    link: '/breakfast'
   },
   {
     id: 2,
@@ -122,7 +122,7 @@ export const mealMoments = [
     id: 3,
     name: 'Snacks',
     image: 'https://images.unsplash.com/photo-1572442568216-e4a31af30b69?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
-    link: '/menu'
+    link: '/snacks'
   },
   {
     id: 4,
@@ -401,6 +401,7 @@ export const chefSpecial = {
   tagline: "Taste for your heart. If you can touch someone's heart, that is limitless.",
   description: "Tangy, temple-style tamarind rice prepared with hand-pounded spices. Each grain carries the devotion of a thousand-year tradition. Served on fresh banana leaf with coconut chutney and papad.",
   price: "£8.99",
+  link: "/prasada",
   image: "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&q=85&w=800"
 };
 

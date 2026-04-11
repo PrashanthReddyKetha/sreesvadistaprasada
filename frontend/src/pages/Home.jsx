@@ -55,7 +55,7 @@ const Home = () => {
       {/* ============================================ */}
       {/* TWO WORLDS NAVIGATION CARDS */}
       {/* ============================================ */}
-      <section className="py-16 md:py-24 px-4 md:px-8" data-testid="two-worlds-section">
+      <section id="two-worlds" className="py-16 md:py-24 px-4 md:px-8" data-testid="two-worlds-section">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
             <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>
@@ -278,6 +278,7 @@ const Home = () => {
               </h2>
 
               <div className="relative rounded-lg overflow-hidden group" style={{ boxShadow: '0 8px 32px rgba(128, 0, 32, 0.08)' }}>
+                <Link to={chefSpecial.link || '/prasada'} className="block">
                 <div className="relative h-64 md:h-80 overflow-hidden">
                   <img
                     src={chefSpecial.image}
@@ -293,7 +294,7 @@ const Home = () => {
                   </span>
                 </div>
                 <div className="p-6 md:p-8 bg-white">
-                  <h3 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                  <h3 className="text-2xl md:text-3xl font-bold mb-2 hover:underline" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                     {chefSpecial.name}
                   </h3>
                   <p className="text-sm italic mb-3" style={{ color: '#B8860B' }}>
@@ -305,7 +306,7 @@ const Home = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold" style={{ color: '#800020' }}>{chefSpecial.price}</span>
                     <button
-                      onClick={() => addToCart(chefSpecial)}
+                      onClick={(e) => { e.preventDefault(); addToCart(chefSpecial); }}
                       className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md"
                       style={{ backgroundColor: '#800020' }}
                       data-testid="chef-special-add-btn"
@@ -314,6 +315,7 @@ const Home = () => {
                     </button>
                   </div>
                 </div>
+                </Link>
               </div>
             </div>
 

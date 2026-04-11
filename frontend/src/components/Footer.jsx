@@ -109,13 +109,25 @@ const Footer = () => {
             <h4 className="text-base font-semibold mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
               Our Services
             </h4>
-            <ul className="space-y-2.5 text-sm" style={{ color: '#A09890' }}>
-              <li>Daily Meal Subscriptions</li>
-              <li>Weekly & Monthly Plans</li>
-              <li>Corporate Catering</li>
-              <li>Temple Prasada Catering</li>
-              <li>UK-Wide Snacks & Pickles</li>
-              <li>Event Catering</li>
+            <ul className="space-y-2.5 text-sm">
+              {[
+                { name: 'Daily Meal Subscriptions', path: '/subscriptions' },
+                { name: 'Weekly & Monthly Plans', path: '/subscriptions' },
+                { name: 'Corporate Catering', path: '/catering' },
+                { name: 'Temple Prasada Catering', path: '/catering' },
+                { name: 'Hot, Sweet & Pickles', path: '/snacks' },
+                { name: 'Event Catering', path: '/catering' },
+              ].map((svc) => (
+                <li key={svc.name}>
+                  <Link
+                    to={svc.path}
+                    className="transition-colors duration-200 hover:text-white"
+                    style={{ color: '#A09890' }}
+                  >
+                    {svc.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -133,11 +145,23 @@ const Footer = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Phone size={16} className="flex-shrink-0" style={{ color: '#F4C430' }} />
-                <p className="text-sm" style={{ color: '#A09890' }}>+44 73 0711 9962</p>
+                <a
+                  href="tel:+447307119962"
+                  className="text-sm transition-colors duration-200 hover:text-white md:pointer-events-none md:cursor-default"
+                  style={{ color: '#A09890' }}
+                >
+                  +44 73 0711 9962
+                </a>
               </div>
               <div className="flex items-center gap-3">
                 <Mail size={16} className="flex-shrink-0" style={{ color: '#F4C430' }} />
-                <p className="text-sm" style={{ color: '#A09890' }}>hello@sreesvadista.co.uk</p>
+                <a
+                  href="mailto:info@sreeswadistaprasada.com"
+                  className="text-sm transition-colors duration-200 hover:text-white"
+                  style={{ color: '#A09890' }}
+                >
+                  info@sreeswadistaprasada.com
+                </a>
               </div>
             </div>
 
@@ -176,8 +200,8 @@ const Footer = () => {
           <div className="flex gap-6">
             <Link to="/contact" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>Contact Us</Link>
             <Link to="/faq" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>FAQ</Link>
-            <span className="text-xs" style={{ color: '#A09890' }}>Privacy Policy</span>
-            <span className="text-xs" style={{ color: '#A09890' }}>Terms of Service</span>
+            <Link to="/privacy-policy" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>Privacy Policy</Link>
+            <Link to="/terms" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>Terms of Service</Link>
           </div>
         </div>
       </div>

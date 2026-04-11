@@ -28,6 +28,8 @@ import ItemDetail from "./pages/ItemDetail";
 import Checkout from "./pages/Checkout";
 import StreetFood from "./pages/StreetFood";
 import Drinks from "./pages/Drinks";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndServices from "./pages/TermsAndServices";
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "placeholder";
 
@@ -67,6 +69,8 @@ function App() {
             <Route path="/drinks" element={<Drinks />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsAndServices />} />
           </Routes>
           <Footer />
           <WhatsAppButton />
