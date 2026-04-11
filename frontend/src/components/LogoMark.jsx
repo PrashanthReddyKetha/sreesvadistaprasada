@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 
-// Tries to load the real logo from /logo.png first.
-// Falls back to an SVG that mirrors the brand mark:
-// a thin oval frame with "SP" serif monogram and a lotus crown.
-const LogoMark = ({ size = 48 }) => {
+// Loads the real logo from /logo.png when the file is placed in frontend/public/.
+// Until then renders a faithful SVG recreation:
+//   — landscape oval ring (the distinctive frame)
+//   — "sP" serif monogram (lowercase s + large P, as in the actual logo)
+//   — lotus crown at the top-left overlapping the oval
+const LogoMark = ({ size = 46 }) => {
   const [error, setError] = useState(false);
 
   if (!error) {
@@ -25,46 +27,61 @@ const LogoMark = ({ size = 48 }) => {
     );
   }
 
-  // SVG fallback — SP in oval with lotus, matching brand colours
-  const h = Math.round(size * 1.1);
   return (
     <svg
       width={size}
-      height={h}
-      viewBox="0 0 48 54"
+      height={Math.round(size * 1.18)}
+      viewBox="0 0 52 62"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="Sree Svadista Prasada"
+      aria-label="Sree Svadista Prasada logo"
       style={{ flexShrink: 0 }}
     >
-      {/* ── Lotus crown ── */}
-      {/* outer petals */}
-      <ellipse cx="24" cy="9"  rx="3.5" ry="6.5" fill="#F4C430" fillOpacity="0.55" transform="rotate(-20 24 9)" />
-      <ellipse cx="24" cy="9"  rx="3.5" ry="6.5" fill="#F4C430" fillOpacity="0.55" transform="rotate(20 24 9)" />
-      {/* inner petals */}
-      <ellipse cx="24" cy="8"  rx="2.8" ry="6"   fill="#F4C430" fillOpacity="0.75" transform="rotate(-8 24 8)" />
-      <ellipse cx="24" cy="8"  rx="2.8" ry="6"   fill="#F4C430" fillOpacity="0.75" transform="rotate(8 24 8)" />
-      {/* centre petal */}
-      <ellipse cx="24" cy="7"  rx="2.4" ry="5.5" fill="#F4C430" />
-      {/* lotus base dot */}
-      <circle  cx="24" cy="13" r="2"    fill="#800020" />
+      {/*
+        ── LOTUS (upper-left, overlapping the top of the oval) ──
+        Pivot point for petal rotations: (19, 22)
+        Each petal: tall ellipse (rx 3, ry 8) sitting 7px above the pivot
+      */}
+      {/* Back/outer petals — slightly wider, more transparent */}
+      <ellipse cx="19" cy="14" rx="3.8" ry="8.5" fill="#F4C430" fillOpacity="0.45" transform="rotate(-35 19 22)" />
+      <ellipse cx="19" cy="14" rx="3.8" ry="8.5" fill="#F4C430" fillOpacity="0.45" transform="rotate(35 19 22)" />
+      {/* Mid petals */}
+      <ellipse cx="19" cy="14" rx="3.2" ry="8"   fill="#F4C430" fillOpacity="0.65" transform="rotate(-18 19 22)" />
+      <ellipse cx="19" cy="14" rx="3.2" ry="8"   fill="#F4C430" fillOpacity="0.65" transform="rotate(18 19 22)" />
+      {/* Centre petal — full gold */}
+      <ellipse cx="19" cy="14" rx="3"   ry="8.5" fill="#F4C430" />
+      {/* Lotus centre bud */}
+      <circle cx="19" cy="22" r="2.2" fill="#800020" />
 
-      {/* ── Oval frame ── */}
-      <ellipse cx="24" cy="35" rx="22" ry="18" stroke="#800020" strokeWidth="1.6" fill="none" />
+      {/*
+        ── OVAL FRAME ──
+        Landscape ellipse, sits below the lotus
+        Two rings (outer + inner subtle) just like the actual logo
+      */}
+      <ellipse cx="29" cy="42" rx="22" ry="17" stroke="#800020" strokeWidth="2"   fill="none" />
+      <ellipse cx="29" cy="42" rx="17" ry="13" stroke="#800020" strokeWidth="0.6" fill="none" strokeOpacity="0.25" />
 
-      {/* ── SP monogram ── */}
+      {/*
+        ── sP MONOGRAM ──
+        Lowercase 's' on the left (smaller), uppercase 'P' large on the right
+        Matching the character size relationship in the actual logo
+      */}
       <text
-        x="24"
-        y="42"
-        textAnchor="middle"
-        fontFamily="'Playfair Display', Georgia, serif"
-        fontSize="20"
+        x="14"
+        y="50"
+        fontFamily="'Playfair Display', Georgia, 'Times New Roman', serif"
+        fontSize="14"
         fontWeight="700"
         fill="#800020"
-        letterSpacing="1"
-      >
-        SP
-      </text>
+      >s</text>
+      <text
+        x="23"
+        y="54"
+        fontFamily="'Playfair Display', Georgia, 'Times New Roman', serif"
+        fontSize="26"
+        fontWeight="700"
+        fill="#800020"
+      >P</text>
     </svg>
   );
 };
