@@ -234,71 +234,72 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Mobile Navigation — full-screen overlay with dropdowns */}
-          {isMenuOpen && (
-            <div
-              className="lg:hidden fixed left-0 right-0 bottom-0 overflow-y-auto z-40"
-              style={{ top: '100px', backgroundColor: '#FDFBF7', borderTop: '1px solid rgba(244,196,48,0.2)' }}
-              data-testid="mobile-nav"
-            >
-              <nav className="px-4 py-4 pb-10">
-                {navItems.map((item) => (
-                  item.dropdown ? (
-                    <div key={item.name} className="border-b" style={{ borderColor: 'rgba(244,196,48,0.15)' }}>
-                      <button
-                        className="flex items-center justify-between w-full py-3.5 text-sm font-semibold"
-                        style={{ color: '#5C4B47' }}
-                        onClick={() => setOpenDropdown(openDropdown === item.name ? null : item.name)}
-                      >
-                        {item.name}
-                        <ChevronDown size={15} className={`transition-transform duration-200 ${openDropdown === item.name ? 'rotate-180' : ''}`} style={{ color: '#B8860B' }} />
-                      </button>
-                      {openDropdown === item.name && (
-                        <div className="pb-3 pl-3 flex flex-col gap-0">
-                          {item.dropdown.map((sub) => (
-                            <Link
-                              key={sub.path}
-                              to={sub.path}
-                              className="block py-2.5 text-sm"
-                              style={{ color: isActive(sub.path) ? '#800020' : '#7C6A65' }}
-                            >
-                              {sub.name}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className="flex items-center py-3.5 text-sm font-semibold border-b"
-                      style={{ color: isActive(item.path) ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.15)' }}
-                    >
-                      {item.name}
-                    </Link>
-                  )
-                ))}
-
-                {user ? (
-                  <div className="mt-4 flex items-center justify-between px-3 py-3 rounded-md" style={{ border: '1px solid rgba(128,0,32,0.2)' }}>
-                    <Link to="/dashboard" className="text-sm font-medium" style={{ color: '#800020' }}><User size={14} className="inline mr-1" />{user.name}</Link>
-                    <button onClick={logout} className="text-xs font-semibold" style={{ color: '#800020' }}>Sign Out</button>
-                  </div>
-                ) : (
-                  <button onClick={() => { setIsMenuOpen(false); setAuthOpen(true); }}
-                    className="w-full mt-4 py-3 text-sm font-medium rounded-md"
-                    style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.2)' }}
-                    data-testid="mobile-account-button">
-                    <User size={16} className="inline mr-2" />
-                    Sign In / Register
-                  </button>
-                )}
-              </nav>
-            </div>
-          )}
         </div>
       </header>
+
+      {/* Mobile Nav — sibling of header, NOT inside it (avoids backdrop-filter stacking context) */}
+      {isMenuOpen && (
+        <div
+          className="lg:hidden fixed left-0 right-0 bottom-0 overflow-y-auto"
+          style={{ top: '100px', backgroundColor: '#FDFBF7', zIndex: 55, borderTop: '2px solid rgba(244,196,48,0.3)' }}
+          data-testid="mobile-nav"
+        >
+          <nav className="px-5 py-4 pb-12">
+            {navItems.map((item) => (
+              item.dropdown ? (
+                <div key={item.name} className="border-b" style={{ borderColor: 'rgba(244,196,48,0.15)' }}>
+                  <button
+                    className="flex items-center justify-between w-full py-4 text-sm font-semibold"
+                    style={{ color: '#5C4B47' }}
+                    onClick={() => setOpenDropdown(openDropdown === item.name ? null : item.name)}
+                  >
+                    {item.name}
+                    <ChevronDown size={15} className={`transition-transform duration-200 ${openDropdown === item.name ? 'rotate-180' : ''}`} style={{ color: '#B8860B' }} />
+                  </button>
+                  {openDropdown === item.name && (
+                    <div className="pb-3 pl-4 flex flex-col">
+                      {item.dropdown.map((sub) => (
+                        <Link
+                          key={sub.path}
+                          to={sub.path}
+                          className="block py-3 text-sm"
+                          style={{ color: isActive(sub.path) ? '#800020' : '#7C6A65' }}
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="flex items-center py-4 text-sm font-semibold border-b"
+                  style={{ color: isActive(item.path) ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.15)' }}
+                >
+                  {item.name}
+                </Link>
+              )
+            ))}
+
+            {user ? (
+              <div className="mt-4 flex items-center justify-between px-3 py-3 rounded-md" style={{ border: '1px solid rgba(128,0,32,0.2)' }}>
+                <Link to="/dashboard" className="text-sm font-medium" style={{ color: '#800020' }}><User size={14} className="inline mr-1" />{user.name}</Link>
+                <button onClick={logout} className="text-xs font-semibold" style={{ color: '#800020' }}>Sign Out</button>
+              </div>
+            ) : (
+              <button onClick={() => { setIsMenuOpen(false); setAuthOpen(true); }}
+                className="w-full mt-4 py-3 text-sm font-medium rounded-md"
+                style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.2)' }}
+                data-testid="mobile-account-button">
+                <User size={16} className="inline mr-2" />
+                Sign In / Register
+              </button>
+            )}
+          </nav>
+        </div>
+      )}
     </>
   );
 };
