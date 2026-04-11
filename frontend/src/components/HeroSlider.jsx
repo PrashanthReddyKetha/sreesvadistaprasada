@@ -121,8 +121,12 @@ const HeroSlider = () => {
                 {slide.description}
               </p>
 
-              <Link to={slide.link}>
+              {slide.link.startsWith('#') ? (
                 <button
+                  onClick={() => {
+                    const el = document.getElementById(slide.link.slice(1));
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
                   className="group px-8 py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg"
                   style={{ backgroundColor: '#800020' }}
                   data-testid={`hero-cta-${slide.id}`}
@@ -130,7 +134,18 @@ const HeroSlider = () => {
                   {slide.cta}
                   <ChevronRight size={16} className="inline ml-2 transition-transform duration-300 group-hover:translate-x-1" />
                 </button>
-              </Link>
+              ) : (
+                <Link to={slide.link}>
+                  <button
+                    className="group px-8 py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg"
+                    style={{ backgroundColor: '#800020' }}
+                    data-testid={`hero-cta-${slide.id}`}
+                  >
+                    {slide.cta}
+                    <ChevronRight size={16} className="inline ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                  </button>
+                </Link>
+              )}
             </div>
           </div>
         </div>

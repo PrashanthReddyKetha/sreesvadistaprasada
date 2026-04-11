@@ -14,11 +14,19 @@ const Home = () => {
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const { addToCart } = useCart();
   const [liveItems, setLiveItems] = useState([]);
+  const [chefSpecialId, setChefSpecialId] = useState(null);
 
   useEffect(() => {
     api.get('/menu?available=true&featured=true')
       .then(r => setLiveItems(r.data))
-      .catch(() => {}); // silently fall back to mockData
+      .catch(() => {});
+  }, []);
+
+  // Look up the chef's special item by name to get its real ID for the detail page link
+  useEffect(() => {
+    api.get('/menu?available=true&search=Pulihora')
+      .then(r => { if (r.data?.[0]?.id) setChefSpecialId(r.data[0].id); })
+      .catch(() => {});
   }, []);
 
   const scrollTrending = (direction) => {
@@ -278,7 +286,7 @@ const Home = () => {
               </h2>
 
               <div className="relative rounded-lg overflow-hidden group" style={{ boxShadow: '0 8px 32px rgba(128, 0, 32, 0.08)' }}>
-                <Link to={chefSpecial.link || '/prasada'} className="block">
+                <Link to={chefSpecialId ? `/item/${chefSpecialId}` : '/prasada'} className="block">
                 <div className="relative h-64 md:h-80 overflow-hidden">
                   <img
                     src={chefSpecial.image}
@@ -562,7 +570,7 @@ const Home = () => {
                 Sending a piece of home across the UK
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                Snacks & Pickles
+                Hot, Sweet & Pickles
               </h2>
               <p className="text-base text-gray-600 leading-relaxed mb-6">
                 Shop our authentic pickles, podis, and sweets. Grandmother's recipes, packed with love and shipped anywhere in the UK.
@@ -579,7 +587,7 @@ const Home = () => {
                   </span>
                 ))}
               </div>
-              <Link to="/menu">
+              <Link to="/snacks">
                 <button className="btn-outlined" data-testid="shop-snacks-btn">
                   Shop the Range <ArrowRight size={16} />
                 </button>

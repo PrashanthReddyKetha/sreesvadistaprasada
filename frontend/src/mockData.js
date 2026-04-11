@@ -17,7 +17,7 @@ export const heroSlides = [
     subtitle: "Divinity for the soul. Spice for the heart.",
     description: "Prasada & Svadista — choose your world.",
     cta: "Discover Our Menus",
-    link: "/#two-worlds"
+    link: "#two-worlds"
   },
   {
     id: 3,
