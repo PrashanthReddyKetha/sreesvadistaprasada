@@ -78,7 +78,7 @@ const HeroSlider = () => {
         <div
           key={slide.id}
           className={`absolute inset-0 ${
-            index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+            index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'
           }`}
           style={{ transition: 'all 700ms ease-in-out' }}
         >
