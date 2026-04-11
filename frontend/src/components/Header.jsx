@@ -246,43 +246,44 @@ const Header = () => {
         >
           <nav className="px-5 py-4 pb-12">
             {navItems.map((item) => (
-              item.dropdown ? (
-                <div key={item.name} className="border-b" style={{ borderColor: 'rgba(244,196,48,0.15)' }}>
-                  <button
-                    className="flex items-center justify-between w-full py-4 text-sm font-semibold"
-                    style={{ color: '#5C4B47' }}
-                    onClick={() => setOpenDropdown(openDropdown === item.name ? null : item.name)}
+              <div key={item.name}>
+                {item.dropdown ? (
+                  <div>
+                    <button
+                      className="flex items-center justify-between w-full py-3 text-base font-medium border-b"
+                      style={{ color: '#800020', borderColor: 'rgba(244,196,48,0.3)' }}
+                      onClick={() => setOpenDropdown(openDropdown === item.name ? null : item.name)}
+                    >
+                      {item.name}
+                      <ChevronDown size={18} style={{ transform: openDropdown === item.name ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                    </button>
+                    {openDropdown === item.name && (
+                      <div className="pl-4 py-1">
+                        {item.dropdown.map((sub) => (
+                          <Link
+                            key={sub.path}
+                            to={sub.path}
+                            onClick={() => { setIsMenuOpen(false); setOpenDropdown(null); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+                            className="block py-2 text-sm border-b"
+                            style={{ color: isActive(sub.path) ? '#B8860B' : '#333', borderColor: 'rgba(244,196,48,0.15)' }}
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    to={item.path}
+                    onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+                    className="block py-3 text-base font-medium border-b"
+                    style={{ color: isActive(item.path) ? '#B8860B' : '#800020', borderColor: 'rgba(244,196,48,0.3)' }}
                   >
                     {item.name}
-                    <ChevronDown size={15} className={`transition-transform duration-200 ${openDropdown === item.name ? 'rotate-180' : ''}`} style={{ color: '#B8860B' }} />
-                  </button>
-                  {openDropdown === item.name && (
-                    <div className="pb-3 pl-4 flex flex-col">
-                      {item.dropdown.map((sub) => (
-                        <Link
-                          key={sub.path}
-                          to={sub.path}
-                          className="block py-3 text-sm"
-                          style={{ color: isActive(sub.path) ? '#800020' : '#7C6A65' }}
-                          onClick={() => { setIsMenuOpen(false); setOpenDropdown(null); }}
-                        >
-                          {sub.name}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="flex items-center py-4 text-sm font-semibold border-b"
-                  style={{ color: isActive(item.path) ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.15)' }}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              )
+                  </Link>
+                )}
+              </div>
             ))}
 
             {user ? (
