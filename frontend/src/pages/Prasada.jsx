@@ -8,11 +8,11 @@ import api from '../api';
 const TABS = ['All', 'Starters & Evening Delights', 'Indo-Chinese', 'Curries & Dal', '🪔 Naivedyam', 'Biryani & Rice'];
 
 const SECTION_MESSAGES = {
-  'Starters & Evening Delights': 'Light bites and crispy evening delights — the perfect way to begin.',
-  'Indo-Chinese': 'Desi-Chinese fusion with a South Indian soul — bold, tangy, and totally addictive.',
-  'Curries & Dal': 'Slow-cooked gravies and lentils, simmered patiently in generations-old spice blends.',
-  '🪔 Naivedyam': 'Sacred rice offerings, prepared with devotion.',
-  'Biryani & Rice': 'Fragrant long-grain rice layered with spices, herbs, and wholesome vegetables.',
+  'Starters & Evening Delights': 'Begin with a spark.',
+  'Indo-Chinese': 'East meets South.',
+  'Curries & Dal': 'Comfort, slow-cooked.',
+  '🪔 Naivedyam': 'Offered with devotion.',
+  'Biryani & Rice': 'Fragrant. Festive. Full.',
 };
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
