@@ -260,15 +260,19 @@ const Header = () => {
                     {openDropdown === item.name && (
                       <div className="pl-4 py-1">
                         {item.dropdown.map((sub) => (
-                          <Link
+                          <button
                             key={sub.path}
-                            to={sub.path}
-                            onClick={() => { setIsMenuOpen(false); setOpenDropdown(null); window.scrollTo({ top: 0, behavior: 'instant' }); }}
-                            className="block py-2 text-sm border-b"
+                            className="block w-full text-left py-2 text-sm border-b"
                             style={{ color: isActive(sub.path) ? '#B8860B' : '#333', borderColor: 'rgba(244,196,48,0.15)', touchAction: 'manipulation' }}
+                            onClick={() => {
+                              navigate(sub.path);
+                              setIsMenuOpen(false);
+                              setOpenDropdown(null);
+                              window.scrollTo({ top: 0, behavior: 'instant' });
+                            }}
                           >
                             {sub.name}
-                          </Link>
+                          </button>
                         ))}
                       </div>
                     )}
