@@ -94,7 +94,7 @@ const Header = () => {
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-3 group" data-testid="logo-link">
-              <LogoMark size={42} />
+              <LogoMark size={72} />
               <div className="flex flex-col">
                 <h1
                   className="text-xl md:text-2xl font-bold tracking-tight leading-tight"
