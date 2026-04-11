@@ -234,50 +234,33 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Mobile Navigation — flat list, no dropdowns */}
           {isMenuOpen && (
             <nav
-              className="lg:hidden pb-6 border-t animate-fade-in"
+              className="lg:hidden pb-6 border-t"
               style={{ borderColor: 'rgba(244, 196, 48, 0.2)' }}
               data-testid="mobile-nav"
             >
-              {navItems.map((item) => (
-                item.dropdown ? (
-                  <div key={item.name}>
-                    <button
-                      className="flex items-center justify-between w-full py-3 text-sm font-medium"
-                      style={{ color: '#5C4B47' }}
-                      onClick={() => setOpenDropdown(openDropdown === item.name ? null : item.name)}
-                    >
-                      {item.name}
-                      <ChevronDown size={14} className={`transition-transform duration-200 ${openDropdown === item.name ? 'rotate-180' : ''}`} />
-                    </button>
-                    {openDropdown === item.name && (
-                      <div className="pl-4 pb-2 space-y-1">
-                        {item.dropdown.map((sub) => (
-                          <Link
-                            key={sub.path + sub.name}
-                            to={sub.path}
-                            className="block py-3 text-sm font-medium"
-                            style={{ color: '#800020' }}
-                          >
-                            {sub.name}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className="block py-3 text-sm font-medium"
-                    style={{ color: isActive(item.path) ? '#800020' : '#5C4B47' }}
-                  >
-                    {item.name}
-                  </Link>
-                )
-              ))}
+              <Link to="/" className="block py-3 text-sm font-medium border-b" style={{ color: isActive('/') ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.1)' }}>Home</Link>
+
+              <p className="pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: '#B8860B' }}>Menus</p>
+              <Link to="/prasada"    className="block py-2.5 text-sm font-medium" style={{ color: isActive('/prasada')    ? '#800020' : '#5C4B47' }}>Prasada (Pure Veg)</Link>
+              <Link to="/svadista"   className="block py-2.5 text-sm font-medium" style={{ color: isActive('/svadista')   ? '#800020' : '#5C4B47' }}>Svadista (Non-Veg)</Link>
+              <Link to="/breakfast"  className="block py-2.5 text-sm font-medium" style={{ color: isActive('/breakfast')  ? '#800020' : '#5C4B47' }}>Breakfast</Link>
+              <Link to="/street-food" className="block py-2.5 text-sm font-medium" style={{ color: isActive('/street-food') ? '#800020' : '#5C4B47' }}>Street Food</Link>
+              <Link to="/drinks"     className="block py-2.5 text-sm font-medium" style={{ color: isActive('/drinks')     ? '#800020' : '#5C4B47' }}>Drinks</Link>
+              <Link to="/menu"       className="block py-2.5 text-sm font-medium border-b pb-4" style={{ color: isActive('/menu') ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.1)' }}>Full Menu</Link>
+
+              <Link to="/snacks"        className="block py-3 text-sm font-medium border-b" style={{ color: isActive('/snacks')        ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.1)' }}>Hot, Sweet &amp; Pickles</Link>
+              <Link to="/subscriptions" className="block py-3 text-sm font-medium border-b" style={{ color: isActive('/subscriptions') ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.1)' }}>Dabba Wala</Link>
+              <Link to="/story"         className="block py-3 text-sm font-medium border-b" style={{ color: isActive('/story')         ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.1)' }}>Our Story</Link>
+              <Link to="/catering"      className="block py-3 text-sm font-medium border-b" style={{ color: isActive('/catering')      ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.1)' }}>Catering</Link>
+
+              <p className="pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: '#B8860B' }}>More</p>
+              <Link to="/gallery" className="block py-2.5 text-sm font-medium" style={{ color: isActive('/gallery') ? '#800020' : '#5C4B47' }}>Gallery</Link>
+              <Link to="/faq"     className="block py-2.5 text-sm font-medium" style={{ color: isActive('/faq')     ? '#800020' : '#5C4B47' }}>FAQ</Link>
+              <Link to="/contact" className="block py-2.5 text-sm font-medium border-b pb-4" style={{ color: isActive('/contact') ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.1)' }}>Contact</Link>
+
               {user ? (
                 <div className="mt-3 flex items-center justify-between px-3 py-3 rounded-md" style={{ border: '1px solid rgba(128,0,32,0.2)' }}>
                   <Link to="/dashboard" className="text-sm font-medium" style={{ color: '#800020' }}><User size={14} className="inline mr-1" />{user.name}</Link>
