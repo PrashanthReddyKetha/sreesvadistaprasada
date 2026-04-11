@@ -95,13 +95,15 @@ const Prasada = () => {
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {!loading && SECTION_MESSAGES[activeTab] && (
-            <div className="flex items-center gap-3 mb-8 -mt-2">
-              <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, #d97706)' }} />
-              <p className="text-sm italic whitespace-nowrap"
-                style={{ color: '#92400e', fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em' }}>
-                {SECTION_MESSAGES[activeTab].icon}&ensp;{SECTION_MESSAGES[activeTab].text}
-              </p>
-              <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, #d97706)' }} />
+            <div className="mb-8 -mt-2 text-center">
+              <div className="inline-flex items-center gap-3 max-w-full">
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to right, transparent, #d97706)' }} />
+                <p className="text-sm italic"
+                  style={{ color: '#92400e', fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', lineHeight: '1.6' }}>
+                  {SECTION_MESSAGES[activeTab].icon}&ensp;{SECTION_MESSAGES[activeTab].text}
+                </p>
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to left, transparent, #d97706)' }} />
+              </div>
             </div>
           )}
           {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} dishes</p>}

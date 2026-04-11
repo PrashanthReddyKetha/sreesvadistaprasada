@@ -73,7 +73,7 @@ const Header = () => {
         style={{ backgroundColor: '#800020', color: '#FDFBF7' }}
       >
         <span className="hidden sm:inline">Swagatam! Now serving authentic hot meals in Milton Keynes, Edinburgh &amp; Glasgow &nbsp;|&nbsp; Take away available &nbsp;|&nbsp; Free Delivery over £30</span>
-        <span className="sm:hidden">Take away available &nbsp;|&nbsp; Free Delivery £30+</span>
+        <span className="sm:hidden whitespace-nowrap">Take away available &nbsp;|&nbsp; Free Delivery £30+</span>
       </div>
 
       {/* Header */}
@@ -259,6 +259,7 @@ const Header = () => {
                             to={sub.path}
                             className="block py-2 text-sm"
                             style={{ color: '#800020' }}
+                            onClick={() => { setIsMenuOpen(false); setOpenDropdown(null); }}
                           >
                             {sub.name}
                           </Link>
