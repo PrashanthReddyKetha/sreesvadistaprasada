@@ -264,6 +264,7 @@ const Header = () => {
                           to={sub.path}
                           className="block py-3 text-sm"
                           style={{ color: isActive(sub.path) ? '#800020' : '#7C6A65' }}
+                          onClick={() => { setIsMenuOpen(false); setOpenDropdown(null); }}
                         >
                           {sub.name}
                         </Link>
@@ -277,6 +278,7 @@ const Header = () => {
                   to={item.path}
                   className="flex items-center py-4 text-sm font-semibold border-b"
                   style={{ color: isActive(item.path) ? '#800020' : '#5C4B47', borderColor: 'rgba(244,196,48,0.15)' }}
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
                 </Link>
