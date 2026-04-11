@@ -93,9 +93,9 @@ const Header = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-2 group" data-testid="logo-link">
+            <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-end gap-2 group" data-testid="logo-link">
               <LogoMark size={72} />
-              <div className="flex flex-col">
+              <div className="flex flex-col pb-1">
                 <h1
                   className="text-xl md:text-2xl font-bold tracking-tight leading-tight"
                   style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
