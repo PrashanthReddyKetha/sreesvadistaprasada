@@ -38,6 +38,8 @@ class MenuCategory(str, Enum):
     veg = "veg"
     prasada = "prasada"
     breakfast = "breakfast"
+    streetFood = "streetFood"
+    drinks = "drinks"
     pickles = "pickles"
     podis = "podis"
 
