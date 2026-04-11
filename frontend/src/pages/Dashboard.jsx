@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, ArrowLeft, Send, CheckCheck, PauseCircle, PlayCircle, Sun, Moon, Leaf, Flame, Sparkles } from 'lucide-react';
+import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, ArrowLeft, Send, CheckCheck, Leaf, Flame, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -405,183 +405,205 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
 const BOX_META = {
   prasada:  { icon: Leaf,     color: '#4A7C59', label: 'Prasada Box' },
   svadista: { icon: Flame,    color: '#8B3A3A', label: 'Svadista Box' },
-  mixed:    { icon: Sparkles, color: '#B8860B', label: 'Mixed Box' },
 };
 
+function fmtDay(iso) {
+  if (!iso) return '—';
+  return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function daysUntil(iso) {
+  if (!iso) return null;
+  return Math.ceil((new Date(iso + 'T23:59:59') - new Date()) / (1000 * 60 * 60 * 24));
+}
+
 function SubsTab({ subs, reload }) {
-  const [updating, setUpdating] = useState(null); // sub id being updated
-  const [cancelStep, setCancelStep] = useState(null); // null | {id} | {id, reason}
-  const [cancelReason, setCancelReason] = useState('');
+  const today = new Date().toISOString().split('T')[0];
+  const in7   = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
-  const CANCEL_REASONS = ['Too expensive', 'Moving away', 'Lifestyle change', 'Not enough variety', 'Quality issue', 'Other'];
+  if (!subs || subs.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Package size={48} className="mx-auto mb-4" style={{ color: '#800020' }} />
+        <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>You have not tried Dabba Wala yet</h3>
+        <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: '#9C7B6B' }}>
+          Home-cooked South Indian meals every weekday — freshly made each morning, delivered to your door. From £9 per meal.
+        </p>
+        <Link to="/subscriptions" className="inline-block px-8 py-3 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>
+          Start my subscription
+        </Link>
+        <div className="flex justify-center gap-6 mt-8">
+          {[
+            { icon: Leaf,    text: '100% fresh daily' },
+            { icon: Clock,   text: 'Delivered 12–2pm' },
+            { icon: Shield,  text: '48hr cancellation window' },
+          ].map(({ icon: Icon, text }) => (
+            <div key={text} className="flex flex-col items-center gap-1.5 text-xs" style={{ color: '#9C7B6B' }}>
+              <Icon size={18} style={{ color: '#800020' }} /> {text}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-  const updateStatus = async (id, status) => {
-    setUpdating(id);
-    try {
-      await api.put(`/subscriptions/${id}/status`, { status });
-      await reload();
-    } catch {}
-    setUpdating(null);
-    setCancelStep(null);
-  };
+  // Find the most relevant subscription
+  const activeSub   = subs.find(s => s.status === 'active' && s.end_date && s.end_date >= today);
+  const endingSoon  = activeSub && activeSub.end_date && activeSub.end_date <= in7;
+  const expiredSub  = subs.find(s => s.status === 'expired' || (s.status === 'active' && s.end_date && s.end_date < today));
+  const cancelledSub = subs.find(s => s.status === 'cancelled');
 
-  if (subs.length === 0) {
-    return <EmptyState icon={Calendar} message="No Dabba Wala subscription" sub="Sign up for our weekly meal plan and never worry about cooking again." link="/subscriptions" linkLabel="Subscribe to Dabba Wala" />;
+  // ── ENDING SOON ─────────────────────────────────────
+  if (endingSoon) return (
+    <div>
+      {/* Amber ending-soon banner */}
+      <div className="rounded-2xl p-5 mb-5" style={{ backgroundColor: '#FAEEDA', border: '0.5px solid #B8860B' }}>
+        <p className="font-bold mb-1" style={{ color: '#854F0B' }}>Your Dabba Wala ends {fmtDay(activeSub.end_date)} 🍱</p>
+        <p className="text-sm mb-4" style={{ color: '#854F0B' }}>Ready to continue? Renew now and keep your meals coming — same box, same schedule.</p>
+        <div className="flex gap-3 flex-wrap">
+          <Link to="/subscriptions" className="px-5 py-2.5 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>Renew — same plan</Link>
+          <Link to="/subscriptions" className="px-5 py-2.5 text-sm font-semibold rounded-sm" style={{ color: '#800020', border: '1.5px solid #800020' }}>Change my plan</Link>
+        </div>
+      </div>
+      <SubActiveCard sub={activeSub} />
+    </div>
+  );
+
+  // ── ACTIVE ───────────────────────────────────────────
+  if (activeSub) return <SubActiveCard sub={activeSub} />;
+
+  // ── EXPIRED ──────────────────────────────────────────
+  if (expiredSub) return (
+    <div className="text-center py-12">
+      <Package size={40} className="mx-auto mb-4" style={{ color: '#9CA3AF' }} />
+      <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+        Your Dabba Wala ended on {fmtDay(expiredSub.end_date)}
+      </h3>
+      <p className="text-sm mb-6" style={{ color: '#9C7B6B' }}>We miss cooking for you. Whenever you are ready to come back, we will be here.</p>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <Link to="/subscriptions" className="px-8 py-3 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>Come back — same preferences</Link>
+        <Link to="/subscriptions" className="px-8 py-3 text-sm font-semibold rounded-sm border-2" style={{ borderColor: '#800020', color: '#800020' }}>Start fresh</Link>
+      </div>
+      <PrevSubDetails sub={expiredSub} />
+    </div>
+  );
+
+  // ── CANCELLED ────────────────────────────────────────
+  if (cancelledSub) return (
+    <div className="text-center py-12">
+      <Package size={40} className="mx-auto mb-4" style={{ color: '#9CA3AF' }} />
+      <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Your subscription was cancelled</h3>
+      <p className="text-sm mb-6" style={{ color: '#9C7B6B' }}>We hope to see you again whenever you are ready.</p>
+      <Link to="/subscriptions" className="inline-block px-8 py-3 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>Subscribe again</Link>
+      <PrevSubDetails sub={cancelledSub} />
+    </div>
+  );
+
+  // Fallback
+  return <EmptyState icon={Calendar} message="No Dabba Wala subscription" sub="Sign up for our weekly meal plan." link="/subscriptions" linkLabel="Subscribe to Dabba Wala" />;
+}
+
+/* Sub-components for SubsTab */
+function SubActiveCard({ sub }) {
+  const [expanded, setExpanded] = useState(false);
+  const today = new Date().toISOString().split('T')[0];
+  const boxMeta = BOX_META[sub.box_type] || BOX_META.prasada;
+  const BoxIcon = boxMeta.icon;
+  const addr = sub.delivery_address;
+  const daysLeft = daysUntil(sub.end_date);
+
+  // Hero banner logic
+  let heroBg = '#800020', heroText = 'Next delivery coming up', heroSub = '';
+  if (daysLeft !== null && daysLeft <= 0) {
+    heroBg = '#B8860B'; heroText = 'This week is confirmed ✅'; heroSub = 'Your meals are being prepared. Changes are now closed for this week.';
+  } else if (daysLeft === 1) {
+    heroBg = '#4A7C59'; heroText = 'Your delivery is tomorrow 🍱'; heroSub = 'Lunch · arriving 12–2pm';
+  } else if (sub.start_date === today) {
+    heroBg = '#F4C430'; heroText = 'Your delivery is on its way today'; heroSub = 'Arriving between 12pm and 2pm';
+  } else {
+    heroText = `Next delivery: ${sub.start_date ? new Date(sub.start_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }) : '—'}`;
+    heroSub = `${daysLeft !== null ? daysLeft + ' days away' : ''}`;
   }
 
   return (
-    <div className="space-y-5">
-      {subs.map(s => {
-        const boxMeta = BOX_META[s.box_type] || BOX_META.prasada;
-        const BoxIcon = boxMeta.icon;
-        const isActive = s.status === 'active';
-        const isPaused = s.status === 'paused';
-        const isCancelled = s.status === 'cancelled';
-        const addr = s.delivery_address;
+    <div className="space-y-4">
+      {/* Hero banner */}
+      <div className="rounded-2xl p-5" style={{ backgroundColor: heroBg }}>
+        <p className="text-lg font-bold mb-1" style={{ color: heroBg === '#F4C430' ? '#2D2422' : 'white', fontFamily: "'Playfair Display', serif" }}>{heroText}</p>
+        {heroSub && <p className="text-sm" style={{ color: heroBg === '#F4C430' ? 'rgba(45,36,34,0.7)' : 'rgba(255,255,255,0.8)' }}>{heroSub}</p>}
+      </div>
 
-        return (
-          <div key={s.id} className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(244,196,48,0.2)', backgroundColor: '#FDFBF7' }}>
-
-            {/* Header band */}
-            <div className="p-5" style={{ background: isCancelled ? '#f3f4f6' : 'linear-gradient(135deg, #800020 0%, #5C0015 100%)' }}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: isCancelled ? '#9CA3AF' : 'rgba(244,196,48,0.8)' }}>Dabba Wala</p>
-                  <p className="text-xl font-bold mb-0.5" style={{ color: isCancelled ? '#6B7280' : 'white', fontFamily: "'Playfair Display', serif" }}>
-                    {s.plan?.charAt(0).toUpperCase() + s.plan?.slice(1)} Plan
-                  </p>
-                  <p className="text-sm" style={{ color: isCancelled ? '#9CA3AF' : 'rgba(255,255,255,0.7)' }}>Since {fmt(s.created_at)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold" style={{ color: isCancelled ? '#6B7280' : 'white' }}>£{s.price}</p>
-                  <StatusBadge status={s.status} />
+      {/* Subscription details (collapsible) */}
+      <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(244,196,48,0.2)', backgroundColor: '#FDFBF7' }}>
+        <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center justify-between p-5 text-left">
+          <p className="font-semibold text-sm" style={{ color: '#800020' }}>Subscription details</p>
+          {expanded ? <ChevronUp size={16} style={{ color: '#9C7B6B' }} /> : <ChevronDown size={16} style={{ color: '#9C7B6B' }} />}
+        </button>
+        {expanded && (
+          <div className="px-5 pb-5 space-y-3" style={{ borderTop: '1px solid rgba(244,196,48,0.15)' }}>
+            {[
+              ['Plan', sub.plan?.charAt(0).toUpperCase() + sub.plan?.slice(1) + ' Plan'],
+              ['Box', boxMeta.label],
+              ['Price', `£${sub.price}`],
+              ['Start date', sub.start_date ? new Date(sub.start_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'],
+              ['End date', sub.end_date ? new Date(sub.end_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'],
+              ['Delivering to', addr ? (typeof addr === 'string' ? addr : `${addr.line1}, ${addr.city}, ${addr.postcode}`) : '—'],
+              ['If not home', sub.delivery_instruction || '—'],
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between items-start gap-4">
+                <p className="text-xs font-semibold shrink-0" style={{ color: '#B8860B', minWidth: 90 }}>{k}</p>
+                <p className="text-sm text-right" style={{ color: '#3D2B1F' }}>{v}</p>
+              </div>
+            ))}
+            {sub.preferences?.length > 0 && (
+              <div className="flex justify-between items-start gap-4">
+                <p className="text-xs font-semibold shrink-0" style={{ color: '#B8860B', minWidth: 90 }}>Preferences</p>
+                <div className="flex flex-wrap gap-1 justify-end">
+                  {sub.preferences.map(p => <span key={p} className="px-2 py-0.5 rounded-full text-xs" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }}>{p}</span>)}
                 </div>
               </div>
-            </div>
-
-            {/* Body */}
-            <div className="p-5">
-              {/* Box type + delivery address */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                <div className="rounded-xl p-3 flex items-center gap-2" style={{ backgroundColor: `${boxMeta.color}10` }}>
-                  <BoxIcon size={16} style={{ color: boxMeta.color }} />
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: '#B8860B' }}>Box</p>
-                    <p className="text-sm font-medium" style={{ color: boxMeta.color }}>{boxMeta.label}</p>
-                  </div>
-                </div>
-
-                {s.start_date && (
-                  <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(128,0,32,0.04)' }}>
-                    <p className="text-[10px] uppercase tracking-widest font-semibold mb-0.5" style={{ color: '#B8860B' }}>Starts</p>
-                    <p className="text-sm font-medium" style={{ color: '#3D2B1F' }}>{new Date(s.start_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                  </div>
-                )}
-
-                {addr && (
-                  <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(128,0,32,0.04)' }}>
-                    <p className="text-[10px] uppercase tracking-widest font-semibold mb-0.5" style={{ color: '#B8860B' }}>Delivering to</p>
-                    <p className="text-sm font-medium" style={{ color: '#3D2B1F' }}>{typeof addr === 'string' ? addr : `${addr.city}, ${addr.postcode}`}</p>
-                  </div>
-                )}
+            )}
+            {sub.custom_request && (
+              <div className="flex justify-between items-start gap-4">
+                <p className="text-xs font-semibold shrink-0" style={{ color: '#B8860B', minWidth: 90 }}>Special request</p>
+                <p className="text-sm text-right italic" style={{ color: '#5C4B47' }}>{sub.custom_request}</p>
               </div>
-
-              {/* Delivery slots */}
-              {s.delivery_slots?.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#B8860B' }}>Delivery Days</p>
-                  <div className="flex flex-wrap gap-2">
-                    {s.delivery_slots.map((slot, i) => (
-                      <span key={i} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }}>
-                        {slot.time === 'lunch' ? <Sun size={10} /> : <Moon size={10} />}
-                        {slot.day?.charAt(0).toUpperCase() + slot.day?.slice(1)} · {slot.time === 'lunch' ? 'Lunch' : 'Dinner'}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Preferences */}
-              {s.preferences?.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#B8860B' }}>Preferences</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {s.preferences.map(p => (
-                      <span key={p} className="px-2.5 py-1 rounded-full text-xs" style={{ backgroundColor: 'rgba(128,0,32,0.06)', color: '#800020' }}>{p}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Action buttons */}
-              {!isCancelled && (
-                <div className="flex gap-2 flex-wrap pt-2" style={{ borderTop: '1px solid rgba(128,0,32,0.08)' }}>
-                  {isActive && (
-                    <button
-                      onClick={() => updateStatus(s.id, 'paused')}
-                      disabled={updating === s.id}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
-                      style={{ backgroundColor: '#FEF9C3', color: '#854D0E' }}>
-                      <PauseCircle size={14} /> {updating === s.id ? 'Pausing…' : 'Pause Subscription'}
-                    </button>
-                  )}
-                  {isPaused && (
-                    <button
-                      onClick={() => updateStatus(s.id, 'active')}
-                      disabled={updating === s.id}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
-                      style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
-                      <PlayCircle size={14} /> {updating === s.id ? 'Resuming…' : 'Resume Deliveries'}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setCancelStep({ id: s.id })}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
-                    style={{ backgroundColor: '#FEE2E2', color: '#991B1B' }}>
-                    <XCircle size={14} /> Cancel
-                  </button>
-                </div>
-              )}
-
-              {/* Cancel flow */}
-              {cancelStep?.id === s.id && (
-                <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.15)' }}>
-                  {!cancelStep.confirm ? (
-                    <>
-                      <p className="text-sm font-semibold mb-1" style={{ color: '#991B1B' }}>Cancel subscription?</p>
-                      <p className="text-xs text-gray-500 mb-3">Your current week's meals will still be delivered. Cancellation takes effect from next week.</p>
-                      <p className="text-xs font-medium text-gray-600 mb-2">Reason (optional):</p>
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        {CANCEL_REASONS.map(r => (
-                          <button key={r} onClick={() => setCancelReason(r)}
-                            className="text-xs px-3 py-2 rounded-lg text-left transition-all"
-                            style={{ backgroundColor: cancelReason === r ? '#FEE2E2' : 'white', border: `1px solid ${cancelReason === r ? '#DC2626' : '#e5e7eb'}`, color: cancelReason === r ? '#991B1B' : '#5C4B47' }}>
-                            {r}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => updateStatus(s.id, 'cancelled')}
-                          disabled={updating === s.id}
-                          className="px-5 py-2 text-xs font-semibold text-white rounded-lg"
-                          style={{ backgroundColor: '#DC2626' }}>
-                          {updating === s.id ? 'Cancelling…' : 'Confirm Cancellation'}
-                        </button>
-                        <button onClick={() => { setCancelStep(null); setCancelReason(''); }}
-                          className="px-5 py-2 text-xs font-semibold rounded-lg border"
-                          style={{ color: '#6B7280', borderColor: '#e5e7eb' }}>
-                          Keep Subscription
-                        </button>
-                      </div>
-                    </>
-                  ) : null}
-                </div>
-              )}
+            )}
+            <div className="pt-3 mt-3" style={{ borderTop: '1px solid rgba(128,0,32,0.08)' }}>
+              <p className="text-xs text-center" style={{ color: '#9C7B6B' }}>
+                Need to make a change?{' '}
+                <Link to="/dashboard" onClick={() => {}} className="underline font-semibold" style={{ color: '#800020' }}>Contact us</Link>
+                {' '}— we aim to respond within 2 hours.
+              </p>
             </div>
           </div>
-        );
-      })}
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PrevSubDetails({ sub }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="mt-6 max-w-sm mx-auto">
+      <button onClick={() => setExpanded(e => !e)} className="text-sm font-semibold flex items-center gap-1 mx-auto" style={{ color: '#9C7B6B' }}>
+        Your previous subscription {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+      </button>
+      {expanded && (
+        <div className="mt-3 rounded-xl p-4 text-left" style={{ backgroundColor: '#F9F6EE', border: '0.5px solid #e0d9d0' }}>
+          {[
+            ['Plan', sub.plan?.charAt(0).toUpperCase() + sub.plan?.slice(1)],
+            ['Box', BOX_META[sub.box_type]?.label || sub.box_type],
+            ['Started', sub.start_date ? new Date(sub.start_date + 'T12:00:00').toLocaleDateString('en-GB') : '—'],
+            ['Ended', sub.end_date ? new Date(sub.end_date + 'T12:00:00').toLocaleDateString('en-GB') : '—'],
+          ].map(([k, v]) => (
+            <div key={k} className="flex justify-between text-sm py-1.5" style={{ borderBottom: '0.5px solid #e0d9d0' }}>
+              <span style={{ color: '#9C7B6B' }}>{k}</span><span style={{ color: '#2D2422' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

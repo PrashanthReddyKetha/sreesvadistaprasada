@@ -23,8 +23,8 @@ class OrderStatus(str, Enum):
 
 class SubscriptionStatus(str, Enum):
     active = "active"
-    paused = "paused"
     cancelled = "cancelled"
+    expired = "expired"
 
 
 class EnquiryStatus(str, Enum):
@@ -200,21 +200,21 @@ class Order(OrderCreate):
 
 # --- Subscriptions ---
 
-class DeliverySlot(BaseModel):
-    day: str   # monday | tuesday | wednesday | thursday | friday
-    time: str  # lunch | dinner
-
-
 class SubscriptionCreate(BaseModel):
     customer_name: str
     customer_email: EmailStr
     customer_phone: str
-    plan: str          # weekly | monthly | family
-    box_type: str      # prasada | svadista | mixed
+    plan: str                       # weekly | monthly
+    box_type: str                   # prasada | svadista
     preferences: List[str] = []
-    delivery_slots: List[DeliverySlot] = []
-    start_date: str
+    custom_request: Optional[str] = None
+    start_date: str                 # YYYY-MM-DD (always a Monday)
     delivery_address: Address
+    delivery_instruction: str = "door"  # call | door | neighbour | safeplace
+    neighbour_name: Optional[str] = None
+    neighbour_door: Optional[str] = None
+    safe_place_description: Optional[str] = None
+    is_guest: bool = False
     user_id: Optional[str] = None
 
 
@@ -226,7 +226,53 @@ class Subscription(SubscriptionCreate):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     price: float = 0.0
     status: SubscriptionStatus = SubscriptionStatus.active
+    end_date: Optional[str] = None
+    meals_delivered: int = 0
+    cancellation_window_expires: Optional[str] = None
+    audit_trail: List[dict] = Field(default_factory=list)
+    internal_notes: List[dict] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+# --- Weekly Menu ---
+
+class WeeklyMenuDay(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    date: str           # YYYY-MM-DD
+    box_type: str       # prasada | svadista
+    main: str = ""
+    side: str = ""
+    accompaniment: str = ""
+    extra: str = ""
+    status: str = "draft"   # draft | published
+    dietary_notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class WeeklyMenuDayCreate(BaseModel):
+    date: str
+    box_type: str
+    main: str
+    side: str
+    accompaniment: str
+    extra: str
+    status: str = "draft"
+    dietary_notes: Optional[str] = None
+
+
+class WeeklyMenuPublish(BaseModel):
+    week_start: str  # YYYY-MM-DD
+
+
+class WeeklyMenuNotes(BaseModel):
+    week_start: str
+    notes: str
+
+
+class WeeklyMenuTemplate(BaseModel):
+    name: str
+    week_start: str
 
 
 # --- Enquiries ---

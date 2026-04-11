@@ -6,7 +6,7 @@ import logging
 
 from database import client
 from seed import seed_menu, create_indexes, create_admin_user
-from routes import auth, menu, orders, subscriptions, enquiries, delivery
+from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -46,6 +46,7 @@ app.include_router(orders.router, prefix="/api")
 app.include_router(subscriptions.router, prefix="/api")
 app.include_router(enquiries.router, prefix="/api")
 app.include_router(delivery.router, prefix="/api")
+app.include_router(admin_dabba_wala.router, prefix="/api")
 
 
 @app.get("/api")

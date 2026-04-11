@@ -1,304 +1,463 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Check, ArrowRight, ArrowLeft, Calendar, Leaf, Flame, Sparkles, Sun, Moon, RotateCcw, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
+/* ── brand ────────────────────────────────────────────── */
+const C = {
+  primary: '#800020', gold: '#F4C430', darkGold: '#B8860B',
+  green: '#4A7C59', greenLight: '#E1F5EE', greenText: '#0F6E56',
+  amberLight: '#FAEEDA', amberText: '#854F0B',
+  cream: '#FDFBF7', surface: '#F9F6EE',
+  dark: '#2D2422', muted: '#9C7B6B',
+};
+
 /* ── constants ────────────────────────────────────────── */
-const STORAGE_KEY = 'ssp_dabba_progress';
-const PROGRESS_TTL = 7 * 24 * 60 * 60 * 1000;
+const STORAGE_KEY = 'ssp_dabba_v4';
+const STORAGE_TTL = 7 * 24 * 60 * 60 * 1000;
+
+const PLANS = [
+  { id: 'weekly',  name: 'Weekly trial',  price: 45,  perMeal: 9,  meals: 5,  badge: 'Start here',   badgeStyle: { backgroundColor: C.greenLight, color: C.greenText } },
+  { id: 'monthly', name: 'Monthly saver', price: 160, perMeal: 8,  meals: 20, badge: 'Best value',  badgeStyle: { backgroundColor: C.amberLight, color: C.amberText } },
+];
+
+const BOXES = [
+  { id: 'prasada',  name: 'Prasada box',  icon: Leaf,  iconBg: C.greenLight, iconColor: C.green,   border: C.green,   desc: 'Pure vegetarian. Temple-style cooking. Made with devotion.', mostChosen: false },
+  { id: 'svadista', name: 'Svadista box', icon: Flame, iconBg: '#FAECE7',   iconColor: C.primary, border: C.primary, desc: 'Non-vegetarian. Bold village flavours. Hearty and real.',    mostChosen: true  },
+];
+
+const PREFS = [
+  { id: 'no-onion',    label: 'No onion / garlic' },
+  { id: 'less-spice',  label: 'Less spicy' },
+  { id: 'extra-spice', label: 'Extra spicy' },
+  { id: 'no-egg',      label: 'No egg' },
+  { id: 'jain',        label: 'Jain preference' },
+  { id: 'no-mushroom', label: 'No mushroom' },
+  { id: 'no-brinjal',  label: 'No brinjal' },
+  { id: 'gluten-free', label: 'Gluten-free where possible' },
+];
+
+const DELIVERY_INSTRUCTIONS = [
+  { id: 'call',      label: 'Call me on arrival',        sub: 'I will always be home',                  hasFields: false },
+  { id: 'door',      label: 'Leave at my door',          sub: 'I accept responsibility once left',      hasFields: false },
+  { id: 'neighbour', label: 'Leave with my neighbour',   sub: 'We will need their details',             hasFields: true  },
+  { id: 'safeplace', label: 'Leave in my safe place',    sub: 'Tell us where',                          hasFields: true  },
+];
 
 const STEPS = [
-  { num: 1, label: 'Plan' },
-  { num: 2, label: 'Box' },
-  { num: 3, label: 'Menu' },
-  { num: 4, label: 'Days' },
-  { num: 5, label: 'Prefs' },
-  { num: 6, label: 'Details' },
-  { num: 7, label: 'Confirm' },
+  { num: 1, label: 'Plan' }, { num: 2, label: 'Box' },
+  { num: 3, label: 'Menu' }, { num: 4, label: 'Prefs' },
+  { num: 5, label: 'Details' }, { num: 6, label: 'Confirm' },
 ];
 
-const DURATIONS = [
-  { id: 'weekly',  name: 'Weekly Trial',  days: '5 Days',       price: '£45',  perMeal: '£9/meal',  desc: 'Try before you commit. 5 meals, Mon–Fri.' },
-  { id: 'monthly', name: 'Monthly Saver', days: '20 Days',       price: '£160', perMeal: '£8/meal',  desc: 'Best value. Full month of homely meals.', popular: true },
-  { id: 'family',  name: 'Family Plan',   days: '20 Days × 2',  price: '£280', perMeal: '£7/meal',  desc: 'Feed the whole family. 40 meals total.' },
-];
+/* ── week config ──────────────────────────────────────── */
+function getWeekConfig() {
+  const today = new Date();
+  const day = today.getDay();
 
-const BOX_TYPES = [
-  { id: 'prasada', name: 'Prasada Box',  icon: Leaf,     color: '#4A7C59', apiCategory: 'veg',    desc: '100% pure vegetarian. Temple-style cooking.',   items: ['Rice / Roti', 'Dal', 'Veg Curry', 'Chutney / Pickle', 'Papad'] },
-  { id: 'svadista', name: 'Svadista Box', icon: Flame,    color: '#8B3A3A', apiCategory: 'nonVeg', desc: 'Traditional non-veg. Bold village flavours.',   items: ['Rice', 'Non-Veg Curry', 'Side Dish', 'Rasam / Sambar', 'Pickle'] },
-  { id: 'mixed',   name: 'Mixed Box',    icon: Sparkles, color: '#B8860B', apiCategory: 'veg',    desc: 'Best of both worlds. Chef-curated daily.',      items: ['Alternating veg / non-veg', 'Full meal each day', 'Chef curated', 'Festival specials'] },
-];
+  const getMonday = (d) => {
+    const date = new Date(d);
+    const diff = date.getDay() === 0 ? -6 : 1 - date.getDay();
+    date.setDate(date.getDate() + diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
 
-const PREFERENCES = [
-  { id: 'no-onion',     label: 'No Onion / Garlic' },
-  { id: 'less-spice',   label: 'Less Spicy' },
-  { id: 'extra-spice',  label: 'Extra Spicy' },
-  { id: 'no-egg',       label: 'No Egg' },
-  { id: 'jain',         label: 'Jain Preference' },
-  { id: 'no-mushroom',  label: 'No Mushroom' },
-  { id: 'no-brinjal',   label: 'No Brinjal' },
-  { id: 'gluten-free',  label: 'Gluten-Free where possible' },
-];
+  const thisMonday = getMonday(today);
+  const nextMonday = new Date(thisMonday); nextMonday.setDate(nextMonday.getDate() + 7);
+  const weekAfterMonday = new Date(nextMonday); weekAfterMonday.setDate(weekAfterMonday.getDate() + 7);
 
-const WEEKDAYS = [
-  { id: 'monday',    label: 'Mon' },
-  { id: 'tuesday',   label: 'Tue' },
-  { id: 'wednesday', label: 'Wed' },
-  { id: 'thursday',  label: 'Thu' },
-  { id: 'friday',    label: 'Fri' },
-];
-
-/* ── helpers ──────────────────────────────────────────── */
-function getNextMonday(minDays = 3) {
-  const d = new Date();
-  d.setDate(d.getDate() + minDays);
-  const dow = d.getDay(); // 0=Sun, 1=Mon ...
-  const add = dow === 0 ? 1 : dow === 1 ? 0 : 8 - dow;
-  d.setDate(d.getDate() + add);
-  return d.toISOString().split('T')[0];
+  if (day >= 1 && day <= 3) {
+    return {
+      tab1: { label: 'This week', monday: thisMonday, primary: true, badge: 'Your start week' },
+      tab2: { label: 'Next week', monday: nextMonday, primary: false, badge: 'Preview' },
+      defaultTab: 1,
+      closedMessage: null,
+    };
+  } else {
+    return {
+      tab1: { label: 'Next week',      monday: nextMonday,     primary: true,  badge: 'Your start week' },
+      tab2: { label: 'The week after', monday: weekAfterMonday, primary: false, badge: 'Preview' },
+      defaultTab: 1,
+      closedMessage: "This week's orders are now closed — we are already preparing meals for current subscribers. Your subscription starts fresh next Monday.",
+    };
+  }
 }
 
-function fmtDate(iso) {
-  if (!iso) return '';
+function isoDate(d) { return d.toISOString().split('T')[0]; }
+
+function fmtShort(iso) {
+  return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function fmtFull(iso) {
   return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function loadProgress() {
+function weekRange(monday) {
+  const fri = new Date(monday); fri.setDate(fri.getDate() + 4);
+  return `${fmtShort(isoDate(monday))} – ${fmtShort(isoDate(fri))}`;
+}
+
+function daysFromNow(iso) {
+  const diff = new Date(iso + 'T12:00:00') - new Date();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+const WEEKDAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
+
+/* ── localStorage ─────────────────────────────────────── */
+function loadSaved() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const p = JSON.parse(raw);
-    if (Date.now() - p.savedAt > PROGRESS_TTL) { localStorage.removeItem(STORAGE_KEY); return null; }
+    if (Date.now() - p.savedAt > STORAGE_TTL) { localStorage.removeItem(STORAGE_KEY); return null; }
     return p;
   } catch { return null; }
 }
-
-function saveProgress(data) {
+function saveProg(data) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, savedAt: Date.now() })); } catch {}
 }
+function clearProg() { try { localStorage.removeItem(STORAGE_KEY); } catch {} }
 
-function clearProgress() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch {}
-}
+/* ── small shared UI ──────────────────────────────────── */
+const InfoBox = ({ bg, border, color, children }) => (
+  <div className="rounded-lg px-4 py-3 text-sm leading-relaxed" style={{ backgroundColor: bg, border: `0.5px solid ${border}`, color, fontSize: 13, lineHeight: 1.6 }}>
+    {children}
+  </div>
+);
 
-const STEP_LABELS = { 1: 'Step 1 – Choosing a Plan', 2: 'Step 2 – Choosing your Box', 3: 'Step 3 – Viewing the Menu', 4: 'Step 4 – Choosing Delivery Days', 5: 'Step 5 – Setting Preferences', 6: 'Step 6 – Adding your Details', 7: 'Step 7 – Summary' };
+const StepIndicator = ({ step }) => (
+  <div className="py-5 px-4 md:px-8" style={{ backgroundColor: C.surface, borderBottom: `0.5px solid rgba(128,0,32,0.1)` }}>
+    <div className="max-w-2xl mx-auto flex items-center justify-between">
+      {STEPS.map((s, i) => (
+        <React.Fragment key={s.num}>
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+              style={{ backgroundColor: step > s.num ? C.green : step === s.num ? C.primary : '#e5e7eb', color: step >= s.num ? 'white' : '#9CA3AF' }}>
+              {step > s.num ? <Check size={13} /> : s.num}
+            </div>
+            <span className="text-[10px] font-medium hidden sm:block" style={{ color: step >= s.num ? C.dark : '#9CA3AF' }}>{s.label}</span>
+          </div>
+          {i < STEPS.length - 1 && <div className="flex-1 h-px mx-1" style={{ backgroundColor: step > s.num ? C.green : '#e5e7eb' }} />}
+        </React.Fragment>
+      ))}
+    </div>
+  </div>
+);
+
+const NavButtons = ({ step, onBack, onNext, nextDisabled, nextLabel }) => (
+  <div className="flex justify-between mt-10 pt-6" style={{ borderTop: `0.5px solid rgba(128,0,32,0.1)` }}>
+    {step > 1
+      ? <button onClick={onBack} className="flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-sm border-2 transition-all"
+          style={{ borderColor: C.primary, color: C.primary }}><ArrowLeft size={15} /> Back</button>
+      : <div />}
+    <button onClick={onNext} disabled={nextDisabled}
+      className="flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white rounded-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+      style={{ backgroundColor: C.primary }}>
+      {nextLabel || 'Next'} <ArrowRight size={15} />
+    </button>
+  </div>
+);
 
 /* ══════════════════════════════════════════════════════ */
 const Subscriptions = () => {
-  const { user } = useAuth();
+  const { user, setAuthOpen } = useAuth();
+  const weekCfg = getWeekConfig();
 
-  // Page-level state
+  // wizard state
+  const [step, setStep] = useState(1);
+  const [selectedPlan, setSelectedPlan] = useState('weekly');
+  const [selectedBox, setSelectedBox] = useState(null);
+  const [menuTab, setMenuTab] = useState(1);
+  const [menuData, setMenuData] = useState({ 1: null, 2: null });
+  const [menuLoading, setMenuLoading] = useState({ 1: false, 2: false });
+  const [menuError, setMenuError] = useState({ 1: null, 2: null });
+  const [selectedStartWeek, setSelectedStartWeek] = useState(null);
+  const [selectedPrefs, setSelectedPrefs] = useState([]);
+  const [customRequest, setCustomRequest] = useState('');
+  const [customer, setCustomer] = useState({ name: '', email: '', phone: '', line1: '', line2: '', city: '', postcode: '' });
+  const [deliveryInstruction, setDeliveryInstruction] = useState(null);
+  const [neighbourName, setNeighbourName] = useState('');
+  const [neighbourDoor, setNeighbourDoor] = useState('');
+  const [safePlaceDesc, setSafePlaceDesc] = useState('');
+  const [postcodeStatus, setPostcodeStatus] = useState(null); // null | 'checking' | {ok, city, msg}
+  const [isGuest, setIsGuest] = useState(false);
+  const [termsChecked, setTermsChecked] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [savedProgress, setSavedProgress] = useState(null);
   const [pageState, setPageState] = useState('loading'); // loading | wizard | active | lapsed
   const [activeSub, setActiveSub] = useState(null);
   const [lapsedSub, setLapsedSub] = useState(null);
-  const [savedProgress, setSavedProgress] = useState(null);
-
-  // Wizard state
-  const [step, setStep] = useState(1);
-  const [plan, setPlan] = useState(null);
-  const [box, setBox] = useState(null);
-  const [slots, setSlots] = useState({}); // { monday: 'lunch'|'dinner', ... }
-  const [prefs, setPrefs] = useState([]);
-  const [startDate, setStartDate] = useState(() => getNextMonday());
-  const [customer, setCustomer] = useState({ name: '', email: '', phone: '', line1: '', line2: '', city: '', postcode: '' });
-  const [postcodeStatus, setPostcodeStatus] = useState(null); // null | 'checking' | { ok, city, msg }
-  const [submitStatus, setSubmitStatus] = useState(null);
-  const [menuItems, setMenuItems] = useState([]);
-  const [menuLoading, setMenuLoading] = useState(false);
+  const postcodeTimer = useRef(null);
 
   /* detect user state on mount */
   useEffect(() => {
-    const progress = loadProgress();
-    if (progress) setSavedProgress(progress);
+    const prog = loadSaved();
+    if (prog) setSavedProgress(prog);
 
     if (!user) { setPageState('wizard'); return; }
 
-    // pre-fill name/email from account
-    setCustomer(prev => ({ ...prev, name: user.name || '', email: user.email || '' }));
+    setCustomer(prev => ({ ...prev, name: user.name || '', email: user.email || '', phone: user.phone || '' }));
 
-    api.get('/subscriptions')
-      .then(res => {
-        const active = res.data.find(s => s.status === 'active' || s.status === 'paused');
-        const lapsed = res.data.find(s => s.status === 'cancelled');
-        if (active) { setActiveSub(active); setPageState('active'); }
-        else if (lapsed) { setLapsedSub(lapsed); setPageState('lapsed'); }
-        else setPageState('wizard');
-      })
-      .catch(() => setPageState('wizard'));
+    api.get('/subscriptions').then(res => {
+      const subs = res.data;
+      const today = new Date().toISOString().split('T')[0];
+      const active = subs.find(s => s.status === 'active' && (!s.end_date || s.end_date >= today));
+      const lapsed = subs.find(s => s.status === 'expired' || s.status === 'cancelled');
+      if (active) { setActiveSub(active); setPageState('active'); }
+      else if (lapsed) { setLapsedSub(lapsed); setPageState('lapsed'); }
+      else setPageState('wizard');
+    }).catch(() => setPageState('wizard'));
   }, [user]);
 
-  /* save wizard progress */
+  /* save progress */
   useEffect(() => {
     if (pageState !== 'wizard' || step <= 1) return;
-    saveProgress({ step, plan, box, slots, prefs, startDate });
-  }, [step, plan, box, slots, prefs, startDate, pageState]);
+    saveProg({ step, selectedPlan, selectedBox, selectedPrefs, customRequest, selectedStartWeek });
+  }, [step, selectedPlan, selectedBox, selectedPrefs, customRequest, selectedStartWeek, pageState]);
 
-  /* fetch menu preview when box selected */
+  /* set start week when tab changes in step 3 */
   useEffect(() => {
-    if (!box) return;
-    const cat = BOX_TYPES.find(b => b.id === box)?.apiCategory || 'veg';
-    setMenuLoading(true);
-    api.get(`/menu?category=${cat}&available=true`)
-      .then(r => setMenuItems(r.data.slice(0, 6)))
-      .catch(() => setMenuItems([]))
-      .finally(() => setMenuLoading(false));
-  }, [box]);
+    const tabCfg = menuTab === 1 ? weekCfg.tab1 : weekCfg.tab2;
+    setSelectedStartWeek(isoDate(tabCfg.monday));
+  }, [menuTab]);
+
+  /* fetch menu for a tab */
+  const fetchMenu = useCallback(async (tabNum) => {
+    if (!selectedBox) return;
+    const tabCfg = tabNum === 1 ? weekCfg.tab1 : weekCfg.tab2;
+    const week = isoDate(tabCfg.monday);
+    setMenuLoading(prev => ({ ...prev, [tabNum]: true }));
+    setMenuError(prev => ({ ...prev, [tabNum]: null }));
+    try {
+      const res = await api.get(`/menu/weekly-preview?week=${week}&box_type=${selectedBox}`);
+      setMenuData(prev => ({ ...prev, [tabNum]: res.data }));
+    } catch {
+      setMenuError(prev => ({ ...prev, [tabNum]: 'Could not load the menu. Please try again.' }));
+    } finally {
+      setMenuLoading(prev => ({ ...prev, [tabNum]: false }));
+    }
+  }, [selectedBox, weekCfg]);
+
+  useEffect(() => {
+    if (step === 3 && selectedBox) {
+      fetchMenu(1);
+      fetchMenu(2);
+    }
+  }, [step, selectedBox]);
 
   /* postcode validation */
   const checkPostcode = useCallback(async (pc) => {
-    if (pc.trim().length < 3) { setPostcodeStatus(null); return; }
+    if (!pc || pc.trim().length < 3) { setPostcodeStatus(null); return; }
     setPostcodeStatus('checking');
     try {
-      const res = await api.post('/delivery/check', { postcode: pc.trim() });
+      const res = await api.post('/delivery/check', { postcode: pc.trim().toUpperCase() });
       const ok = res.data.service_type === 'full';
-      setPostcodeStatus({ ok, city: res.data.city, msg: ok ? `We deliver to ${res.data.city} ✓` : 'Dabba Wala is not available in your area yet' });
-    } catch { setPostcodeStatus({ ok: false, msg: 'Could not verify postcode' }); }
-  }, []);
+      const nextMon = isoDate(weekCfg.tab1.monday);
+      setPostcodeStatus({
+        ok,
+        city: res.data.city,
+        msg: ok
+          ? `Postcode verified — we deliver to ${res.data.city}. Your meals will be on their way from ${fmtShort(nextMon)}.`
+          : 'We do not currently deliver to this postcode. We serve Milton Keynes, Edinburgh, and Glasgow.',
+      });
+    } catch { setPostcodeStatus({ ok: false, msg: 'Could not verify postcode.' }); }
+  }, [weekCfg]);
 
-  /* restore saved progress */
-  const restoreProgress = () => {
-    if (!savedProgress) return;
-    setPlan(savedProgress.plan || null);
-    setBox(savedProgress.box || null);
-    setSlots(savedProgress.slots || {});
-    setPrefs(savedProgress.prefs || []);
-    setStartDate(savedProgress.startDate || getNextMonday());
-    setStep(savedProgress.step || 1);
-    setSavedProgress(null);
+  const handlePostcodeChange = (val) => {
+    setCustomer(prev => ({ ...prev, postcode: val }));
+    setPostcodeStatus(null);
+    clearTimeout(postcodeTimer.current);
+    postcodeTimer.current = setTimeout(() => checkPostcode(val), 600);
   };
 
-  /* quick re-subscribe from lapsed state */
-  const quickResubscribe = () => {
-    if (lapsedSub) {
-      setPlan(lapsedSub.plan || null);
-      setBox(lapsedSub.box_type || null);
-      setPrefs(lapsedSub.preferences || []);
-      const addr = lapsedSub.delivery_address || {};
-      setCustomer(prev => ({ ...prev, line1: addr.line1 || '', line2: addr.line2 || '', city: addr.city || '', postcode: addr.postcode || '' }));
-    }
-    setPageState('wizard');
-    setStep(lapsedSub ? 5 : 1);
-  };
-
-  /* slot toggle helpers */
-  const toggleDay = (day) => {
-    setSlots(prev => {
-      if (prev[day]) { const n = { ...prev }; delete n[day]; return n; }
-      return { ...prev, [day]: 'lunch' };
-    });
-  };
-  const setSlotTime = (day, time) => setSlots(prev => ({ ...prev, [day]: time }));
-
-  /* can proceed per step */
+  /* proceed validation */
   const canProceed = () => {
-    if (step === 1) return !!plan;
-    if (step === 2) return !!box;
-    if (step === 3) return true;
-    if (step === 4) return Object.keys(slots).length >= (plan === 'weekly' ? 3 : 3);
-    if (step === 5) return !!startDate;
-    if (step === 6) return !!(customer.name && customer.email && customer.phone && customer.line1 && customer.city && customer.postcode && postcodeStatus?.ok);
+    if (step === 1) return !!selectedPlan;
+    if (step === 2) return !!selectedBox;
+    if (step === 3) return !!selectedStartWeek;
+    if (step === 4) return true;
+    if (step === 5) {
+      const baseFields = customer.name && customer.email && customer.phone && customer.line1 && customer.city && customer.postcode && postcodeStatus?.ok && !!deliveryInstruction;
+      if (!baseFields) return false;
+      if (deliveryInstruction === 'neighbour') return !!(neighbourName && neighbourDoor);
+      if (deliveryInstruction === 'safeplace') return !!safePlaceDesc;
+      return true;
+    }
+    if (step === 6) return termsChecked;
     return true;
   };
 
-  const goNext = () => { if (canProceed() && step < 7) setStep(s => s + 1); };
+  const goNext = () => { if (canProceed() && step < 6) setStep(s => s + 1); };
   const goBack = () => { if (step > 1) setStep(s => s - 1); };
 
   /* submit */
   const handleConfirm = async () => {
     setSubmitStatus('loading');
+    setErrorMessage('');
     try {
       await api.post('/subscriptions', {
         customer_name: customer.name,
         customer_email: customer.email,
         customer_phone: customer.phone,
-        plan,
-        box_type: box,
-        preferences: prefs,
-        start_date: startDate,
-        delivery_slots: Object.entries(slots).map(([day, time]) => ({ day, time })),
+        plan: selectedPlan,
+        box_type: selectedBox,
+        preferences: selectedPrefs,
+        custom_request: customRequest || undefined,
+        start_date: selectedStartWeek,
         delivery_address: { line1: customer.line1, line2: customer.line2 || undefined, city: customer.city, postcode: customer.postcode },
+        delivery_instruction: deliveryInstruction,
+        neighbour_name: deliveryInstruction === 'neighbour' ? neighbourName : undefined,
+        neighbour_door: deliveryInstruction === 'neighbour' ? neighbourDoor : undefined,
+        safe_place_description: deliveryInstruction === 'safeplace' ? safePlaceDesc : undefined,
+        is_guest: isGuest || !user,
+        user_id: user?.id || undefined,
       });
-      clearProgress();
+      clearProg();
       setSubmitStatus('success');
-    } catch { setSubmitStatus('error'); }
+    } catch (e) {
+      setSubmitStatus('error');
+      setErrorMessage(e.response?.data?.detail || 'Something went wrong. Please try again.');
+    }
   };
 
-  const planData     = DURATIONS.find(d => d.id === plan);
-  const boxData      = BOX_TYPES.find(b => b.id === box);
-  const selectedDays = WEEKDAYS.filter(d => slots[d.id]);
+  const planData = PLANS.find(p => p.id === selectedPlan);
+  const boxData  = BOXES.find(b => b.id === selectedBox);
+  const activeTabCfg = menuTab === 1 ? weekCfg.tab1 : weekCfg.tab2;
+  const currentMenuData = menuData[menuTab];
 
   /* ── loading ── */
-  if (pageState === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FDFBF7' }}>
-        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#800020', borderTopColor: 'transparent' }} />
-      </div>
-    );
-  }
+  if (pageState === 'loading') return (
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.cream }}>
+      <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: C.primary, borderTopColor: 'transparent' }} />
+    </div>
+  );
 
   /* ── active subscriber ── */
-  if (pageState === 'active' && activeSub) {
-    return (
-      <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-        <div className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" />
-        <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-          <div className="text-5xl mb-4">🎉</div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-            You're part of the Dabba Wala family
-          </h1>
-          <p className="text-gray-500 mb-8">Your subscription is active and meals are on their way.</p>
-
-          <div className="rounded-2xl p-6 mb-8 text-left" style={{ background: 'linear-gradient(135deg, #800020 0%, #5C0015 100%)' }}>
-            <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(244,196,48,0.8)' }}>Active Subscription</p>
-            <p className="text-xl font-bold text-white mb-1">{activeSub.plan?.charAt(0).toUpperCase() + activeSub.plan?.slice(1)} Plan — {activeSub.box_type} Box</p>
-            <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.7)' }}>Delivering to {activeSub.delivery_address?.city}</p>
-            <div className="flex gap-3 flex-wrap">
-              <Link to="/dashboard" className="px-5 py-2.5 rounded text-sm font-semibold text-white" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
-                Manage Subscription
-              </Link>
-              <button
-                onClick={() => { setActiveSub(null); setPageState('wizard'); }}
-                className="px-5 py-2.5 rounded text-sm font-semibold"
-                style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}
-              >
-                Add a second subscription
-              </button>
-            </div>
+  if (pageState === 'active' && activeSub) return (
+    <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
+      <div className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" />
+      <div className="max-w-xl mx-auto px-4 py-16 text-center">
+        <div className="text-5xl mb-5">🎉</div>
+        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>You're part of the Dabba Wala family</h1>
+        <p className="text-sm mb-8" style={{ color: C.muted }}>Your subscription is active and meals are on their way.</p>
+        <div className="rounded-2xl p-6 mb-6 text-left" style={{ background: `linear-gradient(135deg, ${C.primary} 0%, #5C0015 100%)` }}>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(244,196,48,0.8)' }}>Active</p>
+          <p className="text-xl font-bold text-white mb-0.5" style={{ fontFamily: "'Playfair Display', serif" }}>
+            {activeSub.plan?.charAt(0).toUpperCase() + activeSub.plan?.slice(1)} Plan — {activeSub.box_type} Box
+          </p>
+          <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.7)' }}>Delivering to {activeSub.delivery_address?.city}</p>
+          <div className="flex gap-3 flex-wrap">
+            <Link to="/dashboard" className="px-5 py-2.5 rounded text-sm font-semibold text-white" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>Manage subscription</Link>
+            <button onClick={() => { setActiveSub(null); setPageState('wizard'); }} className="px-5 py-2.5 rounded text-sm font-semibold" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
+              Add a second subscription
+            </button>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  /* ── lapsed / welcome back ── */
-  if (pageState === 'lapsed' && lapsedSub) {
+  /* ── lapsed subscriber ── */
+  if (pageState === 'lapsed' && lapsedSub) return (
+    <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
+      <div className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" />
+      <div className="max-w-xl mx-auto px-4 py-16 text-center">
+        <div className="text-5xl mb-5">🍛</div>
+        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Welcome back! We've missed cooking for you</h1>
+        <p className="text-sm mb-8" style={{ color: C.muted }}>
+          You were on the <strong>{lapsedSub.plan}</strong> — {lapsedSub.box_type} box, delivering to {lapsedSub.delivery_address?.city}.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button onClick={() => {
+            setSelectedPlan(lapsedSub.plan || 'weekly');
+            setSelectedBox(lapsedSub.box_type || null);
+            setSelectedPrefs(lapsedSub.preferences || []);
+            const addr = lapsedSub.delivery_address || {};
+            setCustomer(prev => ({ ...prev, line1: addr.line1 || '', line2: addr.line2 || '', city: addr.city || '', postcode: addr.postcode || '' }));
+            setPageState('wizard'); setStep(4);
+          }} className="px-8 py-3.5 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: C.primary }}>
+            Re-subscribe with same preferences
+          </button>
+          <button onClick={() => setPageState('wizard')} className="px-8 py-3.5 text-sm font-semibold rounded-sm border-2" style={{ borderColor: C.primary, color: C.primary }}>
+            Start fresh
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ══════════════════════════════════════════════════════ */
+  /* ── SUCCESS SCREEN ─────────────────────────────────── */
+  if (submitStatus === 'success') {
+    const startMonday = selectedStartWeek;
+    const days = daysFromNow(startMonday);
+    const sunBefore = new Date(startMonday + 'T12:00:00');
+    sunBefore.setDate(sunBefore.getDate() - 1);
+    const meals = planData?.id === 'weekly' ? 5 : 20;
+    const currentMenu = menuData[menuTab];
+    const menuDays = currentMenu ? Object.entries(currentMenu.days || {}).slice(0, 5) : [];
+
     return (
-      <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
+      <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
         <div className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" />
-        <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-          <div className="text-5xl mb-4">🍛</div>
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-            Welcome back! We've missed cooking for you
-          </h1>
-          <p className="text-gray-500 mb-2">Your last subscription was a <strong>{lapsedSub.plan}</strong> — {lapsedSub.box_type} box, delivering to {lapsedSub.delivery_address?.city}.</p>
-          <p className="text-gray-400 text-sm mb-8">Pick up where you left off or start fresh.</p>
+        <div className="max-w-2xl mx-auto px-4 py-14">
+          {/* Green tick */}
+          <div className="text-center mb-10">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5" style={{ backgroundColor: C.greenLight }}>
+              <Check size={36} style={{ color: C.green }} strokeWidth={3} />
+            </div>
+            <h1 className="text-4xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Welcome to the family!</h1>
+            <p className="text-base leading-relaxed" style={{ color: '#5C4B47' }}>
+              Your Dabba Wala starts <strong>{fmtFull(startMonday)}</strong>. Freshly cooked meals are being planned for you right now.
+              Check your email for your full meal calendar and delivery details.
+            </p>
+          </div>
 
+          {/* Milestone card */}
+          <div className="rounded-xl p-5 mb-5" style={{ backgroundColor: C.amberLight, border: `0.5px solid ${C.darkGold}` }}>
+            <p className="font-bold text-base mb-1.5" style={{ color: C.amberText }}>Your first meal is {days} day{days !== 1 ? 's' : ''} away</p>
+            <p className="text-sm leading-relaxed" style={{ color: C.amberText }}>
+              Our kitchen starts preparing your ingredients on {sunBefore.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}. By {fmtFull(startMonday)}, your {boxData?.name} will be made fresh and on its way to you by noon.
+            </p>
+          </div>
+
+          {/* Meal preview */}
+          {menuDays.length > 0 && (
+            <div className="rounded-xl p-5 mb-5" style={{ backgroundColor: C.surface, border: `0.5px solid rgba(128,0,32,0.1)` }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: C.darkGold }}>Your start week meals</p>
+              <div className="space-y-2">
+                {menuDays.map(([date, day]) => (
+                  <div key={date} className="flex items-start gap-3 text-sm">
+                    <span className="font-semibold w-10 shrink-0" style={{ color: C.muted }}>
+                      {new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short' })}
+                    </span>
+                    {day.is_placeholder
+                      ? <span className="italic" style={{ color: C.muted }}>Menu coming soon</span>
+                      : <span style={{ color: C.dark }}>{day.main || 'Menu coming soon'}{day.side ? ` · ${day.side}` : ''}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Warm message */}
+          <p className="text-sm leading-relaxed text-center mb-8" style={{ color: C.muted }}>
+            Thank you for trusting us with your weekday meals. We cook every box as if it were going to our own family. We will not let you down. 🙏
+          </p>
+
+          {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={quickResubscribe}
-              className="px-8 py-3.5 text-sm font-semibold text-white rounded-sm"
-              style={{ backgroundColor: '#800020' }}
-            >
-              Re-subscribe with same preferences
-            </button>
-            <button
-              onClick={() => setPageState('wizard')}
-              className="px-8 py-3.5 text-sm font-semibold rounded-sm border-2"
-              style={{ borderColor: '#800020', color: '#800020' }}
-            >
-              Start fresh
-            </button>
+            <Link to="/dashboard" className="px-8 py-3.5 text-sm font-semibold text-white rounded-sm text-center" style={{ backgroundColor: C.primary }}>
+              Go to my dashboard
+            </Link>
+            <Link to="/" className="px-8 py-3.5 text-sm font-semibold rounded-sm border-2 text-center" style={{ borderColor: C.primary, color: C.primary }}>
+              Back to home
+            </Link>
           </div>
         </div>
       </div>
@@ -307,410 +466,494 @@ const Subscriptions = () => {
 
   /* ══ WIZARD ══════════════════════════════════════════ */
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-
+    <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
       {/* Hero */}
-      <section className="relative overflow-hidden" style={{ height: 'min(45vh, 360px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Dabba Wala"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)' }} />
-        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-end md:items-center pb-8 md:pb-0"
-          style={{ paddingTop: 'calc(32px + 68px)' }}>
+      <section className="relative overflow-hidden" style={{ height: 'min(42vh, 340px)' }}>
+        <img src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Dabba Wala" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)` }} />
+        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-end md:items-center pb-8 md:pb-0" style={{ paddingTop: 'calc(32px + 68px)' }}>
           <div className="max-w-xl">
             <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service</p>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Your Daily Dose of Home
-            </h1>
-            <p className="text-base text-gray-200 leading-relaxed">
-              Fresh home-cooked South Indian meals delivered to your door. Mon–Fri, no cooking required.
-            </p>
+            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Your Daily Dose of Home</h1>
+            <p className="text-sm text-gray-200">Fresh South Indian meals delivered Mon–Fri. No cooking required.</p>
           </div>
         </div>
       </section>
 
       {/* Resume banner */}
-      {savedProgress && pageState === 'wizard' && (
-        <div className="px-4 md:px-8 py-3" style={{ backgroundColor: '#FFF8E6', borderBottom: '1px solid rgba(184,134,11,0.2)' }}>
-          <div className="max-w-3xl mx-auto flex items-center justify-between gap-4 flex-wrap">
-            <p className="text-sm font-medium" style={{ color: '#5C4B47' }}>
-              <RotateCcw size={14} className="inline mr-1.5" />
-              Welcome back! You left off at <strong>{STEP_LABELS[savedProgress.step]}</strong>.
+      {savedProgress && pageState === 'wizard' && step === 1 && (
+        <div className="px-4 md:px-8 py-3" style={{ backgroundColor: C.amberLight, borderBottom: `0.5px solid ${C.darkGold}` }}>
+          <div className="max-w-2xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-sm font-medium" style={{ color: C.amberText }}>
+              <RotateCcw size={13} className="inline mr-1.5" />
+              You left off at Step {savedProgress.step}. Continue where you left off?
             </p>
             <div className="flex gap-2">
-              <button onClick={restoreProgress} className="px-4 py-1.5 text-xs font-semibold text-white rounded" style={{ backgroundColor: '#800020' }}>
-                Continue
-              </button>
-              <button onClick={() => { clearProgress(); setSavedProgress(null); }} className="px-4 py-1.5 text-xs font-medium rounded border" style={{ color: '#9C7B6B', borderColor: 'rgba(128,0,32,0.2)' }}>
-                Start fresh
-              </button>
+              <button onClick={() => {
+                setSelectedPlan(savedProgress.selectedPlan || 'weekly');
+                setSelectedBox(savedProgress.selectedBox || null);
+                setSelectedPrefs(savedProgress.selectedPrefs || []);
+                setCustomRequest(savedProgress.customRequest || '');
+                setSelectedStartWeek(savedProgress.selectedStartWeek || null);
+                setStep(savedProgress.step || 1);
+                setSavedProgress(null);
+              }} className="px-4 py-1.5 text-xs font-semibold text-white rounded" style={{ backgroundColor: C.primary }}>Continue</button>
+              <button onClick={() => { clearProg(); setSavedProgress(null); }} className="px-4 py-1.5 text-xs rounded border" style={{ color: C.muted, borderColor: 'rgba(128,0,32,0.2)' }}>Start fresh</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Step indicator */}
-      <div className="py-5 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE', borderBottom: '1px solid rgba(128,0,32,0.1)' }}>
-        <div className="max-w-3xl mx-auto">
-          <div className="flex items-center justify-between">
-            {STEPS.map((s, i) => (
-              <React.Fragment key={s.num}>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
-                    style={{ backgroundColor: step > s.num ? '#4A7C59' : step === s.num ? '#800020' : '#e5e7eb', color: step >= s.num ? 'white' : '#9CA3AF' }}>
-                    {step > s.num ? <Check size={14} /> : s.num}
-                  </div>
-                  <span className="text-[10px] font-medium hidden sm:block" style={{ color: step >= s.num ? '#3D2B1F' : '#9CA3AF' }}>{s.label}</span>
-                </div>
-                {i < STEPS.length - 1 && (
-                  <div className="flex-1 h-0.5 mx-1" style={{ backgroundColor: step > s.num ? '#4A7C59' : '#e5e7eb' }} />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-      </div>
+      <StepIndicator step={step} />
 
-      {/* Wizard content */}
       <section className="py-10 md:py-14 px-4 md:px-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-2xl mx-auto">
 
-          {/* STEP 1 — Plan */}
+          {/* ── STEP 1 — PLAN ──────────────────────────────── */}
           {step === 1 && (
             <div>
-              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Choose Your Plan</h2>
-              <p className="text-sm text-gray-400 mb-8">How long do you want homely meals delivered?</p>
-              <div className="grid md:grid-cols-3 gap-5">
-                {DURATIONS.map(dur => (
-                  <button key={dur.id} onClick={() => setPlan(dur.id)}
-                    className="relative p-6 rounded-xl text-left transition-all duration-200"
-                    style={{ backgroundColor: 'white', border: plan === dur.id ? '2px solid #800020' : '2px solid transparent', boxShadow: plan === dur.id ? '0 8px 24px rgba(128,0,32,0.12)' : '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    {dur.popular && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>Most Popular</span>
-                    )}
-                    <h3 className="text-xl font-bold mb-0.5" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>{dur.name}</h3>
-                    <p className="text-xs text-gray-400 mb-3">{dur.days}</p>
-                    <p className="text-3xl font-bold mb-0.5" style={{ color: '#800020' }}>{dur.price}</p>
-                    <p className="text-xs font-semibold mb-3" style={{ color: '#B8860B' }}>{dur.perMeal}</p>
-                    <p className="text-xs text-gray-400 leading-relaxed">{dur.desc}</p>
-                    {plan === dur.id && <div className="absolute top-4 right-4"><Check size={18} style={{ color: '#800020' }} /></div>}
+              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Choose your plan</h2>
+              <p className="text-sm mb-6" style={{ color: C.muted }}>Home-cooked South Indian meals, freshly made every morning, delivered to your door.</p>
+
+              {/* Encouraging message */}
+              {(!user || !lapsedSub) && (
+                <InfoBox bg={C.amberLight} border={C.darkGold} color={C.amberText}>
+                  New here? Most of our monthly subscribers started with a Weekly Trial first. Five meals, one week — the best way to experience the food before committing to more.
+                </InfoBox>
+              )}
+              {user && lapsedSub && (
+                <InfoBox bg={C.amberLight} border={C.darkGold} color={C.amberText}>
+                  Welcome back. Ready for another week of home cooking? 🙏
+                </InfoBox>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                {PLANS.map(plan => (
+                  <button key={plan.id} onClick={() => setSelectedPlan(plan.id)}
+                    className="relative p-5 rounded-xl text-left transition-all duration-200"
+                    style={{ backgroundColor: 'white', border: selectedPlan === plan.id ? `2px solid ${C.primary}` : '0.5px solid #e0d9d0', boxShadow: selectedPlan === plan.id ? `0 4px 20px rgba(128,0,32,0.1)` : '0 2px 6px rgba(0,0,0,0.04)' }}>
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-3" style={plan.badgeStyle}>{plan.badge}</span>
+                    <p className="font-semibold mb-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: C.primary }}>{plan.name}</p>
+                    <p className="mb-1" style={{ fontSize: 24, fontWeight: 500, color: C.primary }}>£{plan.price}</p>
+                    <p className="text-sm" style={{ color: C.muted }}>{plan.meals} meals · Mon–Fri</p>
+                    <p className="text-xs" style={{ color: C.muted }}>£{plan.perMeal} per meal</p>
+                    {selectedPlan === plan.id && <div className="absolute top-4 right-4"><Check size={16} style={{ color: C.primary }} /></div>}
                   </button>
                 ))}
               </div>
+
+              <div className="mt-5">
+                <InfoBox bg={C.surface} border="#e0d9d0" color={C.muted}>
+                  Both plans are paid upfront. No hidden charges, no auto-renewal — you are always in control.
+                </InfoBox>
+              </div>
+
+              <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
             </div>
           )}
 
-          {/* STEP 2 — Box type */}
+          {/* ── STEP 2 — BOX ──────────────────────────────── */}
           {step === 2 && (
             <div>
-              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Choose Your Box</h2>
-              <p className="text-sm text-gray-400 mb-8">What kind of meals would you like every day?</p>
-              <div className="grid md:grid-cols-3 gap-5">
-                {BOX_TYPES.map(b => (
-                  <button key={b.id} onClick={() => setBox(b.id)}
-                    className="relative p-6 rounded-xl text-left transition-all duration-200"
-                    style={{ backgroundColor: 'white', border: box === b.id ? `2px solid ${b.color}` : '2px solid transparent', boxShadow: box === b.id ? `0 8px 24px ${b.color}22` : '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <b.icon size={26} style={{ color: b.color }} className="mb-3" />
-                    <h3 className="text-xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: b.color }}>{b.name}</h3>
-                    <p className="text-xs text-gray-400 mb-4 leading-relaxed">{b.desc}</p>
-                    <ul className="space-y-1.5">
-                      {b.items.map(item => (
-                        <li key={item} className="text-xs text-gray-500 flex items-center gap-1.5">
-                          <Check size={11} style={{ color: b.color }} />{item}
-                        </li>
-                      ))}
-                    </ul>
-                    {box === b.id && <div className="absolute top-4 right-4"><Check size={18} style={{ color: b.color }} /></div>}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Choose your box</h2>
+              <p className="text-sm mb-6" style={{ color: C.muted }}>Two boxes. Each one has its own personality — find yours.</p>
 
-          {/* STEP 3 — Menu preview */}
-          {step === 3 && (
-            <div>
-              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>A Taste of What's Coming</h2>
-              <p className="text-sm text-gray-400 mb-8">Sample dishes from your <strong>{boxData?.name}</strong> — freshly made each morning.</p>
-              {menuLoading ? (
-                <div className="flex justify-center py-12">
-                  <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#800020', borderTopColor: 'transparent' }} />
-                </div>
-              ) : menuItems.length > 0 ? (
-                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {menuItems.map(item => (
-                    <div key={item.id} className="rounded-xl overflow-hidden bg-white" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                      {item.image_url && (
-                        <img src={item.image_url} alt={item.name} className="w-full h-32 object-cover" />
-                      )}
-                      <div className="p-3">
-                        <p className="text-sm font-bold mb-0.5" style={{ color: '#3D2B1F' }}>{item.name}</p>
-                        <p className="text-xs text-gray-400 line-clamp-2">{item.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 rounded-xl" style={{ backgroundColor: 'rgba(128,0,32,0.04)' }}>
-                  <p className="text-gray-400 text-sm">Menu loading — you'll receive a full preview by email once subscribed.</p>
-                </div>
-              )}
-              <p className="text-xs text-gray-400 mt-6 text-center">Menu rotates weekly. What you see above is a representative sample from our current menu.</p>
-            </div>
-          )}
-
-          {/* STEP 4 — Delivery days */}
-          {step === 4 && (
-            <div>
-              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Choose Your Delivery Days</h2>
-              <p className="text-sm text-gray-400 mb-2">Pick which days you want your meals delivered.</p>
-              <p className="text-xs mb-8" style={{ color: '#B8860B' }}>
-                {plan === 'weekly' ? 'Minimum 3 days required.' : 'Select your weekly pattern — it repeats every week.'}
-              </p>
-
-              <div className="grid grid-cols-5 gap-3 mb-6">
-                {WEEKDAYS.map(day => {
-                  const selected = !!slots[day.id];
+              <div className="flex flex-col gap-4">
+                {BOXES.map(box => {
+                  const BoxIcon = box.icon;
                   return (
-                    <button key={day.id} onClick={() => toggleDay(day.id)}
-                      className="rounded-xl py-4 flex flex-col items-center gap-2 transition-all duration-200 font-medium text-sm"
-                      style={{ border: selected ? '2px solid #800020' : '2px solid #e5e7eb', backgroundColor: selected ? 'rgba(128,0,32,0.06)' : 'white', color: selected ? '#800020' : '#6B7280' }}>
-                      <span>{day.label}</span>
-                      {selected && <Check size={14} style={{ color: '#800020' }} />}
+                    <button key={box.id} onClick={() => setSelectedBox(box.id)}
+                      className="relative flex items-center gap-4 p-5 rounded-xl text-left transition-all duration-200"
+                      style={{ backgroundColor: 'white', border: selectedBox === box.id ? `2px solid ${box.border}` : '0.5px solid #e0d9d0', boxShadow: selectedBox === box.id ? `0 4px 20px ${box.border}18` : '0 2px 6px rgba(0,0,0,0.04)' }}>
+                      {box.mostChosen && (
+                        <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white" style={{ backgroundColor: C.primary }}>Most chosen</span>
+                      )}
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: box.iconBg }}>
+                        <BoxIcon size={18} style={{ color: box.iconColor }} />
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-0.5" style={{ fontSize: 15, color: C.dark }}>{box.name}</p>
+                        <p className="text-sm" style={{ color: C.muted }}>{box.desc}</p>
+                      </div>
+                      {selectedBox === box.id && <div className="ml-auto shrink-0"><Check size={16} style={{ color: box.border }} /></div>}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Time slot per selected day */}
-              {Object.keys(slots).length > 0 && (
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold" style={{ color: '#3D2B1F' }}>Preferred delivery time per day:</p>
-                  {WEEKDAYS.filter(d => slots[d.id]).map(day => (
-                    <div key={day.id} className="flex items-center justify-between rounded-xl px-4 py-3" style={{ backgroundColor: 'white', border: '1px solid rgba(128,0,32,0.1)' }}>
-                      <span className="text-sm font-medium capitalize" style={{ color: '#3D2B1F', minWidth: 80 }}>{day.id}</span>
-                      <div className="flex gap-2">
-                        <button onClick={() => setSlotTime(day.id, 'lunch')}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                          style={{ backgroundColor: slots[day.id] === 'lunch' ? '#800020' : 'transparent', color: slots[day.id] === 'lunch' ? 'white' : '#6B7280', border: '1px solid', borderColor: slots[day.id] === 'lunch' ? '#800020' : '#e5e7eb' }}>
-                          <Sun size={12} /> Lunch (12–2pm)
-                        </button>
-                        <button onClick={() => setSlotTime(day.id, 'dinner')}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                          style={{ backgroundColor: slots[day.id] === 'dinner' ? '#800020' : 'transparent', color: slots[day.id] === 'dinner' ? 'white' : '#6B7280', border: '1px solid', borderColor: slots[day.id] === 'dinner' ? '#800020' : '#e5e7eb' }}>
-                          <Moon size={12} /> Dinner (5–8pm)
-                        </button>
+              <div className="mt-5">
+                <InfoBox bg={C.greenLight} border={C.green} color={C.greenText}>
+                  Whichever box you choose, you will see the exact menu for each day before you pay — no surprises.
+                </InfoBox>
+              </div>
+
+              <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
+            </div>
+          )}
+
+          {/* ── STEP 3 — MENU PREVIEW ─────────────────────── */}
+          {step === 3 && (
+            <div>
+              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>What's coming your way</h2>
+              <p className="text-sm mb-4" style={{ color: C.muted }}>This is exactly what arrives each day. Made fresh every morning, never reheated.</p>
+
+              <InfoBox bg={C.amberLight} border={C.darkGold} color={C.amberText}>
+                Our menu changes every week so there is always something to look forward to. What you see below is what lands at your door.
+              </InfoBox>
+
+              {/* Closed message */}
+              {weekCfg.closedMessage && (
+                <div className="mt-4">
+                  <InfoBox bg="#FFF8E1" border="#F4C430" color="#854F0B">{weekCfg.closedMessage}</InfoBox>
+                </div>
+              )}
+
+              {/* Week tabs */}
+              <div className="grid grid-cols-2 gap-3 mt-5">
+                {[1, 2].map(tabNum => {
+                  const tc = tabNum === 1 ? weekCfg.tab1 : weekCfg.tab2;
+                  return (
+                    <button key={tabNum} onClick={() => setMenuTab(tabNum)}
+                      className="p-4 rounded-xl text-left transition-all"
+                      style={{ border: menuTab === tabNum ? `2px solid ${C.primary}` : '0.5px solid #e0d9d0', backgroundColor: 'white' }}>
+                      <p className="font-semibold text-sm" style={{ color: menuTab === tabNum ? C.primary : C.dark }}>{tc.label}</p>
+                      <p className="text-xs mt-0.5" style={{ color: C.muted }}>{weekRange(tc.monday)}</p>
+                      {tc.badge && <p className="text-[10px] mt-1 font-semibold" style={{ color: C.amberText }}>{tc.badge}</p>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Day cards */}
+              <div className="mt-5">
+                {menuLoading[menuTab] ? (
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                    {[0,1,2,3,4].map(i => (
+                      <div key={i} className="shrink-0 rounded-xl animate-pulse" style={{ width: 120, height: 160, backgroundColor: '#e5e7eb' }} />
+                    ))}
+                  </div>
+                ) : menuError[menuTab] ? (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-red-600 mb-3">{menuError[menuTab]}</p>
+                    <button onClick={() => fetchMenu(menuTab)} className="text-xs font-semibold px-4 py-2 rounded" style={{ backgroundColor: C.primary, color: 'white' }}>Retry</button>
+                  </div>
+                ) : currentMenuData ? (
+                  <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                    {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => {
+                      const isPast = new Date(date + 'T23:59:59') < new Date();
+                      const d = new Date(date + 'T12:00:00');
+                      return (
+                        <div key={date} className="shrink-0 rounded-xl p-3 flex flex-col" style={{ minWidth: 100, backgroundColor: 'white', border: '0.5px solid #e0d9d0', opacity: isPast ? 0.35 : 1 }}>
+                          <p className="font-semibold mb-0.5" style={{ fontSize: 11, color: C.muted }}>{WEEKDAY_LABELS[idx]}</p>
+                          <p className="mb-2" style={{ fontSize: 10, color: C.muted }}>{d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                          {day.is_placeholder ? (
+                            <p className="text-[10px] italic" style={{ color: C.muted }}>Menu coming soon</p>
+                          ) : (
+                            <>
+                              <p className="font-semibold leading-snug mb-1" style={{ fontSize: 11, color: C.dark }}>{day.main}</p>
+                              <p style={{ fontSize: 10, color: C.muted }}>{day.side}</p>
+                              <p style={{ fontSize: 10, color: C.muted }}>{day.accompaniment}</p>
+                              <p style={{ fontSize: 10, color: C.muted }}>{day.extra}</p>
+                            </>
+                          )}
+                          {isPast && <p className="text-[9px] mt-auto pt-1" style={{ color: C.muted }}>Passed</p>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                {currentMenuData?.dietary_notes && (
+                  <div className="mt-3">
+                    <InfoBox bg={C.surface} border="#e0d9d0" color={C.muted}>
+                      🌿 Kitchen note: {currentMenuData.dietary_notes}
+                    </InfoBox>
+                  </div>
+                )}
+              </div>
+
+              <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
+            </div>
+          )}
+
+          {/* ── STEP 4 — PREFERENCES ──────────────────────── */}
+          {step === 4 && (
+            <div>
+              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Any dietary preferences?</h2>
+              <p className="text-sm mb-5" style={{ color: C.muted }}>Optional — but we want every meal to feel right for you.</p>
+
+              <InfoBox bg={C.amberLight} border={C.darkGold} color={C.amberText}>
+                Whatever you select here, our kitchen honours it for every single meal of your subscription. You never need to remind us.
+              </InfoBox>
+
+              <div className="grid grid-cols-2 gap-3 mt-6">
+                {PREFS.map(p => {
+                  const sel = selectedPrefs.includes(p.id);
+                  return (
+                    <button key={p.id} onClick={() => setSelectedPrefs(prev => prev.includes(p.id) ? prev.filter(x => x !== p.id) : [...prev, p.id])}
+                      className="flex items-center gap-3 p-3.5 rounded-xl text-left text-sm font-medium transition-all"
+                      style={{ backgroundColor: sel ? '#fff8f8' : 'white', border: sel ? `2px solid ${C.primary}` : '0.5px solid #e0d9d0', color: sel ? C.primary : C.dark }}>
+                      <div className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center" style={{ backgroundColor: sel ? C.primary : 'transparent', border: sel ? 'none' : '1.5px solid #d1d5db' }}>
+                        {sel && <Check size={10} color="white" />}
                       </div>
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6">
+                <label className="text-sm font-semibold block mb-1" style={{ color: C.dark }}>Have something specific not listed?</label>
+                <textarea
+                  value={customRequest} onChange={e => setCustomRequest(e.target.value)}
+                  placeholder="Tell us anything else — we will do our very best."
+                  rows={3} style={{ resize: 'none' }}
+                  className="w-full p-3 rounded-xl border text-sm focus:outline-none focus:border-[#800020] transition-colors"
+                  style={{ border: '0.5px solid #e0d9d0', resize: 'none', fontSize: 13 }}
+                />
+                <p className="text-[11px] mt-1" style={{ color: C.muted }}>This is a request, not a guarantee. Our kitchen will confirm if it can be accommodated.</p>
+              </div>
+
+              <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={false} nextLabel="Next" />
+            </div>
+          )}
+
+          {/* ── STEP 5 — DETAILS ──────────────────────────── */}
+          {step === 5 && (
+            <div>
+              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Where shall we deliver?</h2>
+              <p className="text-sm mb-6" style={{ color: C.muted }}>Almost there — just your details and we are ready to start cooking.</p>
+
+              {/* SCENARIO A — Logged in */}
+              {user && !isGuest && (
+                <div>
+                  <InfoBox bg={C.greenLight} border={C.green} color={C.greenText}>
+                    We have your details from your account. Just confirm your delivery address below.
+                  </InfoBox>
+                  <div className="mt-4 flex items-center gap-2 mb-4">
+                    <p className="text-sm" style={{ color: C.dark }}>Delivering to: <strong>{user.name}</strong> · {user.email}</p>
+                    <button onClick={() => { /* logout handled by auth */ }} className="text-xs ml-2 underline" style={{ color: C.muted }}>Not you? Sign out</button>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {[
+                      { label: 'Address Line 1 *', key: 'line1', placeholder: '12 Curry Lane' },
+                      { label: 'Address Line 2',   key: 'line2', placeholder: 'Flat / Apartment (optional)' },
+                      { label: 'City *',            key: 'city',  placeholder: 'Milton Keynes' },
+                    ].map(({ label, key, placeholder }) => (
+                      <div key={key}>
+                        <label className="text-xs font-semibold block mb-1" style={{ color: C.dark }}>{label}</label>
+                        <input type="text" placeholder={placeholder} value={customer[key]}
+                          onChange={e => setCustomer(prev => ({ ...prev, [key]: e.target.value }))}
+                          className="w-full p-3 rounded-xl text-sm focus:outline-none transition-colors"
+                          style={{ border: '0.5px solid #e0d9d0' }} />
+                      </div>
+                    ))}
+                    <div>
+                      <label className="text-xs font-semibold block mb-1" style={{ color: C.dark }}>Postcode *</label>
+                      <input type="text" placeholder="MK9 1AB" value={customer.postcode}
+                        onChange={e => handlePostcodeChange(e.target.value)}
+                        className="w-full p-3 rounded-xl text-sm focus:outline-none transition-colors"
+                        style={{ border: `0.5px solid ${postcodeStatus?.ok === false ? '#DC2626' : postcodeStatus?.ok ? C.green : '#e0d9d0'}` }} />
+                    </div>
+                  </div>
+                  {/* Postcode feedback */}
+                  {postcodeStatus === 'checking' && <p className="text-xs mt-1" style={{ color: C.muted }}>Checking postcode…</p>}
+                  {postcodeStatus?.ok === true  && <p className="text-xs mt-1 font-medium" style={{ color: C.green }}>{postcodeStatus.msg}</p>}
+                  {postcodeStatus?.ok === false && <p className="text-xs mt-1 font-medium text-red-600">{postcodeStatus.msg}</p>}
+                </div>
+              )}
+
+              {/* SCENARIO B — Not logged in, show account prompt */}
+              {!user && !isGuest && (
+                <div className="flex flex-col gap-4">
+                  {[
+                    { title: 'Sign in to your account', desc: 'Your name, email, and saved address will be filled in automatically.', btnLabel: 'Sign in', action: () => setAuthOpen(true) },
+                    { title: 'Create an account',       desc: 'Takes 30 seconds. Your order history and preferences are saved for next time.', btnLabel: 'Create account', action: () => setAuthOpen(true) },
+                    { title: 'Continue as guest',       desc: 'No account needed. We will create one for you after your subscription is confirmed.', btnLabel: 'Continue as guest', action: () => setIsGuest(true) },
+                  ].map(opt => (
+                    <div key={opt.title} className="flex items-center justify-between gap-4 p-5 rounded-xl" style={{ backgroundColor: 'white', border: '0.5px solid #e0d9d0' }}>
+                      <div>
+                        <p className="font-semibold text-sm mb-0.5" style={{ color: C.dark }}>{opt.title}</p>
+                        <p className="text-xs" style={{ color: C.muted }}>{opt.desc}</p>
+                      </div>
+                      <button onClick={opt.action} className="shrink-0 px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ backgroundColor: C.primary }}>{opt.btnLabel}</button>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
-          )}
 
-          {/* STEP 5 — Preferences + start date */}
-          {step === 5 && (
-            <div>
-              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Fine-Tune Your Meals</h2>
-              <p className="text-sm text-gray-400 mb-8">Any dietary preferences or exclusions? (All optional)</p>
-              <div className="grid sm:grid-cols-2 gap-3 mb-10">
-                {PREFERENCES.map(p => (
-                  <button key={p.id} onClick={() => setPrefs(prev => prev.includes(p.id) ? prev.filter(x => x !== p.id) : [...prev, p.id])}
-                    className="flex items-center gap-3 p-4 rounded-xl text-left text-sm font-medium transition-all duration-200"
-                    style={{ backgroundColor: prefs.includes(p.id) ? 'rgba(128,0,32,0.05)' : 'white', border: prefs.includes(p.id) ? '2px solid #800020' : '2px solid #e5e7eb' }}>
-                    <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: prefs.includes(p.id) ? '#800020' : 'transparent', border: prefs.includes(p.id) ? 'none' : '2px solid #D1D5DB' }}>
-                      {prefs.includes(p.id) && <Check size={12} color="white" />}
+              {/* SCENARIO C — Guest full form */}
+              {(isGuest || !user) && isGuest && (
+                <div className="mt-4">
+                  <InfoBox bg={C.amberLight} border={C.darkGold} color={C.amberText}>
+                    We will create an account for you using this email. You will receive a link to set your password after your subscription is confirmed.
+                  </InfoBox>
+                  <div className="grid md:grid-cols-2 gap-4 mt-5">
+                    {[
+                      { label: 'Full name *',        key: 'name',    type: 'text',  placeholder: 'Your full name' },
+                      { label: 'Email address *',    key: 'email',   type: 'email', placeholder: 'you@example.com' },
+                      { label: 'Phone number *',     key: 'phone',   type: 'tel',   placeholder: '+44 7xxx xxxxxx' },
+                      { label: 'Address Line 1 *',   key: 'line1',   type: 'text',  placeholder: '12 Curry Lane' },
+                      { label: 'Address Line 2',     key: 'line2',   type: 'text',  placeholder: 'Flat / Apartment (optional)' },
+                      { label: 'City *',             key: 'city',    type: 'text',  placeholder: 'Milton Keynes' },
+                    ].map(({ label, key, type, placeholder }) => (
+                      <div key={key}>
+                        <label className="text-xs font-semibold block mb-1" style={{ color: C.dark }}>{label}</label>
+                        <input type={type} placeholder={placeholder} value={customer[key]}
+                          onChange={e => setCustomer(prev => ({ ...prev, [key]: e.target.value }))}
+                          className="w-full p-3 rounded-xl text-sm focus:outline-none transition-colors"
+                          style={{ border: '0.5px solid #e0d9d0' }} />
+                      </div>
+                    ))}
+                    <div>
+                      <label className="text-xs font-semibold block mb-1" style={{ color: C.dark }}>Postcode *</label>
+                      <input type="text" placeholder="MK9 1AB" value={customer.postcode}
+                        onChange={e => handlePostcodeChange(e.target.value)}
+                        className="w-full p-3 rounded-xl text-sm focus:outline-none transition-colors"
+                        style={{ border: `0.5px solid ${postcodeStatus?.ok === false ? '#DC2626' : postcodeStatus?.ok ? C.green : '#e0d9d0'}` }} />
+                      {postcodeStatus === 'checking' && <p className="text-xs mt-1" style={{ color: C.muted }}>Checking postcode…</p>}
+                      {postcodeStatus?.ok === true  && <p className="text-xs mt-1 font-medium" style={{ color: C.green }}>{postcodeStatus.msg}</p>}
+                      {postcodeStatus?.ok === false && <p className="text-xs mt-1 font-medium text-red-600">{postcodeStatus.msg}</p>}
                     </div>
-                    <span style={{ color: prefs.includes(p.id) ? '#800020' : '#5C4B47' }}>{p.label}</span>
-                  </button>
-                ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Delivery instruction — shown after postcode verified */}
+              {postcodeStatus?.ok && (
+                <div className="mt-8">
+                  <p className="text-sm font-semibold mb-3" style={{ color: C.dark }}>If you are not home when we arrive</p>
+                  <div className="flex flex-col gap-2">
+                    {DELIVERY_INSTRUCTIONS.map(di => (
+                      <div key={di.id}>
+                        <button onClick={() => setDeliveryInstruction(di.id)}
+                          className="w-full flex items-start gap-3 p-4 rounded-xl text-left transition-all"
+                          style={{ backgroundColor: 'white', border: deliveryInstruction === di.id ? `2px solid ${C.primary}` : '0.5px solid #e0d9d0' }}>
+                          <div className="w-4 h-4 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: deliveryInstruction === di.id ? C.primary : 'transparent', border: deliveryInstruction === di.id ? 'none' : `1.5px solid #d1d5db` }}>
+                            {deliveryInstruction === di.id && <Check size={10} color="white" />}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium" style={{ color: C.dark }}>{di.label}</p>
+                            <p className="text-xs" style={{ color: C.muted }}>{di.sub}</p>
+                          </div>
+                        </button>
+                        {deliveryInstruction === di.id && di.hasFields && (
+                          <div className="ml-7 mt-2 flex flex-col gap-2">
+                            {di.id === 'neighbour' && (
+                              <>
+                                <input type="text" placeholder="Neighbour name" value={neighbourName} onChange={e => setNeighbourName(e.target.value)}
+                                  className="p-3 rounded-xl text-sm" style={{ border: '0.5px solid #e0d9d0' }} />
+                                <input type="text" placeholder="Neighbour door / flat number" value={neighbourDoor} onChange={e => setNeighbourDoor(e.target.value)}
+                                  className="p-3 rounded-xl text-sm" style={{ border: '0.5px solid #e0d9d0' }} />
+                              </>
+                            )}
+                            {di.id === 'safeplace' && (
+                              <textarea rows={2} placeholder="e.g. inside the porch, behind the plant pot at the back gate" value={safePlaceDesc} onChange={e => setSafePlaceDesc(e.target.value)}
+                                className="p-3 rounded-xl text-sm" style={{ border: '0.5px solid #e0d9d0', resize: 'none' }} />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Food safety note */}
+              <div className="mt-6">
+                <InfoBox bg={C.surface} border="#e0d9d0" color={C.muted}>
+                  Our meals are best enjoyed fresh. Please refrigerate within two hours if you are not eating immediately — they stay delicious until the evening.
+                </InfoBox>
               </div>
 
-              <div className="max-w-xs">
-                <label className="text-sm font-semibold block mb-2" style={{ color: '#2D2422' }}>Preferred Start Date *</label>
-                <p className="text-xs text-gray-400 mb-2">Subscriptions always start on a Monday.</p>
-                <div className="flex gap-2 mb-3">
-                  {[0, 7].map((offset, i) => {
-                    const d = getNextMonday(3 + offset);
-                    const label = i === 0 ? 'This Monday' : 'Next Monday';
-                    return (
-                      <button key={d} onClick={() => setStartDate(d)}
-                        className="px-3 py-2 rounded-lg text-xs font-semibold transition-all"
-                        style={{ backgroundColor: startDate === d ? '#800020' : 'transparent', color: startDate === d ? 'white' : '#800020', border: '1.5px solid', borderColor: '#800020' }}>
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-                  className="w-full p-3 rounded-xl border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors" />
-              </div>
+              <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
             </div>
           )}
 
-          {/* STEP 6 — Personal details + address */}
+          {/* ── STEP 6 — CONFIRM ──────────────────────────── */}
           {step === 6 && (
             <div>
-              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Your Details</h2>
-              <p className="text-sm text-gray-400 mb-8">Where should we deliver your meals?</p>
-              <div className="grid md:grid-cols-2 gap-4 max-w-2xl">
+              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Review and confirm</h2>
+              <p className="text-sm mb-5" style={{ color: C.muted }}>Take a moment to check everything looks right — your meals are about to be planned.</p>
+
+              <InfoBox bg={C.amberLight} border={C.darkGold} color={C.amberText}>
+                You are one step away from your first Dabba Wala. We cannot wait to start cooking for you. 🙏
+              </InfoBox>
+
+              {/* Summary card */}
+              <div className="rounded-xl bg-white mt-6 overflow-hidden" style={{ border: '0.5px solid #e0d9d0' }}>
                 {[
-                  { label: 'Full Name *',       key: 'name',     type: 'text',  placeholder: 'Your full name' },
-                  { label: 'Email *',            key: 'email',    type: 'email', placeholder: 'you@example.com' },
-                  { label: 'Phone *',            key: 'phone',    type: 'tel',   placeholder: '+44 7xxx xxxxxx' },
-                  { label: 'Address Line 1 *',   key: 'line1',    type: 'text',  placeholder: '12 Curry Lane' },
-                  { label: 'Address Line 2',     key: 'line2',    type: 'text',  placeholder: 'Flat / Apartment (optional)' },
-                  { label: 'City *',             key: 'city',     type: 'text',  placeholder: 'Milton Keynes' },
-                ].map(({ label, key, type, placeholder }) => (
-                  <div key={key}>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: '#2D2422' }}>{label}</label>
-                    <input type={type} placeholder={placeholder} value={customer[key]}
-                      onChange={e => setCustomer(prev => ({ ...prev, [key]: e.target.value }))}
-                      className="w-full p-3 rounded-xl border-2 border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors" />
+                  { label: 'Plan',          value: planData?.name },
+                  { label: 'Box',           value: boxData?.name },
+                  { label: 'Start week',    value: selectedStartWeek ? `Mon ${fmtShort(selectedStartWeek)} – Fri ${fmtShort((() => { const d = new Date(selectedStartWeek + 'T12:00:00'); d.setDate(d.getDate() + 4); return isoDate(d); })())}` : '—' },
+                  { label: 'Meals',         value: `${planData?.meals} meals · lunch delivery, 12–2pm` },
+                  { label: 'Delivering to', value: `${customer.line1}${customer.line2 ? ', ' + customer.line2 : ''}, ${customer.city}, ${customer.postcode}` },
+                  { label: 'If not home',   value: DELIVERY_INSTRUCTIONS.find(d => d.id === deliveryInstruction)?.label || '—' },
+                  { label: 'Preferences',   value: selectedPrefs.length ? selectedPrefs.join(', ') : 'None selected' },
+                  ...(customRequest ? [{ label: 'Special request', value: customRequest }] : []),
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex items-start justify-between px-5 py-3" style={{ borderBottom: '0.5px solid #f0ebe6' }}>
+                    <p className="text-xs font-semibold w-32 shrink-0" style={{ color: C.muted }}>{label}</p>
+                    <p className="text-sm font-medium text-right" style={{ color: C.dark }}>{value}</p>
                   </div>
                 ))}
+              </div>
+
+              {/* Meal list */}
+              {currentMenuData && Object.values(currentMenuData.days || {}).some(d => !d.is_placeholder) && (
+                <div className="mt-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: C.darkGold }}>
+                    {planData?.id === 'weekly' ? 'Your 5 meals' : 'Your first week of meals'}
+                  </p>
+                  <div className="rounded-xl overflow-hidden bg-white" style={{ border: '0.5px solid #e0d9d0' }}>
+                    {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => (
+                      <div key={date} className="flex items-start gap-3 px-5 py-3" style={{ borderBottom: idx < 4 ? '0.5px solid #f0ebe6' : 'none' }}>
+                        <p className="text-xs font-semibold w-10 shrink-0 pt-0.5" style={{ color: C.muted }}>{WEEKDAY_LABELS[idx]}</p>
+                        <p className="text-xs" style={{ color: C.dark }}>{day.is_placeholder ? 'Menu coming soon' : `${day.main}${day.side ? ' · ' + day.side : ''}`}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {planData?.id === 'monthly' && (
+                    <p className="text-xs mt-2" style={{ color: C.muted }}>Weeks 2–4 menus are revealed each Friday — you will receive an email with next week's menu every Friday morning.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Terms */}
+              <div className="mt-6 rounded-xl p-5" style={{ backgroundColor: C.surface, border: '0.5px solid #e0d9d0' }}>
+                <p className="text-xs leading-relaxed mb-4" style={{ color: C.dark, lineHeight: 1.7 }}>
+                  This subscription is paid in full today.<br /><br />
+                  Changed your mind? You have <strong>48 hours</strong> from the moment you subscribe to cancel for a full refund — as long as your first meal has not yet entered preparation. After that, all sales are final.<br /><br />
+                  Because your meals are prepared fresh each morning using ingredients purchased the evening before, we are unable to offer refunds or cancellations once preparation has begun.
+                </p>
+                <Link to="/terms" className="text-xs font-semibold" style={{ color: C.primary }}>View full terms →</Link>
+              </div>
+
+              <label className="flex items-start gap-3 mt-4 cursor-pointer">
+                <input type="checkbox" checked={termsChecked} onChange={e => setTermsChecked(e.target.checked)} className="mt-0.5 accent-[#800020]" />
+                <span className="text-sm" style={{ color: C.dark }}>I have read and understood the subscription terms.</span>
+              </label>
+
+              {/* Total + confirm */}
+              <div className="flex items-center justify-between mt-6 mb-4">
                 <div>
-                  <label className="text-xs font-semibold block mb-1" style={{ color: '#2D2422' }}>Postcode *</label>
-                  <input type="text" placeholder="MK9 1AB" value={customer.postcode}
-                    onChange={e => { setCustomer(prev => ({ ...prev, postcode: e.target.value })); setPostcodeStatus(null); }}
-                    onBlur={e => checkPostcode(e.target.value)}
-                    className="w-full p-3 rounded-xl border-2 text-sm focus:outline-none transition-colors"
-                    style={{ borderColor: postcodeStatus?.ok === false ? '#DC2626' : postcodeStatus?.ok ? '#4A7C59' : '#e5e7eb' }} />
-                  {postcodeStatus === 'checking' && <p className="text-xs mt-1 text-gray-400">Checking postcode…</p>}
-                  {postcodeStatus?.ok === true  && <p className="text-xs mt-1 font-medium" style={{ color: '#4A7C59' }}>{postcodeStatus.msg}</p>}
-                  {postcodeStatus?.ok === false && <p className="text-xs mt-1 font-medium text-red-600">{postcodeStatus.msg}</p>}
+                  <p className="text-xs" style={{ color: C.muted }}>Total</p>
+                  <p className="text-3xl font-bold" style={{ color: C.primary }}>£{planData?.price}.00</p>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* STEP 7 — Summary */}
-          {step === 7 && (
-            <div>
-              <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Your Subscription Summary</h2>
-              <p className="text-sm text-gray-400 mb-8">Review everything before confirming.</p>
+              <button onClick={handleConfirm} disabled={!termsChecked || submitStatus === 'loading'}
+                className="w-full py-4 text-sm font-semibold text-white rounded-sm transition-all disabled:opacity-50"
+                style={{ backgroundColor: C.primary }}>
+                {submitStatus === 'loading' ? 'Confirming…' : `Confirm and pay £${planData?.price} — ${planData?.name}`}
+              </button>
 
-              {submitStatus === 'success' ? (
-                <div className="text-center py-16 rounded-2xl" style={{ backgroundColor: 'rgba(74,124,89,0.08)', border: '2px solid rgba(74,124,89,0.2)' }}>
-                  <div className="text-5xl mb-4">🎉</div>
-                  <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#4A7C59' }}>Subscription Confirmed!</h3>
-                  <p className="text-gray-500 mb-2">Your Dabba Wala starts on <strong>{fmtDate(startDate)}</strong>.</p>
-                  <p className="text-sm text-gray-400 mb-8">Check your email for confirmation details.</p>
-                  <Link to="/dashboard" className="inline-block px-8 py-3 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>
-                    Go to My Dashboard
-                  </Link>
-                </div>
-              ) : (
-                <div className="rounded-2xl bg-white p-6 md:p-8 space-y-5" style={{ boxShadow: '0 4px 24px rgba(128,0,32,0.08)' }}>
-                  {/* Plan */}
-                  <div className="flex justify-between items-center pb-4" style={{ borderBottom: '1px solid #f0ebe6' }}>
-                    <div>
-                      <p className="text-xs text-gray-400">Plan</p>
-                      <p className="text-lg font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>{planData?.name}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold" style={{ color: '#800020' }}>{planData?.price}</p>
-                      <p className="text-xs" style={{ color: '#B8860B' }}>{planData?.perMeal}</p>
-                    </div>
-                  </div>
-
-                  {/* Box */}
-                  <div className="pb-4" style={{ borderBottom: '1px solid #f0ebe6' }}>
-                    <p className="text-xs text-gray-400 mb-1">Box</p>
-                    <div className="flex items-center gap-2">
-                      {boxData && <boxData.icon size={16} style={{ color: boxData.color }} />}
-                      <p className="font-bold" style={{ color: boxData?.color }}>{boxData?.name}</p>
-                    </div>
-                  </div>
-
-                  {/* Delivery days */}
-                  {selectedDays.length > 0 && (
-                    <div className="pb-4" style={{ borderBottom: '1px solid #f0ebe6' }}>
-                      <p className="text-xs text-gray-400 mb-2">Delivery Days</p>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedDays.map(d => (
-                          <span key={d.id} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }}>
-                            {slots[d.id] === 'lunch' ? <Sun size={10} /> : <Moon size={10} />}
-                            {d.id.charAt(0).toUpperCase() + d.id.slice(1)} · {slots[d.id] === 'lunch' ? 'Lunch' : 'Dinner'}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Prefs */}
-                  {prefs.length > 0 && (
-                    <div className="pb-4" style={{ borderBottom: '1px solid #f0ebe6' }}>
-                      <p className="text-xs text-gray-400 mb-2">Preferences</p>
-                      <div className="flex flex-wrap gap-2">
-                        {prefs.map(p => (
-                          <span key={p} className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }}>
-                            {PREFERENCES.find(x => x.id === p)?.label}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Start date */}
-                  <div className="pb-4" style={{ borderBottom: '1px solid #f0ebe6' }}>
-                    <p className="text-xs text-gray-400 mb-1">Start Date</p>
-                    <div className="flex items-center gap-2">
-                      <Calendar size={14} style={{ color: '#B8860B' }} />
-                      <p className="text-sm font-medium">{fmtDate(startDate)}</p>
-                    </div>
-                  </div>
-
-                  {/* Address */}
-                  <div className="pb-4" style={{ borderBottom: '1px solid #f0ebe6' }}>
-                    <p className="text-xs text-gray-400 mb-1">Delivering To</p>
-                    <p className="text-sm font-medium">{customer.line1}{customer.line2 ? `, ${customer.line2}` : ''}, {customer.city}, {customer.postcode}</p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-between flex-wrap gap-4 pt-2">
-                    <div>
-                      <p className="text-xs text-gray-400">Total</p>
-                      <p className="text-3xl font-bold" style={{ color: '#800020' }}>{planData?.price}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      {submitStatus === 'error' && (
-                        <p className="text-sm font-medium px-4 py-2 rounded-lg" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>Something went wrong. Please try again.</p>
-                      )}
-                      <button
-                        onClick={handleConfirm}
-                        disabled={submitStatus === 'loading'}
-                        className="px-8 py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg disabled:opacity-60"
-                        style={{ backgroundColor: '#800020' }}
-                      >
-                        {submitStatus === 'loading' ? 'Confirming…' : 'Confirm Subscription'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              {submitStatus === 'error' && (
+                <p className="text-sm mt-3 font-medium text-red-600">{errorMessage || 'Something went wrong. Please try again.'}</p>
               )}
-            </div>
-          )}
 
-          {/* Navigation */}
-          {submitStatus !== 'success' && (
-            <div className="flex justify-between mt-10">
-              {step > 1 ? (
-                <button onClick={goBack} className="flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-sm border-2 transition-all"
-                  style={{ borderColor: '#800020', color: '#800020' }}>
-                  <ArrowLeft size={16} /> Back
-                </button>
-              ) : <div />}
-              {step < 7 && (
-                <button onClick={goNext} disabled={!canProceed()}
-                  className="flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white rounded-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md"
-                  style={{ backgroundColor: '#800020' }}>
-                  Next <ArrowRight size={16} />
-                </button>
-              )}
+              <NavButtons step={step} onBack={goBack} onNext={() => {}} nextDisabled={true} nextLabel="" />
             </div>
           )}
 

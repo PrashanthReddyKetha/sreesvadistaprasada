@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 import os, json
 from database import db
 from models import MenuItem, MenuItemCreate, MenuItemUpdate, MenuCategory, Review, ReviewCreate
@@ -194,3 +194,49 @@ async def get_item_social(item_id: str, current_user: Optional[dict] = Depends(g
         "user_liked": user_liked,
         "user_reviewed": user_reviewed,
     }
+
+
+@router.get("/weekly-preview")
+async def get_weekly_preview(
+    week: str = Query(..., description="Monday date YYYY-MM-DD"),
+    box_type: str = Query(..., description="prasada or svadista"),
+    current_user: Optional[dict] = Depends(get_optional_user),
+):
+    """Return the published weekly menu for a given week + box type.
+    Admins see drafts too. Customers only see published entries."""
+    try:
+        week_start = datetime.strptime(week, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid week format. Use YYYY-MM-DD")
+
+    # Build list of Mon–Fri dates for this week
+    days = []
+    for i in range(5):
+        days.append((week_start + timedelta(days=i)).strftime("%Y-%m-%d"))
+
+    is_admin = current_user and current_user.get("role") == "admin"
+    status_filter = {} if is_admin else {"status": "published"}
+
+    results = {}
+    for d in days:
+        query = {"date": d, "box_type": box_type, **status_filter}
+        doc = await db.weekly_menu_days.find_one(query, {"_id": 0})
+        if doc:
+            results[d] = doc
+        else:
+            results[d] = {
+                "date": d,
+                "box_type": box_type,
+                "main": "",
+                "side": "",
+                "accompaniment": "",
+                "extra": "",
+                "status": "empty",
+                "is_placeholder": True,
+            }
+
+    # Also fetch this week's dietary notes
+    notes_doc = await db.weekly_menu_notes.find_one({"week_start": week, "box_type": box_type}, {"_id": 0})
+    dietary_notes = notes_doc.get("notes") if notes_doc else None
+
+    return {"days": results, "dietary_notes": dietary_notes}

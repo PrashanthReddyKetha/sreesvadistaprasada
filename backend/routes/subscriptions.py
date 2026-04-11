@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
+from datetime import datetime, timedelta
 from database import db
 from models import Subscription, SubscriptionCreate, SubscriptionStatusUpdate, SubscriptionStatus
 from auth import get_current_user, get_optional_user, require_admin
@@ -7,9 +8,13 @@ from auth import get_current_user, get_optional_user, require_admin
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
 PLAN_PRICES = {
-    "weekly": 45.0,
+    "weekly":  45.0,
     "monthly": 160.0,
-    "family": 280.0,
+}
+
+PLAN_DAYS = {
+    "weekly":  4,   # Mon + 4 = Fri
+    "monthly": 27,  # Mon + 27 = 4th Friday
 }
 
 
@@ -18,13 +23,26 @@ async def create_subscription(
     payload: SubscriptionCreate,
     current_user: Optional[dict] = Depends(get_optional_user),
 ):
-    price = PLAN_PRICES.get(payload.plan.lower(), 0.0)
+    price = PLAN_PRICES.get(payload.plan.lower(), 45.0)
+    days  = PLAN_DAYS.get(payload.plan.lower(), 4)
     user_id = current_user["sub"] if current_user else payload.user_id
+
+    # Calculate end_date and cancellation window
+    try:
+        start = datetime.strptime(payload.start_date, "%Y-%m-%d")
+        end   = start + timedelta(days=days)
+        end_date_str = end.strftime("%Y-%m-%d")
+    except Exception:
+        end_date_str = None
+
+    cancellation_window = (datetime.utcnow() + timedelta(hours=48)).isoformat()
 
     subscription = Subscription(
         **payload.model_dump(),
         price=price,
         user_id=user_id,
+        end_date=end_date_str,
+        cancellation_window_expires=cancellation_window,
     )
     await db.subscriptions.insert_one(subscription.model_dump())
     return subscription
@@ -42,6 +60,14 @@ async def get_subscriptions(
         query["status"] = status.value
 
     subs = await db.subscriptions.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+
+    # Auto-expire subscriptions whose end_date has passed
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    for s in subs:
+        if s.get("status") == "active" and s.get("end_date") and s["end_date"] < today:
+            s["status"] = "expired"
+            await db.subscriptions.update_one({"id": s["id"]}, {"$set": {"status": "expired"}})
+
     return subs
 
 
