@@ -1499,6 +1499,50 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
 /* ── Menu Planner ──────────────────────────────────────── */
 const BOX_ROWS = ['prasada', 'svadista'];
 
+function MenuItemAutocomplete({ value, suggestions, onChange, onRemove, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const filtered = value.trim().length > 0
+    ? suggestions.filter(s => s.toLowerCase().includes(value.toLowerCase())).slice(0, 8)
+    : [];
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative mb-1">
+      <div className="flex items-center gap-0.5">
+        <input
+          type="text" value={value}
+          onChange={e => { onChange(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder={placeholder}
+          className="flex-1 text-[11px] px-2 py-1 rounded border-0 focus:outline-none focus:ring-1 focus:ring-[#800020]"
+          style={{ backgroundColor: 'rgba(255,255,255,0.8)', fontSize: 11 }}
+        />
+        <button onClick={onRemove} className="text-gray-300 hover:text-red-400 px-0.5">
+          <X size={11} />
+        </button>
+      </div>
+      {open && filtered.length > 0 && (
+        <div className="absolute z-50 left-0 right-0 top-full mt-0.5 rounded-lg overflow-hidden shadow-lg"
+          style={{ backgroundColor: 'white', border: '1px solid #e0d9d0', maxHeight: 180, overflowY: 'auto' }}>
+          {filtered.map(s => (
+            <button key={s} onMouseDown={() => { onChange(s); setOpen(false); }}
+              className="block w-full text-left px-3 py-1.5 text-xs hover:bg-[#800020]/8 transition-colors"
+              style={{ color: '#2D2422' }}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DabbaMenuPlanner() {
   const today = new Date();
   const getMonday = (d) => { const date = new Date(d); const diff = date.getDay()===0?-6:1-date.getDay(); date.setDate(date.getDate()+diff); return date; };
@@ -1507,16 +1551,24 @@ function DabbaMenuPlanner() {
   const weekAfterMonday = new Date(nextMonday); weekAfterMonday.setDate(weekAfterMonday.getDate()+7);
 
   const [selectedWeek, setSelectedWeek] = useState(1);
-  const [cells, setCells] = useState({}); // key: "date_boxtype" → {main,side,accompaniment,extra,status}
+  const [cells, setCells] = useState({}); // key: "date_boxtype" → {items:[], status}
   const [dietaryNotes, setDietaryNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [menuItems, setMenuItems] = useState([]); // for autocomplete
 
   const weekMondayDate = selectedWeek === 1 ? nextMonday : weekAfterMonday;
   const weekDates = Array.from({length:5}, (_,i) => { const d = new Date(weekMondayDate); d.setDate(d.getDate()+i); return d.toISOString().split('T')[0]; });
   const DAY_LABELS = ['MON','TUE','WED','THU','FRI'];
+
+  // Fetch menu items for autocomplete
+  useEffect(() => {
+    api.get('/menu').then(res => {
+      setMenuItems((res.data || []).map(m => m.name).filter(Boolean));
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const monday = weekMondayDate.toISOString().split('T')[0];
@@ -1524,14 +1576,41 @@ function DabbaMenuPlanner() {
       BOX_ROWS.map(b => api.get(`/menu/weekly-preview?week=${monday}&box_type=${b}`))
     ).then(([p, s]) => {
       const newCells = {};
-      Object.entries(p.data.days || {}).forEach(([date, day]) => { newCells[`${date}_prasada`] = { main:day.main||'', side:day.side||'', accompaniment:day.accompaniment||'', extra:day.extra||'', status:day.status||'empty' }; });
-      Object.entries(s.data.days || {}).forEach(([date, day]) => { newCells[`${date}_svadista`] = { main:day.main||'', side:day.side||'', accompaniment:day.accompaniment||'', extra:day.extra||'', status:day.status||'empty' }; });
+      Object.entries(p.data.days || {}).forEach(([date, day]) => {
+        newCells[`${date}_prasada`] = { items: day.items || [], status: day.status || 'empty' };
+      });
+      Object.entries(s.data.days || {}).forEach(([date, day]) => {
+        newCells[`${date}_svadista`] = { items: day.items || [], status: day.status || 'empty' };
+      });
       setCells(newCells);
     }).catch(() => {});
   }, [selectedWeek, weekMondayDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateCell = (date, box, field, value) => {
-    setCells(prev => ({ ...prev, [`${date}_${box}`]: { ...(prev[`${date}_${box}`]||{}), [field]:value, status: (prev[`${date}_${box}`]?.status==='published'?'published':'draft') } }));
+  const updateItem = (date, box, itemIdx, value) => {
+    setCells(prev => {
+      const key = `${date}_${box}`;
+      const cell = prev[key] || { items: [], status: 'empty' };
+      const items = [...(cell.items || [])];
+      items[itemIdx] = value;
+      return { ...prev, [key]: { ...cell, items, status: cell.status === 'published' ? 'published' : 'draft' } };
+    });
+  };
+
+  const addItem = (date, box) => {
+    setCells(prev => {
+      const key = `${date}_${box}`;
+      const cell = prev[key] || { items: [], status: 'empty' };
+      return { ...prev, [key]: { ...cell, items: [...(cell.items || []), ''], status: cell.status === 'published' ? 'published' : 'draft' } };
+    });
+  };
+
+  const removeItem = (date, box, itemIdx) => {
+    setCells(prev => {
+      const key = `${date}_${box}`;
+      const cell = prev[key] || { items: [], status: 'empty' };
+      const items = (cell.items || []).filter((_, i) => i !== itemIdx);
+      return { ...prev, [key]: { ...cell, items, status: cell.status === 'published' ? 'published' : 'draft' } };
+    });
   };
 
   const saveDraft = async () => {
@@ -1540,8 +1619,9 @@ function DabbaMenuPlanner() {
       await Promise.all(
         weekDates.flatMap(date => BOX_ROWS.map(box => {
           const c = cells[`${date}_${box}`];
-          if (!c || !c.main) return null;
-          return api.post('/admin/menu', { date, box_type:box, main:c.main, side:c.side||'', accompaniment:c.accompaniment||'', extra:c.extra||'', status:c.status==='published'?'published':'draft' });
+          const items = (c?.items || []).filter(i => i.trim());
+          if (!items.length) return null;
+          return api.post('/admin/menu', { date, box_type: box, items, status: c.status === 'published' ? 'published' : 'draft' });
         }).filter(Boolean))
       );
       setLastSaved(new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
@@ -1606,19 +1686,27 @@ function DabbaMenuPlanner() {
                   <span className="text-xs font-semibold capitalize px-2 py-1 rounded-full" style={{ backgroundColor:BOX_BADGE[box]?.bg, color:BOX_BADGE[box]?.color }}>{box}</span>
                 </td>
                 {weekDates.map(date => {
-                  const c = cells[`${date}_${box}`] || {};
-                  const isEmpty = !c.main;
+                  const c = cells[`${date}_${box}`] || { items: [], status: 'empty' };
+                  const items = c.items || [];
+                  const isEmpty = items.filter(i => i.trim()).length === 0;
                   const isPublished = c.status === 'published';
                   return (
-                    <td key={date} className="p-2 align-top" style={{ backgroundColor:isEmpty?'#FEF2F2':isPublished?'white':'#FFFBEB', border:'1px solid #e0d9d0', minWidth:130 }}>
+                    <td key={date} className="p-2 align-top" style={{ backgroundColor:isEmpty?'#FEF2F2':isPublished?'white':'#FFFBEB', border:'1px solid #e0d9d0', minWidth:140 }}>
                       {isPublished && <div className="flex justify-end mb-1"><CheckCircle size={12} style={{ color:'#4A7C59' }} /></div>}
-                      {isEmpty && <p className="text-[10px] text-center italic mb-2" style={{ color:'#DC2626' }}>Add menu</p>}
-                      {['main','side','accompaniment','extra'].map((field, fi) => (
-                        <input key={field} type="text" value={c[field]||''} onChange={e => updateCell(date, box, field, e.target.value)}
-                          placeholder={['e.g. Sambar rice','e.g. Beans poriyal','e.g. Mango pickle','e.g. Papad'][fi]}
-                          className="block w-full text-[11px] px-2 py-1 rounded mb-1 border-0 focus:outline-none focus:ring-1 focus:ring-[#800020]"
-                          style={{ backgroundColor:'rgba(255,255,255,0.7)', fontSize:11 }} />
+                      {isEmpty && <p className="text-[10px] text-center italic mb-1" style={{ color:'#DC2626' }}>Add menu</p>}
+                      {items.map((item, fi) => (
+                        <MenuItemAutocomplete
+                          key={fi} value={item} suggestions={menuItems}
+                          onChange={v => updateItem(date, box, fi, v)}
+                          onRemove={() => removeItem(date, box, fi)}
+                          placeholder={fi === 0 ? 'e.g. Sambar rice' : 'e.g. Beans poriyal'}
+                        />
                       ))}
+                      <button onClick={() => addItem(date, box)}
+                        className="mt-1 w-full text-[10px] py-0.5 rounded border border-dashed transition-colors hover:bg-[#800020]/5"
+                        style={{ borderColor: '#800020', color: '#800020' }}>
+                        + add item
+                      </button>
                     </td>
                   );
                 })}

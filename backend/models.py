@@ -240,10 +240,7 @@ class WeeklyMenuDay(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     date: str           # YYYY-MM-DD
     box_type: str       # prasada | svadista
-    main: str = ""
-    side: str = ""
-    accompaniment: str = ""
-    extra: str = ""
+    items: List[str] = []   # flexible list of meal components
     status: str = "draft"   # draft | published
     dietary_notes: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -253,10 +250,7 @@ class WeeklyMenuDay(BaseModel):
 class WeeklyMenuDayCreate(BaseModel):
     date: str
     box_type: str
-    main: str
-    side: str
-    accompaniment: str
-    extra: str
+    items: List[str] = []
     status: str = "draft"
     dietary_notes: Optional[str] = None
 

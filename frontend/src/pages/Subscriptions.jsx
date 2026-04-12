@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package } from 'lucide-react';
+import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -106,6 +106,59 @@ function daysFromNow(iso) {
 }
 
 const WEEKDAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
+const WEEKDAY_FULL   = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+/* Day food images (South Indian) */
+const DAY_FOOD_IMGS = [
+  'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=240&q=75',
+  'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=240&q=75',
+  'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=240&q=75',
+  'https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=240&q=75',
+  'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=240&q=75',
+];
+
+/* Social proof */
+const BOX_SOCIAL = {
+  prasada:  { count: '30+', window: 'last 2 weeks', rating: 5, reviewCount: 142 },
+  svadista: { count: '75+', window: 'last 3 weeks', rating: 5, reviewCount: 289 },
+};
+
+const BOX_REVIEWS = {
+  prasada: [
+    { name: 'Ananya M.', text: 'The flavours took me right back to my grandmother\'s kitchen in Chennai.' },
+    { name: 'Priya K.', text: 'Every day feels like a home-cooked meal — incredibly fresh and wholesome.' },
+    { name: 'Kavitha R.', text: 'Ordered for one week and renewed for a month. Cannot imagine weekdays without it.' },
+    { name: 'Sunita P.', text: 'Pure vegetarian done perfectly. The rasam on Wednesdays is divine.' },
+    { name: 'Deepa S.', text: 'As a busy mum, this has been a lifesaver. My kids love every single meal.' },
+    { name: 'Meera J.', text: 'Temple-style cooking that somehow manages to feel personal every time.' },
+    { name: 'Lakshmi V.', text: 'The freshness is unreal for a delivery service. Like a freshly cooked meal.' },
+    { name: 'Radha N.', text: 'Light enough for everyday eating but full of the right flavours and warmth.' },
+    { name: 'Usha B.', text: 'I requested no garlic and they honoured it every single day without fail.' },
+    { name: 'Geetha T.', text: 'I have tried other meal plans but nothing comes close to this quality.' },
+    { name: 'Padma C.', text: 'The rice is always perfectly cooked — never mushy, never undercooked.' },
+    { name: 'Vasantha L.', text: 'A genuine taste of South India. I look forward to every lunch delivery.' },
+    { name: 'Nirmala A.', text: 'Wonderful value for the quality. You can tell every dish is made with care.' },
+    { name: 'Hema D.', text: 'My colleagues at work are jealous every time I open my dabba.' },
+    { name: 'Santha W.', text: 'Consistent, fresh and absolutely delicious every single day of the week.' },
+  ],
+  svadista: [
+    { name: 'Ravi K.', text: 'The chicken curry on Tuesdays alone is worth the subscription. Brilliant.' },
+    { name: 'Suresh M.', text: 'Bold, spicy and exactly how my mum used to cook back in Andhra.' },
+    { name: 'Ajay P.', text: 'First week I thought it was good. Second week I thought it was exceptional.' },
+    { name: 'Kiran T.', text: 'The gravy-to-rice ratio is perfect. I have never been disappointed once.' },
+    { name: 'Vijay N.', text: 'Requested extra spice and they absolutely delivered — proper village-style heat.' },
+    { name: 'Arun S.', text: 'I live alone and this has completely changed my work-week lunches.' },
+    { name: 'Mahesh B.', text: 'The mutton on Fridays is slow-cooked to perfection. Just incredible.' },
+    { name: 'Sanjay R.', text: 'Authentic South Indian non-veg cooking is rare to find. This is the real deal.' },
+    { name: 'Rohit G.', text: 'Hearty, full-flavoured meals that actually keep me going through the afternoon.' },
+    { name: 'Pavan C.', text: 'Three months in and I still get excited when my dabba arrives each day.' },
+    { name: 'Dinesh V.', text: 'The consistency is the best part — every meal is as good as the last.' },
+    { name: 'Naresh L.', text: 'My friends now order here based on my recommendation. Worth every penny.' },
+    { name: 'Prasad A.', text: 'Reminds me of eating at the local dhabas back home in Hyderabad.' },
+    { name: 'Kishore J.', text: 'The packaging keeps it perfectly warm even an hour after delivery.' },
+    { name: 'Venkat W.', text: 'Switched from another meal service after the first trial. No looking back.' },
+  ],
+};
 
 /* ── localStorage ─────────────────────────────────────── */
 function loadSaved() {
@@ -128,6 +181,49 @@ const InfoBox = ({ bg, border, color, children }) => (
     {children}
   </div>
 );
+
+function ReviewCarousel({ boxId }) {
+  const reviews = BOX_REVIEWS[boxId] || BOX_REVIEWS.prasada;
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % reviews.length), 3800);
+    return () => clearInterval(t);
+  }, [reviews.length]);
+  const r = reviews[idx];
+  return (
+    <div className="rounded-xl px-4 py-3 text-left transition-all" style={{ backgroundColor: 'rgba(128,0,32,0.04)', border: '0.5px solid rgba(128,0,32,0.1)', minHeight: 62 }}>
+      <p className="text-xs leading-relaxed mb-1" style={{ color: C.dark }}>"{r.text}"</p>
+      <p className="text-[10px] font-semibold" style={{ color: C.muted }}>— {r.name}</p>
+    </div>
+  );
+}
+
+function StarRating({ count, reviewCount }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="flex gap-0.5">
+        {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="#F4C430" stroke="none" />)}
+      </div>
+      <span className="text-[11px] font-semibold" style={{ color: C.darkGold }}>{reviewCount.toLocaleString()} ratings</span>
+    </div>
+  );
+}
+
+function SocialProofBlock({ boxId }) {
+  const s = BOX_SOCIAL[boxId];
+  if (!s) return null;
+  return (
+    <div className="mt-4 rounded-xl p-4 space-y-2.5" style={{ backgroundColor: C.surface, border: '0.5px solid rgba(128,0,32,0.08)' }}>
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-semibold" style={{ color: C.muted }}>
+          <span className="text-sm font-bold" style={{ color: C.primary }}>{s.count}</span> subscribed in the {s.window}
+        </p>
+        <StarRating count={s.rating} reviewCount={s.reviewCount} />
+      </div>
+      <ReviewCarousel boxId={boxId} />
+    </div>
+  );
+}
 
 const StepIndicator = ({ step }) => (
   <div className="py-5 px-4 md:px-8" style={{ backgroundColor: C.surface, borderBottom: `0.5px solid rgba(128,0,32,0.1)` }}>
@@ -292,8 +388,26 @@ const Subscriptions = () => {
     return true;
   };
 
+  const goBackRef = useRef(null);
+  const goBack = () => {
+    // If guest chose "Continue as guest" and hits Back, show the 3-option screen again
+    if (step === 5 && isGuest) { setIsGuest(false); return; }
+    if (step > 1) setStep(s => s - 1);
+  };
+  goBackRef.current = goBack;
   const goNext = () => { if (canProceed() && step < 6) setStep(s => s + 1); };
-  const goBack = () => { if (step > 1) setStep(s => s - 1); };
+
+  // Intercept browser back button — stay in wizard instead of navigating away
+  useEffect(() => {
+    if (pageState !== 'wizard' || submitStatus === 'success') return;
+    window.history.pushState(null, '', window.location.href);
+    const handler = () => {
+      window.history.pushState(null, '', window.location.href);
+      if (goBackRef.current) goBackRef.current();
+    };
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
+  }, [step, isGuest, pageState, submitStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* submit */
   const handleConfirm = async () => {
@@ -436,9 +550,9 @@ const Subscriptions = () => {
                     <span className="font-semibold w-10 shrink-0" style={{ color: C.muted }}>
                       {new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short' })}
                     </span>
-                    {day.is_placeholder
-                      ? <span className="italic" style={{ color: C.muted }}>Menu coming soon</span>
-                      : <span style={{ color: C.dark }}>{day.main || 'Menu coming soon'}{day.side ? ` · ${day.side}` : ''}</span>}
+                    {day.is_placeholder || !day.items?.length
+                      ? <span className="italic" style={{ color: C.muted }}>Menu is on the way 🍱</span>
+                      : <span style={{ color: C.dark }}>{day.items.join(' · ')}</span>}
                   </div>
                 ))}
               </div>
@@ -545,10 +659,12 @@ const Subscriptions = () => {
 
               <div className="mt-5">
                 <InfoBox bg={C.surface} border="#e0d9d0" color={C.muted}>
-                  Both plans are paid upfront. No hidden charges, no auto-renewal — you are always in control.
+                  No hidden charges, no auto-renewal — you are always in control.
                 </InfoBox>
               </div>
 
+              {/* Social proof strip — steps 1–3 */}
+              <SocialProofBlock boxId="svadista" />
               <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
             </div>
           )}
@@ -559,25 +675,39 @@ const Subscriptions = () => {
               <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Choose your box</h2>
               <p className="text-sm mb-6" style={{ color: C.muted }}>Two boxes. Each one has its own personality — find yours.</p>
 
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-5">
                 {BOXES.map(box => {
                   const BoxIcon = box.icon;
+                  const social = BOX_SOCIAL[box.id];
+                  const isSelected = selectedBox === box.id;
                   return (
-                    <button key={box.id} onClick={() => setSelectedBox(box.id)}
-                      className="relative flex items-center gap-4 p-5 rounded-xl text-left transition-all duration-200"
-                      style={{ backgroundColor: 'white', border: selectedBox === box.id ? `2px solid ${box.border}` : '0.5px solid #e0d9d0', boxShadow: selectedBox === box.id ? `0 4px 20px ${box.border}18` : '0 2px 6px rgba(0,0,0,0.04)' }}>
-                      {box.mostChosen && (
-                        <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white" style={{ backgroundColor: C.primary }}>Most chosen</span>
-                      )}
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: box.iconBg }}>
-                        <BoxIcon size={18} style={{ color: box.iconColor }} />
+                    <div key={box.id} className="rounded-xl overflow-hidden" style={{ border: isSelected ? `2px solid ${box.border}` : '0.5px solid #e0d9d0', boxShadow: isSelected ? `0 4px 20px ${box.border}18` : '0 2px 6px rgba(0,0,0,0.04)' }}>
+                      <button onClick={() => setSelectedBox(box.id)}
+                        className="relative w-full flex items-center gap-4 p-5 text-left transition-all duration-200"
+                        style={{ backgroundColor: 'white' }}>
+                        {box.mostChosen && (
+                          <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white" style={{ backgroundColor: C.primary }}>Most chosen</span>
+                        )}
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: box.iconBg }}>
+                          <BoxIcon size={18} style={{ color: box.iconColor }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold mb-0.5" style={{ fontSize: 15, color: C.dark }}>{box.name}</p>
+                          <p className="text-sm" style={{ color: C.muted }}>{box.desc}</p>
+                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                            <StarRating count={social.rating} reviewCount={social.reviewCount} />
+                            <span className="text-[10px]" style={{ color: C.muted }}>
+                              <span className="font-bold" style={{ color: C.primary }}>{social.count}</span> subscribed in the {social.window}
+                            </span>
+                          </div>
+                        </div>
+                        {isSelected && <div className="ml-2 shrink-0"><Check size={16} style={{ color: box.border }} /></div>}
+                      </button>
+                      {/* Review teaser */}
+                      <div className="px-5 pb-4" style={{ backgroundColor: 'white', borderTop: '0.5px solid rgba(128,0,32,0.06)' }}>
+                        <ReviewCarousel boxId={box.id} />
                       </div>
-                      <div>
-                        <p className="font-semibold mb-0.5" style={{ fontSize: 15, color: C.dark }}>{box.name}</p>
-                        <p className="text-sm" style={{ color: C.muted }}>{box.desc}</p>
-                      </div>
-                      {selectedBox === box.id && <div className="ml-auto shrink-0"><Check size={16} style={{ color: box.border }} /></div>}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -596,21 +726,16 @@ const Subscriptions = () => {
           {step === 3 && (
             <div>
               <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>What's coming your way</h2>
-              <p className="text-sm mb-4" style={{ color: C.muted }}>This is exactly what arrives each day. Made fresh every morning, never reheated.</p>
-
-              <InfoBox bg={C.amberLight} border={C.darkGold} color={C.amberText}>
-                Our menu changes every week so there is always something to look forward to. What you see below is what lands at your door.
-              </InfoBox>
 
               {/* Closed message */}
               {weekCfg.closedMessage && (
-                <div className="mt-4">
+                <div className="mb-4">
                   <InfoBox bg="#FFF8E1" border="#F4C430" color="#854F0B">{weekCfg.closedMessage}</InfoBox>
                 </div>
               )}
 
               {/* Week tabs */}
-              <div className="grid grid-cols-2 gap-3 mt-5">
+              <div className="grid grid-cols-2 gap-3 mb-5">
                 {[1, 2].map(tabNum => {
                   const tc = tabNum === 1 ? weekCfg.tab1 : weekCfg.tab2;
                   return (
@@ -625,53 +750,71 @@ const Subscriptions = () => {
                 })}
               </div>
 
-              {/* Day cards */}
-              <div className="mt-5">
-                {menuLoading[menuTab] ? (
-                  <div className="flex gap-2 overflow-x-auto pb-2">
-                    {[0,1,2,3,4].map(i => (
-                      <div key={i} className="shrink-0 rounded-xl animate-pulse" style={{ width: 120, height: 160, backgroundColor: '#e5e7eb' }} />
-                    ))}
-                  </div>
-                ) : menuError[menuTab] ? (
-                  <div className="text-center py-8">
-                    <p className="text-sm text-red-600 mb-3">{menuError[menuTab]}</p>
-                    <button onClick={() => fetchMenu(menuTab)} className="text-xs font-semibold px-4 py-2 rounded" style={{ backgroundColor: C.primary, color: 'white' }}>Retry</button>
-                  </div>
-                ) : currentMenuData ? (
-                  <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                    {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => {
-                      const isPast = new Date(date + 'T23:59:59') < new Date();
-                      const d = new Date(date + 'T12:00:00');
-                      return (
-                        <div key={date} className="shrink-0 rounded-xl p-3 flex flex-col" style={{ minWidth: 100, backgroundColor: 'white', border: '0.5px solid #e0d9d0', opacity: isPast ? 0.35 : 1 }}>
-                          <p className="font-semibold mb-0.5" style={{ fontSize: 11, color: C.muted }}>{WEEKDAY_LABELS[idx]}</p>
-                          <p className="mb-2" style={{ fontSize: 10, color: C.muted }}>{d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
-                          {day.is_placeholder ? (
-                            <p className="text-[10px] italic" style={{ color: C.muted }}>Menu coming soon</p>
-                          ) : (
-                            <>
-                              <p className="font-semibold leading-snug mb-1" style={{ fontSize: 11, color: C.dark }}>{day.main}</p>
-                              <p style={{ fontSize: 10, color: C.muted }}>{day.side}</p>
-                              <p style={{ fontSize: 10, color: C.muted }}>{day.accompaniment}</p>
-                              <p style={{ fontSize: 10, color: C.muted }}>{day.extra}</p>
-                            </>
-                          )}
-                          {isPast && <p className="text-[9px] mt-auto pt-1" style={{ color: C.muted }}>Passed</p>}
+              {/* Day rows — vertical */}
+              {menuLoading[menuTab] ? (
+                <div className="space-y-3">
+                  {[0,1,2,3,4].map(i => (
+                    <div key={i} className="rounded-xl animate-pulse flex gap-3 p-3" style={{ backgroundColor: '#e5e7eb', height: 72 }} />
+                  ))}
+                </div>
+              ) : menuError[menuTab] ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-red-600 mb-3">{menuError[menuTab]}</p>
+                  <button onClick={() => fetchMenu(menuTab)} className="text-xs font-semibold px-4 py-2 rounded" style={{ backgroundColor: C.primary, color: 'white' }}>Retry</button>
+                </div>
+              ) : currentMenuData ? (
+                <div className="space-y-3">
+                  {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => {
+                    const isPast = new Date(date + 'T23:59:59') < new Date();
+                    const allPlaceholder = day.is_placeholder || !day.items || day.items.length === 0;
+                    return (
+                      <div key={date} className="flex gap-3 rounded-xl overflow-hidden"
+                        style={{ backgroundColor: 'white', border: '0.5px solid #e0d9d0', opacity: isPast ? 0.45 : 1 }}>
+                        {/* Food image */}
+                        <div className="shrink-0 w-20 h-20 overflow-hidden" style={{ borderRadius: '0.75rem 0 0 0.75rem' }}>
+                          <img src={DAY_FOOD_IMGS[idx]} alt={WEEKDAY_FULL[idx]}
+                            className="w-full h-full object-cover" loading="lazy" />
                         </div>
-                      );
-                    })}
-                  </div>
-                ) : null}
+                        {/* Content */}
+                        <div className="py-3 pr-3 flex-1 min-w-0 flex flex-col justify-center">
+                          <div className="flex items-baseline gap-2 mb-1">
+                            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: C.primary }}>{WEEKDAY_LABELS[idx]}</p>
+                            <p className="text-[10px]" style={{ color: C.muted }}>{new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                            {isPast && <p className="text-[9px] ml-auto" style={{ color: C.muted }}>Passed</p>}
+                          </div>
+                          {allPlaceholder ? (
+                            <p className="text-xs italic" style={{ color: C.muted }}>Menu is on the way 🍱</p>
+                          ) : (
+                            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                              {(day.items || []).map((item, i) => (
+                                <span key={i} className="text-xs" style={{ color: i === 0 ? C.dark : C.muted, fontWeight: i === 0 ? 600 : 400 }}>
+                                  {i > 0 && <span style={{ color: '#d1c4b8' }}>·</span>} {item}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
 
-                {currentMenuData?.dietary_notes && (
-                  <div className="mt-3">
-                    <InfoBox bg={C.surface} border="#e0d9d0" color={C.muted}>
-                      🌿 Kitchen note: {currentMenuData.dietary_notes}
-                    </InfoBox>
-                  </div>
-                )}
+              {/* "Menu keeps changing" note — after the days, not at top */}
+              <div className="mt-5">
+                <div className="rounded-xl px-4 py-3 flex items-center gap-2" style={{ backgroundColor: C.amberLight, border: `0.5px solid ${C.darkGold}` }}>
+                  <RotateCcw size={14} style={{ color: C.amberText, flexShrink: 0 }} />
+                  <p className="text-xs font-semibold" style={{ color: C.amberText }}>Our menu keeps changing every week — there's always something new to look forward to.</p>
+                </div>
               </div>
+
+              {currentMenuData?.dietary_notes && (
+                <div className="mt-3">
+                  <InfoBox bg={C.surface} border="#e0d9d0" color={C.muted}>
+                    🌿 Kitchen note: {currentMenuData.dietary_notes}
+                  </InfoBox>
+                </div>
+              )}
 
               <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
             </div>
@@ -910,7 +1053,7 @@ const Subscriptions = () => {
                     {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => (
                       <div key={date} className="flex items-start gap-3 px-5 py-3" style={{ borderBottom: idx < 4 ? '0.5px solid #f0ebe6' : 'none' }}>
                         <p className="text-xs font-semibold w-10 shrink-0 pt-0.5" style={{ color: C.muted }}>{WEEKDAY_LABELS[idx]}</p>
-                        <p className="text-xs" style={{ color: C.dark }}>{day.is_placeholder ? 'Menu coming soon' : `${day.main}${day.side ? ' · ' + day.side : ''}`}</p>
+                        <p className="text-xs" style={{ color: C.dark }}>{day.is_placeholder || !day.items?.length ? 'Menu is on the way 🍱' : day.items.join(' · ')}</p>
                       </div>
                     ))}
                   </div>

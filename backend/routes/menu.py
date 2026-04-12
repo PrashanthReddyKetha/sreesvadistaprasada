@@ -227,10 +227,7 @@ async def get_weekly_preview(
             results[d] = {
                 "date": d,
                 "box_type": box_type,
-                "main": "",
-                "side": "",
-                "accompaniment": "",
-                "extra": "",
+                "items": [],
                 "status": "empty",
                 "is_placeholder": True,
             }
