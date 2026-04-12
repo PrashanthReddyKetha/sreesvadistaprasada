@@ -60,7 +60,8 @@ function getWeekConfig() {
     const date = new Date(d);
     const diff = date.getDay() === 0 ? -6 : 1 - date.getDay();
     date.setDate(date.getDate() + diff);
-    date.setHours(0, 0, 0, 0);
+    // Use noon (12:00) not midnight to avoid BST/UTC offset shifting the date back one day
+    date.setHours(12, 0, 0, 0);
     return date;
   };
 
@@ -85,7 +86,13 @@ function getWeekConfig() {
   }
 }
 
-function isoDate(d) { return d.toISOString().split('T')[0]; }
+function isoDate(d) {
+  // Use local date parts — toISOString() is UTC and shifts the date back in BST/UTC+ timezones
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 function fmtShort(iso) {
   return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
@@ -324,8 +331,8 @@ const Subscriptions = () => {
     setSelectedStartWeek(isoDate(tabCfg.monday));
   }, [menuTab, weekCfg.tab1, weekCfg.tab2]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* fetch menu for a tab */
-  const fetchMenu = useCallback(async (tabNum) => {
+  /* fetch menu for a tab — with auto-retry for Render cold start */
+  const fetchMenu = useCallback(async (tabNum, attempt = 1) => {
     if (!selectedBox) return;
     const tabCfg = tabNum === 1 ? weekCfg.tab1 : weekCfg.tab2;
     const week = isoDate(tabCfg.monday);
@@ -335,9 +342,16 @@ const Subscriptions = () => {
       const res = await api.get(`/menu/weekly-preview?week=${week}&box_type=${selectedBox}`);
       setMenuData(prev => ({ ...prev, [tabNum]: res.data }));
     } catch {
-      setMenuError(prev => ({ ...prev, [tabNum]: 'Could not load the menu. Please try again.' }));
+      if (attempt < 3) {
+        // Auto-retry — Render backend may be cold-starting (can take ~30s)
+        setMenuError(prev => ({ ...prev, [tabNum]: 'waking' }));
+        setTimeout(() => fetchMenu(tabNum, attempt + 1), 6000);
+      } else {
+        setMenuError(prev => ({ ...prev, [tabNum]: 'Could not load the menu. Please try again.' }));
+      }
     } finally {
-      setMenuLoading(prev => ({ ...prev, [tabNum]: false }));
+      if (attempt >= 3) setMenuLoading(prev => ({ ...prev, [tabNum]: false }));
+      else setMenuLoading(prev => ({ ...prev, [tabNum]: false }));
     }
   }, [selectedBox, weekCfg]);
 
@@ -758,6 +772,11 @@ const Subscriptions = () => {
                   {[0,1,2,3,4].map(i => (
                     <div key={i} className="rounded-xl animate-pulse flex gap-3 p-3" style={{ backgroundColor: '#e5e7eb', height: 72 }} />
                   ))}
+                </div>
+              ) : menuError[menuTab] === 'waking' ? (
+                <div className="text-center py-10 space-y-2">
+                  <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin mx-auto" style={{ borderColor: C.primary, borderTopColor: 'transparent' }} />
+                  <p className="text-sm" style={{ color: C.muted }}>Waking up our kitchen server… this takes about 30 seconds on the first visit.</p>
                 </div>
               ) : menuError[menuTab] ? (
                 <div className="text-center py-8">
