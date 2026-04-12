@@ -568,7 +568,7 @@ const Subscriptions = () => {
                     </span>
                     {day.is_placeholder || !day.items?.length
                       ? <span className="italic" style={{ color: C.muted }}>Menu is on the way 🍱</span>
-                      : <span style={{ color: C.dark }}>{day.items.join(' · ')}</span>}
+                      : <span style={{ color: C.dark }}>{day.items.map(it => typeof it === 'string' ? it : it.name).join(' · ')}</span>}
                   </div>
                 ))}
               </div>
@@ -784,37 +784,72 @@ const Subscriptions = () => {
                   <button onClick={() => fetchMenu(menuTab)} className="text-xs font-semibold px-4 py-2 rounded" style={{ backgroundColor: C.primary, color: 'white' }}>Retry</button>
                 </div>
               ) : currentMenuData ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => {
                     const isPast = new Date(date + 'T23:59:59') < new Date();
-                    const allPlaceholder = day.is_placeholder || !day.items || day.items.length === 0;
+                    const items = day.items || [];
+                    const allPlaceholder = day.is_placeholder || items.length === 0;
+                    const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
                     return (
-                      <div key={date} className="flex gap-3 rounded-xl overflow-hidden"
-                        style={{ backgroundColor: 'white', border: '0.5px solid #e0d9d0', opacity: isPast ? 0.45 : 1 }}>
-                        {/* Food image */}
-                        <div className="shrink-0 w-20 h-20 overflow-hidden" style={{ borderRadius: '0.75rem 0 0 0.75rem' }}>
-                          <img src={DAY_FOOD_IMGS[idx]} alt={WEEKDAY_FULL[idx]}
-                            className="w-full h-full object-cover" loading="lazy" />
-                        </div>
-                        {/* Content */}
-                        <div className="py-3 pr-3 flex-1 min-w-0 flex flex-col justify-center">
-                          <div className="flex items-baseline gap-2 mb-1">
-                            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: C.primary }}>{WEEKDAY_LABELS[idx]}</p>
-                            <p className="text-[10px]" style={{ color: C.muted }}>{new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
-                            {isPast && <p className="text-[9px] ml-auto" style={{ color: C.muted }}>Passed</p>}
+                      <div key={date} className="rounded-2xl overflow-hidden"
+                        style={{ backgroundColor: 'white', border: '0.5px solid #e0d9d0', opacity: isPast ? 0.5 : 1 }}>
+
+                        {/* Day header bar */}
+                        <div className="flex items-center justify-between px-4 py-2.5"
+                          style={{ backgroundColor: idx === 0 ? C.primary : C.surface, borderBottom: '0.5px solid #f0ebe6' }}>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-bold" style={{ color: idx === 0 ? 'white' : C.primary }}>{WEEKDAY_FULL[idx]}</p>
+                            <p className="text-xs" style={{ color: idx === 0 ? 'rgba(255,255,255,0.7)' : C.muted }}>{dateLabel}</p>
                           </div>
-                          {allPlaceholder ? (
-                            <p className="text-xs italic" style={{ color: C.muted }}>Menu is on the way 🍱</p>
-                          ) : (
-                            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                              {(day.items || []).map((item, i) => (
-                                <span key={i} className="text-xs" style={{ color: i === 0 ? C.dark : C.muted, fontWeight: i === 0 ? 600 : 400 }}>
-                                  {i > 0 && <span style={{ color: '#d1c4b8' }}>·</span>} {item}
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                          {isPast && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,0,0,0.08)', color: idx === 0 ? 'white' : C.muted }}>Passed</span>}
                         </div>
+
+                        {/* Dish cards */}
+                        {allPlaceholder ? (
+                          <div className="px-4 py-5 flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                              style={{ backgroundColor: C.surface }}>🍱</div>
+                            <p className="text-sm italic" style={{ color: C.muted }}>Menu is on the way — check back soon</p>
+                          </div>
+                        ) : (
+                          <div className="flex gap-3 px-4 py-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                            {items.map((item, i) => {
+                              const name = typeof item === 'string' ? item : item.name;
+                              const img  = typeof item === 'object' ? item.image : null;
+                              const isMain = i === 0;
+                              return (
+                                <div key={i} className="shrink-0 flex flex-col items-center"
+                                  style={{ width: isMain ? 96 : 80 }}>
+                                  {/* Dish image */}
+                                  <div className="overflow-hidden mb-1.5"
+                                    style={{ width: isMain ? 88 : 72, height: isMain ? 88 : 72, borderRadius: 12,
+                                      border: isMain ? `2px solid ${C.primary}` : '1px solid #e0d9d0', flexShrink: 0 }}>
+                                    {img ? (
+                                      <img src={img} alt={name}
+                                        className="w-full h-full object-cover" loading="lazy"
+                                        onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
+                                      />
+                                    ) : null}
+                                    <div className="w-full h-full items-center justify-center text-2xl"
+                                      style={{ display: img ? 'none' : 'flex', backgroundColor: isMain ? 'rgba(128,0,32,0.06)' : C.surface }}>
+                                      🍛
+                                    </div>
+                                  </div>
+                                  {/* Dish name */}
+                                  <p className="text-center leading-tight"
+                                    style={{ fontSize: 10, fontWeight: isMain ? 700 : 400, color: isMain ? C.dark : C.muted,
+                                      width: isMain ? 88 : 72, wordBreak: 'break-word' }}>
+                                    {name}
+                                  </p>
+                                  {isMain && (
+                                    <span className="mt-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                                      style={{ backgroundColor: C.amberLight, color: C.amberText }}>Main</span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1074,7 +1109,7 @@ const Subscriptions = () => {
                     {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => (
                       <div key={date} className="flex items-start gap-3 px-5 py-3" style={{ borderBottom: idx < 4 ? '0.5px solid #f0ebe6' : 'none' }}>
                         <p className="text-xs font-semibold w-10 shrink-0 pt-0.5" style={{ color: C.muted }}>{WEEKDAY_LABELS[idx]}</p>
-                        <p className="text-xs" style={{ color: C.dark }}>{day.is_placeholder || !day.items?.length ? 'Menu is on the way 🍱' : day.items.join(' · ')}</p>
+                        <p className="text-xs" style={{ color: C.dark }}>{day.is_placeholder || !day.items?.length ? 'Menu is on the way 🍱' : day.items.map(it => typeof it === 'string' ? it : it.name).join(' · ')}</p>
                       </div>
                     ))}
                   </div>

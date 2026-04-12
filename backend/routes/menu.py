@@ -68,8 +68,25 @@ async def get_weekly_preview(
         if doc:
             # Normalize docs saved in old format (main/side/accompaniment/extra) to items list
             if 'items' not in doc or not doc.get('items'):
-                old_items = [doc.get(f, '') for f in ('main', 'side', 'accompaniment', 'extra') if doc.get(f, '').strip()]
-                doc['items'] = old_items
+                raw = [doc.get(f, '') for f in ('main', 'side', 'accompaniment', 'extra') if doc.get(f, '').strip()]
+                doc['items'] = raw
+
+            # Enrich each item string with image from menu_items collection
+            enriched = []
+            for item in (doc.get('items') or []):
+                if isinstance(item, dict):
+                    enriched.append(item)  # already enriched
+                else:
+                    name = str(item).strip()
+                    menu_doc = await db.menu_items.find_one(
+                        {"name": {"$regex": f"^{name}$", "$options": "i"}},
+                        {"_id": 0, "image": 1, "name": 1}
+                    )
+                    enriched.append({
+                        "name": name,
+                        "image": menu_doc.get("image") if menu_doc else None,
+                    })
+            doc['items'] = enriched
             results[d] = doc
         else:
             results[d] = {
