@@ -224,7 +224,7 @@ const Subscriptions = () => {
   useEffect(() => {
     const tabCfg = menuTab === 1 ? weekCfg.tab1 : weekCfg.tab2;
     setSelectedStartWeek(isoDate(tabCfg.monday));
-  }, [menuTab]);
+  }, [menuTab, weekCfg.tab1, weekCfg.tab2]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* fetch menu for a tab */
   const fetchMenu = useCallback(async (tabNum) => {
@@ -248,7 +248,7 @@ const Subscriptions = () => {
       fetchMenu(1);
       fetchMenu(2);
     }
-  }, [step, selectedBox]);
+  }, [step, selectedBox, fetchMenu]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* postcode validation */
   const checkPostcode = useCallback(async (pc) => {

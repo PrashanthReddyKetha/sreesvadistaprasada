@@ -1527,7 +1527,7 @@ function DabbaMenuPlanner() {
       Object.entries(s.data.days || {}).forEach(([date, day]) => { newCells[`${date}_svadista`] = { main:day.main||'', side:day.side||'', accompaniment:day.accompaniment||'', extra:day.extra||'', status:day.status||'empty' }; });
       setCells(newCells);
     }).catch(() => {});
-  }, [selectedWeek]);
+  }, [selectedWeek, BOX_ROWS, weekMondayDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateCell = (date, box, field, value) => {
     setCells(prev => ({ ...prev, [`${date}_${box}`]: { ...(prev[`${date}_${box}`]||{}), [field]:value, status: (prev[`${date}_${box}`]?.status==='published'?'published':'draft') } }));
