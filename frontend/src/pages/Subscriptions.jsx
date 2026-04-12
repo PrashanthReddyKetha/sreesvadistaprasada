@@ -783,78 +783,113 @@ const Subscriptions = () => {
                   <p className="text-sm text-red-600 mb-3">{menuError[menuTab]}</p>
                   <button onClick={() => fetchMenu(menuTab)} className="text-xs font-semibold px-4 py-2 rounded" style={{ backgroundColor: C.primary, color: 'white' }}>Retry</button>
                 </div>
-              ) : currentMenuData ? (
-                <div className="space-y-4">
-                  {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => {
-                    const isPast = new Date(date + 'T23:59:59') < new Date();
-                    const items = day.items || [];
-                    const allPlaceholder = day.is_placeholder || items.length === 0;
-                    const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                    return (
-                      <div key={date} className="rounded-2xl overflow-hidden"
-                        style={{ backgroundColor: 'white', border: '0.5px solid #e0d9d0', opacity: isPast ? 0.5 : 1 }}>
+              ) : currentMenuData ? (() => {
+                // Calculate total savings across days with menu data
+                const daysWithMenu = Object.values(currentMenuData.days || {}).filter(d => !d.is_placeholder && d.items?.length);
+                const totalRetail = daysWithMenu.reduce((sum, d) =>
+                  sum + (d.items || []).reduce((s, it) => s + (typeof it === 'object' && it.price ? it.price : 0), 0), 0);
+                const perMealPlan = planData?.perMeal || 0;
+                const mealsWithPrices = daysWithMenu.filter(d => (d.items||[]).some(it => typeof it === 'object' && it.price));
+                const avgRetailPerMeal = mealsWithPrices.length ? totalRetail / mealsWithPrices.length : 0;
+                const weekSaving = mealsWithPrices.length ? (avgRetailPerMeal - perMealPlan) * mealsWithPrices.length : 0;
+                const showSavings = weekSaving > 1;
 
-                        {/* Day header bar */}
-                        <div className="flex items-center justify-between px-4 py-2.5"
-                          style={{ backgroundColor: idx === 0 ? C.primary : C.surface, borderBottom: '0.5px solid #f0ebe6' }}>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-bold" style={{ color: idx === 0 ? 'white' : C.primary }}>{WEEKDAY_FULL[idx]}</p>
-                            <p className="text-xs" style={{ color: idx === 0 ? 'rgba(255,255,255,0.7)' : C.muted }}>{dateLabel}</p>
-                          </div>
-                          {isPast && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,0,0,0.08)', color: idx === 0 ? 'white' : C.muted }}>Passed</span>}
-                        </div>
+                return (
+                  <div className="space-y-3">
+                    {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => {
+                      const isPast = new Date(date + 'T23:59:59') < new Date();
+                      const items = day.items || [];
+                      const allPlaceholder = day.is_placeholder || items.length === 0;
+                      const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                      const dayRetail = items.reduce((s, it) => s + (typeof it === 'object' && it.price ? it.price : 0), 0);
+                      const daySaving = dayRetail > 0 ? dayRetail - perMealPlan : 0;
 
-                        {/* Dish cards */}
-                        {allPlaceholder ? (
-                          <div className="px-4 py-5 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-                              style={{ backgroundColor: C.surface }}>🍱</div>
-                            <p className="text-sm italic" style={{ color: C.muted }}>Menu is on the way — check back soon</p>
+                      return (
+                        <div key={date} className="rounded-2xl overflow-hidden"
+                          style={{ backgroundColor: 'white', border: '0.5px solid #e0d9d0', opacity: isPast ? 0.5 : 1 }}>
+
+                          {/* Day header */}
+                          <div className="flex items-center justify-between px-4 py-2.5"
+                            style={{ backgroundColor: C.surface, borderBottom: '0.5px solid #f0ebe6' }}>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-bold" style={{ color: C.primary }}>{WEEKDAY_FULL[idx]}</p>
+                              <p className="text-xs" style={{ color: C.muted }}>{dateLabel}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {daySaving > 1 && !allPlaceholder && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                  style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
+                                  Save £{daySaving.toFixed(0)} today
+                                </span>
+                              )}
+                              {isPast && <span className="text-[10px]" style={{ color: C.muted }}>Passed</span>}
+                            </div>
                           </div>
-                        ) : (
-                          <div className="flex gap-3 px-4 py-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                            {items.map((item, i) => {
-                              const name = typeof item === 'string' ? item : item.name;
-                              const img  = typeof item === 'object' ? item.image : null;
-                              const isMain = i === 0;
-                              return (
-                                <div key={i} className="shrink-0 flex flex-col items-center"
-                                  style={{ width: isMain ? 96 : 80 }}>
-                                  {/* Dish image */}
-                                  <div className="overflow-hidden mb-1.5"
-                                    style={{ width: isMain ? 88 : 72, height: isMain ? 88 : 72, borderRadius: 12,
-                                      border: isMain ? `2px solid ${C.primary}` : '1px solid #e0d9d0', flexShrink: 0 }}>
-                                    {img ? (
-                                      <img src={img} alt={name}
-                                        className="w-full h-full object-cover" loading="lazy"
-                                        onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
-                                      />
-                                    ) : null}
-                                    <div className="w-full h-full items-center justify-center text-2xl"
-                                      style={{ display: img ? 'none' : 'flex', backgroundColor: isMain ? 'rgba(128,0,32,0.06)' : C.surface }}>
-                                      🍛
+
+                          {/* Dish cards */}
+                          {allPlaceholder ? (
+                            <div className="px-4 py-5 flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                                style={{ backgroundColor: C.surface }}>🍱</div>
+                              <p className="text-sm italic" style={{ color: C.muted }}>Menu is on the way — check back soon</p>
+                            </div>
+                          ) : (
+                            <div className="flex items-start px-4 py-3 overflow-x-auto gap-0" style={{ scrollbarWidth: 'none' }}>
+                              {items.map((item, i) => {
+                                const name = typeof item === 'string' ? item : item.name;
+                                const img  = typeof item === 'object' ? item.image : null;
+                                return (
+                                  <React.Fragment key={i}>
+                                    {i > 0 && (
+                                      <div className="flex items-center self-stretch px-1 shrink-0"
+                                        style={{ color: '#d1c4b8', fontSize: 16, paddingTop: 28 }}>+</div>
+                                    )}
+                                    <div className="flex flex-col items-center shrink-0" style={{ width: 76 }}>
+                                      <div className="overflow-hidden mb-1.5"
+                                        style={{ width: 68, height: 68, borderRadius: 10, border: '1px solid #e0d9d0', flexShrink: 0 }}>
+                                        {img ? (
+                                          <img src={img} alt={name} className="w-full h-full object-cover" loading="lazy"
+                                            onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
+                                        ) : null}
+                                        <div className="w-full h-full items-center justify-center text-xl"
+                                          style={{ display: img ? 'none' : 'flex', backgroundColor: C.surface }}>🍛</div>
+                                      </div>
+                                      <p className="text-center leading-tight"
+                                        style={{ fontSize: 10, color: C.dark, width: 68, wordBreak: 'break-word' }}>
+                                        {name}
+                                      </p>
                                     </div>
-                                  </div>
-                                  {/* Dish name */}
-                                  <p className="text-center leading-tight"
-                                    style={{ fontSize: 10, fontWeight: isMain ? 700 : 400, color: isMain ? C.dark : C.muted,
-                                      width: isMain ? 88 : 72, wordBreak: 'break-word' }}>
-                                    {name}
-                                  </p>
-                                  {isMain && (
-                                    <span className="mt-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
-                                      style={{ backgroundColor: C.amberLight, color: C.amberText }}>Main</span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
+                                  </React.Fragment>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Weekly savings summary */}
+                    {showSavings && (
+                      <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl"
+                        style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+                        <span style={{ fontSize: 15 }}>💰</span>
+                        <div>
+                          <span className="text-xs font-bold" style={{ color: '#166534' }}>
+                            You save ~£{(avgRetailPerMeal - perMealPlan).toFixed(0)} per meal
+                          </span>
+                          <span className="text-xs" style={{ color: '#166534' }}> · </span>
+                          <span className="text-xs font-bold" style={{ color: '#166534' }}>
+                            ~£{weekSaving.toFixed(0)} this week
+                          </span>
+                          <span className="text-[10px] ml-1" style={{ color: '#4ADE80' }}>
+                            vs ordering these dishes individually
+                          </span>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              ) : null}
+                    )}
+                  </div>
+                );
+              })() : null}
 
               {/* "Menu keeps changing" note — after the days, not at top */}
               <div className="mt-5">

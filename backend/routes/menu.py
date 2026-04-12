@@ -80,11 +80,12 @@ async def get_weekly_preview(
                     name = str(item).strip()
                     menu_doc = await db.menu_items.find_one(
                         {"name": {"$regex": f"^{name}$", "$options": "i"}},
-                        {"_id": 0, "image": 1, "name": 1}
+                        {"_id": 0, "image": 1, "name": 1, "price": 1}
                     )
                     enriched.append({
                         "name": name,
                         "image": menu_doc.get("image") if menu_doc else None,
+                        "price": menu_doc.get("price") if menu_doc else None,
                     })
             doc['items'] = enriched
             results[d] = doc
