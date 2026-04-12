@@ -222,6 +222,10 @@ async def get_weekly_preview(
         query = {"date": d, "box_type": box_type, **status_filter}
         doc = await db.weekly_menu_days.find_one(query, {"_id": 0})
         if doc:
+            # Normalize docs saved in old format (main/side/accompaniment/extra) to items list
+            if 'items' not in doc or not doc.get('items'):
+                old_items = [doc.get(f, '') for f in ('main', 'side', 'accompaniment', 'extra') if doc.get(f, '').strip()]
+                doc['items'] = old_items
             results[d] = doc
         else:
             results[d] = {

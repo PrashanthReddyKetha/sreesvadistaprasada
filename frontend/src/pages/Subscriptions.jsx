@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -261,7 +261,9 @@ const NavButtons = ({ step, onBack, onNext, nextDisabled, nextLabel }) => (
 /* ══════════════════════════════════════════════════════ */
 const Subscriptions = () => {
   const { user, setAuthOpen } = useAuth();
-  const weekCfg = getWeekConfig();
+  // useMemo prevents getWeekConfig() from returning a new object reference every render,
+  // which would break useCallback(fetchMenu) and cause an infinite fetch loop.
+  const weekCfg = useMemo(() => getWeekConfig(), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // wizard state
   const [step, setStep] = useState(1);
