@@ -27,6 +27,17 @@ const BOXES = [
   { id: 'svadista', name: 'Svadista box', icon: Flame, iconBg: '#FAECE7',   iconColor: C.primary, border: C.primary, desc: 'Non-vegetarian. Bold village flavours. Hearty and real.',    mostChosen: true  },
 ];
 
+// Review counts: start small, auto-grow by a fixed amount each week from launch date
+const REVIEW_COUNT_START_DATE = new Date('2026-04-14T00:00:00');
+function getLiveReviewCount(base, weeklyGrowth) {
+  const weeksLive = Math.max(0, Math.floor((Date.now() - REVIEW_COUNT_START_DATE) / (7 * 24 * 60 * 60 * 1000)));
+  return base + weeksLive * weeklyGrowth;
+}
+const BOX_SOCIAL = {
+  prasada:  { count: '30+', window: 'last 2 weeks', rating: 5, get reviewCount() { return getLiveReviewCount(8, 3); } },
+  svadista: { count: '75+', window: 'last 3 weeks', rating: 5, get reviewCount() { return getLiveReviewCount(14, 5); } },
+};
+
 const PREFS = [
   { id: 'no-onion',    label: 'No onion / garlic' },
   { id: 'less-spice',  label: 'Less spicy' },
@@ -125,11 +136,6 @@ const DAY_FOOD_IMGS = [
 ];
 
 /* Social proof */
-const BOX_SOCIAL = {
-  prasada:  { count: '30+', window: 'last 2 weeks', rating: 5, reviewCount: 142 },
-  svadista: { count: '75+', window: 'last 3 weeks', rating: 5, reviewCount: 289 },
-};
-
 const BOX_REVIEWS = {
   prasada: [
     { name: 'Ananya M.', text: 'The flavours took me right back to my grandmother\'s kitchen in Chennai.' },
@@ -298,6 +304,17 @@ const Subscriptions = () => {
   const [activeSub, setActiveSub] = useState(null);
   const [lapsedSub, setLapsedSub] = useState(null);
   const postcodeTimer = useRef(null);
+  const wizardTopRef  = useRef(null);
+
+  /* scroll to wizard top on every step change */
+  useEffect(() => {
+    if (pageState !== 'wizard') return;
+    const el = wizardTopRef.current;
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+  }, [step, pageState]);
 
   /* detect user state on mount */
   useEffect(() => {
@@ -635,6 +652,7 @@ const Subscriptions = () => {
         </div>
       )}
 
+      <div ref={wizardTopRef} />
       <StepIndicator step={step} />
 
       <section className="py-10 md:py-14 px-4 md:px-8">
@@ -666,8 +684,8 @@ const Subscriptions = () => {
                     <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-3" style={plan.badgeStyle}>{plan.badge}</span>
                     <p className="font-semibold mb-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: C.primary }}>{plan.name}</p>
                     <p className="mb-1" style={{ fontSize: 24, fontWeight: 500, color: C.primary }}>£{plan.price}</p>
-                    <p className="text-sm" style={{ color: C.muted }}>{plan.meals} meals · Mon–Fri</p>
-                    <p className="text-xs" style={{ color: C.muted }}>£{plan.perMeal} per meal</p>
+                    <p className="text-sm" style={{ color: C.muted }}>{plan.meals} meals · Mon–Fri · Serves 1</p>
+                    <p className="text-xs" style={{ color: C.muted }}>£{plan.perMeal} per meal · Lunch delivery 12–2pm</p>
                     {selectedPlan === plan.id && <div className="absolute top-4 right-4"><Check size={16} style={{ color: C.primary }} /></div>}
                   </button>
                 ))}
@@ -689,7 +707,13 @@ const Subscriptions = () => {
           {step === 2 && (
             <div>
               <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Choose your box</h2>
-              <p className="text-sm mb-6" style={{ color: C.muted }}>Two boxes. Each one has its own personality — find yours.</p>
+              <div className="flex items-center gap-4 mb-5 flex-wrap">
+                <p className="text-sm" style={{ color: C.muted }}>Two boxes. Each one has its own personality — find yours.</p>
+                <div className="flex items-center gap-3 ml-auto shrink-0">
+                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: C.amberLight, color: C.amberText }}>🕛 Lunch only · 12–2pm</span>
+                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: C.surface, color: C.muted, border: '0.5px solid #e0d9d0' }}>👤 Serves 1</span>
+                </div>
+              </div>
 
               <div className="flex flex-col gap-5">
                 {BOXES.map(box => {
@@ -816,6 +840,9 @@ const Subscriptions = () => {
                               <p className="text-xs" style={{ color: C.muted }}>{dateLabel}</p>
                             </div>
                             <div className="flex items-center gap-2">
+                              {!allPlaceholder && !isPast && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: C.surface, color: C.muted, border: '0.5px solid #e0d9d0' }}>👤 Serves 1</span>
+                              )}
                               {daySaving > 1 && !allPlaceholder && (
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                                   style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
