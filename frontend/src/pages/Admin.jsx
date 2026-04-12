@@ -1497,6 +1497,8 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
 }
 
 /* ── Menu Planner ──────────────────────────────────────── */
+const BOX_ROWS = ['prasada', 'svadista'];
+
 function DabbaMenuPlanner() {
   const today = new Date();
   const getMonday = (d) => { const date = new Date(d); const diff = date.getDay()===0?-6:1-date.getDay(); date.setDate(date.getDate()+diff); return date; };
@@ -1515,7 +1517,6 @@ function DabbaMenuPlanner() {
   const weekMondayDate = selectedWeek === 1 ? nextMonday : weekAfterMonday;
   const weekDates = Array.from({length:5}, (_,i) => { const d = new Date(weekMondayDate); d.setDate(d.getDate()+i); return d.toISOString().split('T')[0]; });
   const DAY_LABELS = ['MON','TUE','WED','THU','FRI'];
-  const BOX_ROWS = ['prasada', 'svadista'];
 
   useEffect(() => {
     const monday = weekMondayDate.toISOString().split('T')[0];
@@ -1527,7 +1528,7 @@ function DabbaMenuPlanner() {
       Object.entries(s.data.days || {}).forEach(([date, day]) => { newCells[`${date}_svadista`] = { main:day.main||'', side:day.side||'', accompaniment:day.accompaniment||'', extra:day.extra||'', status:day.status||'empty' }; });
       setCells(newCells);
     }).catch(() => {});
-  }, [selectedWeek, BOX_ROWS, weekMondayDate]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedWeek, weekMondayDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateCell = (date, box, field, value) => {
     setCells(prev => ({ ...prev, [`${date}_${box}`]: { ...(prev[`${date}_${box}`]||{}), [field]:value, status: (prev[`${date}_${box}`]?.status==='published'?'published':'draft') } }));
