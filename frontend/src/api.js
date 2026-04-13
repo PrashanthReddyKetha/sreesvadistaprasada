@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: (process.env.REACT_APP_BACKEND_URL || 'https://svadista-backend.onrender.com') + '/api',
-});
+const BASE = (process.env.REACT_APP_BACKEND_URL || 'https://svadista-backend.onrender.com') + '/api';
+
+// Wake Render backend immediately on page load (prevents cold-start delay on first real request)
+axios.get(`${BASE}/health`).catch(() => {});
+
+const api = axios.create({ baseURL: BASE });
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('ssp_token');
