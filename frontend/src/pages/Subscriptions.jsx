@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom';
 import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star, CreditCard, Lock } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, CardPostalCodeElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, PostalCodeElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -1320,7 +1320,7 @@ const SubscriptionsInner = () => {
                               <CardCvcElement options={CARD_STYLE} placeholder="CVC" />
                             </div>
                             <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: C.cream }}>
-                              <CardPostalCodeElement options={CARD_STYLE} placeholder="Postcode" />
+                              <PostalCodeElement options={CARD_STYLE} placeholder="Postcode" />
                             </div>
                           </div>
                         </div>

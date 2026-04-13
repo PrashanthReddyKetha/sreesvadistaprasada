@@ -6,7 +6,7 @@ import {
   LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, CardPostalCodeElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, PostalCodeElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
@@ -753,7 +753,7 @@ const CheckoutInner = () => {
                         <CardCvcElement options={CARD_STYLE} placeholder="CVC" />
                       </div>
                       <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
-                        <CardPostalCodeElement options={CARD_STYLE} placeholder="Postcode" />
+                        <PostalCodeElement options={CARD_STYLE} placeholder="Postcode" />
                       </div>
                     </div>
                   </div>
