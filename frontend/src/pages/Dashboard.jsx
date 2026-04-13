@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, ArrowLeft, Send, CheckCheck, Leaf, Flame, Shield } from 'lucide-react';
+import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, CheckCheck, Leaf, Flame, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
+import SubActiveCard, { BOX_META, DishCards, daysUntil } from '../components/dashboard/SubActiveCard';
+import EnquiriesTab from '../components/dashboard/EnquiriesTab';
 
 /* ── helpers ─────────────────────────────────────────── */
 const STATUS_COLORS = {
@@ -402,19 +404,34 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
 }
 
 /* ══ Subscriptions ════════════════════════════════════ */
-const BOX_META = {
-  prasada:  { icon: Leaf,     color: '#4A7C59', label: 'Prasada Box' },
-  svadista: { icon: Flame,    color: '#8B3A3A', label: 'Svadista Box' },
-};
-
 function fmtDay(iso) {
   if (!iso) return '—';
   return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function daysUntil(iso) {
-  if (!iso) return null;
-  return Math.ceil((new Date(iso + 'T23:59:59') - new Date()) / (1000 * 60 * 60 * 24));
+function PrevSubDetails({ sub }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="mt-6 max-w-sm mx-auto">
+      <button onClick={() => setExpanded(e => !e)} className="text-sm font-semibold flex items-center gap-1 mx-auto" style={{ color: '#9C7B6B' }}>
+        Your previous subscription {expanded ? <ChevronDown size={14} style={{ transform:'rotate(180deg)' }} /> : <ChevronDown size={14} />}
+      </button>
+      {expanded && (
+        <div className="mt-3 rounded-xl p-4 text-left" style={{ backgroundColor: '#F9F6EE', border: '0.5px solid #e0d9d0' }}>
+          {[
+            ['Plan', sub.plan?.charAt(0).toUpperCase() + sub.plan?.slice(1)],
+            ['Box', BOX_META[sub.box_type]?.label || sub.box_type],
+            ['Started', sub.start_date ? new Date(sub.start_date + 'T12:00:00').toLocaleDateString('en-GB') : '—'],
+            ['Ended', sub.end_date ? new Date(sub.end_date + 'T12:00:00').toLocaleDateString('en-GB') : '—'],
+          ].map(([k, v]) => (
+            <div key={k} className="flex justify-between text-sm py-1.5" style={{ borderBottom: '0.5px solid #e0d9d0' }}>
+              <span style={{ color: '#9C7B6B' }}>{k}</span><span style={{ color: '#2D2422' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function SubsTab({ subs, reload }) {
@@ -503,227 +520,6 @@ function SubsTab({ subs, reload }) {
   return <EmptyState icon={Calendar} message="No Dabba Wala subscription" sub="Sign up for our weekly meal plan." link="/subscriptions" linkLabel="Subscribe to Dabba Wala" />;
 }
 
-/* ── Dish card grid shared between wizard + dashboard ── */
-function DishCards({ items }) {
-  return (
-    <div className="flex items-start overflow-x-auto gap-0 pb-1" style={{ scrollbarWidth: 'none' }}>
-      {(items || []).map((item, i) => {
-        const name = typeof item === 'string' ? item : item.name;
-        const img  = typeof item === 'object' ? item.image : null;
-        return (
-          <React.Fragment key={i}>
-            {i > 0 && (
-              <div className="flex items-center self-stretch px-1 shrink-0"
-                style={{ color: '#d1c4b8', fontSize: 14, paddingTop: 24 }}>+</div>
-            )}
-            <div className="flex flex-col items-center shrink-0" style={{ width: 72 }}>
-              <div className="overflow-hidden mb-1"
-                style={{ width: 64, height: 64, borderRadius: 10, border: '1px solid #e0d9d0' }}>
-                {img ? (
-                  <img src={img} alt={name} className="w-full h-full object-cover" loading="lazy"
-                    onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
-                ) : null}
-                <div className="w-full h-full items-center justify-center text-lg"
-                  style={{ display: img ? 'none' : 'flex', backgroundColor: '#F9F6EE' }}>🍛</div>
-              </div>
-              <p className="text-center leading-tight" style={{ fontSize: 9, color: '#5C4B47', width: 64, wordBreak: 'break-word' }}>{name}</p>
-            </div>
-          </React.Fragment>
-        );
-      })}
-    </div>
-  );
-}
-
-/* Sub-components for SubsTab */
-function SubActiveCard({ sub }) {
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [weekMenu, setWeekMenu]       = useState(null);
-  const [menuLoading, setMenuLoading] = useState(false);
-
-  const today = new Date().toISOString().split('T')[0];
-  const boxMeta = BOX_META[sub.box_type] || BOX_META.prasada;
-  const addr = sub.delivery_address;
-  const daysLeft = daysUntil(sub.end_date);
-
-  // Get this week's Monday using local date parts
-  const thisWeekMonday = useMemo(() => {
-    const d = new Date();
-    const diff = d.getDay() === 0 ? -6 : 1 - d.getDay();
-    d.setDate(d.getDate() + diff);
-    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
-    return `${y}-${m}-${day}`;
-  }, []);
-
-  useEffect(() => {
-    if (!sub.box_type) return;
-    setMenuLoading(true);
-    api.get(`/menu/weekly-preview?week=${thisWeekMonday}&box_type=${sub.box_type}`)
-      .then(r => setWeekMenu(r.data))
-      .catch(() => {})
-      .finally(() => setMenuLoading(false));
-  }, [sub.box_type, thisWeekMonday]);
-
-  // Savings calculation
-  const savingsInfo = useMemo(() => {
-    if (!weekMenu) return null;
-    const days = Object.values(weekMenu.days || {}).filter(d => !d.is_placeholder && d.items?.length);
-    const totalRetail = days.reduce((s, d) =>
-      s + (d.items||[]).reduce((a, it) => a + (typeof it==='object' && it.price ? it.price : 0), 0), 0);
-    const mealsWithPrices = days.filter(d => (d.items||[]).some(it => typeof it==='object' && it.price));
-    if (!mealsWithPrices.length) return null;
-    const perMealPlan = sub.plan === 'monthly' ? 8 : 9;
-    const avgRetail = totalRetail / mealsWithPrices.length;
-    const weekSaving = (avgRetail - perMealPlan) * mealsWithPrices.length;
-    if (weekSaving < 1) return null;
-    return { perMeal: (avgRetail - perMealPlan).toFixed(0), week: weekSaving.toFixed(0) };
-  }, [weekMenu, sub.plan]);
-
-  // Hero banner
-  let heroBg = '#800020', heroText = 'Next delivery coming up', heroSub = '';
-  if (daysLeft !== null && daysLeft <= 0) {
-    heroBg = '#B8860B'; heroText = 'This week is confirmed ✅'; heroSub = 'Your meals are being prepared.';
-  } else if (daysLeft === 1) {
-    heroBg = '#4A7C59'; heroText = 'Your delivery is tomorrow 🍱'; heroSub = 'Lunch · arriving 12–2pm';
-  } else if (sub.start_date === today) {
-    heroBg = '#F4C430'; heroText = 'Your delivery is on its way today'; heroSub = 'Arriving between 12pm and 2pm';
-  } else {
-    heroText = `Next delivery: ${sub.start_date ? new Date(sub.start_date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'}) : '—'}`;
-    heroSub = daysLeft !== null ? `${daysLeft} days away` : '';
-  }
-
-  const WEEKDAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-
-  return (
-    <div className="space-y-4">
-      {/* Hero banner */}
-      <div className="rounded-2xl p-5" style={{ backgroundColor: heroBg }}>
-        <p className="text-lg font-bold mb-1"
-          style={{ color: heroBg === '#F4C430' ? '#2D2422' : 'white', fontFamily: "'Playfair Display', serif" }}>{heroText}</p>
-        {heroSub && <p className="text-sm" style={{ color: heroBg === '#F4C430' ? 'rgba(45,36,34,0.7)' : 'rgba(255,255,255,0.8)' }}>{heroSub}</p>}
-      </div>
-
-      {/* This week's menu */}
-      <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(244,196,48,0.2)', backgroundColor: '#FDFBF7' }}>
-        <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '0.5px solid rgba(244,196,48,0.15)' }}>
-          <p className="font-semibold text-sm" style={{ color: '#800020' }}>This week's meals</p>
-          {savingsInfo && (
-            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full"
-              style={{ backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0' }}>
-              💰 Save ~£{savingsInfo.perMeal}/meal · £{savingsInfo.week} this week
-            </span>
-          )}
-        </div>
-
-        {menuLoading ? (
-          <div className="px-5 py-6 flex justify-center">
-            <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: '#800020', borderTopColor: 'transparent' }} />
-          </div>
-        ) : weekMenu ? (
-          <div className="divide-y" style={{ borderColor: 'rgba(244,196,48,0.1)' }}>
-            {Object.entries(weekMenu.days || {}).map(([date, day], idx) => {
-              const isPast = new Date(date + 'T23:59:59') < new Date();
-              const items = day.items || [];
-              const isToday = date === today;
-              return (
-                <div key={date} className="px-4 py-3" style={{ opacity: isPast && !isToday ? 0.5 : 1 }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <p className="text-xs font-bold" style={{ color: isToday ? '#166534' : '#800020' }}>{WEEKDAYS[idx]}</p>
-                    <p className="text-[10px]" style={{ color: '#9C7B6B' }}>
-                      {new Date(date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
-                    </p>
-                    {isToday && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor:'#DCFCE7',color:'#166534'}}>Today</span>}
-                    {isPast && !isToday && <span className="text-[9px]" style={{ color:'#9C7B6B'}}>Passed</span>}
-                  </div>
-                  {day.is_placeholder || items.length === 0 ? (
-                    <p className="text-xs italic" style={{ color: '#9C7B6B' }}>Menu is on the way 🍱</p>
-                  ) : (
-                    <DishCards items={items} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="px-5 py-4 text-sm italic" style={{ color: '#9C7B6B' }}>Could not load this week's menu.</p>
-        )}
-      </div>
-
-      {/* Subscription details (collapsible) */}
-      <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(244,196,48,0.2)', backgroundColor: '#FDFBF7' }}>
-        <button onClick={() => setDetailsOpen(e => !e)} className="w-full flex items-center justify-between p-5 text-left">
-          <p className="font-semibold text-sm" style={{ color: '#800020' }}>Subscription details</p>
-          {detailsOpen ? <ChevronUp size={16} style={{ color: '#9C7B6B' }} /> : <ChevronDown size={16} style={{ color: '#9C7B6B' }} />}
-        </button>
-        {detailsOpen && (
-          <div className="px-5 pb-5 space-y-3" style={{ borderTop: '1px solid rgba(244,196,48,0.15)' }}>
-            {[
-              ['Plan', sub.plan?.charAt(0).toUpperCase() + sub.plan?.slice(1) + ' Plan'],
-              ['Box', boxMeta.label],
-              ['Price', `£${sub.price}`],
-              ['Start date', sub.start_date ? new Date(sub.start_date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '—'],
-              ['End date', sub.end_date ? new Date(sub.end_date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '—'],
-              ['Delivering to', addr ? (typeof addr==='string' ? addr : `${addr.line1}, ${addr.city}, ${addr.postcode}`) : '—'],
-              ['If not home', sub.delivery_instruction || '—'],
-            ].map(([k, v]) => (
-              <div key={k} className="flex justify-between items-start gap-4">
-                <p className="text-xs font-semibold shrink-0" style={{ color: '#B8860B', minWidth: 90 }}>{k}</p>
-                <p className="text-sm text-right" style={{ color: '#3D2B1F' }}>{v}</p>
-              </div>
-            ))}
-            {sub.preferences?.length > 0 && (
-              <div className="flex justify-between items-start gap-4">
-                <p className="text-xs font-semibold shrink-0" style={{ color: '#B8860B', minWidth: 90 }}>Preferences</p>
-                <div className="flex flex-wrap gap-1 justify-end">
-                  {sub.preferences.map(p => <span key={p} className="px-2 py-0.5 rounded-full text-xs" style={{ backgroundColor:'rgba(128,0,32,0.08)',color:'#800020'}}>{p}</span>)}
-                </div>
-              </div>
-            )}
-            {sub.custom_request && (
-              <div className="flex justify-between items-start gap-4">
-                <p className="text-xs font-semibold shrink-0" style={{ color: '#B8860B', minWidth: 90 }}>Special request</p>
-                <p className="text-sm text-right italic" style={{ color: '#5C4B47' }}>{sub.custom_request}</p>
-              </div>
-            )}
-            <div className="pt-3 mt-3" style={{ borderTop: '1px solid rgba(128,0,32,0.08)' }}>
-              <p className="text-xs text-center" style={{ color: '#9C7B6B' }}>
-                Need to make a change?{' '}
-                <Link to="/dashboard" className="underline font-semibold" style={{ color: '#800020' }}>Contact us</Link>
-                {' '}— we aim to respond within 2 hours.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function PrevSubDetails({ sub }) {
-  const [expanded, setExpanded] = useState(false);
-  return (
-    <div className="mt-6 max-w-sm mx-auto">
-      <button onClick={() => setExpanded(e => !e)} className="text-sm font-semibold flex items-center gap-1 mx-auto" style={{ color: '#9C7B6B' }}>
-        Your previous subscription {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-      </button>
-      {expanded && (
-        <div className="mt-3 rounded-xl p-4 text-left" style={{ backgroundColor: '#F9F6EE', border: '0.5px solid #e0d9d0' }}>
-          {[
-            ['Plan', sub.plan?.charAt(0).toUpperCase() + sub.plan?.slice(1)],
-            ['Box', BOX_META[sub.box_type]?.label || sub.box_type],
-            ['Started', sub.start_date ? new Date(sub.start_date + 'T12:00:00').toLocaleDateString('en-GB') : '—'],
-            ['Ended', sub.end_date ? new Date(sub.end_date + 'T12:00:00').toLocaleDateString('en-GB') : '—'],
-          ].map(([k, v]) => (
-            <div key={k} className="flex justify-between text-sm py-1.5" style={{ borderBottom: '0.5px solid #e0d9d0' }}>
-              <span style={{ color: '#9C7B6B' }}>{k}</span><span style={{ color: '#2D2422' }}>{v}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 /* ══ Account ════════════════════════════════════════════ */
 function AccountTab({ user, login }) {
@@ -841,239 +637,4 @@ function EmptyState({ icon: Icon, message, sub, link, linkLabel }) {
   );
 }
 
-/* ══ Enquiries Tab ═══════════════════════════════════════ */
-const ENQ_STATUS_COLORS = {
-  new:       { bg:'#EFF6FF', text:'#1D4ED8' },
-  contacted: { bg:'#FFF8E1', text:'#B8860B' },
-  resolved:  { bg:'#DCFCE7', text:'#166534' },
-};
-function EnqBadge({ status }) {
-  const s = ENQ_STATUS_COLORS[status] || { bg:'#F3F4F6', text:'#374151' };
-  return (
-    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize"
-      style={{ backgroundColor: s.bg, color: s.text }}>{status}</span>
-  );
-}
 
-function EnquiriesTab({ enquiries, reload }) {
-  const [sub, setSub]               = useState('contact');
-  const [selected, setSelected]     = useState(null); // { type, enq }
-  const [messages, setMessages]     = useState([]);
-  const [msgLoading, setMsgLoading] = useState(false);
-  const [replyText, setReplyText]   = useState('');
-  const [sending, setSending]       = useState(false);
-  const pollRef                     = useRef(null);
-  const threadEndRef                = useRef(null);
-
-  const list = sub === 'contact' ? (enquiries.contact || []) : (enquiries.catering || []);
-  const totalUnread = [...(enquiries.contact||[]), ...(enquiries.catering||[])].reduce((s,e)=>s+(e.unread||0),0);
-
-  const openConversation = useCallback(async (type, enq) => {
-    setSelected({ type, enq });
-    setMessages([]);
-    setReplyText('');
-    setMsgLoading(true);
-    try {
-      const res = await api.get(`/enquiries/${type}/${enq.id}/messages`);
-      setMessages(res.data);
-      reload(); // refresh unread counts
-    } finally { setMsgLoading(false); }
-  }, [reload]);
-
-  useEffect(() => {
-    threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Poll every 8s while conversation open
-  useEffect(() => {
-    if (!selected) { clearInterval(pollRef.current); return; }
-    pollRef.current = setInterval(async () => {
-      try {
-        const res = await api.get(`/enquiries/${selected.type}/${selected.enq.id}/messages`);
-        setMessages(res.data);
-      } catch {}
-    }, 8000);
-    return () => clearInterval(pollRef.current);
-  }, [selected]);
-
-  const sendReply = async () => {
-    if (!replyText.trim() || !selected) return;
-    setSending(true);
-    try {
-      const res = await api.post(`/enquiries/${selected.type}/${selected.enq.id}/reply`, { text: replyText.trim() });
-      setMessages(m => [...m, res.data]);
-      setReplyText('');
-      reload();
-    } catch (e) {
-      alert(e.response?.data?.detail || 'Failed to send reply');
-    } finally { setSending(false); }
-  };
-
-  // ── List view ──────────────────────────────────────────
-  if (!selected) {
-    return (
-      <div className="space-y-4">
-        {/* Sub-tabs */}
-        <div className="flex gap-2">
-          {[['contact','Contact Messages', enquiries.contact?.length||0],
-            ['catering','Catering Enquiries', enquiries.catering?.length||0]].map(([key,label,count])=>(
-            <button key={key} onClick={()=>setSub(key)}
-              className="px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-              style={{ backgroundColor:sub===key?'#800020':'#FDFBF7', color:sub===key?'white':'#5C4B47',
-                       border:sub===key?'none':'1px solid rgba(128,0,32,0.15)' }}>
-              {label} ({count})
-            </button>
-          ))}
-        </div>
-
-        {list.length === 0 ? (
-          <EmptyState icon={MessageSquare} message="No enquiries yet"
-            sub="Have a question or special request? Get in touch with us."
-            link="/contact" linkLabel="Send an Enquiry" />
-        ) : (
-          <div className="space-y-3">
-            {list.map(enq => (
-              <div key={enq.id}
-                className="rounded-2xl p-4 cursor-pointer hover:shadow-md transition-shadow flex items-start gap-3"
-                style={{ backgroundColor:'#FDFBF7', border:`1px solid ${enq.unread ? '#FCA5A5' : 'rgba(244,196,48,0.2)'}` }}
-                onClick={() => openConversation(sub, enq)}>
-                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm"
-                  style={{ backgroundColor:'#800020' }}>
-                  {enq.name?.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                    <p className="font-semibold text-sm" style={{ color:'#3D2B1F' }}>{enq.name}</p>
-                    <EnqBadge status={enq.status} />
-                    {enq.unread > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white" style={{ backgroundColor:'#DC2626' }}>
-                        {enq.unread} new
-                      </span>
-                    )}
-                  </div>
-                  {sub === 'contact' && (
-                    <p className="text-xs font-medium mb-0.5" style={{ color:'#800020' }}>{enq.subject}</p>
-                  )}
-                  {sub === 'catering' && (
-                    <p className="text-xs font-medium mb-0.5" style={{ color:'#800020' }}>
-                      {enq.event_type} · {enq.guest_count} guests · {enq.event_date}
-                    </p>
-                  )}
-                  <p className="text-xs line-clamp-1" style={{ color:'#9C7B6B' }}>
-                    {sub === 'contact' ? enq.message : enq.additional_details || 'Catering enquiry'}
-                  </p>
-                </div>
-                <span className="text-[10px] text-gray-400 whitespace-nowrap flex-shrink-0">
-                  {new Date(enq.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' })}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ── Conversation view ──────────────────────────────────
-  const { type, enq } = selected;
-
-  return (
-    <div className="flex flex-col" style={{ minHeight:'60vh' }}>
-      {/* Header */}
-      <div className="rounded-2xl p-4 mb-3 flex items-start gap-3"
-        style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)' }}>
-        <button onClick={() => setSelected(null)}
-          className="p-2 rounded-xl hover:bg-[#800020]/10 transition-colors flex-shrink-0">
-          <ArrowLeft size={18} style={{ color:'#800020' }} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-bold" style={{ color:'#3D2B1F' }}>{enq.name}</p>
-            <EnqBadge status={enq.status} />
-          </div>
-          {type === 'contact' && enq.subject && (
-            <p className="text-sm font-medium mt-0.5" style={{ color:'#800020' }}>Re: {enq.subject}</p>
-          )}
-          {type === 'catering' && (
-            <p className="text-xs mt-0.5" style={{ color:'#9C7B6B' }}>
-              {enq.event_type} · {enq.guest_count} guests · {enq.event_date}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Original message */}
-      <div className="rounded-2xl p-4 mb-3 border-l-4" style={{ backgroundColor:'#FDFBF7', borderLeftColor:'#B8860B' }}>
-        <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color:'#B8860B' }}>
-          Your original message
-        </p>
-        {type === 'contact' ? (
-          <p className="text-sm leading-relaxed" style={{ color:'#3D2B1F' }}>{enq.message}</p>
-        ) : (
-          <p className="text-sm" style={{ color:'#3D2B1F' }}>
-            {enq.event_type} event for {enq.guest_count} guests on {enq.event_date}
-            {enq.additional_details ? ` — ${enq.additional_details}` : ''}
-          </p>
-        )}
-      </div>
-
-      {/* Thread */}
-      <div className="flex-1 rounded-2xl p-4 mb-3 overflow-y-auto space-y-3"
-        style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)', maxHeight:'320px' }}>
-        {msgLoading ? (
-          <div className="flex justify-center py-8"><RefreshCw size={18} className="animate-spin text-gray-400" /></div>
-        ) : messages.length === 0 ? (
-          <p className="text-center text-sm py-8" style={{ color:'#9C7B6B' }}>
-            No replies yet — we'll respond as soon as possible.
-          </p>
-        ) : (
-          <>
-            {messages.map(msg => {
-              const isAdmin = msg.sender === 'admin';
-              return (
-                <div key={msg.id} className={`flex ${isAdmin ? 'justify-start' : 'justify-end'}`}>
-                  <div className={`max-w-[78%] rounded-2xl px-4 py-2.5 ${isAdmin ? 'rounded-tl-sm' : 'rounded-tr-sm'}`}
-                    style={{ backgroundColor: isAdmin ? '#F3F4F6' : '#800020', color: isAdmin ? '#1F2937' : 'white' }}>
-                    <p className={`text-[10px] font-semibold mb-1 ${isAdmin ? 'text-gray-500' : 'text-[#F4C430]'}`}>
-                      {msg.sender_name}
-                    </p>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                    <p className={`text-[10px] mt-1.5 ${isAdmin ? 'text-gray-400' : 'text-white/60'}`}>
-                      {new Date(msg.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-            <div ref={threadEndRef} />
-          </>
-        )}
-      </div>
-
-      {/* Reply */}
-      <div className="rounded-2xl p-3 flex gap-2 items-end"
-        style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)' }}>
-        <textarea
-          value={replyText}
-          onChange={e => setReplyText(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); } }}
-          placeholder="Reply to the team… (Enter to send)"
-          rows={2}
-          className="flex-1 resize-none rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#800020]/30"
-          style={{ borderColor:'rgba(128,0,32,0.2)', color:'#3D2B1F', backgroundColor:'white' }}
-        />
-        <button onClick={sendReply} disabled={sending || !replyText.trim()}
-          className="p-3 rounded-xl text-white flex-shrink-0 disabled:opacity-40"
-          style={{ backgroundColor:'#800020' }}>
-          {sending ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
-        </button>
-      </div>
-
-      {enq.status === 'resolved' && (
-        <p className="text-xs text-center mt-2" style={{ color:'#166534' }}>
-          <CheckCircle size={12} className="inline mr-1" /> This enquiry is resolved. Replying will reopen it automatically.
-        </p>
-      )}
-    </div>
-  );
-}

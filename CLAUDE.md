@@ -1,5 +1,8 @@
 # Sree Svadista Prasada — Project Context for Claude Code
 
+## Response Style
+Minimal words. No pleasantries, no preamble, no summaries. Code only unless explanation is essential. One sentence max per thought. Never say "I'll now...", "Let me...", "Great!", or similar filler.
+
 ## What This Is
 A full-stack food ordering web app for an authentic South Indian restaurant serving Milton Keynes, Edinburgh, and Glasgow. Customers can browse menus, place orders, subscribe to a weekly meal plan (Dabba Wala), and contact the restaurant. Admins manage everything through a dashboard.
 
