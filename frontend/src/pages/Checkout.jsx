@@ -6,7 +6,7 @@ import {
   LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, PostalCodeElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
@@ -460,7 +460,7 @@ const CheckoutInner = () => {
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: {
           card: cardNumberElement,
-          billing_details: { name: form.name, email: form.email },
+          billing_details: { name: form.name, email: form.email, address: { postal_code: form.postcode } },
         },
       });
       if (stripeError) { setError(stripeError.message || 'Payment failed. Please try again.'); return; }
@@ -752,9 +752,14 @@ const CheckoutInner = () => {
                       <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
                         <CardCvcElement options={CARD_STYLE} placeholder="CVC" />
                       </div>
-                      <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
-                        <PostalCodeElement options={CARD_STYLE} placeholder="Postcode" />
-                      </div>
+                      <input
+                        type="text"
+                        value={form.postcode}
+                        onChange={e => set('postcode')(e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase())}
+                        placeholder="Postcode"
+                        className="p-3 rounded-xl border-2 text-sm focus:outline-none"
+                        style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7', color: '#2D2422' }}
+                      />
                     </div>
                   </div>
                 </div>

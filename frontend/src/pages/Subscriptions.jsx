@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom';
 import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star, CreditCard, Lock } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, PostalCodeElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -472,7 +472,7 @@ const SubscriptionsInner = () => {
       const { client_secret, payment_intent_id } = intentRes.data;
       // 2. Confirm card payment with individual elements
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
-        payment_method: { card: cardNumberElement, billing_details: { name: customer.name, email: customer.email } },
+        payment_method: { card: cardNumberElement, billing_details: { name: customer.name, email: customer.email, address: { postal_code: customer.postcode } } },
       });
       if (stripeError) { setSubmitStatus('error'); setErrorMessage(stripeError.message || 'Payment failed. Please try again.'); return; }
       if (paymentIntent.status !== 'succeeded') { setSubmitStatus('error'); setErrorMessage('Payment was not completed. Please try again.'); return; }
@@ -1320,7 +1320,14 @@ const SubscriptionsInner = () => {
                               <CardCvcElement options={CARD_STYLE} placeholder="CVC" />
                             </div>
                             <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: C.cream }}>
-                              <PostalCodeElement options={CARD_STYLE} placeholder="Postcode" />
+                              <input
+                                type="text"
+                                value={customer.postcode}
+                                onChange={e => setCustomer(prev => ({ ...prev, postcode: e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase() }))}
+                                placeholder="Postcode"
+                                className="w-full text-sm focus:outline-none bg-transparent"
+                                style={{ color: '#2D2422' }}
+                              />
                             </div>
                           </div>
                         </div>
