@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { heroSlides } from '../../data/mockData';
+import { heroSlides } from '../data/mockData';
 
 const HeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
