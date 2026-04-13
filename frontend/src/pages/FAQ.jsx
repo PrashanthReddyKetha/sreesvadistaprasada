@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
-import { faqData } from '../mockData';
+import { faqData } from '../data/mockData';
 
 const FAQ = () => {
   const [openItems, setOpenItems] = useState({});

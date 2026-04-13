@@ -20,6 +20,7 @@ const STATUS_COLORS = {
   pending:   { bg:'#FFF8E1', text:'#B8860B', border:'#F4C430' },
   confirmed: { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
   preparing: { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
+  out_for_delivery: { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
   delivered: { bg:'#F3E5F5', text:'#6A1B9A', border:'#9C27B0' },
   cancelled: { bg:'#FFEBEE', text:'#C62828', border:'#EF5350' },
   active:    { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
@@ -53,7 +54,8 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
 const ORDER_FLOW = {
   pending:   { next:'confirmed', label:'Confirm Order',    color:'#2E7D32' },
   confirmed: { next:'preparing', label:'Start Preparing',  color:'#1565C0' },
-  preparing: { next:'delivered', label:'Mark Delivered',   color:'#6A1B9A' },
+  preparing: { next:'out_for_delivery', label:'Out for Delivery',   color:'#1565C0' },
+  out_for_delivery: { next:'delivered', label:'Mark Delivered',   color:'#6A1B9A' },
 };
 
 const OrderActions = ({ order, onUpdate }) => {
@@ -76,7 +78,7 @@ const OrderActions = ({ order, onUpdate }) => {
           {flow.label}
         </button>
       )}
-      {['pending','confirmed','preparing'].includes(order.status) && (
+      {['pending','confirmed','preparing','out_for_delivery'].includes(order.status) && (
         <button onClick={() => handle('cancelled')} disabled={!!busy}
           className="px-2 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
           style={{ border:'1px solid #EF5350', color:'#C62828', backgroundColor:'transparent' }}>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, ShoppingCart, ArrowRight, Search } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import MenuLoader from '../components/MenuLoader';
-import api from '../api';
-import { getCached, setCached } from '../lib/menuCache';
+import { useCart } from '../../context/CartContext';
+import MenuLoader from '../../components/MenuLoader';
+import api from '../../api';
+import { getCached, setCached } from '../../api/menuCache';
 
 const categories = [
   { id: 'all', name: 'All Dishes' },
@@ -14,6 +14,7 @@ const categories = [
   { id: 'breakfast', name: 'Breakfast' },
   { id: 'streetFood', name: 'Street Food' },
   { id: 'drinks', name: 'Drinks' },
+  { id: 'naivedyam', name: '🪔 Naivedyam' },
   { id: 'pickles', name: 'Pickles' },
   { id: 'podis', name: 'Podis' },
 ];
@@ -36,7 +37,11 @@ const Menu = () => {
   }, []);
 
   const filtered = allDishes
-    .filter(dish => activeCategory === 'all' || dish.category === activeCategory)
+    .filter(dish => {
+      if (activeCategory === 'all') return true;
+      if (activeCategory === 'naivedyam') return dish.category === 'veg' && dish.subcategory === 'Rice Specials';
+      return dish.category === activeCategory;
+    })
     .filter(dish =>
       !searchQuery.trim() ||
       dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -118,37 +123,37 @@ const Menu = () => {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filtered.map((dish) => (
-                <div key={dish.id} className="rounded-lg overflow-hidden bg-white card-hover group" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }} data-testid={`menu-dish-${dish.id}`}>
-                  {dish.image && (
-                    <div className="relative h-40 overflow-hidden">
-                      <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
-                      <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-sm border-2 flex items-center justify-center bg-white/90"
-                        style={{ borderColor: dish.is_veg ? '#22c55e' : '#ef4444' }}>
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dish.is_veg ? '#22c55e' : '#ef4444' }} />
-                      </div>
-                    </div>
-                  )}
-                  <div className="p-4">
-                    {dish.spice_level > 0 && (
-                      <div className="flex gap-0.5 mb-1.5">
-                        {Array(dish.spice_level).fill(0).map((_, i) => (
-                          <Flame key={i} size={10} className="text-red-500 fill-red-500" />
-                        ))}
+                <Link key={dish.id} to={`/item/${dish.id}`} onClick={e => e.target.closest('button') && e.preventDefault()} data-testid={`menu-dish-${dish.id}`}>
+                  <div className="rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }}>
+                    {dish.image && (
+                      <div className="relative h-40 overflow-hidden">
+                        <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+                        <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-sm border-2 flex items-center justify-center bg-white/90"
+                          style={{ borderColor: dish.is_veg ? '#22c55e' : '#ef4444' }}>
+                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dish.is_veg ? '#22c55e' : '#ef4444' }} />
+                        </div>
                       </div>
                     )}
-                    <Link to={`/item/${dish.id}`}>
-                      <h3 className="text-sm font-bold mb-1 hover:underline" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
-                    </Link>
-                    <p className="text-xs text-gray-500 line-clamp-1 mb-2">{dish.description}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-base font-bold" style={{ color: '#800020' }}>£{dish.price.toFixed(2)}</span>
-                      <button onClick={() => addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` })} className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>
-                        <ShoppingCart size={11} /> Add
-                      </button>
+                    <div className="p-4 flex flex-col h-[180px]">
+                      {dish.spice_level > 0 && (
+                        <div className="flex gap-0.5 mb-1.5">
+                          {Array(dish.spice_level).fill(0).map((_, i) => (
+                            <Flame key={i} size={10} className="text-red-500 fill-red-500" />
+                          ))}
+                        </div>
+                      )}
+                      <h3 className="text-sm font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
+                      <p className="text-xs text-gray-500 line-clamp-1 mb-2 flex-1">{dish.description}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-base font-bold" style={{ color: '#800020' }}>£{dish.price.toFixed(2)}</span>
+                        <button onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` }); }} className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>
+                          <ShoppingCart size={11} /> Add
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

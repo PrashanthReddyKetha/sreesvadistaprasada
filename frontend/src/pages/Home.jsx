@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Truck, Calendar, MapPin, Search } from 'lucide-react';
-import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '../mockData';
+import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '../data/mockData';
 import HeroSlider from '../components/HeroSlider';
 import api from '../api';
 import { useCart } from '../context/CartContext';

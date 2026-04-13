@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User, ChevronDown } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import LogoMark from './LogoMark';
+import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
+import LogoMark from '../LogoMark';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

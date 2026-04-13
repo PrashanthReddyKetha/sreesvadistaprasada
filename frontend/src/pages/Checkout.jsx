@@ -6,7 +6,7 @@ import {
   LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, CardPostalCodeElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
@@ -448,18 +448,18 @@ const CheckoutInner = () => {
     const required = ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
     if (required.some(k => !form[k].trim())) { setError('Please fill in all required fields.'); return; }
     if (!stripe || !elements) { setError('Payment not ready. Please wait a moment.'); return; }
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) { setError('Card details are missing.'); return; }
+    const cardNumberElement = elements.getElement(CardNumberElement);
+    if (!cardNumberElement) { setError('Card details are missing.'); return; }
     setSubmitting(true);
     try {
       // 1. Create payment intent
       const intentRes = await api.post('/payments/create-intent', { amount: grandTotal });
       const { client_secret, payment_intent_id } = intentRes.data;
 
-      // 2. Confirm card payment with Stripe
+      // 2. Confirm card payment with Stripe using individual elements
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: {
-          card: cardElement,
+          card: cardNumberElement,
           billing_details: { name: form.name, email: form.email },
         },
       });
@@ -644,12 +644,13 @@ const CheckoutInner = () => {
                       type="text" placeholder="e.g. MK9 1AB"
                       value={form.postcode}
                       onChange={e => {
-                        const val = e.target.value.toUpperCase();
-                        set('postcode')(val);
+                        // Only allow alphanumeric characters and spaces
+                        const sanitized = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase();
+                        set('postcode')(sanitized);
                         setPcError(''); setAddressDropdown(false);
                         clearTimeout(pcDebounceRef.current);
-                        if (val.replace(/\s/g, '').length >= 5) {
-                          pcDebounceRef.current = setTimeout(() => lookupPostcode(val), 600);
+                        if (sanitized.replace(/\s/g, '').length >= 5) {
+                          pcDebounceRef.current = setTimeout(() => lookupPostcode(sanitized), 600);
                         }
                       }}
                       onBlur={() => { clearTimeout(pcDebounceRef.current); lookupPostcode(form.postcode); }}
@@ -738,8 +739,23 @@ const CheckoutInner = () => {
                     <span className="font-bold text-sm" style={{ color: '#800020' }}>Payment</span>
                     <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-400"><Lock size={10} /> Stripe</span>
                   </div>
-                  <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
-                    <CardElement options={CARD_STYLE} />
+                  <div className="space-y-2">
+                    {/* Card number - full width */}
+                    <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
+                      <CardNumberElement options={CARD_STYLE} placeholder="Card number" />
+                    </div>
+                    {/* Expiry, CVC, Postcode - single row */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
+                        <CardExpiryElement options={CARD_STYLE} placeholder="MM / YY" />
+                      </div>
+                      <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
+                        <CardCvcElement options={CARD_STYLE} placeholder="CVC" />
+                      </div>
+                      <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
+                        <CardPostalCodeElement options={CARD_STYLE} placeholder="Postcode" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

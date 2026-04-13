@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, ShoppingCart, ArrowRight, Package, Truck } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import api from '../api';
-import { getCached, setCached } from '../lib/menuCache';
+import { useCart } from '../../context/CartContext';
+import api from '../../api';
+import { getCached, setCached } from '../../api/menuCache';
 
 const categories = ['All', 'Pickles', 'Podis'];
 
@@ -98,38 +98,35 @@ const Snacks = () => {
           {loading ? <div className="text-center py-20 text-gray-400">Loading...</div> : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filtered.map(item => (
-              <div key={item.id} className="rounded-lg overflow-hidden bg-white card-hover group" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }} data-testid={`snack-item-${item.id}`}>
-                {item.image && (
-                  <div className="relative h-40 overflow-hidden">
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    <span className="absolute top-3 left-3 px-2 py-1 rounded-sm text-xs font-medium text-white" style={{ backgroundColor: '#800020' }}>
-                      {item.type}
-                    </span>
-                  </div>
-                )}
-                <div className="p-5">
-                  {item.spice_level > 0 && (
-                    <div className="flex gap-0.5 mb-2">
-                      {Array(item.spice_level).fill(0).map((_, i) => (
-                        <Flame key={i} size={11} className="text-red-500 fill-red-500" />
-                      ))}
+              <Link key={item.id} to={`/item/${item.id}`} onClick={e => e.target.closest('button') && e.preventDefault()}>
+                <div className="rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }} data-testid={`snack-item-${item.id}`}>
+                  {item.image && (
+                    <div className="relative h-40 overflow-hidden">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <span className="absolute top-3 left-3 px-2 py-1 rounded-sm text-xs font-medium text-white" style={{ backgroundColor: '#800020' }}>
+                        {item.type}
+                      </span>
                     </div>
                   )}
-                  <Link to={`/item/${item.id}`} className="hover:underline">
+                  <div className="p-5 flex flex-col h-[180px]">
+                    {item.spice_level > 0 && (
+                      <div className="flex gap-0.5 mb-2">
+                        {Array(item.spice_level).fill(0).map((_, i) => (
+                          <Flame key={i} size={11} className="text-red-500 fill-red-500" />
+                        ))}
+                      </div>
+                    )}
                     <h3 className="text-base font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{item.name}</h3>
-                  </Link>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2">{item.description}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold" style={{ color: '#800020' }}>£{item.price.toFixed(2)}</span>
-                    <div className="flex items-center gap-2">
-                      <Link to={`/item/${item.id}`} className="text-xs font-semibold px-3 py-1.5 rounded-sm" style={{ color:'#800020', border:'1px solid #800020' }}>Details</Link>
-                      <button onClick={() => addToCart({ ...item, price: `£${item.price.toFixed(2)}` })} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#800020' }} data-testid={`snack-add-${item.id}`}>
+                    <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2 flex-1">{item.description}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold" style={{ color: '#800020' }}>£{item.price.toFixed(2)}</span>
+                      <button onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ ...item, price: `£${item.price.toFixed(2)}` }); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#800020' }} data-testid={`snack-add-${item.id}`}>
                         <ShoppingCart size={12} /> Add
                       </button>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           )}

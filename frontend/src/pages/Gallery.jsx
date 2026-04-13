@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { galleryImages } from '../mockData';
+import { galleryImages } from '../data/mockData';
 
 const categories = ['All', 'Kitchen', 'Svadista', 'Prasada', 'Breakfast', 'Snacks'];
 

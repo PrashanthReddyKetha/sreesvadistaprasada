@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, Flame, Heart, ArrowRight, Sparkles } from 'lucide-react';
-import { images } from '../mockData';
+import { images } from '../data/mockData';
 
 const OurStory = () => {
   return (

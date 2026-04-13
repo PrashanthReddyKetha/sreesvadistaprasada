@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, CheckCheck, Leaf, Flame, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
@@ -11,6 +11,7 @@ const STATUS_COLORS = {
   pending:    { bg: '#FEF9C3', text: '#854D0E', label: 'Pending' },
   confirmed:  { bg: '#DBEAFE', text: '#1E40AF', label: 'Confirmed' },
   preparing:  { bg: '#FEF3C7', text: '#92400E', label: 'Preparing' },
+  out_for_delivery: { bg: '#DBEAFE', text: '#1E40AF', label: 'Out for Delivery' },
   delivered:  { bg: '#DCFCE7', text: '#166534', label: 'Delivered' },
   cancelled:  { bg: '#FEE2E2', text: '#991B1B', label: 'Cancelled' },
   active:     { bg: '#DCFCE7', text: '#166534', label: 'Active' },
@@ -45,7 +46,8 @@ const TABS = [
 export default function Dashboard() {
   const { user, logout, login } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [orders, setOrders] = useState([]);
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +83,7 @@ export default function Dashboard() {
   if (!user) return null;
 
   const pending   = orders.filter(o => o.status === 'pending').length;
-  const active    = orders.filter(o => ['confirmed','preparing'].includes(o.status)).length;
+  const active    = orders.filter(o => ['confirmed','preparing','out_for_delivery'].includes(o.status)).length;
   const delivered = orders.filter(o => o.status === 'delivered').length;
   const totalSpent = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0);
   const activeSub = subs.find(s => s.status === 'active');
@@ -125,7 +127,7 @@ export default function Dashboard() {
             return (
               <button
                 key={t.id}
-                onClick={() => setActiveTab(t.id)}
+                onClick={() => { setActiveTab(t.id); setSearchParams({ tab: t.id }); }}
                 className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all"
                 style={{
                   backgroundColor: active ? '#800020' : '#FDFBF7',
@@ -282,9 +284,9 @@ function OrdersTab({ orders, reload, expandedOrder, setExpandedOrder }) {
 
 function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling }) {
   const canCancel = ['pending', 'confirmed'].includes(o.status);
-  const stepMap = { pending: 0, confirmed: 1, preparing: 2, delivered: 3, cancelled: -1 };
+  const stepMap = { pending: 0, confirmed: 1, preparing: 2, out_for_delivery: 3, delivered: 4, cancelled: -1 };
   const step = stepMap[o.status] ?? 0;
-  const steps = ['Order Placed', 'Confirmed', 'Preparing', 'Delivered'];
+  const steps = ['Order Placed', 'Confirmed', 'Preparing', 'Out for Delivery', 'Delivered'];
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(244,196,48,0.2)' }}>
