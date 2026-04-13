@@ -38,7 +38,7 @@ async def create_subscription(
     cancellation_window = (datetime.utcnow() + timedelta(hours=48)).isoformat()
 
     subscription = Subscription(
-        **payload.model_dump(),
+        **payload.model_dump(exclude={'user_id'}),
         price=price,
         user_id=user_id,
         end_date=end_date_str,
