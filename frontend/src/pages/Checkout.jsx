@@ -708,39 +708,9 @@ const CheckoutInner = () => {
               </div>
             )}
 
-            {/* Card payment */}
-            {canCheckout && (
-              <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
-                <div className="flex items-center gap-2">
-                  <CreditCard size={16} style={{ color: '#800020' }} />
-                  <h2 className="font-bold text-base" style={{ color: '#800020' }}>Payment</h2>
-                  <span className="ml-auto flex items-center gap-1 text-xs text-gray-400"><Lock size={11} /> Secured by Stripe</span>
-                </div>
-                <div className="p-3.5 rounded-xl border-2 transition-colors"
-                  style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
-                  <CardElement options={CARD_STYLE} />
-                </div>
-                <p className="text-[11px] text-gray-400">Your card details are encrypted and never stored on our servers.</p>
-              </div>
-            )}
-
             {/* Error */}
             {error && (
               <p className="text-sm font-medium p-4 rounded-xl" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{error}</p>
-            )}
-
-            {/* Mobile: Place Order button */}
-            {canCheckout && (
-              <div className="lg:hidden">
-                <button onClick={handleOrder} disabled={submitting}
-                  className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-60"
-                  style={{ backgroundColor: '#800020' }}>
-                  {submitting
-                    ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Placing Order…</>
-                    : <>Pay {fmt(grandTotal)}</>
-                  }
-                </button>
-              </div>
             )}
           </div>
 
@@ -760,31 +730,41 @@ const CheckoutInner = () => {
                 deliveryFee={deliveryFee}
               />
 
-              {/* Trust badges */}
-              <div className="bg-white rounded-2xl p-4" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  {[['🔒', 'Secure order'], ['⚡', '30–45 min'], ['🍛', 'Freshly made']].map(([icon, label]) => (
-                    <div key={label}>
-                      <span className="text-2xl block mb-1">{icon}</span>
-                      <span className="text-[11px] text-gray-400 font-medium">{label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Desktop: Place Order button */}
+              {/* Card payment */}
               {canCheckout && (
-                <div className="hidden lg:block">
-                  <button onClick={handleOrder} disabled={submitting}
-                    className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-60"
-                    style={{ background: 'linear-gradient(135deg, #800020, #5C0018)' }}>
-                    {submitting
-                      ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Placing Order…</>
-                      : <>Pay {fmt(grandTotal)}</>
-                    }
-                  </button>
+                <div className="bg-white rounded-2xl p-4 space-y-3" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
+                  <div className="flex items-center gap-2">
+                    <CreditCard size={14} style={{ color: '#800020' }} />
+                    <span className="font-bold text-sm" style={{ color: '#800020' }}>Payment</span>
+                    <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-400"><Lock size={10} /> Stripe</span>
+                  </div>
+                  <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
+                    <CardElement options={CARD_STYLE} />
+                  </div>
                 </div>
               )}
+
+              {/* Pay button */}
+              {canCheckout && (
+                <button onClick={handleOrder} disabled={submitting}
+                  className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, #800020, #5C0018)' }}>
+                  {submitting
+                    ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
+                    : <>Pay {fmt(grandTotal)}</>
+                  }
+                </button>
+              )}
+
+              {/* Trust badges — compact */}
+              <div className="flex items-center justify-center gap-4 py-2">
+                {[['🔒', 'Secure'], ['⚡', '30–45 min'], ['🍛', 'Fresh']].map(([icon, label]) => (
+                  <div key={label} className="flex items-center gap-1">
+                    <span className="text-sm">{icon}</span>
+                    <span className="text-[11px] text-gray-400">{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 

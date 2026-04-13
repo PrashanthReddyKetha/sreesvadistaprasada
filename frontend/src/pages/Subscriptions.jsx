@@ -1165,95 +1165,128 @@ const SubscriptionsInner = () => {
           {step === 6 && (
             <div>
               <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Review and confirm</h2>
-              <p className="text-sm mb-5" style={{ color: C.muted }}>Take a moment to check everything looks right — your meals are about to be planned.</p>
+              <p className="text-sm mb-5" style={{ color: C.muted }}>Check everything looks right before paying.</p>
 
-              <InfoBox bg={C.amberLight} border={C.darkGold} color={C.amberText}>
-                You are one step away from your first Dabba Wala. We cannot wait to start cooking for you. 🙏
-              </InfoBox>
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-              {/* Summary card */}
-              <div className="rounded-xl bg-white mt-6 overflow-hidden" style={{ border: '0.5px solid #e0d9d0' }}>
-                {[
-                  { label: 'Plan',          value: planData?.name },
-                  { label: 'Box',           value: boxData?.name },
-                  { label: 'Start week',    value: selectedStartWeek ? `Mon ${fmtShort(selectedStartWeek)} – Fri ${fmtShort((() => { const d = new Date(selectedStartWeek + 'T12:00:00'); d.setDate(d.getDate() + 4); return isoDate(d); })())}` : '—' },
-                  { label: 'Meals',         value: `${planData?.meals} meals · lunch delivery, 12–2pm` },
-                  { label: 'Delivering to', value: `${customer.line1}${customer.line2 ? ', ' + customer.line2 : ''}, ${customer.city}, ${customer.postcode}` },
-                  { label: 'If not home',   value: DELIVERY_INSTRUCTIONS.find(d => d.id === deliveryInstruction)?.label || '—' },
-                  { label: 'Preferences',   value: selectedPrefs.length ? selectedPrefs.join(', ') : 'None selected' },
-                  ...(customRequest ? [{ label: 'Special request', value: customRequest }] : []),
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex items-start justify-between px-5 py-3" style={{ borderBottom: '0.5px solid #f0ebe6' }}>
-                    <p className="text-xs font-semibold w-32 shrink-0" style={{ color: C.muted }}>{label}</p>
-                    <p className="text-sm font-medium text-right" style={{ color: C.dark }}>{value}</p>
-                  </div>
-                ))}
-              </div>
+                {/* ── LEFT: summary + terms ── */}
+                <div className="lg:col-span-3 space-y-4">
 
-              {/* Meal list */}
-              {currentMenuData && Object.values(currentMenuData.days || {}).some(d => !d.is_placeholder) && (
-                <div className="mt-5">
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: C.darkGold }}>
-                    {planData?.id === 'weekly' ? 'Your 5 meals' : 'Your first week of meals'}
-                  </p>
-                  <div className="rounded-xl overflow-hidden bg-white" style={{ border: '0.5px solid #e0d9d0' }}>
-                    {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => (
-                      <div key={date} className="flex items-start gap-3 px-5 py-3" style={{ borderBottom: idx < 4 ? '0.5px solid #f0ebe6' : 'none' }}>
-                        <p className="text-xs font-semibold w-10 shrink-0 pt-0.5" style={{ color: C.muted }}>{WEEKDAY_LABELS[idx]}</p>
-                        <p className="text-xs" style={{ color: C.dark }}>{day.is_placeholder || !day.items?.length ? 'Menu is on the way 🍱' : day.items.map(it => typeof it === 'string' ? it : it.name).join(' · ')}</p>
+                  {/* Order summary */}
+                  <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
+                    <div className="px-5 py-3 border-b" style={{ borderColor: '#f0ebe6', backgroundColor: C.surface }}>
+                      <p className="text-xs font-bold uppercase tracking-wider" style={{ color: C.primary }}>Subscription summary</p>
+                    </div>
+                    {[
+                      { label: 'Plan',          value: planData?.name },
+                      { label: 'Box',           value: boxData?.name },
+                      { label: 'Start week',    value: selectedStartWeek ? `Mon ${fmtShort(selectedStartWeek)} – Fri ${fmtShort((() => { const d = new Date(selectedStartWeek + 'T12:00:00'); d.setDate(d.getDate() + 4); return isoDate(d); })())}` : '—' },
+                      { label: 'Meals',         value: `${planData?.meals} meals · lunch delivery, 12–2pm` },
+                      { label: 'Delivering to', value: `${customer.line1}${customer.line2 ? ', ' + customer.line2 : ''}, ${customer.city}, ${customer.postcode}` },
+                      { label: 'If not home',   value: DELIVERY_INSTRUCTIONS.find(d => d.id === deliveryInstruction)?.label || '—' },
+                      { label: 'Preferences',   value: selectedPrefs.length ? selectedPrefs.join(', ') : 'None selected' },
+                      ...(customRequest ? [{ label: 'Special request', value: customRequest }] : []),
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex items-start justify-between px-5 py-3" style={{ borderBottom: '0.5px solid #f0ebe6' }}>
+                        <p className="text-xs font-semibold w-32 shrink-0" style={{ color: C.muted }}>{label}</p>
+                        <p className="text-sm font-medium text-right" style={{ color: C.dark }}>{value}</p>
                       </div>
                     ))}
                   </div>
-                  {planData?.id === 'monthly' && (
-                    <p className="text-xs mt-2" style={{ color: C.muted }}>Weeks 2–4 menus are revealed each Friday — you will receive an email with next week's menu every Friday morning.</p>
+
+                  {/* Meal list */}
+                  {currentMenuData && Object.values(currentMenuData.days || {}).some(d => !d.is_placeholder) && (
+                    <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
+                      <div className="px-5 py-3 border-b" style={{ borderColor: '#f0ebe6', backgroundColor: C.surface }}>
+                        <p className="text-xs font-bold uppercase tracking-wider" style={{ color: C.darkGold }}>
+                          {planData?.id === 'weekly' ? 'Your 5 meals this week' : 'Your first week of meals'}
+                        </p>
+                      </div>
+                      {Object.entries(currentMenuData.days || {}).map(([date, day], idx) => (
+                        <div key={date} className="flex items-start gap-3 px-5 py-3" style={{ borderBottom: idx < 4 ? '0.5px solid #f0ebe6' : 'none' }}>
+                          <p className="text-xs font-semibold w-10 shrink-0 pt-0.5" style={{ color: C.muted }}>{WEEKDAY_LABELS[idx]}</p>
+                          <p className="text-xs" style={{ color: C.dark }}>{day.is_placeholder || !day.items?.length ? 'Menu is on the way 🍱' : day.items.map(it => typeof it === 'string' ? it : it.name).join(' · ')}</p>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                </div>
-              )}
 
-              {/* Terms */}
-              <div className="mt-6 rounded-xl p-5" style={{ backgroundColor: C.surface, border: '0.5px solid #e0d9d0' }}>
-                <p className="text-xs leading-relaxed mb-4" style={{ color: C.dark, lineHeight: 1.7 }}>
-                  This subscription is paid in full today.<br /><br />
-                  Changed your mind? You have <strong>48 hours</strong> from the moment you subscribe to cancel for a full refund — as long as your first meal has not yet entered preparation. After that, all sales are final.<br /><br />
-                  Because your meals are prepared fresh each morning using ingredients purchased the evening before, we are unable to offer refunds or cancellations once preparation has begun.
-                </p>
-                <Link to="/terms" className="text-xs font-semibold" style={{ color: C.primary }}>View full terms →</Link>
+                  {/* Terms */}
+                  <div className="rounded-2xl p-5" style={{ backgroundColor: C.surface, border: '1px solid rgba(128,0,32,0.1)' }}>
+                    <p className="text-xs leading-relaxed mb-3" style={{ color: C.dark, lineHeight: 1.7 }}>
+                      This subscription is paid in full today. You have <strong>48 hours</strong> to cancel for a full refund — as long as your first meal has not entered preparation. After that, all sales are final.
+                    </p>
+                    <Link to="/terms" className="text-xs font-semibold" style={{ color: C.primary }}>View full terms →</Link>
+                  </div>
+
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" checked={termsChecked} onChange={e => setTermsChecked(e.target.checked)} className="mt-0.5 accent-[#800020]" />
+                    <span className="text-sm" style={{ color: C.dark }}>I have read and understood the subscription terms.</span>
+                  </label>
+                </div>
+
+                {/* ── RIGHT: payment + pay ── */}
+                <div className="lg:col-span-2">
+                  <div className="lg:sticky lg:top-6 space-y-4">
+
+                    {/* Price summary */}
+                    <div className="bg-white rounded-2xl p-5" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-gray-500">{planData?.name}</span>
+                        <span className="text-sm font-semibold" style={{ color: C.dark }}>£{planData?.price}.00</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-gray-500">Delivery</span>
+                        <span className="text-sm font-semibold" style={{ color: C.green }}>Included</span>
+                      </div>
+                      <div className="border-t pt-3 mt-2 flex justify-between items-center" style={{ borderColor: '#f0ebe6' }}>
+                        <span className="font-bold" style={{ color: C.dark }}>Total</span>
+                        <span className="text-2xl font-bold" style={{ color: C.primary }}>£{planData?.price}.00</span>
+                      </div>
+                    </div>
+
+                    {/* Card input */}
+                    <div className="bg-white rounded-2xl p-4 space-y-3" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
+                      <div className="flex items-center gap-2">
+                        <CreditCard size={14} style={{ color: C.primary }} />
+                        <span className="font-bold text-sm" style={{ color: C.primary }}>Payment</span>
+                        <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-400"><Lock size={10} /> Stripe</span>
+                      </div>
+                      <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: C.cream }}>
+                        <CardElement options={CARD_STYLE} />
+                      </div>
+                    </div>
+
+                    {/* Pay button */}
+                    <button onClick={handleConfirm} disabled={!termsChecked || submitStatus === 'loading'}
+                      className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 hover:shadow-xl"
+                      style={{ background: `linear-gradient(135deg, ${C.primary}, #5C0018)` }}>
+                      {submitStatus === 'loading'
+                        ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
+                        : <>Pay £{planData?.price}.00 — {planData?.name}</>
+                      }
+                    </button>
+
+                    {/* Trust */}
+                    <div className="flex items-center justify-center gap-4 py-1">
+                      {[['🔒', 'Secure'], ['🍛', 'Fresh daily'], ['📦', 'Free delivery']].map(([icon, label]) => (
+                        <div key={label} className="flex items-center gap-1">
+                          <span className="text-sm">{icon}</span>
+                          <span className="text-[11px] text-gray-400">{label}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {submitStatus === 'error' && (
+                      <p className="text-sm font-medium p-3 rounded-xl text-center" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{errorMessage || 'Something went wrong. Please try again.'}</p>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <label className="flex items-start gap-3 mt-4 cursor-pointer">
-                <input type="checkbox" checked={termsChecked} onChange={e => setTermsChecked(e.target.checked)} className="mt-0.5 accent-[#800020]" />
-                <span className="text-sm" style={{ color: C.dark }}>I have read and understood the subscription terms.</span>
-              </label>
-
-              {/* Card input */}
-              <div className="mt-6 p-4 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: C.cream }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <CreditCard size={14} style={{ color: C.primary }} />
-                  <span className="text-xs font-semibold" style={{ color: C.primary }}>Card Details</span>
-                  <span className="ml-auto flex items-center gap-1 text-xs" style={{ color: C.muted }}><Lock size={10} /> Secured by Stripe</span>
-                </div>
-                <CardElement options={CARD_STYLE} />
+              <div className="mt-6">
+                <NavButtons step={step} onBack={goBack} onNext={() => {}} nextDisabled={true} nextLabel="" />
               </div>
-
-              {/* Total + confirm */}
-              <div className="flex items-center justify-between mt-6 mb-4">
-                <div>
-                  <p className="text-xs" style={{ color: C.muted }}>Total</p>
-                  <p className="text-3xl font-bold" style={{ color: C.primary }}>£{planData?.price}.00</p>
-                </div>
-              </div>
-
-              <button onClick={handleConfirm} disabled={!termsChecked || submitStatus === 'loading'}
-                className="w-full py-4 text-sm font-semibold text-white rounded-sm transition-all disabled:opacity-50"
-                style={{ backgroundColor: C.primary }}>
-                {submitStatus === 'loading' ? 'Confirming…' : `Confirm and pay £${planData?.price} — ${planData?.name}`}
-              </button>
-
-              {submitStatus === 'error' && (
-                <p className="text-sm mt-3 font-medium text-red-600">{errorMessage || 'Something went wrong. Please try again.'}</p>
-              )}
-
-              <NavButtons step={step} onBack={goBack} onNext={() => {}} nextDisabled={true} nextLabel="" />
             </div>
           )}
 
