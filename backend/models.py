@@ -182,6 +182,7 @@ class OrderCreate(BaseModel):
     items: List[OrderItem]
     notes: Optional[str] = None
     user_id: Optional[str] = None
+    payment_intent_id: Optional[str] = None
 
 
 class OrderStatusUpdate(BaseModel):
@@ -194,6 +195,8 @@ class Order(OrderCreate):
     delivery_fee: float = 0.0
     total: float = 0.0
     status: OrderStatus = OrderStatus.pending
+    payment_intent_id: Optional[str] = None
+    payment_status: str = "pending"
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

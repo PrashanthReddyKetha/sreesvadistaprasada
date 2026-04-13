@@ -6,7 +6,7 @@ import logging
 
 from database import client
 from seed import seed_menu, create_indexes, create_admin_user
-from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala
+from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -28,6 +28,8 @@ app = FastAPI(title="Sree Svadista Prasada API", version="1.0.0", lifespan=lifes
 ALLOWED_ORIGINS = [
     "https://sreesvadistaprasada.vercel.app",
     "https://sreesvadistaprasada-git-main-prasanthreddykethas-projects.vercel.app",
+    "https://sreesvadistaprasada.com",
+    "https://www.sreesvadistaprasada.com",
     "http://localhost:3000",
     "http://localhost:3001",
 ]
@@ -47,6 +49,7 @@ app.include_router(subscriptions.router, prefix="/api")
 app.include_router(enquiries.router, prefix="/api")
 app.include_router(delivery.router, prefix="/api")
 app.include_router(admin_dabba_wala.router, prefix="/api")
+app.include_router(payments.router, prefix="/api")
 
 
 @app.get("/api")

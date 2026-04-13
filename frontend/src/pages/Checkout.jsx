@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import {
   ShoppingBag, Truck, CheckCircle, MapPin, User, Mail, Phone, FileText,
   Plus, Minus, Trash2, ArrowLeft, X, Zap, Lock, Eye, EyeOff,
-  LogIn, UserPlus, ChevronDown, ChevronUp, Tag
+  LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard
 } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
+
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || '');
 
 const FREE_DELIVERY_THRESHOLD = 30;
 const DELIVERY_FEE = 3.99;
@@ -330,8 +334,22 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal }) {
   );
 }
 
+const CARD_STYLE = {
+  style: {
+    base: {
+      fontSize: '14px',
+      color: '#2D2422',
+      fontFamily: 'inherit',
+      '::placeholder': { color: '#9CA3AF' },
+    },
+    invalid: { color: '#DC2626' },
+  },
+};
+
 /* ══════════════════════════════════════════════════════════════════════════ */
-const Checkout = () => {
+const CheckoutInner = () => {
+  const stripe = useStripe();
+  const elements = useElements();
   const navigate = useNavigate();
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, addToCart } = useCart();
   const { user, login, setAuthOpen } = useAuth();
@@ -428,8 +446,26 @@ const Checkout = () => {
     setError('');
     const required = ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
     if (required.some(k => !form[k].trim())) { setError('Please fill in all required fields.'); return; }
+    if (!stripe || !elements) { setError('Payment not ready. Please wait a moment.'); return; }
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) { setError('Card details are missing.'); return; }
     setSubmitting(true);
     try {
+      // 1. Create payment intent
+      const intentRes = await api.post('/payments/create-intent', { amount: grandTotal });
+      const { client_secret, payment_intent_id } = intentRes.data;
+
+      // 2. Confirm card payment with Stripe
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: { name: form.name, email: form.email },
+        },
+      });
+      if (stripeError) { setError(stripeError.message || 'Payment failed. Please try again.'); return; }
+      if (paymentIntent.status !== 'succeeded') { setError('Payment was not completed. Please try again.'); return; }
+
+      // 3. Create order in our system
       const res = await api.post('/orders', {
         customer_name:  form.name,
         customer_email: form.email,
@@ -444,14 +480,14 @@ const Checkout = () => {
           city:  form.city,
           postcode: form.postcode,
         },
-        special_instructions: form.notes || undefined,
-        delivery_fee: deliveryFee,
-        total: grandTotal,
+        notes: form.notes || undefined,
+        payment_intent_id,
       });
       setSuccess({ orderId: res.data?.id?.slice(-6).toUpperCase() || '' });
       clearCart();
-    } catch { setError('Something went wrong. Please try again.'); }
-    finally { setSubmitting(false); }
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Something went wrong. Please try again.');
+    } finally { setSubmitting(false); }
   };
 
   // Redirect if cart is empty (and not on success screen)
@@ -671,6 +707,22 @@ const Checkout = () => {
               </div>
             )}
 
+            {/* Card payment */}
+            {canCheckout && (
+              <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
+                <div className="flex items-center gap-2">
+                  <CreditCard size={16} style={{ color: '#800020' }} />
+                  <h2 className="font-bold text-base" style={{ color: '#800020' }}>Payment</h2>
+                  <span className="ml-auto flex items-center gap-1 text-xs text-gray-400"><Lock size={11} /> Secured by Stripe</span>
+                </div>
+                <div className="p-3.5 rounded-xl border-2 transition-colors"
+                  style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
+                  <CardElement options={CARD_STYLE} />
+                </div>
+                <p className="text-[11px] text-gray-400">Your card details are encrypted and never stored on our servers.</p>
+              </div>
+            )}
+
             {/* Error */}
             {error && (
               <p className="text-sm font-medium p-4 rounded-xl" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{error}</p>
@@ -684,7 +736,7 @@ const Checkout = () => {
                   style={{ backgroundColor: '#800020' }}>
                   {submitting
                     ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Placing Order…</>
-                    : <>Place Order · {fmt(grandTotal)}</>
+                    : <>Pay {fmt(grandTotal)}</>
                   }
                 </button>
               </div>
@@ -727,7 +779,7 @@ const Checkout = () => {
                     style={{ background: 'linear-gradient(135deg, #800020, #5C0018)' }}>
                     {submitting
                       ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Placing Order…</>
-                      : <>Place Order · {fmt(grandTotal)}</>
+                      : <>Pay {fmt(grandTotal)}</>
                     }
                   </button>
                 </div>
@@ -740,5 +792,11 @@ const Checkout = () => {
     </div>
   );
 };
+
+const Checkout = () => (
+  <Elements stripe={stripePromise}>
+    <CheckoutInner />
+  </Elements>
+);
 
 export default Checkout;
