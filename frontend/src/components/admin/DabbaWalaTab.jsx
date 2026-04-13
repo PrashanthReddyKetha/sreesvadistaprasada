@@ -83,9 +83,9 @@ function DabbaOperations() {
       .finally(() => setLoading(false));
   }, []);
 
-  const markDelivered = async (deliveryId) => {
-    await api.patch(`/admin/dabba-wala/deliveries/${deliveryId}/status`, { status: 'delivered' });
-    setDeliveries(prev => prev.map(d => d.delivery_id === deliveryId ? { ...d, status: 'delivered' } : d));
+  const updateDeliveryStatus = async (deliveryId, status) => {
+    await api.patch(`/admin/dabba-wala/deliveries/${deliveryId}/status`, { status });
+    setDeliveries(prev => prev.map(d => d.delivery_id === deliveryId ? { ...d, status } : d));
   };
 
   const dayLabel = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -169,12 +169,23 @@ function DabbaOperations() {
                             <Badge status={d.status || 'confirmed'} />
                           </td>
                           <td className="px-4 py-3">
-                            {d.status !== 'delivered' && (
-                              <button onClick={() => markDelivered(d.delivery_id)}
-                                className="px-3 py-1.5 text-xs font-semibold text-white rounded-lg"
-                                style={{ backgroundColor:'#4A7C59' }}>
-                                Mark delivered
-                              </button>
+                            {d.status !== 'delivered' && d.status !== 'failed' ? (
+                              <div className="flex gap-1.5 flex-wrap">
+                                <button onClick={() => updateDeliveryStatus(d.delivery_id, 'delivered')}
+                                  className="px-3 py-1.5 text-xs font-semibold text-white rounded-lg"
+                                  style={{ backgroundColor:'#4A7C59' }}>
+                                  Delivered
+                                </button>
+                                <button onClick={() => updateDeliveryStatus(d.delivery_id, 'failed')}
+                                  className="px-3 py-1.5 text-xs font-semibold text-white rounded-lg"
+                                  style={{ backgroundColor:'#C62828' }}>
+                                  Failed
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-xs font-semibold capitalize" style={{ color: d.status==='delivered'?'#4A7C59':'#C62828' }}>
+                                {d.status}
+                              </span>
                             )}
                           </td>
                         </tr>
@@ -688,6 +699,14 @@ function DabbaDeliverySheet() {
     } catch {} finally { setLoading(false); }
   };
 
+  const toggleDelivered = async (deliveryId, current) => {
+    const newStatus = current === 'delivered' ? 'confirmed' : 'delivered';
+    try {
+      await api.patch(`/admin/dabba-wala/deliveries/${deliveryId}/status`, { status: newStatus });
+      setDeliveries(prev => prev.map(d => d.delivery_id === deliveryId ? { ...d, status: newStatus } : d));
+    } catch {}
+  };
+
   const copyForWhatsApp = () => {
     const lines = [`Dabba Wala Deliveries — ${new Date(date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}`, `Total: ${deliveries.length} deliveries`, ''];
     deliveries.forEach((d, i) => {
@@ -738,7 +757,7 @@ function DabbaDeliverySheet() {
                     {d.delivery_instruction && d.delivery_instruction !== 'door' && <p className="text-xs mt-0.5" style={{ color:'#B8860B' }}>Note: {d.delivery_instruction}{d.neighbour_name ? ` — ${d.neighbour_name}, ${d.neighbour_door}` : ''}{d.safe_place_description ? ` — ${d.safe_place_description}` : ''}</p>}
                     {d.custom_request && <p className="text-xs mt-0.5 italic" style={{ color:'#9C7B6B' }}>"{d.custom_request}"</p>}
                   </div>
-                  <input type="checkbox" checked={d.status==='delivered'} onChange={() => {}} className="mt-1 w-4 h-4 accent-[#4A7C59]" />
+                  <input type="checkbox" checked={d.status==='delivered'} onChange={() => toggleDelivered(d.delivery_id, d.status)} className="mt-1 w-4 h-4 accent-[#4A7C59] cursor-pointer" />
                 </div>
               );
             })}

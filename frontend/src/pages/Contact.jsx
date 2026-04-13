@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Instagram, Facebook, Twitter, ArrowRight } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Instagram, ArrowRight } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -113,8 +113,6 @@ const Contact = () => {
                   <div className="flex gap-3">
                     {[
                       { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/sreesvadistaprasada/' },
-                      { icon: Facebook, label: 'Facebook', href: '#' },
-                      { icon: Twitter, label: 'Twitter', href: '#' },
                     ].map(({ icon: Icon, label, href }) => (
                       <a key={label} href={href} target={href !== '#' ? '_blank' : undefined} rel="noopener noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 hover:bg-[#800020] hover:text-white" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }} aria-label={label} data-testid={`contact-social-${label.toLowerCase()}`}>
                         <Icon size={18} />

@@ -85,8 +85,26 @@ async def subscribe_newsletter(payload: NewsletterCreate):
 
 @router.get("/newsletter", response_model=List[NewsletterSubscription])
 async def get_newsletter_subscribers(_: dict = Depends(require_admin)):
-    docs = await db.newsletter.find({"active": True}, {"_id": 0}).to_list(1000)
+    docs = await db.newsletter.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     return docs
+
+
+@router.delete("/newsletter/{subscriber_id}")
+async def delete_newsletter_subscriber(subscriber_id: str, _: dict = Depends(require_admin)):
+    result = await db.newsletter.delete_one({"id": subscriber_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Subscriber not found")
+    return {"ok": True}
+
+
+@router.patch("/newsletter/{subscriber_id}/toggle")
+async def toggle_newsletter_subscriber(subscriber_id: str, _: dict = Depends(require_admin)):
+    doc = await db.newsletter.find_one({"id": subscriber_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Subscriber not found")
+    new_active = not doc.get("active", True)
+    await db.newsletter.update_one({"id": subscriber_id}, {"$set": {"active": new_active}})
+    return {"active": new_active}
 
 
 # ── My Enquiries (customer) ────────────────────────────────────────────────────

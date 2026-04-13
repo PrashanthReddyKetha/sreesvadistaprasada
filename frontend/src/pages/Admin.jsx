@@ -567,39 +567,79 @@ const EnquiriesTab = ({ contacts, catering, onStatusUpdate, reload }) => {
 };
 
 // ─── Newsletter ───────────────────────────────────────────────────────────────
-const NewsletterTab = ({ newsletter }) => (
-  <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
-    <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor:'#f0ebe6' }}>
-      <h3 className="font-bold" style={{ fontFamily:"'Playfair Display', serif", color:'#800020' }}>Newsletter Subscribers ({newsletter.length})</h3>
-      <button onClick={()=>{
-        const csv='Email,Subscribed\n'+newsletter.map(n=>`${n.email},${fmtDate(n.created_at)}`).join('\n');
-        const a=document.createElement('a'); a.href='data:text/csv,'+encodeURIComponent(csv); a.download='newsletter.csv'; a.click();
-      }} className="text-xs font-semibold px-3 py-1.5 rounded-lg border" style={{ color:'#800020', borderColor:'#800020' }}>
-        Export CSV
-      </button>
-    </div>
-    {newsletter.length===0 ? <p className="text-center text-gray-400 py-16">No subscribers yet.</p> : (
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead style={{ backgroundColor:'#FDFBF7' }}>
-            <tr>{['Email','Subscribed','Status'].map(h=>(
-              <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
-            ))}</tr>
-          </thead>
-          <tbody>
-            {newsletter.map(n=>(
-              <tr key={n.id} className="border-t hover:bg-gray-50" style={{ borderColor:'#f9f6ee' }}>
-                <td className="px-4 py-3">{n.email}</td>
-                <td className="px-4 py-3 text-xs text-gray-400">{fmtDate(n.created_at)}</td>
-                <td className="px-4 py-3"><Badge status={n.active?'active':'cancelled'} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+const NewsletterTab = ({ newsletter, reload }) => {
+  const [list, setList] = React.useState(newsletter);
+  React.useEffect(() => setList(newsletter), [newsletter]);
+
+  const exportCSV = () => {
+    const csv = 'Email,Subscribed,Status\n' + list.map(n => `${n.email},${fmtDate(n.created_at)},${n.active?'active':'unsubscribed'}`).join('\n');
+    const a = document.createElement('a'); a.href = 'data:text/csv,' + encodeURIComponent(csv); a.download = 'newsletter.csv'; a.click();
+  };
+
+  const toggle = async (id) => {
+    try {
+      const res = await api.patch(`/enquiries/newsletter/${id}/toggle`);
+      setList(l => l.map(n => n.id === id ? { ...n, active: res.data.active } : n));
+    } catch {}
+  };
+
+  const remove = async (id) => {
+    if (!window.confirm('Remove this subscriber permanently?')) return;
+    try {
+      await api.delete(`/enquiries/newsletter/${id}`);
+      setList(l => l.filter(n => n.id !== id));
+    } catch {}
+  };
+
+  const active = list.filter(n => n.active).length;
+
+  return (
+    <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
+      <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor:'#f0ebe6' }}>
+        <h3 className="font-bold" style={{ fontFamily:"'Playfair Display', serif", color:'#800020' }}>
+          Newsletter Subscribers <span className="text-sm font-normal text-gray-400">({active} active · {list.length} total)</span>
+        </h3>
+        <button onClick={exportCSV} className="text-xs font-semibold px-3 py-1.5 rounded-lg border" style={{ color:'#800020', borderColor:'#800020' }}>
+          Export CSV
+        </button>
       </div>
-    )}
-  </div>
-);
+      {list.length === 0 ? <p className="text-center text-gray-400 py-16">No subscribers yet.</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead style={{ backgroundColor:'#FDFBF7' }}>
+              <tr>{['Email','Subscribed','Status','Actions'].map(h=>(
+                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {list.map(n => (
+                <tr key={n.id} className="border-t hover:bg-gray-50" style={{ borderColor:'#f9f6ee', opacity: n.active ? 1 : 0.5 }}>
+                  <td className="px-4 py-3">{n.email}</td>
+                  <td className="px-4 py-3 text-xs text-gray-400">{fmtDate(n.created_at)}</td>
+                  <td className="px-4 py-3"><Badge status={n.active ? 'active' : 'cancelled'} /></td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <button onClick={() => toggle(n.id)}
+                        className="text-xs px-2 py-1 rounded border font-medium"
+                        style={{ color:'#B8860B', borderColor:'#B8860B' }}>
+                        {n.active ? 'Unsubscribe' : 'Resubscribe'}
+                      </button>
+                      <button onClick={() => remove(n.id)}
+                        className="text-xs px-2 py-1 rounded border font-medium"
+                        style={{ color:'#C62828', borderColor:'#C62828' }}>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ─── Main Admin Page ──────────────────────────────────────────────────────────
 const TABS = [
@@ -736,7 +776,7 @@ const Admin = () => {
               {activeTab==='menu'          && <MenuTab />}
               {activeTab==='users'         && <UsersTab users={data.users} />}
               {activeTab==='enquiries'     && <EnquiriesTab contacts={data.contacts} catering={data.catering} onStatusUpdate={handleStatusUpdate} reload={fetchAll} />}
-              {activeTab==='newsletter'    && <NewsletterTab newsletter={data.newsletter} />}
+              {activeTab==='newsletter'    && <NewsletterTab newsletter={data.newsletter} reload={fetchAll} />}
             </>
           )}
         </main>
