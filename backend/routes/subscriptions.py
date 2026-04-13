@@ -83,6 +83,82 @@ async def get_subscription(sub_id: str, current_user: dict = Depends(get_current
     return doc
 
 
+@router.get("/{sub_id}/deliveries")
+async def get_sub_deliveries(sub_id: str, current_user: dict = Depends(get_current_user)):
+    """Return per-day delivery statuses for a subscription's active week range."""
+    sub = await db.subscriptions.find_one({"id": sub_id}, {"_id": 0})
+    if not sub:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    if current_user.get("role") != "admin" and sub.get("user_id") != current_user["sub"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    start = datetime.strptime(sub["start_date"], "%Y-%m-%d")
+    end = datetime.strptime(sub["end_date"], "%Y-%m-%d") if sub.get("end_date") else start + timedelta(days=4)
+
+    # Build weekday-only date list
+    dates = []
+    d = start
+    while d <= end:
+        if d.weekday() < 5:
+            dates.append(d.strftime("%Y-%m-%d"))
+        d += timedelta(days=1)
+
+    tracking = {
+        t["delivery_id"]: t
+        async for t in db.delivery_tracking.find({"delivery_id": {"$in": [f"{sub_id}_{dt}" for dt in dates]}}, {"_id": 0})
+    }
+
+    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+    result = []
+    for dt in dates:
+        t = tracking.get(f"{sub_id}_{dt}")
+        status = (t or {}).get("status")
+        if not status:
+            status = "upcoming" if dt >= today_str else "delivered"
+        result.append({
+            "date": dt,
+            "status": status,
+            "skipped_at": (t or {}).get("skipped_at"),
+            "issue_description": (t or {}).get("issue_description"),
+        })
+    return result
+
+
+@router.post("/{sub_id}/deliveries/{date}/skip")
+async def skip_delivery(sub_id: str, date: str, current_user: dict = Depends(get_current_user)):
+    """Customer marks a specific day as skipped."""
+    sub = await db.subscriptions.find_one({"id": sub_id}, {"_id": 0})
+    if not sub:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    if current_user.get("role") != "admin" and sub.get("user_id") != current_user["sub"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    try:
+        delivery_day = datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date")
+
+    now = datetime.utcnow()
+    hours_until = (delivery_day.replace(hour=12) - now).total_seconds() / 3600
+    if hours_until < 0:
+        raise HTTPException(status_code=400, detail="Cannot skip a past delivery")
+
+    short_notice = hours_until < 12
+    await db.delivery_tracking.update_one(
+        {"delivery_id": f"{sub_id}_{date}"},
+        {"$set": {
+            "delivery_id": f"{sub_id}_{date}",
+            "sub_id": sub_id,
+            "status": "skipped",
+            "skipped_at": now.isoformat(),
+            "short_notice": short_notice,
+            "updated_at": now.isoformat(),
+        }},
+        upsert=True,
+    )
+    return {"ok": True, "short_notice": short_notice}
+
+
 @router.put("/{sub_id}/status", response_model=Subscription)
 async def update_subscription_status(
     sub_id: str,

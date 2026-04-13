@@ -44,10 +44,52 @@ export function DishCards({ items }) {
   );
 }
 
+const STATUS_META = {
+  upcoming:         { label: 'Upcoming',        bg: '#FEF3C7', fg: '#92400E' },
+  out_for_delivery: { label: 'Out for delivery', bg: '#DBEAFE', fg: '#1E40AF' },
+  delivered:        { label: 'Delivered',       bg: '#DCFCE7', fg: '#166534' },
+  missed:           { label: 'Missed',          bg: '#FEE2E2', fg: '#991B1B' },
+  cancelled:        { label: 'Cancelled',       bg: '#FEE2E2', fg: '#991B1B' },
+  skipped:          { label: 'Skipped',         bg: '#E5E7EB', fg: '#374151' },
+  confirmed:        { label: 'Confirmed',       bg: '#DBEAFE', fg: '#1E40AF' },
+  issue:            { label: 'Issue reported',  bg: '#FEE2E2', fg: '#991B1B' },
+};
+
+function SkipModal({ date, shortNotice, onConfirm, onCancel, submitting }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="rounded-2xl max-w-md w-full p-6" style={{ backgroundColor: '#FDFBF7' }}>
+        <h3 className="font-bold mb-3" style={{ color: '#800020', fontFamily: "'Playfair Display', serif", fontSize: 18 }}>
+          Skip delivery on {new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}?
+        </h3>
+        <p className="text-sm mb-3" style={{ color: '#5C4B47' }}>
+          We completely understand — emergencies happen, plans change, sometimes you just won't be home. Are you sure you want to cancel this meal?
+        </p>
+        {shortNotice && (
+          <div className="rounded-lg p-3 mb-4 text-xs" style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '0.5px solid #F4C430' }}>
+            ⚠️ You're cancelling less than 12 hours before delivery. Next time, if possible, please let us know 12+ hours in advance — it really helps us reduce food waste. 🙏
+          </div>
+        )}
+        <div className="flex gap-2 justify-end">
+          <button onClick={onCancel} disabled={submitting}
+            className="px-4 py-2 text-sm font-semibold rounded-sm"
+            style={{ color: '#5C4B47', border: '1px solid #e0d9d0' }}>Keep delivery</button>
+          <button onClick={onConfirm} disabled={submitting}
+            className="px-4 py-2 text-sm font-semibold text-white rounded-sm disabled:opacity-60"
+            style={{ backgroundColor: '#800020' }}>{submitting ? 'Skipping…' : 'Yes, skip this meal'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SubActiveCard({ sub }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [weekMenu, setWeekMenu]       = useState(null);
   const [menuLoading, setMenuLoading] = useState(false);
+  const [deliveries, setDeliveries]   = useState([]);
+  const [skipTarget, setSkipTarget]   = useState(null); // { date, shortNotice }
+  const [skipping, setSkipping]       = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
   const boxMeta = BOX_META[sub.box_type] || BOX_META.prasada;
@@ -70,6 +112,34 @@ export default function SubActiveCard({ sub }) {
       .catch(() => {})
       .finally(() => setMenuLoading(false));
   }, [sub.box_type, thisWeekMonday]);
+
+  const loadDeliveries = () => {
+    if (!sub.id) return;
+    api.get(`/subscriptions/${sub.id}/deliveries`).then(r => setDeliveries(r.data)).catch(() => {});
+  };
+  useEffect(loadDeliveries, [sub.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const deliveryByDate = useMemo(() => {
+    const m = {};
+    (deliveries || []).forEach(d => { m[d.date] = d; });
+    return m;
+  }, [deliveries]);
+
+  const confirmSkip = async () => {
+    if (!skipTarget) return;
+    setSkipping(true);
+    try {
+      await api.post(`/subscriptions/${sub.id}/deliveries/${skipTarget.date}/skip`);
+      setSkipTarget(null);
+      loadDeliveries();
+    } catch { /* show inline error? keep minimal */ }
+    finally { setSkipping(false); }
+  };
+
+  const openSkip = (date) => {
+    const hoursUntil = (new Date(date + 'T12:00:00') - new Date()) / (1000 * 60 * 60);
+    setSkipTarget({ date, shortNotice: hoursUntil < 12 });
+  };
 
   const savingsInfo = useMemo(() => {
     if (!weekMenu) return null;
@@ -128,15 +198,34 @@ export default function SubActiveCard({ sub }) {
               const isPast = new Date(date + 'T23:59:59') < new Date();
               const items = day.items || [];
               const isToday = date === today;
+              const delivery = deliveryByDate[date];
+              const status = delivery?.status;
+              const statusMeta = status ? STATUS_META[status] : null;
+              const isTomorrow = !isPast && !isToday && (new Date(date + 'T12:00:00') - new Date()) / 86400000 < 1.5;
+              const canSkip = !isPast && !isToday && !['skipped','cancelled','delivered','missed'].includes(status);
               return (
                 <div key={date} className="px-4 py-3" style={{ opacity: isPast && !isToday ? 0.5 : 1 }}>
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <p className="text-xs font-bold" style={{ color: isToday ? '#166534' : '#800020' }}>{WEEKDAYS[idx]}</p>
                     <p className="text-[10px]" style={{ color: '#9C7B6B' }}>
                       {new Date(date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
                     </p>
                     {isToday && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor:'#DCFCE7',color:'#166534'}}>Today</span>}
-                    {isPast && !isToday && <span className="text-[9px]" style={{ color:'#9C7B6B'}}>Passed</span>}
+                    {isTomorrow && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor:'#FEF3C7',color:'#92400E'}}>Upcoming delivery</span>}
+                    {isPast && !isToday && !status && <span className="text-[9px]" style={{ color:'#9C7B6B'}}>Passed</span>}
+                    {statusMeta && (
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: statusMeta.bg, color: statusMeta.fg }}>
+                        {statusMeta.label}
+                      </span>
+                    )}
+                    {canSkip && (
+                      <button onClick={() => openSkip(date)}
+                        className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                        style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.3)' }}>
+                        Skip this meal
+                      </button>
+                    )}
                   </div>
                   {day.is_placeholder || items.length === 0 ? (
                     <p className="text-xs italic" style={{ color: '#9C7B6B' }}>Menu is on the way 🍱</p>
@@ -197,6 +286,12 @@ export default function SubActiveCard({ sub }) {
           </div>
         )}
       </div>
+      {skipTarget && (
+        <SkipModal date={skipTarget.date} shortNotice={skipTarget.shortNotice}
+          submitting={skipping}
+          onConfirm={confirmSkip}
+          onCancel={() => setSkipTarget(null)} />
+      )}
     </div>
   );
 }

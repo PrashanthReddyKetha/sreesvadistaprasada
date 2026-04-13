@@ -75,38 +75,54 @@ const STEPS = [
 ];
 
 /* ── week config ──────────────────────────────────────── */
+/**
+ * Auto-rolling weeks. The "recommended start week" is the upcoming Monday,
+ * unless subscriptions are closed for that week — in which case we roll forward by 1.
+ *
+ * Closure rule: next Monday closes at Sunday 17:00. So a visitor on:
+ *   - Monday–Saturday: recommended = next Monday
+ *   - Sunday before 17:00: recommended = next Monday (tomorrow)
+ *   - Sunday 17:00+ OR day is Monday (already started): recommended = the Monday after
+ *
+ * Returns { weeks[], startIdx, closedMessage }. Caller slices based on plan.
+ */
 function getWeekConfig() {
-  const today = new Date();
-  const day = today.getDay();
+  const now = new Date();
+  const day = now.getDay();
+  const hour = now.getHours();
 
   const getMonday = (d) => {
     const date = new Date(d);
-    const diff = date.getDay() === 0 ? -6 : 1 - date.getDay();
+    const diff = date.getDay() === 0 ? 1 : 8 - date.getDay(); // days until NEXT Monday (always forward)
     date.setDate(date.getDate() + diff);
-    // Use noon (12:00) not midnight to avoid BST/UTC offset shifting the date back one day
     date.setHours(12, 0, 0, 0);
     return date;
   };
 
-  const thisMonday = getMonday(today);
-  const nextMonday = new Date(thisMonday); nextMonday.setDate(nextMonday.getDate() + 7);
-  const weekAfterMonday = new Date(nextMonday); weekAfterMonday.setDate(weekAfterMonday.getDate() + 7);
+  // Is the upcoming Monday closed? (Sun 17:00+ or already Monday/later in the week means the "coming" Monday is this past/today)
+  // But since getMonday() always returns FUTURE Monday, closure just means: Sun after 17:00.
+  const nextMondayClosed = day === 0 && hour >= 17;
 
-  if (day >= 1 && day <= 3) {
-    return {
-      tab1: { label: 'This week', monday: thisMonday, primary: true, badge: 'Your start week' },
-      tab2: { label: 'Next week', monday: nextMonday, primary: false, badge: 'Preview' },
-      defaultTab: 1,
-      closedMessage: null,
-    };
-  } else {
-    return {
-      tab1: { label: 'Next week',      monday: nextMonday,     primary: true,  badge: 'Your start week' },
-      tab2: { label: 'The week after', monday: weekAfterMonday, primary: false, badge: 'Preview' },
-      defaultTab: 1,
-      closedMessage: "This week's orders are now closed — we are already preparing meals for current subscribers. Your subscription starts fresh next Monday.",
-    };
+  const firstMonday = getMonday(now);
+  if (nextMondayClosed) firstMonday.setDate(firstMonday.getDate() + 7);
+
+  const weeks = [];
+  for (let i = 0; i < 4; i++) {
+    const m = new Date(firstMonday);
+    m.setDate(m.getDate() + i * 7);
+    weeks.push({
+      label: i === 0 ? 'Next week' : i === 1 ? 'The week after' : `In ${i + 1} weeks`,
+      monday: m,
+      badge: i === 0 ? 'Recommended start' : 'Preview',
+    });
   }
+
+  return {
+    weeks,
+    closedMessage: nextMondayClosed
+      ? "Subscriptions for next week have closed — our team is already prepping those meals. Your recommended start week is the one after."
+      : null,
+  };
 }
 
 function isoDate(d) {
@@ -296,10 +312,11 @@ const SubscriptionsInner = () => {
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState('weekly');
   const [selectedBox, setSelectedBox] = useState(null);
-  const [menuTab, setMenuTab] = useState(1);
-  const [menuData, setMenuData] = useState({ 1: null, 2: null });
-  const [menuLoading, setMenuLoading] = useState({ 1: false, 2: false });
-  const [menuError, setMenuError] = useState({ 1: null, 2: null });
+  const [menuTab, setMenuTab] = useState(0);
+  const [monthlyPage, setMonthlyPage] = useState(0); // carousel offset for monthly plan (shows 2 weeks at a time)
+  const [menuData, setMenuData] = useState({});
+  const [menuLoading, setMenuLoading] = useState({});
+  const [menuError, setMenuError] = useState({});
   const [selectedStartWeek, setSelectedStartWeek] = useState(null);
   const [selectedPrefs, setSelectedPrefs] = useState([]);
   const [customRequest, setCustomRequest] = useState('');
@@ -356,42 +373,43 @@ const SubscriptionsInner = () => {
     saveProg({ step, selectedPlan, selectedBox, selectedPrefs, customRequest, selectedStartWeek });
   }, [step, selectedPlan, selectedBox, selectedPrefs, customRequest, selectedStartWeek, pageState]);
 
+  /* Number of weeks shown in preview depends on plan */
+  const previewCount = selectedPlan === 'monthly' ? 4 : 2;
+
   /* set start week when tab changes in step 3 */
   useEffect(() => {
-    const tabCfg = menuTab === 1 ? weekCfg.tab1 : weekCfg.tab2;
-    setSelectedStartWeek(isoDate(tabCfg.monday));
-  }, [menuTab, weekCfg.tab1, weekCfg.tab2]); // eslint-disable-line react-hooks/exhaustive-deps
+    const w = weekCfg.weeks[menuTab];
+    if (w) setSelectedStartWeek(isoDate(w.monday));
+  }, [menuTab, weekCfg.weeks]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* fetch menu for a tab — with auto-retry for Render cold start */
-  const fetchMenu = useCallback(async (tabNum, attempt = 1) => {
+  const fetchMenu = useCallback(async (tabIdx, attempt = 1) => {
     if (!selectedBox) return;
-    const tabCfg = tabNum === 1 ? weekCfg.tab1 : weekCfg.tab2;
-    const week = isoDate(tabCfg.monday);
-    setMenuLoading(prev => ({ ...prev, [tabNum]: true }));
-    setMenuError(prev => ({ ...prev, [tabNum]: null }));
+    const w = weekCfg.weeks[tabIdx];
+    if (!w) return;
+    const week = isoDate(w.monday);
+    setMenuLoading(prev => ({ ...prev, [tabIdx]: true }));
+    setMenuError(prev => ({ ...prev, [tabIdx]: null }));
     try {
       const res = await api.get(`/menu/weekly-preview?week=${week}&box_type=${selectedBox}`);
-      setMenuData(prev => ({ ...prev, [tabNum]: res.data }));
+      setMenuData(prev => ({ ...prev, [tabIdx]: res.data }));
     } catch {
       if (attempt < 3) {
-        // Auto-retry — Render backend may be cold-starting (can take ~30s)
-        setMenuError(prev => ({ ...prev, [tabNum]: 'waking' }));
-        setTimeout(() => fetchMenu(tabNum, attempt + 1), 6000);
+        setMenuError(prev => ({ ...prev, [tabIdx]: 'waking' }));
+        setTimeout(() => fetchMenu(tabIdx, attempt + 1), 6000);
       } else {
-        setMenuError(prev => ({ ...prev, [tabNum]: 'Could not load the menu. Please try again.' }));
+        setMenuError(prev => ({ ...prev, [tabIdx]: 'Could not load the menu. Please try again.' }));
       }
     } finally {
-      if (attempt >= 3) setMenuLoading(prev => ({ ...prev, [tabNum]: false }));
-      else setMenuLoading(prev => ({ ...prev, [tabNum]: false }));
+      setMenuLoading(prev => ({ ...prev, [tabIdx]: false }));
     }
   }, [selectedBox, weekCfg]);
 
   useEffect(() => {
     if (step === 3 && selectedBox) {
-      fetchMenu(1);
-      fetchMenu(2);
+      for (let i = 0; i < previewCount; i++) fetchMenu(i);
     }
-  }, [step, selectedBox, fetchMenu]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, selectedBox, previewCount, fetchMenu]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* postcode validation */
   const checkPostcode = useCallback(async (pc) => {
@@ -400,7 +418,7 @@ const SubscriptionsInner = () => {
     try {
       const res = await api.post('/delivery/check', { postcode: pc.trim().toUpperCase() });
       const ok = res.data.service_type === 'full';
-      const nextMon = isoDate(weekCfg.tab1.monday);
+      const nextMon = isoDate(weekCfg.weeks[0].monday);
       setPostcodeStatus({
         ok,
         city: res.data.city,
@@ -506,7 +524,7 @@ const SubscriptionsInner = () => {
 
   const planData = PLANS.find(p => p.id === selectedPlan);
   const boxData  = BOXES.find(b => b.id === selectedBox);
-  const activeTabCfg = menuTab === 1 ? weekCfg.tab1 : weekCfg.tab2;
+  const activeTabCfg = weekCfg.weeks[menuTab];
   const currentMenuData = menuData[menuTab];
 
   /* load success state from localStorage on mount */
@@ -816,20 +834,70 @@ const SubscriptionsInner = () => {
               )}
 
               {/* Week tabs */}
-              <div className="grid grid-cols-2 gap-3 mb-5">
-                {[1, 2].map(tabNum => {
-                  const tc = tabNum === 1 ? weekCfg.tab1 : weekCfg.tab2;
-                  return (
-                    <button key={tabNum} onClick={() => setMenuTab(tabNum)}
-                      className="p-4 rounded-xl text-left transition-all"
-                      style={{ border: menuTab === tabNum ? `2px solid ${C.primary}` : '0.5px solid #e0d9d0', backgroundColor: 'white' }}>
-                      <p className="font-semibold text-sm" style={{ color: menuTab === tabNum ? C.primary : C.dark }}>{tc.label}</p>
-                      <p className="text-xs mt-0.5" style={{ color: C.muted }}>{weekRange(tc.monday)}</p>
-                      {tc.badge && <p className="text-[10px] mt-1 font-semibold" style={{ color: C.amberText }}>{tc.badge}</p>}
+              {previewCount === 2 ? (
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  {[0, 1].map(idx => {
+                    const tc = weekCfg.weeks[idx];
+                    const isActive = menuTab === idx;
+                    return (
+                      <button key={idx} onClick={() => setMenuTab(idx)}
+                        className="p-4 rounded-xl text-left transition-all"
+                        style={{ border: isActive ? `2px solid ${C.primary}` : '0.5px solid #e0d9d0', backgroundColor: 'white' }}>
+                        <p className="font-semibold text-sm" style={{ color: isActive ? C.primary : C.dark }}>{tc.label}</p>
+                        <p className="text-xs mt-0.5" style={{ color: C.muted }}>{weekRange(tc.monday)}</p>
+                        {tc.badge && <p className="text-[10px] mt-1 font-semibold" style={{ color: C.amberText }}>{tc.badge}</p>}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mb-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <button
+                      onClick={() => setMonthlyPage(p => Math.max(0, p - 1))}
+                      disabled={monthlyPage === 0}
+                      className="w-8 h-8 rounded-full flex items-center justify-center transition-opacity disabled:opacity-30"
+                      style={{ border: '0.5px solid #e0d9d0', backgroundColor: 'white' }}
+                      aria-label="Previous weeks"
+                    >
+                      <ArrowLeft size={14} style={{ color: C.primary }} />
                     </button>
-                  );
-                })}
-              </div>
+                    <div
+                      className="flex-1 overflow-x-auto snap-x snap-mandatory scroll-smooth grid grid-flow-col gap-3"
+                      style={{ gridAutoColumns: 'calc(50% - 6px)', scrollbarWidth: 'none' }}
+                      ref={el => {
+                        if (el) {
+                          const target = monthlyPage * (el.clientWidth / 2 + 6) * 2;
+                          if (Math.abs(el.scrollLeft - target) > 4) el.scrollTo({ left: target, behavior: 'smooth' });
+                        }
+                      }}
+                    >
+                      {weekCfg.weeks.map((tc, idx) => {
+                        const isActive = menuTab === idx;
+                        return (
+                          <button key={idx} onClick={() => setMenuTab(idx)}
+                            className="p-4 rounded-xl text-left transition-all snap-start"
+                            style={{ border: isActive ? `2px solid ${C.primary}` : '0.5px solid #e0d9d0', backgroundColor: 'white' }}>
+                            <p className="font-semibold text-sm" style={{ color: isActive ? C.primary : C.dark }}>Week {idx + 1}</p>
+                            <p className="text-xs mt-0.5" style={{ color: C.muted }}>{weekRange(tc.monday)}</p>
+                            {idx === 0 && <p className="text-[10px] mt-1 font-semibold" style={{ color: C.amberText }}>Starts here</p>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      onClick={() => setMonthlyPage(p => Math.min(1, p + 1))}
+                      disabled={monthlyPage >= 1}
+                      className="w-8 h-8 rounded-full flex items-center justify-center transition-opacity disabled:opacity-30"
+                      style={{ border: '0.5px solid #e0d9d0', backgroundColor: 'white' }}
+                      aria-label="Next weeks"
+                    >
+                      <ArrowRight size={14} style={{ color: C.primary }} />
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-center" style={{ color: C.muted }}>Swipe or tap arrows to view all 4 weeks</p>
+                </div>
+              )}
 
               {/* Day rows — vertical */}
               {menuLoading[menuTab] ? (

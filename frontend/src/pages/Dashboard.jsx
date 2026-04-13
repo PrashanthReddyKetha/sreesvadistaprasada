@@ -85,7 +85,9 @@ export default function Dashboard() {
   const pending   = orders.filter(o => o.status === 'pending').length;
   const active    = orders.filter(o => ['confirmed','preparing','out_for_delivery'].includes(o.status)).length;
   const delivered = orders.filter(o => o.status === 'delivered').length;
-  const totalSpent = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0);
+  const ordersSpent = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0);
+  const subsSpent = subs.filter(s => s.status !== 'cancelled').reduce((s, sub) => s + (sub.price || 0), 0);
+  const totalSpent = ordersSpent + subsSpent;
   const activeSub = subs.find(s => s.status === 'active');
 
   return (
@@ -475,14 +477,8 @@ function SubsTab({ subs, reload }) {
   // ── ENDING SOON ─────────────────────────────────────
   if (endingSoon) return (
     <div>
-      {/* Amber ending-soon banner */}
       <div className="rounded-2xl p-5 mb-5" style={{ backgroundColor: '#FAEEDA', border: '0.5px solid #B8860B' }}>
-        <p className="font-bold mb-1" style={{ color: '#854F0B' }}>Your Dabba Wala ends {fmtDay(activeSub.end_date)} 🍱</p>
-        <p className="text-sm mb-4" style={{ color: '#854F0B' }}>Ready to continue? Renew now and keep your meals coming — same box, same schedule.</p>
-        <div className="flex gap-3 flex-wrap">
-          <Link to="/subscriptions" className="px-5 py-2.5 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>Renew — same plan</Link>
-          <Link to="/subscriptions" className="px-5 py-2.5 text-sm font-semibold rounded-sm" style={{ color: '#800020', border: '1.5px solid #800020' }}>Change my plan</Link>
-        </div>
+        <p className="font-bold" style={{ color: '#854F0B' }}>Your Dabba Wala ends {fmtDay(activeSub.end_date)} 🍱</p>
       </div>
       <SubActiveCard sub={activeSub} />
     </div>
