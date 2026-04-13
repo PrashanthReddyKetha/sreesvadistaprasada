@@ -1,8 +1,20 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star } from 'lucide-react';
+import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star, CreditCard, Lock } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
+
+const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
+
+const CARD_STYLE = {
+  style: {
+    base: { fontSize: '14px', color: '#2D2422', fontFamily: 'inherit', '::placeholder': { color: '#9CA3AF' } },
+    invalid: { color: '#DC2626' },
+  },
+};
 
 /* ── brand ────────────────────────────────────────────── */
 const C = {
@@ -272,7 +284,9 @@ const NavButtons = ({ step, onBack, onNext, nextDisabled, nextLabel }) => (
 );
 
 /* ══════════════════════════════════════════════════════ */
-const Subscriptions = () => {
+const SubscriptionsInner = () => {
+  const stripe = useStripe();
+  const elements = useElements();
   const { user, setAuthOpen } = useAuth();
   // useMemo prevents getWeekConfig() from returning a new object reference every render,
   // which would break useCallback(fetchMenu) and cause an infinite fetch loop.
@@ -444,9 +458,23 @@ const Subscriptions = () => {
 
   /* submit */
   const handleConfirm = async () => {
+    if (!stripe || !elements) { setErrorMessage('Payment not ready. Please wait a moment.'); setSubmitStatus('error'); return; }
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) { setErrorMessage('Please enter your card details.'); setSubmitStatus('error'); return; }
     setSubmitStatus('loading');
     setErrorMessage('');
     try {
+      const planPrice = planData?.price || 45;
+      // 1. Create payment intent
+      const intentRes = await api.post('/payments/create-intent', { amount: planPrice });
+      const { client_secret, payment_intent_id } = intentRes.data;
+      // 2. Confirm card payment
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
+        payment_method: { card: cardElement, billing_details: { name: customer.name, email: customer.email } },
+      });
+      if (stripeError) { setSubmitStatus('error'); setErrorMessage(stripeError.message || 'Payment failed. Please try again.'); return; }
+      if (paymentIntent.status !== 'succeeded') { setSubmitStatus('error'); setErrorMessage('Payment was not completed. Please try again.'); return; }
+      // 3. Create subscription
       await api.post('/subscriptions', {
         customer_name: customer.name,
         customer_email: customer.email,
@@ -463,6 +491,7 @@ const Subscriptions = () => {
         safe_place_description: deliveryInstruction === 'safeplace' ? safePlaceDesc : undefined,
         is_guest: isGuest || !user,
         user_id: user?.id || undefined,
+        payment_intent_id,
       });
       clearProg();
       setSubmitStatus('success');
@@ -1196,6 +1225,16 @@ const Subscriptions = () => {
                 <span className="text-sm" style={{ color: C.dark }}>I have read and understood the subscription terms.</span>
               </label>
 
+              {/* Card input */}
+              <div className="mt-6 p-4 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: C.cream }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <CreditCard size={14} style={{ color: C.primary }} />
+                  <span className="text-xs font-semibold" style={{ color: C.primary }}>Card Details</span>
+                  <span className="ml-auto flex items-center gap-1 text-xs" style={{ color: C.muted }}><Lock size={10} /> Secured by Stripe</span>
+                </div>
+                <CardElement options={CARD_STYLE} />
+              </div>
+
               {/* Total + confirm */}
               <div className="flex items-center justify-between mt-6 mb-4">
                 <div>
@@ -1223,5 +1262,11 @@ const Subscriptions = () => {
     </div>
   );
 };
+
+const Subscriptions = () => (
+  <Elements stripe={stripePromise}>
+    <SubscriptionsInner />
+  </Elements>
+);
 
 export default Subscriptions;
