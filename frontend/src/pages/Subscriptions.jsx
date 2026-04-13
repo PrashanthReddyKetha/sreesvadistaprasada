@@ -701,7 +701,15 @@ const SubscriptionsInner = () => {
                 setSelectedBox(savedProgress.selectedBox || null);
                 setSelectedPrefs(savedProgress.selectedPrefs || []);
                 setCustomRequest(savedProgress.customRequest || '');
-                setSelectedStartWeek(savedProgress.selectedStartWeek || null);
+                {
+                  const recommended = isoDate(weekCfg.weeks[0].monday);
+                  const saved = savedProgress.selectedStartWeek;
+                  // Drop saved start week if it's earlier than the current recommended Monday
+                  // (e.g. user resumed a session from a previous week).
+                  const valid = saved && saved >= recommended && weekCfg.weeks.some(w => isoDate(w.monday) === saved);
+                  setSelectedStartWeek(valid ? saved : recommended);
+                  if (!valid) setMenuTab(0);
+                }
                 setStep(savedProgress.step || 1);
                 setSavedProgress(null);
               }} className="px-4 py-1.5 text-xs font-semibold text-white rounded" style={{ backgroundColor: C.primary }}>Continue</button>
