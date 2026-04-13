@@ -2,16 +2,24 @@ name: Keep Backend Alive
 
 on:
   schedule:
+    # Runs every 14 minutes — keeps Render free tier from spinning down (sleeps after 15 min)
     - cron: '*/14 * * * *'
-  workflow_dispatch:
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   ping:
     name: Ping Backend
     runs-on: ubuntu-latest
     timeout-minutes: 2
+
     steps:
       - name: Ping /api/health
         run: |
-          curl -s --max-time 60 https://svadista-backend.onrender.com/api/health
-          echo "Backend pinged successfully"
+          echo "Pinging backend to prevent cold start..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://svadista-backend.onrender.com/api/health)
+          echo "Response status: $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Backend is alive and healthy"
+          else
+            echo "⚠️ Backend returned status $STATUS (may be waking up)"
+          fi

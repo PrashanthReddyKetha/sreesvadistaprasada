@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import api from "./api";
 import "./App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -39,6 +40,15 @@ function ScrollToTop() {
   return null;
 }
 
+// Warmup ping — fires silently on app load so the Render backend
+// starts waking up before the user clicks anything.
+function BackendWarmup() {
+  useEffect(() => {
+    api.get('/health').catch(() => {});
+  }, []);
+  return null;
+}
+
 function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
@@ -46,6 +56,7 @@ function App() {
     <CartProvider>
       <div className="App">
         <BrowserRouter>
+          <BackendWarmup />
           <ScrollToTop />
           <Header />
           <CartDrawer />
