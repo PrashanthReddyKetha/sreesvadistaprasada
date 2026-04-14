@@ -37,7 +37,7 @@ const TermsAndServices = () => (
         <p>
           Sree Svadista Prasada ("<strong>we</strong>", "<strong>us</strong>", "<strong>our</strong>") is a South Indian
           food ordering and meal-subscription service operating in Milton Keynes, Edinburgh, and Glasgow, UK.
-          Contact: <a href="mailto:info@sreeswadistaprasada.com" className="underline" style={{ color: '#800020' }}>info@sreeswadistaprasada.com</a> | +44 73 0711 9962.
+          Contact: <a href="mailto:info@sreesvadistaprasada.com" className="underline" style={{ color: '#800020' }}>info@sreesvadistaprasada.com</a> | +44 73 0711 9962.
         </p>
       </Section>
 

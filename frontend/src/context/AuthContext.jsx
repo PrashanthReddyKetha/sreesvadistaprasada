@@ -11,12 +11,14 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem('ssp_user');
       if (stored) setUser(JSON.parse(stored));
     } catch { /* ignore */ }
+    setInitialized(true);
   }, []);
 
   const login = (userData, token) => {
@@ -33,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, authOpen, setAuthOpen }}>
+    <AuthContext.Provider value={{ user, login, logout, authOpen, setAuthOpen, initialized }}>
       {children}
     </AuthContext.Provider>
   );

@@ -37,7 +37,7 @@ const PrivacyPolicy = () => (
           Our contact details are:
         </p>
         <ul className="list-disc ml-5 space-y-1">
-          <li>Email: <a href="mailto:info@sreeswadistaprasada.com" className="underline" style={{ color: '#800020' }}>info@sreeswadistaprasada.com</a></li>
+          <li>Email: <a href="mailto:info@sreesvadistaprasada.com" className="underline" style={{ color: '#800020' }}>info@sreesvadistaprasada.com</a></li>
           <li>Phone: +44 73 0711 9962</li>
           <li>Website: <a href="https://sreesvadistaprasada.vercel.app" className="underline" style={{ color: '#800020' }}>sreesvadistaprasada.vercel.app</a></li>
         </ul>
@@ -153,8 +153,8 @@ const PrivacyPolicy = () => (
         </ul>
         <p>
           To exercise any of these rights, please contact us at{' '}
-          <a href="mailto:info@sreeswadistaprasada.com" className="underline" style={{ color: '#800020' }}>
-            info@sreeswadistaprasada.com
+          <a href="mailto:info@sreesvadistaprasada.com" className="underline" style={{ color: '#800020' }}>
+            info@sreesvadistaprasada.com
           </a>. We will respond within 30 days.
         </p>
         <p>
@@ -193,7 +193,7 @@ const PrivacyPolicy = () => (
       <Section title="13. Contact Us">
         <p>For any privacy-related queries or to exercise your rights:</p>
         <ul className="list-disc ml-5 space-y-1">
-          <li>Email: <a href="mailto:info@sreeswadistaprasada.com" className="underline" style={{ color: '#800020' }}>info@sreeswadistaprasada.com</a></li>
+          <li>Email: <a href="mailto:info@sreesvadistaprasada.com" className="underline" style={{ color: '#800020' }}>info@sreesvadistaprasada.com</a></li>
           <li>Phone: +44 73 0711 9962</li>
         </ul>
       </Section>

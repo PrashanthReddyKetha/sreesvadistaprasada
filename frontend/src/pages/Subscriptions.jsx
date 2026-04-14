@@ -25,6 +25,67 @@ const C = {
   dark: '#2D2422', muted: '#9C7B6B',
 };
 
+/* ── Upgrade modal ─────────────────────────────────────── */
+function UpgradeModal({ user, activeSub, onClose }) {
+  const [form, setForm] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    message: `I'd like to upgrade my ${activeSub?.plan || ''} plan to monthly.`,
+  });
+  const [status, setStatus] = useState('idle');
+  const submit = async (e) => {
+    e.preventDefault();
+    setStatus('submitting');
+    try {
+      await api.post('/enquiries/contact', {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        subject: 'Plan Upgrade Enquiry',
+        message: form.message,
+        user_id: user?.id,
+      });
+      setStatus('success');
+    } catch { setStatus('error'); }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }} onClick={onClose}>
+      <div className="rounded-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#FDFBF7' }} onClick={e => e.stopPropagation()}>
+        {status === 'success' ? (
+          <div className="text-center py-4">
+            <div className="text-4xl mb-3">🎉</div>
+            <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Thank you!</h3>
+            <p className="text-sm mb-5" style={{ color: '#5C4B47' }}>We've received your upgrade request and will reach out within 2 hours with your exclusive offer.</p>
+            <button onClick={onClose} className="px-5 py-2.5 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>Close</button>
+          </div>
+        ) : (
+          <>
+            <div className="text-3xl mb-2">✨</div>
+            <h3 className="text-xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>That's awesome!</h3>
+            <p className="text-sm mb-4" style={{ color: '#5C4B47' }}>
+              We truly appreciate you planning to make our food part of your monthly rhythm. Fill the form below and we'll send you an <strong>exclusive offer</strong> for your upgrade.
+            </p>
+            <form onSubmit={submit} className="space-y-3">
+              <input required type="text" placeholder="Your name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 text-sm rounded-sm focus:outline-none" style={{ border: '1px solid #e0d9d0' }} />
+              <input required type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 text-sm rounded-sm focus:outline-none" style={{ border: '1px solid #e0d9d0' }} />
+              <input type="tel" placeholder="Phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full px-3 py-2 text-sm rounded-sm focus:outline-none" style={{ border: '1px solid #e0d9d0' }} />
+              <textarea rows={3} placeholder="Tell us what you'd like to upgrade to" value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} className="w-full px-3 py-2 text-sm rounded-sm focus:outline-none" style={{ border: '1px solid #e0d9d0' }} />
+              {status === 'error' && <p className="text-xs text-red-600">Something went wrong. Please try again.</p>}
+              <div className="flex gap-2 justify-end pt-1">
+                <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold rounded-sm" style={{ color: '#5C4B47', border: '1px solid #e0d9d0' }}>Cancel</button>
+                <button type="submit" disabled={status === 'submitting'} className="px-5 py-2 text-sm font-semibold text-white rounded-sm disabled:opacity-60" style={{ backgroundColor: '#800020' }}>
+                  {status === 'submitting' ? 'Sending…' : 'Send request'}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── constants ────────────────────────────────────────── */
 const STORAGE_KEY = 'ssp_dabba_v4';
 const STORAGE_TTL = 7 * 24 * 60 * 60 * 1000;
@@ -333,6 +394,7 @@ const SubscriptionsInner = () => {
   const [savedProgress, setSavedProgress] = useState(null);
   const [pageState, setPageState] = useState('loading'); // loading | wizard | active | lapsed
   const [activeSub, setActiveSub] = useState(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [lapsedSub, setLapsedSub] = useState(null);
   const postcodeTimer = useRef(null);
   const wizardTopRef  = useRef(null);
@@ -559,12 +621,13 @@ const SubscriptionsInner = () => {
           <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.7)' }}>Delivering to {activeSub.delivery_address?.city}</p>
           <div className="flex gap-3 flex-wrap">
             <Link to="/dashboard" className="px-5 py-2.5 rounded text-sm font-semibold text-white" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>Manage subscription</Link>
-            <button onClick={() => { setActiveSub(null); setPageState('wizard'); }} className="px-5 py-2.5 rounded text-sm font-semibold" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
-              Add a second subscription
+            <button onClick={() => setUpgradeOpen(true)} className="px-5 py-2.5 rounded text-sm font-semibold" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
+              Upgrade plan
             </button>
           </div>
         </div>
       </div>
+      {upgradeOpen && <UpgradeModal user={user} activeSub={activeSub} onClose={() => setUpgradeOpen(false)} />}
     </div>
   );
 

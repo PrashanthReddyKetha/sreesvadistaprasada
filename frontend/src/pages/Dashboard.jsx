@@ -44,7 +44,7 @@ const TABS = [
 
 /* ══════════════════════════════════════════════════════ */
 export default function Dashboard() {
-  const { user, logout, login } = useAuth();
+  const { user, logout, login, initialized } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
@@ -57,8 +57,8 @@ export default function Dashboard() {
 
   /* redirect if not logged in */
   useEffect(() => {
-    if (!user) navigate('/', { replace: true });
-  }, [user, navigate]);
+    if (initialized && !user) navigate('/', { replace: true });
+  }, [user, navigate, initialized]);
 
   const load = useCallback(async () => {
     if (!user) return;

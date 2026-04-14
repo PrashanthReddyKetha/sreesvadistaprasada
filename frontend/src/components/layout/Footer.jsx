@@ -27,6 +27,23 @@ const Footer = () => {
 
   return (
     <footer style={{ backgroundColor: '#2D2422', color: '#FDFBF7' }}>
+      {/* Help line */}
+      <div style={{ backgroundColor: '#25D366' }}>
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-2.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
+          <WhatsAppIcon size={14} />
+          <p className="text-xs md:text-sm text-white">
+            Questions about orders, subscriptions, payments, or anything on the site?
+          </p>
+          <a
+            href="https://wa.me/447307119962?text=Hi,%20I%20have%20a%20question."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs md:text-sm font-bold text-white underline"
+          >
+            Message us on WhatsApp — we'll reply right away.
+          </a>
+        </div>
+      </div>
       {/* Newsletter */}
       <div className="border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
@@ -163,11 +180,11 @@ const Footer = () => {
               <div className="flex items-center gap-3">
                 <Mail size={16} className="flex-shrink-0" style={{ color: '#F4C430' }} />
                 <a
-                  href="mailto:info@sreeswadistaprasada.com"
+                  href="mailto:info@sreesvadistaprasada.com"
                   className="text-sm transition-colors duration-200 hover:text-white"
                   style={{ color: '#A09890' }}
                 >
-                  info@sreeswadistaprasada.com
+                  info@sreesvadistaprasada.com
                 </a>
               </div>
             </div>
@@ -199,7 +216,7 @@ const Footer = () => {
                   <WhatsAppIcon size={16} />
                 </a>
                 <a
-                  href="mailto:info@sreeswadistaprasada.com"
+                  href="mailto:info@sreesvadistaprasada.com"
                   className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 hover:bg-[#EA4335]"
                   style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#A09890' }}
                   aria-label="Email us"

@@ -155,16 +155,30 @@ export default function SubActiveCard({ sub }) {
     return { perMeal: (avgRetail - perMealPlan).toFixed(0), week: weekSaving.toFixed(0) };
   }, [weekMenu, sub.plan]);
 
+  const nextDeliveryDate = useMemo(() => {
+    const skippedStatuses = new Set(['skipped', 'cancelled', 'delivered', 'missed']);
+    const weekDates = weekMenu ? Object.keys(weekMenu.days || {}) : [];
+    const candidates = weekDates.filter(d => d >= today && !skippedStatuses.has(deliveryByDate[d]?.status));
+    if (candidates.length) return candidates.sort()[0];
+    // roll to next week's Monday
+    const d = new Date(today + 'T12:00:00');
+    const daysToMon = ((8 - d.getDay()) % 7) || 7;
+    d.setDate(d.getDate() + daysToMon);
+    return d.toISOString().split('T')[0];
+  }, [weekMenu, deliveryByDate, today]);
+
+  const nextDaysAway = nextDeliveryDate ? Math.round((new Date(nextDeliveryDate + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000) : null;
+
   let heroBg = '#800020', heroText = 'Next delivery coming up', heroSub = '';
-  if (daysLeft !== null && daysLeft <= 0) {
-    heroBg = '#B8860B'; heroText = 'This week is confirmed ✅'; heroSub = 'Your meals are being prepared.';
-  } else if (daysLeft === 1) {
-    heroBg = '#4A7C59'; heroText = 'Your delivery is tomorrow 🍱'; heroSub = 'Lunch · arriving 12–2pm';
-  } else if (sub.start_date === today) {
+  if (daysLeft !== null && daysLeft < 0) {
+    heroBg = '#B8860B'; heroText = 'Your plan has ended'; heroSub = 'Renew to keep meals coming.';
+  } else if (nextDeliveryDate === today) {
     heroBg = '#F4C430'; heroText = 'Your delivery is on its way today'; heroSub = 'Arriving between 12pm and 2pm';
+  } else if (nextDaysAway === 1) {
+    heroBg = '#4A7C59'; heroText = 'Your delivery is tomorrow 🍱'; heroSub = 'Lunch · arriving 12–2pm';
   } else {
-    heroText = `Next delivery: ${sub.start_date ? new Date(sub.start_date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'}) : '—'}`;
-    heroSub = daysLeft !== null ? `${daysLeft} days away` : '';
+    heroText = `Next delivery: ${new Date(nextDeliveryDate+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'})}`;
+    heroSub = nextDaysAway !== null ? `${nextDaysAway} days away` : '';
   }
 
   const WEEKDAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
@@ -279,7 +293,7 @@ export default function SubActiveCard({ sub }) {
             <div className="pt-3 mt-3" style={{ borderTop: '1px solid rgba(128,0,32,0.08)' }}>
               <p className="text-xs text-center" style={{ color: '#9C7B6B' }}>
                 Need to make a change?{' '}
-                <Link to="/dashboard" className="underline font-semibold" style={{ color: '#800020' }}>Contact us</Link>
+                <a href="https://wa.me/447307119962?text=Hi,%20I%20need%20help%20with%20my%20Dabba%20Wala%20subscription." target="_blank" rel="noopener noreferrer" className="underline font-semibold" style={{ color: '#800020' }}>Contact us on WhatsApp</a>
                 {' '}— we aim to respond within 2 hours.
               </p>
             </div>
