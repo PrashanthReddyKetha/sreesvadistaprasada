@@ -169,7 +169,7 @@ export default function ReviewsTab({ reviews, reload }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-2">
       {pending.length > 0 && (
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: '#800020' }}>

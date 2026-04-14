@@ -153,8 +153,50 @@ async def _schedule_sms_reminder(user_id: str, review_type: str, ref_id: str):
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
+async def _backfill_meal_stubs(user_id: str):
+    """Create stubs for any past Dabba Wala delivery days that don't have one yet
+    (covers auto-delivered days that were never explicitly patched by admin)."""
+    today_s = datetime.utcnow().strftime("%Y-%m-%d")
+    subs = await db.subscriptions.find(
+        {"user_id": user_id}, {"_id": 0}
+    ).to_list(50)
+    for sub in subs:
+        start = sub.get("start_date")
+        end = sub.get("end_date") or start
+        if not start:
+            continue
+        try:
+            d = datetime.strptime(start, "%Y-%m-%d")
+            e = datetime.strptime(end, "%Y-%m-%d")
+        except ValueError:
+            continue
+        while d <= e and d.strftime("%Y-%m-%d") < today_s:
+            if d.weekday() < 5:
+                dt = d.strftime("%Y-%m-%d")
+                t = await db.delivery_tracking.find_one(
+                    {"delivery_id": f"{sub['id']}_{dt}"}, {"_id": 0}
+                )
+                status = (t or {}).get("status") or "delivered"
+                if status == "delivered":
+                    menu_doc = await db.weekly_menu_days.find_one(
+                        {"date": dt, "box_type": sub.get("box_type", "prasada")}, {"_id": 0}
+                    )
+                    await ensure_meal_day_review_stub(sub, dt, menu_doc)
+            d += timedelta(days=1)
+
+
+async def _backfill_order_stubs(user_id: str):
+    delivered = await db.orders.find(
+        {"user_id": user_id, "status": "delivered"}, {"_id": 0}
+    ).to_list(200)
+    for o in delivered:
+        await ensure_order_review_stub(o)
+
+
 @router.get("/pending")
 async def list_pending(current_user: dict = Depends(get_current_user)):
+    await _backfill_meal_stubs(current_user["sub"])
+    await _backfill_order_stubs(current_user["sub"])
     items = await db.delivery_reviews.find(
         {"user_id": current_user["sub"], "status": "pending"},
         {"_id": 0},
@@ -164,6 +206,8 @@ async def list_pending(current_user: dict = Depends(get_current_user)):
 
 @router.get("/mine")
 async def list_mine(current_user: dict = Depends(get_current_user)):
+    await _backfill_meal_stubs(current_user["sub"])
+    await _backfill_order_stubs(current_user["sub"])
     items = await db.delivery_reviews.find(
         {"user_id": current_user["sub"]},
         {"_id": 0},

@@ -109,6 +109,7 @@ async def get_sub_deliveries(sub_id: str, current_user: dict = Depends(get_curre
     }
 
     today_str = datetime.utcnow().strftime("%Y-%m-%d")
+    from routes.reviews import ensure_meal_day_review_stub
     result = []
     for dt in dates:
         t = tracking.get(f"{sub_id}_{dt}")
@@ -121,6 +122,13 @@ async def get_sub_deliveries(sub_id: str, current_user: dict = Depends(get_curre
             "skipped_at": (t or {}).get("skipped_at"),
             "issue_description": (t or {}).get("issue_description"),
         })
+        # Any delivered past meal should have a review stub — catches days that
+        # were auto-marked delivered without an admin patch.
+        if status == "delivered" and sub.get("user_id"):
+            menu_doc = await db.weekly_menu_days.find_one(
+                {"date": dt, "box_type": sub.get("box_type", "prasada")}, {"_id": 0}
+            )
+            await ensure_meal_day_review_stub(sub, dt, menu_doc)
     return result
 
 
