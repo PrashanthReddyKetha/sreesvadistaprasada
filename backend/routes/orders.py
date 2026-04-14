@@ -79,6 +79,9 @@ async def update_order_status(
         raise HTTPException(status_code=404, detail="Order not found")
 
     doc = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if doc and payload.status.value == "delivered":
+        from routes.reviews import ensure_order_review_stub
+        await ensure_order_review_stub(doc)
     return doc
 
 

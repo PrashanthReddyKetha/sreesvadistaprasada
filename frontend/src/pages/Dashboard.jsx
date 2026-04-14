@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, CheckCheck, Leaf, Flame, Shield } from 'lucide-react';
+import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, CheckCheck, Leaf, Flame, Shield, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 import SubActiveCard, { BOX_META, DishCards, daysUntil } from '../components/dashboard/SubActiveCard';
 import EnquiriesTab from '../components/dashboard/EnquiriesTab';
+import ReviewsTab from '../components/dashboard/ReviewsTab';
 
 /* ── helpers ─────────────────────────────────────────── */
 const STATUS_COLORS = {
@@ -39,6 +40,7 @@ const TABS = [
   { id: 'orders',         label: 'Orders',         icon: ShoppingBag },
   { id: 'subscriptions',  label: 'Dabba Wala',     icon: Calendar },
   { id: 'enquiries',      label: 'Enquiries',      icon: MessageSquare },
+  { id: 'reviews',        label: 'Reviews',        icon: Star },
   { id: 'account',        label: 'My Account',     icon: User },
 ];
 
@@ -54,6 +56,7 @@ export default function Dashboard() {
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [enquiries, setEnquiries] = useState({ contact: [], catering: [] });
   const [unreadCount, setUnreadCount] = useState(0);
+  const [reviews, setReviews] = useState([]);
 
   /* redirect if not logged in */
   useEffect(() => {
@@ -64,16 +67,18 @@ export default function Dashboard() {
     if (!user) return;
     setLoading(true);
     try {
-      const [oRes, sRes, eRes, nRes] = await Promise.all([
+      const [oRes, sRes, eRes, nRes, rRes] = await Promise.all([
         api.get('/orders'),
         api.get('/subscriptions'),
         api.get('/enquiries/my'),
         api.get('/enquiries/notifications/unread-count'),
+        api.get('/reviews/mine'),
       ]);
       setOrders(oRes.data);
       setSubs(sRes.data);
       setEnquiries(eRes.data);
       setUnreadCount(nRes.data.count || 0);
+      setReviews(rRes.data || []);
     } catch { /* token may have expired */ }
     finally { setLoading(false); }
   }, [user]);
@@ -89,6 +94,7 @@ export default function Dashboard() {
   const subsSpent = subs.filter(s => s.status !== 'cancelled').reduce((s, sub) => s + (sub.price || 0), 0);
   const totalSpent = ordersSpent + subsSpent;
   const activeSub = subs.find(s => s.status === 'active');
+  const pendingReviews = reviews.filter(r => r.status === 'pending').length;
 
   return (
     <div className="min-h-screen pt-24 md:pt-28 pb-16 px-4" style={{ backgroundColor: '#FAF8F4' }}>
@@ -125,7 +131,8 @@ export default function Dashboard() {
           {TABS.map(t => {
             const Icon = t.icon;
             const active = activeTab === t.id;
-            const hasUnread = t.id === 'enquiries' && unreadCount > 0;
+            const badge = t.id === 'enquiries' ? unreadCount : t.id === 'reviews' ? pendingReviews : 0;
+            const hasUnread = badge > 0;
             return (
               <button
                 key={t.id}
@@ -142,7 +149,7 @@ export default function Dashboard() {
                 {hasUnread && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white"
                     style={{ backgroundColor: '#DC2626' }}>
-                    {unreadCount > 9 ? '9+' : unreadCount}
+                    {badge > 9 ? '9+' : badge}
                   </span>
                 )}
               </button>
@@ -156,10 +163,11 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            {activeTab === 'overview'      && <OverviewTab orders={orders} subs={subs} pending={pending} active={active} delivered={delivered} totalSpent={totalSpent} activeSub={activeSub} setActiveTab={setActiveTab} unreadEnquiries={unreadCount} />}
+            {activeTab === 'overview'      && <OverviewTab orders={orders} subs={subs} pending={pending} active={active} delivered={delivered} totalSpent={totalSpent} activeSub={activeSub} setActiveTab={setActiveTab} unreadEnquiries={unreadCount} pendingReviews={pendingReviews} />}
             {activeTab === 'orders'        && <OrdersTab orders={orders} reload={load} expandedOrder={expandedOrder} setExpandedOrder={setExpandedOrder} />}
             {activeTab === 'subscriptions' && <SubsTab subs={subs} reload={load} />}
             {activeTab === 'enquiries'     && <EnquiriesTab enquiries={enquiries} reload={load} />}
+            {activeTab === 'reviews'       && <ReviewsTab reviews={reviews} reload={load} />}
             {activeTab === 'account'       && <AccountTab user={user} login={login} />}
           </>
         )}
@@ -169,7 +177,7 @@ export default function Dashboard() {
 }
 
 /* ══ Overview ════════════════════════════════════════════ */
-function OverviewTab({ orders, subs, pending, active, delivered, totalSpent, activeSub, setActiveTab, unreadEnquiries }) {
+function OverviewTab({ orders, subs, pending, active, delivered, totalSpent, activeSub, setActiveTab, unreadEnquiries, pendingReviews }) {
   const recentOrders = orders.slice(0, 3);
 
   const stats = [
@@ -181,6 +189,22 @@ function OverviewTab({ orders, subs, pending, active, delivered, totalSpent, act
 
   return (
     <div className="space-y-6">
+      {/* Pending review nudge */}
+      {pendingReviews > 0 && (
+        <button onClick={() => setActiveTab('reviews')}
+          className="w-full flex items-center gap-3 p-4 rounded-2xl text-left transition-opacity hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #B8860B 0%, #8B6508 100%)' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+            <Star size={18} className="fill-white text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-white">
+              {pendingReviews} {pendingReviews === 1 ? 'meal' : 'meals'} waiting for your rating
+            </p>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.85)' }}>Takes 10 seconds — tell us how it was →</p>
+          </div>
+        </button>
+      )}
       {/* Unread enquiry alert */}
       {unreadEnquiries > 0 && (
         <button onClick={() => setActiveTab('enquiries')}

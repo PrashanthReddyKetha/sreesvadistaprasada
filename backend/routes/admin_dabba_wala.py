@@ -357,11 +357,25 @@ async def get_todays_deliveries(current_user: dict = Depends(require_admin)):
 @router.patch("/dabba-wala/deliveries/{delivery_id}/status")
 async def update_delivery_status(delivery_id: str, payload: dict, current_user: dict = Depends(require_admin)):
     # delivery_id format: {sub_id}_{date}
+    new_status = payload.get("status", "delivered")
     await db.delivery_tracking.update_one(
         {"delivery_id": delivery_id},
-        {"$set": {"status": payload.get("status", "delivered"), "updated_at": datetime.utcnow().isoformat()}},
+        {"$set": {"status": new_status, "updated_at": datetime.utcnow().isoformat()}},
         upsert=True,
     )
+    if new_status == "delivered":
+        try:
+            sub_id, date = delivery_id.rsplit("_", 1)
+        except ValueError:
+            sub_id, date = None, None
+        if sub_id and date:
+            sub = await db.subscriptions.find_one({"id": sub_id}, {"_id": 0})
+            if sub:
+                menu_doc = await db.weekly_menu_days.find_one(
+                    {"date": date, "box_type": sub.get("box_type", "prasada")}, {"_id": 0}
+                )
+                from routes.reviews import ensure_meal_day_review_stub
+                await ensure_meal_day_review_stub(sub, date, menu_doc)
     return {"ok": True}
 
 
