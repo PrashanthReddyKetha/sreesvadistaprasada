@@ -14,7 +14,7 @@ from typing import Optional, List
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 from database import db
-from auth import get_current_user
+from auth import get_current_user, require_admin
 import uuid
 import logging
 
@@ -259,6 +259,50 @@ async def submit_review(
             })
 
     return {"ok": True}
+
+
+@router.get("/admin/all")
+async def admin_list_reviews(
+    status: Optional[str] = "submitted",
+    type: Optional[str] = None,
+    max_rating: Optional[int] = None,
+    _: dict = Depends(require_admin),
+):
+    """Admin view of delivery reviews. Default: all submitted."""
+    q: dict = {}
+    if status and status != "all":
+        q["status"] = status
+    if type:
+        q["type"] = type
+    if max_rating is not None:
+        q["rating"] = {"$lte": max_rating}
+    docs = await db.delivery_reviews.find(q, {"_id": 0}).sort("submitted_at", -1).to_list(500)
+    user_ids = list({d["user_id"] for d in docs if d.get("user_id")})
+    users = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(500)
+    umap = {u["id"]: u for u in users}
+    for d in docs:
+        u = umap.get(d.get("user_id"), {})
+        d["user_name"] = u.get("name")
+        d["user_email"] = u.get("email")
+    return docs
+
+
+@router.get("/admin/stats")
+async def admin_review_stats(_: dict = Depends(require_admin)):
+    """Aggregate stats for admin overview."""
+    pipeline = [
+        {"$match": {"status": "submitted"}},
+        {"$group": {"_id": None, "avg": {"$avg": "$rating"}, "count": {"$sum": 1}}},
+    ]
+    agg = await db.delivery_reviews.aggregate(pipeline).to_list(1)
+    avg = round(agg[0]["avg"], 2) if agg else 0
+    total = agg[0]["count"] if agg else 0
+    since = (datetime.utcnow() - timedelta(days=7)).isoformat()
+    low_7d = await db.delivery_reviews.count_documents(
+        {"status": "submitted", "rating": {"$lte": 2}, "submitted_at": {"$gte": since}}
+    )
+    pending = await db.delivery_reviews.count_documents({"status": "pending"})
+    return {"average_rating": avg, "total_submitted": total, "low_star_7d": low_7d, "pending": pending}
 
 
 @router.post("/{review_id}/dismiss")

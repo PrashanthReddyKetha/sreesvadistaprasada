@@ -7,7 +7,7 @@ import {
   TrendingUp, Clock, CheckCircle, XCircle, RefreshCw,
   ChevronDown, ChevronRight, LayoutDashboard,
   ArrowLeft, Send, CheckCheck, AlertCircle,
-  Calendar, Utensils
+  Calendar, Utensils, Star
 } from 'lucide-react';
 import DabbaWalaTab from '../components/admin/DabbaWalaTab';
 import MenuTab from '../components/admin/MenuTab';
@@ -95,6 +95,10 @@ const Overview = ({ orders, subscriptions, users, contacts, catering, newsletter
   const pendingOrders   = orders.filter(o => o.status === 'pending').length;
   const activeSubs      = subscriptions.filter(s => s.status === 'active').length;
   const newEnquiries    = [...contacts,...catering].filter(e => e.status === 'new').length;
+  const [reviewStats, setReviewStats] = useState(null);
+  useEffect(() => {
+    api.get('/reviews/admin/stats').then(r => setReviewStats(r.data)).catch(() => {});
+  }, []);
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -104,6 +108,12 @@ const Overview = ({ orders, subscriptions, users, contacts, catering, newsletter
         <StatCard icon={Package}     label="Active Subscriptions" value={activeSubs}                color="#1565C0" />
         <StatCard icon={Users}       label="Registered Users"     value={users.length}              color="#6A1B9A" />
         <StatCard icon={Bell}        label="New Enquiries"        value={newEnquiries}              color="#C62828" />
+        {reviewStats && (
+          <>
+            <StatCard icon={Star}       label="Avg Rating"          value={reviewStats.average_rating || '—'} color="#B8860B" />
+            <StatCard icon={AlertCircle} label="Low Ratings (7d)"   value={reviewStats.low_star_7d}           color="#C62828" />
+          </>
+        )}
       </div>
 
       <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
@@ -643,6 +653,147 @@ const NewsletterTab = ({ newsletter, reload }) => {
   );
 };
 
+// ─── Reviews ──────────────────────────────────────────────────────────────────
+const TYPE_LABEL = { order:'Order', meal_day:'Meal Day', week_summary:'Weekly' };
+const TYPE_COLOR = {
+  order:        { bg:'#E3F2FD', text:'#1565C0' },
+  meal_day:     { bg:'#FFF8E1', text:'#B8860B' },
+  week_summary: { bg:'#F3E5F5', text:'#6A1B9A' },
+};
+const RatingStars = ({ value }) => (
+  <div className="flex gap-0.5">
+    {[1,2,3,4,5].map(n => (
+      <Star key={n} size={14} className={n <= (value||0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} />
+    ))}
+  </div>
+);
+const ReviewsTab = () => {
+  const [reviews, setReviews] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState({ status:'submitted', type:'', lowOnly:false });
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filter.status)  params.set('status', filter.status);
+      if (filter.type)    params.set('type', filter.type);
+      if (filter.lowOnly) params.set('max_rating', '2');
+      const [r, s] = await Promise.all([
+        api.get(`/reviews/admin/all?${params.toString()}`),
+        api.get('/reviews/admin/stats'),
+      ]);
+      setReviews(r.data); setStats(s.data);
+    } finally { setLoading(false); }
+  }, [filter]);
+  useEffect(() => { load(); }, [load]);
+
+  const StatMini = ({ label, value, color }) => (
+    <div className="bg-white rounded-xl p-4" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
+      <p className="text-2xl font-bold" style={{ color }}>{value}</p>
+      <p className="text-xs text-gray-500 font-medium">{label}</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {stats && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatMini label="Avg Rating"        value={stats.average_rating || '—'}  color="#4A7C59" />
+          <StatMini label="Submitted Total"   value={stats.total_submitted}        color="#800020" />
+          <StatMini label="Low Stars (7d)"    value={stats.low_star_7d}            color="#C62828" />
+          <StatMini label="Pending"           value={stats.pending}                color="#B8860B" />
+        </div>
+      )}
+      <div className="bg-white rounded-xl p-4 flex flex-wrap gap-3 items-center" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
+        <select value={filter.status} onChange={e => setFilter(f => ({...f, status:e.target.value}))}
+          className="text-sm border rounded-lg px-3 py-2" style={{ borderColor:'rgba(128,0,32,0.2)' }}>
+          <option value="submitted">Submitted</option>
+          <option value="pending">Pending</option>
+          <option value="dismissed">Dismissed</option>
+          <option value="all">All</option>
+        </select>
+        <select value={filter.type} onChange={e => setFilter(f => ({...f, type:e.target.value}))}
+          className="text-sm border rounded-lg px-3 py-2" style={{ borderColor:'rgba(128,0,32,0.2)' }}>
+          <option value="">All types</option>
+          <option value="order">Order</option>
+          <option value="meal_day">Meal Day</option>
+          <option value="week_summary">Weekly</option>
+        </select>
+        <label className="flex items-center gap-2 text-sm font-medium" style={{ color:'#5C4B47' }}>
+          <input type="checkbox" checked={filter.lowOnly}
+            onChange={e => setFilter(f => ({...f, lowOnly:e.target.checked}))} />
+          Low ratings only (≤2★)
+        </label>
+        <button onClick={load} className="ml-auto flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold"
+          style={{ backgroundColor:'rgba(128,0,32,0.08)', color:'#800020' }}>
+          <RefreshCw size={12} /> Refresh
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
+        <div className="px-6 py-4 border-b" style={{ borderColor:'#f0ebe6' }}>
+          <h3 className="font-bold" style={{ fontFamily:"'Playfair Display', serif", color:'#800020' }}>
+            Customer Feedback <span className="text-sm font-normal text-gray-400">({reviews.length})</span>
+          </h3>
+        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <RefreshCw size={24} className="animate-spin" style={{ color:'#800020' }} />
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="px-6 py-12 text-center text-sm text-gray-500">No reviews match these filters.</div>
+        ) : (
+          <div className="divide-y" style={{ borderColor:'#f0ebe6' }}>
+            {reviews.map(r => {
+              const isLow = r.status === 'submitted' && r.rating && r.rating <= 2;
+              const tc = TYPE_COLOR[r.type] || { bg:'#F5F5F5', text:'#666' };
+              return (
+                <div key={r.id} className="px-6 py-4" style={isLow ? { backgroundColor:'#FFF5F5', borderLeft:'3px solid #C62828' } : {}}>
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div className="flex-1 min-w-[260px]">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+                          style={{ backgroundColor:tc.bg, color:tc.text }}>
+                          {TYPE_LABEL[r.type] || r.type}
+                        </span>
+                        <span className="font-semibold text-sm" style={{ color:'#1a1a1a' }}>
+                          {r.user_name || 'Customer'}
+                        </span>
+                        {r.user_email && <span className="text-xs text-gray-400">· {r.user_email}</span>}
+                        {isLow && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor:'#FFEBEE', color:'#C62828' }}>LOW</span>}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">
+                        {r.rating ? <RatingStars value={r.rating} /> : <span className="italic">No rating</span>}
+                        {r.meal_date   && <span>Meal · {fmtDate(r.meal_date)}</span>}
+                        {r.week_start  && <span>Week of {fmtDate(r.week_start)}</span>}
+                        {r.order_id    && <span>Order #{r.order_id.slice(0,8)}</span>}
+                        {r.submitted_at && <span>Submitted {fmt(r.submitted_at)}</span>}
+                      </div>
+                      {!!r.menu_item_names?.length && (
+                        <p className="text-xs mb-2" style={{ color:'#5C4B47' }}>
+                          <span className="font-semibold">Items: </span>{r.menu_item_names.join(' · ')}
+                        </p>
+                      )}
+                      {r.text ? (
+                        <p className="text-sm rounded-lg p-3" style={{ backgroundColor:'#FDFBF7', color:'#5C4B47' }}>"{r.text}"</p>
+                      ) : (
+                        <p className="text-xs italic text-gray-400">No comment left.</p>
+                      )}
+                    </div>
+                    <Badge status={r.status} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Admin Page ──────────────────────────────────────────────────────────
 const TABS = [
   { id:'overview',      label:'Overview',      icon:TrendingUp   },
@@ -652,6 +803,7 @@ const TABS = [
   { id:'menu',          label:'Menu',          icon:Utensils     },
   { id:'users',         label:'Users',         icon:Users        },
   { id:'enquiries',     label:'Enquiries',     icon:MessageSquare},
+  { id:'reviews',       label:'Reviews',       icon:Star         },
   { id:'newsletter',    label:'Newsletter',    icon:Mail         },
 ];
 
@@ -778,6 +930,7 @@ const Admin = () => {
               {activeTab==='menu'          && <MenuTab />}
               {activeTab==='users'         && <UsersTab users={data.users} />}
               {activeTab==='enquiries'     && <EnquiriesTab contacts={data.contacts} catering={data.catering} onStatusUpdate={handleStatusUpdate} reload={fetchAll} />}
+              {activeTab==='reviews'       && <ReviewsTab />}
               {activeTab==='newsletter'    && <NewsletterTab newsletter={data.newsletter} reload={fetchAll} />}
             </>
           )}
