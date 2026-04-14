@@ -518,25 +518,42 @@ const SubscriptionsInner = () => {
   };
 
   const goBackRef = useRef(null);
+  const stepRef = useRef(step); stepRef.current = step;
+  const isGuestRef = useRef(isGuest); isGuestRef.current = isGuest;
   const goBack = () => {
     // If guest chose "Continue as guest" and hits Back, show the 3-option screen again
-    if (step === 5 && isGuest) { setIsGuest(false); return; }
-    if (step > 1) setStep(s => s - 1);
+    if (stepRef.current === 5 && isGuestRef.current) { setIsGuest(false); isGuestRef.current = false; return; }
+    if (stepRef.current > 1) { const ns = stepRef.current - 1; setStep(ns); stepRef.current = ns; }
   };
   goBackRef.current = goBack;
-  const goNext = () => { if (canProceed() && step < 6) setStep(s => s + 1); };
+  const goNext = () => {
+    if (canProceed() && step < 6) {
+      window.history.pushState({ wizard: true }, '', window.location.href);
+      setStep(s => s + 1);
+    }
+  };
 
-  // Intercept browser back button — stay in wizard instead of navigating away
+  // Intercept browser back button — stay in wizard instead of navigating away.
+  // Register popstate once; use ref for up-to-date goBack. Push a new history
+  // entry on every step advance so each browser-back consumes one wizard step.
+  const wizardActiveRef = useRef(false);
   useEffect(() => {
-    if (pageState !== 'wizard' || submitStatus === 'success') return;
-    window.history.pushState(null, '', window.location.href);
+    wizardActiveRef.current = (pageState === 'wizard' && submitStatus !== 'success');
+  }, [pageState, submitStatus]);
+
+  useEffect(() => {
+    window.history.pushState({ wizard: true }, '', window.location.href);
     const handler = () => {
-      window.history.pushState(null, '', window.location.href);
+      if (!wizardActiveRef.current) return;
+      const before = { step: stepRef.current, isGuest: isGuestRef.current };
       if (goBackRef.current) goBackRef.current();
+      const changed = stepRef.current !== before.step || isGuestRef.current !== before.isGuest;
+      if (changed) window.history.pushState({ wizard: true }, '', window.location.href);
+      // else: step was already 1 — let the browser leave the wizard.
     };
     window.addEventListener('popstate', handler);
     return () => window.removeEventListener('popstate', handler);
-  }, [step, isGuest, pageState, submitStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* submit */
   const handleConfirm = async () => {

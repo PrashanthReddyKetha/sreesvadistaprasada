@@ -5,6 +5,7 @@ import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
+import useTabHistory from '../../hooks/useTabHistory';
 
 const TABS = ['All', 'Starters & Evening Delights', 'Indo-Chinese', 'Curries & Dal', '🪔 Naivedyam', 'Biryani & Rice'];
 
@@ -32,6 +33,7 @@ const Prasada = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
+  const selectTab = useTabHistory(activeTab, setActiveTab, 'All');
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -86,7 +88,7 @@ const Prasada = () => {
         style={{ backgroundColor: '#F0FFF4', borderBottom: '1px solid rgba(22,101,52,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
         <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {TABS.map(tab => (
-            <button key={tab} onClick={() => { setActiveTab(tab); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
+            <button key={tab} onClick={() => { selectTab(tab); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
               className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
               style={{
                 backgroundColor: activeTab === tab ? '#166534' : 'transparent',

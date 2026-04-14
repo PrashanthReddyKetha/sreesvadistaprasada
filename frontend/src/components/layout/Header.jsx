@@ -190,7 +190,7 @@ const Header = () => {
                         Admin Panel
                       </Link>
                     ) : (
-                      <span className="text-xs font-semibold hidden xl:block max-w-[100px] truncate" style={{ color: '#800020' }}>{user.name}</span>
+                      <Link to="/dashboard" className="text-xs font-semibold hidden xl:block max-w-[100px] truncate hover:underline" style={{ color: '#800020' }}>{user.name}</Link>
                     )}
                     <Link to="/dashboard" className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" style={{ color: '#800020' }} data-testid="dashboard-button" title="My Account">
                       <User size={20} />

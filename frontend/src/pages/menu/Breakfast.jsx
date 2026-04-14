@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Sun } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
+import useTabHistory from '../../hooks/useTabHistory';
 
 const TABS = ['All', 'Idli & Vada', 'Dosas', 'Others'];
 
@@ -24,6 +25,7 @@ const Breakfast = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
+  const selectTab = useTabHistory(activeTab, setActiveTab, 'All');
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -72,7 +74,7 @@ const Breakfast = () => {
         style={{ backgroundColor: '#FFFBEB', borderBottom: '1px solid rgba(180,101,11,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
         <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {TABS.map(tab => (
-            <button key={tab} onClick={() => { setActiveTab(tab); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
+            <button key={tab} onClick={() => { selectTab(tab); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
               className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
               style={{
                 backgroundColor: activeTab === tab ? '#B45309' : 'transparent',

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Flame, ArrowRight, Package, Truck, MessageCircle } from 'lucide-react';
 import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
+import useTabHistory from '../../hooks/useTabHistory';
 
 const categories = ['All', 'Pickles', 'Podis'];
 
@@ -10,6 +11,7 @@ const Snacks = () => {
   const [allItems, setAllItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
+  const selectTab = useTabHistory(activeFilter, setActiveFilter, 'All');
   useEffect(() => {
     const key = 'snacks';
     const cached = getCached(key);
@@ -75,7 +77,7 @@ const Snacks = () => {
           {categories.map(cat => (
             <button
               key={cat}
-              onClick={() => { setActiveFilter(cat); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
+              onClick={() => { selectTab(cat); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
               className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                 activeFilter === cat ? 'text-white' : 'text-gray-600 hover:bg-[#800020]/10'
               }`}

@@ -329,8 +329,12 @@ async def get_todays_deliveries(current_user: dict = Depends(require_admin)):
             {"date": today, "box_type": s["box_type"], "status": "published"},
             {"_id": 0}
         )
+        delivery_id = f"{s['id']}_{today}"
+        tracking = await db.delivery_tracking.find_one(
+            {"delivery_id": delivery_id}, {"_id": 0}
+        )
         deliveries.append({
-            "delivery_id": f"{s['id']}_{today}",
+            "delivery_id": delivery_id,
             "sub_id": s["id"],
             "seq": i + 1,
             "name": s["customer_name"].split()[0] if s.get("customer_name") else "—",
@@ -344,7 +348,7 @@ async def get_todays_deliveries(current_user: dict = Depends(require_admin)):
             "neighbour_door": s.get("neighbour_door"),
             "safe_place_description": s.get("safe_place_description"),
             "menu": menu_doc,
-            "status": "confirmed",
+            "status": (tracking or {}).get("status", "confirmed"),
         })
 
     return deliveries
