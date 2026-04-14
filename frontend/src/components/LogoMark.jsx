@@ -8,7 +8,7 @@ const LogoMark = ({ size = 64, className = '' }) => {
   if (!error) {
     return (
       <img
-        src="/logo.png"
+        src="/logo.png?v=2"
         alt="Sree Svadista Prasada"
         onError={() => setError(true)}
         className={className || undefined}
