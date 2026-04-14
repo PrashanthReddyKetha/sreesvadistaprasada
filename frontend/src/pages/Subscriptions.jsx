@@ -1387,24 +1387,25 @@ const SubscriptionsInner = () => {
                           <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: C.cream }}>
                             <CardNumberElement options={CARD_STYLE} placeholder="Card number" />
                           </div>
-                          {/* Expiry, CVC, Postcode - single row */}
-                          <div className="grid grid-cols-3 gap-2">
+                          {/* Expiry + CVC row */}
+                          <div className="grid grid-cols-2 gap-2">
                             <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: C.cream }}>
                               <CardExpiryElement options={CARD_STYLE} placeholder="MM / YY" />
                             </div>
                             <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: C.cream }}>
                               <CardCvcElement options={CARD_STYLE} placeholder="CVC" />
                             </div>
-                            <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: C.cream }}>
-                              <input
-                                type="text"
-                                value={customer.postcode}
-                                onChange={e => setCustomer(prev => ({ ...prev, postcode: e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase() }))}
-                                placeholder="Postcode"
-                                className="w-full text-sm focus:outline-none bg-transparent"
-                                style={{ color: '#2D2422' }}
-                              />
-                            </div>
+                          </div>
+                          {/* Postcode - full width */}
+                          <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: C.cream }}>
+                            <input
+                              type="text"
+                              value={customer.postcode}
+                              onChange={e => setCustomer(prev => ({ ...prev, postcode: e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase() }))}
+                              placeholder="Postcode"
+                              className="w-full text-sm focus:outline-none bg-transparent"
+                              style={{ color: '#2D2422' }}
+                            />
                           </div>
                         </div>
                         <p className="text-[10px] text-gray-400">Card details encrypted — never stored on our servers.</p>
