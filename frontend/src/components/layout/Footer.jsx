@@ -50,10 +50,10 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <h3 className="text-xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
-                Stay Close to Home
+                A letter from the kitchen
               </h3>
               <p className="text-sm" style={{ color: '#A09890' }}>
-                Get weekly menus, offers, and festive specials straight to your inbox.
+                This week's menu, festival specials, and what's simmering on the stove — once a week, never noise.
               </p>
             </div>
             <form onSubmit={handleNewsletterSubmit} className="flex gap-2 w-full md:w-auto" data-testid="newsletter-form">
@@ -88,14 +88,14 @@ const Footer = () => {
             <h3 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
               Sree Svadista Prasada
             </h3>
-            <span className="text-xs tracking-[0.2em] uppercase block mb-4" style={{ color: '#F4C430' }}>
-              Authentic South Indian
+            <span className="text-xs italic block mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#F4C430' }}>
+              Taste for your heart · memories on a plate
             </span>
             <p className="text-sm leading-relaxed mb-4" style={{ color: '#A09890' }}>
-              From grandmother's kitchen to the UK — pure, divine, and truly home-style food. Now proudly serving Milton Keynes, Edinburgh & Glasgow.
+              Grandmother's recipes, slow tadkas, and the patient kind of love that fills a house with aroma. Cooked in Milton Keynes. Carried to Edinburgh &amp; Glasgow. Sent across the UK in small, careful jars.
             </p>
             <p className="text-sm italic" style={{ color: '#F4C430' }}>
-              "Finally, I am home."
+              "Cooked with care. Served with love."
             </p>
           </div>
 

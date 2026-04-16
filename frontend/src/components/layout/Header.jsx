@@ -73,8 +73,8 @@ const Header = () => {
         className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-medium tracking-wide overflow-hidden"
         style={{ backgroundColor: '#800020', color: '#FDFBF7' }}
       >
-        <span className="hidden sm:inline">Swagatam! Now serving authentic hot meals in Milton Keynes, Edinburgh &amp; Glasgow &nbsp;|&nbsp; Take away available &nbsp;|&nbsp; Free Delivery over £30</span>
-        <span className="sm:hidden whitespace-nowrap">Take away available &nbsp;|&nbsp; Free Delivery £30+</span>
+        <span className="hidden sm:inline">Swagatam — welcome home &nbsp;·&nbsp; Hot meals in Milton Keynes, Edinburgh &amp; Glasgow &nbsp;·&nbsp; Free delivery over £30</span>
+        <span className="sm:hidden whitespace-nowrap">Swagatam · welcome home &nbsp;·&nbsp; Free delivery £30+</span>
       </div>
 
       {/* Header */}
@@ -103,8 +103,8 @@ const Header = () => {
                 >
                   Sree Svadista Prasada
                 </h1>
-                <span className="text-[9px] md:text-xs tracking-[0.18em] md:tracking-[0.2em] uppercase leading-none" style={{ color: '#B8860B' }}>
-                  Authentic South Indian
+                <span className="text-[9px] md:text-xs italic leading-none" style={{ fontFamily: "'Playfair Display', serif", color: '#B8860B' }}>
+                  Taste for your heart · memories on a plate
                 </span>
               </div>
             </Link>

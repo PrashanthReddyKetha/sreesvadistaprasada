@@ -445,15 +445,15 @@ const AuthModal = () => {
   /* ── Header config ───────────────────────────────────────────────────── */
   const isRegister = tab === 'register';
   const title = googleStep
-    ? (googleStep === 'phone' ? `Hi, ${googleName.split(' ')[0]}!` : 'Verify your number')
+    ? (googleStep === 'phone' ? `Swagatam, ${googleName.split(' ')[0]}` : 'One last check')
     : isRegister
-      ? (step === 1 ? 'Create Account' : 'Verify Your Number')
-      : 'Welcome Back';
+      ? (step === 1 ? 'Pull up a chair' : 'One last check')
+      : 'Swagatam — welcome home';
   const subtitle = googleStep
-    ? (googleStep === 'phone' ? 'Add your mobile to complete your account.' : `Enter the code sent to ${googlePhone}`)
+    ? (googleStep === 'phone' ? 'Leave your number so we can bring a hot meal to the right door.' : `We just sent a code to ${googlePhone}.`)
     : isRegister
-      ? (step === 1 ? 'Join thousands of happy customers.' : `We sent a 6-digit code to ${phone}`)
-      : 'Sign in to track orders and manage subscriptions.';
+      ? (step === 1 ? 'A warm plate is always waiting here.' : `We just sent a code to ${phone}.`)
+      : 'Sign in — your orders and subscription are right where you left them.';
 
   return (
     <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center p-4" onClick={close}>
@@ -532,16 +532,16 @@ const AuthModal = () => {
               <button type="submit" disabled={loading}
                 className="w-full py-3.5 text-sm font-bold text-white rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-lg disabled:opacity-60"
                 style={{ backgroundColor: '#800020' }}>
-                {loading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Signing in…</> : 'Sign In'}
+                {loading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Opening the door…</> : 'Sign In'}
               </button>
 
               <Divider />
               <GoogleBtn onClick={() => googleLogin()} loading={loading} label="Continue with Google" />
 
               <p className="text-center text-xs text-gray-400 pt-1">
-                Don't have an account?{' '}
+                First time here?{' '}
                 <button type="button" onClick={() => { setTab('register'); setLoginError(''); }}
-                  className="font-semibold hover:underline" style={{ color: '#800020' }}>Register here</button>
+                  className="font-semibold hover:underline" style={{ color: '#800020' }}>Come on in</button>
               </p>
             </form>
           )}
@@ -650,9 +650,9 @@ const AuthModal = () => {
               <GoogleBtn onClick={() => googleLogin()} loading={loading} label="Register with Google" />
 
               <p className="text-center text-xs text-gray-400 pt-1">
-                Already have an account?{' '}
+                Been here before?{' '}
                 <button type="button" onClick={() => { setTab('login'); setRegError(''); }}
-                  className="font-semibold hover:underline" style={{ color: '#800020' }}>Sign in</button>
+                  className="font-semibold hover:underline" style={{ color: '#800020' }}>Welcome back</button>
               </p>
             </form>
           )}
@@ -678,7 +678,7 @@ const AuthModal = () => {
                 className="w-full py-3.5 text-sm font-bold text-white rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-lg disabled:opacity-50"
                 style={{ backgroundColor: '#800020' }}>
                 {loading
-                  ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Creating account…</>
+                  ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Setting a place for you…</>
                   : 'Verify & Create Account'
                 }
               </button>

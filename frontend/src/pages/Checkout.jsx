@@ -582,7 +582,7 @@ const CheckoutInner = () => {
             <ArrowLeft size={16} /> Back
           </button>
           <h1 className="text-xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-            Checkout
+            Almost at the doorstep
           </h1>
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
             <Lock size={12} /> Secure order

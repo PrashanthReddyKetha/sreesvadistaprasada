@@ -161,10 +161,10 @@ const Home = () => {
             <div className="flex items-end justify-between mb-5">
               <div>
                 <p className="text-xs uppercase tracking-[0.25em] mb-1" style={{ color: '#B8860B' }}>
-                  Fresh off the kitchen
+                  Straight off this morning's stove
                 </p>
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                  Today's Specials
+                  Fresh on the Stove Today
                 </h2>
               </div>
               <div className="hidden md:flex gap-2">
@@ -255,10 +255,10 @@ const Home = () => {
           <div className="flex items-end justify-between mb-10">
             <div>
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>
-                What Our Cities are Loving Right Now
+                The plates our families keep asking for
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                Trending & Loved
+                Loved &amp; Reordered
               </h2>
             </div>
             <div className="hidden md:flex gap-2">
@@ -388,19 +388,19 @@ const Home = () => {
         <div className="max-w-7xl mx-auto relative">
           <div className="text-center mb-8 md:mb-16">
             <p className="text-[11px] md:text-sm uppercase tracking-[0.25em] mb-2 md:mb-3" style={{ color: '#F4C430' }}>
-              Your daily dose of home love
+              A hot dabba, every day, like clockwork
             </p>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
-              The Dabba Wala Service
+              The Dabba Wala
             </h2>
             <div className="w-12 h-0.5 mx-auto mt-3 md:mt-4" style={{ backgroundColor: '#F4C430' }} />
           </div>
 
           <div className="grid grid-cols-3 gap-3 md:gap-12 mb-8 md:mb-12">
             {[
-              { num: '01', icon: Package, title: 'Choose Your Box', desc: 'Pick from Prasada (Pure Veg), Svadista (Non-Veg), or Mixed. Weekly or Monthly plans.' },
-              { num: '02', icon: Calendar, title: 'Set Your Schedule', desc: 'Choose delivery days and time. Pause, resume, or change preferences anytime.' },
-              { num: '03', icon: Truck, title: 'Enjoy Daily Meals', desc: 'Freshly prepared homely food delivered to your doorstep. Just like mother used to pack.' },
+              { num: '01', icon: Package, title: 'Pick Your Dabba', desc: 'Prasada, Svadista, or a bit of both. Weekly or monthly — whichever fits your week.' },
+              { num: '02', icon: Calendar, title: 'Tell Us Your Days', desc: 'Choose days and times. Pause for a holiday, switch the menu, no fuss.' },
+              { num: '03', icon: Truck, title: 'Open It Warm', desc: 'Packed fresh, sealed hot, at your door — the way a home meal should arrive.' },
             ].map((step) => (
               <div key={step.num} className="text-center" data-testid={`dabba-step-${step.num}`}>
                 <div className="relative inline-block mb-3 md:mb-6">
@@ -428,7 +428,7 @@ const Home = () => {
                 style={{ backgroundColor: '#F4C430', color: '#2D2422' }}
                 data-testid="dabba-subscribe-btn"
               >
-                Start Your Subscription <ArrowRight size={16} className="inline ml-2" />
+                Start My Dabba <ArrowRight size={16} className="inline ml-2" />
               </button>
             </Link>
           </div>
@@ -444,10 +444,10 @@ const Home = () => {
             {/* Chef's Special - 3 columns */}
             <div className="lg:col-span-3">
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>
-                Prepared with devotion
+                Cooked slow · served with both hands
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                Chef's Special
+                This Week's Favourite
               </h2>
 
               <div className="relative rounded-lg overflow-hidden group" style={{ boxShadow: '0 8px 32px rgba(128, 0, 32, 0.08)' }}>
@@ -495,10 +495,10 @@ const Home = () => {
             {/* Explore by Meal Moment - 2 columns */}
             <div className="lg:col-span-2">
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>
-                Quick navigation
+                Pick a time of day
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                Explore by Meal Moment
+                By the Hour
               </h2>
 
               <div className="grid grid-cols-2 gap-4 md:gap-5">
@@ -532,12 +532,12 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div>
-              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Check your area</p>
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Let's find your door</p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                Do We Deliver to You?
+                Where Shall We Bring the Warmth?
               </h2>
               <p className="text-sm text-gray-600 leading-relaxed mb-6">
-                Enter your postcode to see what's available in your area. Full meals and subscriptions in Milton Keynes, Edinburgh & Glasgow. Snacks and pickles ship UK-wide.
+                Drop your postcode and we'll tell you what's on the way. Hot meals and daily dabbas in Milton Keynes, Edinburgh &amp; Glasgow. Pickles and podis — we post those anywhere you call home.
               </p>
               <form onSubmit={checkPostcode} className="flex gap-2 mb-4" data-testid="postcode-form">
                 <div className="relative flex-1">
@@ -604,9 +604,9 @@ const Home = () => {
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }} data-testid="gallery-preview-section">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
-            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>From our kitchens</p>
+            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>A peek into our kitchen</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-              A Glimpse of Home
+              From Our Kitchen
             </h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
@@ -637,21 +637,21 @@ const Home = () => {
             <div className="absolute top-0 left-0 w-24 h-24 rounded-full opacity-10" style={{ backgroundColor: '#F4C430', transform: 'translate(-50%, -50%)' }} />
             <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full opacity-10" style={{ backgroundColor: '#800020', transform: 'translate(50%, 50%)' }} />
 
-            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>Limited time offer</p>
+            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>A little welcome gift</p>
             <h2 className="text-4xl sm:text-5xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-              Flat 15% OFF
+              15% OFF
             </h2>
             <p className="text-lg mb-1" style={{ color: '#800020' }}>
-              Your First Subscription Month
+              Your first month of daily dabbas
             </p>
-            <p className="text-sm text-gray-600 mb-6">Use Code: <span className="font-bold" style={{ color: '#800020' }}>HOME15</span></p>
+            <p className="text-sm text-gray-600 mb-6">Use code: <span className="font-bold" style={{ color: '#800020' }}>HOME15</span></p>
             <Link to="/subscriptions">
               <button
                 className="px-8 py-3 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg"
                 style={{ backgroundColor: '#800020' }}
                 data-testid="offer-cta-btn"
               >
-                Claim Offer
+                Bring It Home
               </button>
             </Link>
           </div>
@@ -677,14 +677,13 @@ const Home = () => {
             </div>
             <div>
               <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>
-                Sending a piece of home across the UK
+                Small jars · big memories
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                Hot, Sweet & Pickles
+                Avakaya, Podis &amp; Sweet Things
               </h2>
               <p className="text-base text-gray-600 leading-relaxed mb-6">
-                Shop our authentic pickles, podis, and sweets. Grandmother's recipes, packed with love and shipped anywhere in the UK.
-                From tangy Gongura pickle to fiery Mango Avakaya — jars of joy waiting to open.
+                Hand-stirred pickles. Dry-roasted podis ground in small batches. Sweets folded the way grandmothers fold them — slow and smiling. From tangy Gongura to fiery Mango Avakaya, each jar carries a noisy Sunday kitchen inside it.
               </p>
               <div className="flex flex-wrap gap-3 mb-8">
                 {['Avakaya', 'Gongura', 'Kandi Podi', 'Sweets', 'Podis'].map((tag) => (
@@ -699,7 +698,7 @@ const Home = () => {
               </div>
               <Link to="/snacks">
                 <button className="btn-outlined" data-testid="shop-snacks-btn">
-                  Shop the Range <ArrowRight size={16} />
+                  Open the Pantry <ArrowRight size={16} />
                 </button>
               </Link>
             </div>
@@ -715,22 +714,21 @@ const Home = () => {
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="order-2 md:order-1">
               <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>
-                More than just food
+                Not just food · a feeling we kept chasing
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                Our Story
+                Why We Lit This Stove
               </h2>
               <p className="text-base text-gray-600 leading-relaxed mb-4">
-                It is an emotion. Rooted in Telugu tradition and carried across continents. When South Indians in the UK longed for more than just "curry" —
-                they missed memories, warmth, and the soul of home-cooked food.
+                Somewhere between a UK winter and a long video call home, we missed something no menu was naming — the smell of tadka hitting hot ghee, the hiss of mustard seeds, and a plate placed in front of us without being asked for.
               </p>
               <p className="text-base text-gray-600 leading-relaxed mb-8">
-                That longing became Sree Svadista Prasada. Two kitchens, two philosophies, one love:
-                <em className="font-medium" style={{ color: '#800020' }}> the taste of home.</em>
+                So we lit our own stove. Two kitchens, one quiet promise —
+                <em className="font-medium" style={{ color: '#800020' }}> taste for your heart.</em>
               </p>
               <Link to="/story">
                 <button className="btn-outlined" data-testid="read-story-btn">
-                  Read Our Story <ArrowRight size={16} />
+                  Sit With Us a While <ArrowRight size={16} />
                 </button>
               </Link>
             </div>
@@ -752,10 +750,10 @@ const Home = () => {
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#800020' }} data-testid="testimonials-section">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#F4C430' }}>
-            Words from our family
+            Notes from the family we're feeding
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-12" style={{ fontFamily: "'Playfair Display', serif" }}>
-            Finally, I Am Home
+            Finally, a Taste of Home
           </h2>
 
           <div className="grid md:grid-cols-3 gap-8">

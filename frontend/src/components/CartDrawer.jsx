@@ -21,10 +21,10 @@ function DeliveryBar({ total }) {
         <div className="flex items-center gap-1.5">
           <Truck size={13} style={{ color: isFree ? '#166534' : '#B8860B' }} />
           {isFree ? (
-            <span className="text-xs font-semibold" style={{ color: '#166534' }}>You've unlocked free delivery!</span>
+            <span className="text-xs font-semibold" style={{ color: '#166534' }}>Delivery's on us.</span>
           ) : (
             <span className="text-xs font-medium text-gray-600">
-              Add <strong style={{ color: '#800020' }}>{fmt(remaining)}</strong> more for free delivery
+              Add <strong style={{ color: '#800020' }}>{fmt(remaining)}</strong> more and delivery's on us
             </span>
           )}
         </div>
@@ -82,7 +82,7 @@ function UpsellRow({ cartItems, onAdd }) {
     <div className="px-6 py-4 border-b" style={{ borderColor: 'rgba(128,0,32,0.08)', backgroundColor: '#FDFBF7' }}>
       <div className="flex items-center gap-1.5 mb-3">
         <Zap size={13} style={{ color: '#B8860B' }} />
-        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#B8860B' }}>Frequently added together</p>
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#B8860B' }}>Goes well on the same plate</p>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
         {suggestions.map(item => (
@@ -150,10 +150,10 @@ const CartDrawer = () => {
         {cartItems.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
             <ShoppingBag size={52} className="mb-4 opacity-20" />
-            <p className="text-sm font-semibold text-gray-500 mb-1">Your basket is empty</p>
-            <p className="text-xs text-gray-400 mb-5">Add some delicious South Indian food!</p>
+            <p className="text-base font-semibold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Nothing packed yet</p>
+            <p className="text-xs text-gray-400 mb-5 italic">Start with a dish you miss.</p>
             <button onClick={handleClose} className="text-sm font-semibold" style={{ color: '#800020' }}>
-              Browse Menu →
+              Open the Menu →
             </button>
           </div>
         ) : (
@@ -226,7 +226,7 @@ const CartDrawer = () => {
               <button onClick={goToCheckout}
                 className="w-full py-3.5 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-2 hover:shadow-lg transition-all"
                 style={{ backgroundColor: '#800020' }}>
-                Proceed to Checkout <ArrowRight size={16} />
+                Send it Home <ArrowRight size={16} />
               </button>
             </div>
           </>
