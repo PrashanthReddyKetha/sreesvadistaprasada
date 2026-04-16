@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 from database import db
 from auth import get_current_user, require_admin
+from notifications import send_email, send_sms, notify_admin, email_review_prompt, SITE_URL
 import uuid
 import logging
 
@@ -134,21 +135,29 @@ async def ensure_meal_day_review_stub(sub: dict, date: str, menu_doc: Optional[d
 
 
 async def _schedule_sms_reminder(user_id: str, review_type: str, ref_id: str):
-    """Record that an SMS reminder should go out. Real dispatch left as integration
-    point (e.g. Twilio / WhatsApp Business). For now we log + stamp the review."""
-    user = await db.users.find_one({"id": user_id}, {"phone": 1, "name": 1})
-    phone = (user or {}).get("phone")
+    """Dispatch SMS + email review prompts."""
+    user = await db.users.find_one({"id": user_id}, {"phone": 1, "name": 1, "email": 1})
+    if not user:
+        return
     now = datetime.utcnow().isoformat()
     await db.delivery_reviews.update_one(
         {"user_id": user_id, "type": review_type, "ref_id": ref_id},
         {"$set": {"reminder_sent_at": now}},
     )
-    if phone:
-        logger.info(
-            "SMS reminder queued: to=%s type=%s ref=%s  — 'How was your meal? Leave a quick rating at /dashboard.'",
-            phone, review_type, ref_id,
+    name = user.get("name") or "there"
+    when_label = {
+        "order": "your order",
+        "meal_day": "today's meal",
+        "week_summary": "this week's meals",
+    }.get(review_type, "your delivery")
+    if user.get("phone"):
+        send_sms(
+            user["phone"],
+            f"Sree Svadista Prasada: How was {when_label}? Rate it in 10 seconds → {SITE_URL}/dashboard",
         )
-    # TODO: wire Twilio or WhatsApp Business API here.
+    if user.get("email"):
+        subj, html = email_review_prompt(name, when_label)
+        send_email(user["email"], subj, html)
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────

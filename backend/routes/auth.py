@@ -9,6 +9,7 @@ from models import (
     GoogleAuthRequest, GoogleCompleteRequest,
 )
 from auth import hash_password, verify_password, create_access_token, get_current_user, require_admin
+from notifications import send_email, email_welcome
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -95,6 +96,8 @@ async def register(payload: UserCreate):
         password_hash=hash_password(payload.password),
     )
     await db.users.insert_one(user.model_dump())
+    subj, html = email_welcome(user.name)
+    send_email(user.email, subj, html)
     token = create_access_token(user.id, user.role.value)
     return TokenResponse(access_token=token, user=User(**user.model_dump()))
 
@@ -213,6 +216,8 @@ async def google_complete(payload: GoogleCompleteRequest):
         password_hash=None,
     )
     await db.users.insert_one(user.model_dump())
+    subj, html = email_welcome(user.name)
+    send_email(user.email, subj, html)
     token = create_access_token(user.id, user.role.value)
     return TokenResponse(access_token=token, user=User(**user.model_dump()))
 

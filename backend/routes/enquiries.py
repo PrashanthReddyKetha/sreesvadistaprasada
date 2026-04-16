@@ -10,6 +10,7 @@ from models import (
     Notification,
 )
 from auth import require_admin, get_current_user, get_optional_user
+from notifications import send_email, notify_admin, email_enquiry_receipt, email_enquiry_reply
 
 router = APIRouter(prefix="/enquiries", tags=["enquiries"])
 
@@ -20,6 +21,16 @@ router = APIRouter(prefix="/enquiries", tags=["enquiries"])
 async def submit_contact(payload: ContactMessageCreate):
     msg = ContactMessage(**payload.model_dump())
     await db.contact_messages.insert_one(msg.model_dump())
+    name = getattr(payload, "name", None) or "there"
+    if getattr(payload, "email", None):
+        subj, html = email_enquiry_receipt("contact", name)
+        send_email(payload.email, subj, html)
+    notify_admin(
+        f"New contact enquiry · {name}",
+        f"<p><b>From:</b> {name} ({getattr(payload,'email','—')} · {getattr(payload,'phone','—')})</p>"
+        f"<p><b>Subject:</b> {getattr(payload,'subject','—')}</p>"
+        f"<p>{getattr(payload,'message','')}</p>",
+    )
     return msg
 
 
@@ -46,6 +57,17 @@ async def update_contact_status(msg_id: str, status: str, _: dict = Depends(requ
 async def submit_catering(payload: CateringEnquiryCreate):
     enquiry = CateringEnquiry(**payload.model_dump())
     await db.catering_enquiries.insert_one(enquiry.model_dump())
+    name = getattr(payload, "name", None) or "there"
+    if getattr(payload, "email", None):
+        subj, html = email_enquiry_receipt("catering", name)
+        send_email(payload.email, subj, html)
+    notify_admin(
+        f"Catering enquiry · {name}",
+        f"<p><b>From:</b> {name} ({getattr(payload,'email','—')} · {getattr(payload,'phone','—')})</p>"
+        f"<p><b>Event:</b> {getattr(payload,'event_type','—')} on {getattr(payload,'event_date','—')} · "
+        f"{getattr(payload,'guest_count','—')} guests</p>"
+        f"<p>{getattr(payload,'message','')}</p>",
+    )
     return enquiry
 
 
@@ -269,6 +291,18 @@ async def admin_send_message(
             enquiry_type=enq_type,
         )
         await db.notifications.insert_one(notif.model_dump())
+
+    # Email the customer about the reply
+    customer_email = enquiry.get("email")
+    customer_name = enquiry.get("name") or "there"
+    if not customer_email and customer_uid:
+        u = await db.users.find_one({"id": customer_uid}, {"email": 1, "name": 1})
+        if u:
+            customer_email = u.get("email")
+            customer_name = u.get("name") or customer_name
+    if customer_email:
+        subj, html = email_enquiry_reply(customer_name, payload.text)
+        send_email(customer_email, subj, html)
 
     return msg.model_dump()
 

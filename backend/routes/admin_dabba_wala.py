@@ -11,6 +11,10 @@ from models import (
     WeeklyMenuNotes, WeeklyMenuTemplate,
 )
 from auth import require_admin
+from notifications import (
+    send_email, send_sms, notify_admin,
+    email_subscription_cancelled, email_renewal_reminder, email_delivery_issue,
+)
 import uuid
 
 router = APIRouter(prefix="/admin", tags=["admin-dabba-wala"])
@@ -234,6 +238,11 @@ async def force_update_status(sub_id: str, payload: dict, current_user: dict = D
         {"id": sub_id},
         {"$set": {"status": new}, "$push": {"audit_trail": entry}}
     )
+    if old != new and new == "cancelled":
+        name = doc.get("customer_name") or "there"
+        if doc.get("customer_email"):
+            subj, html = email_subscription_cancelled(name, doc)
+            send_email(doc["customer_email"], subj, html)
     return {"ok": True}
 
 
@@ -255,11 +264,22 @@ async def add_internal_note(sub_id: str, payload: dict, current_user: dict = Dep
 
 @router.post("/subscriptions/{sub_id}/send-renewal-reminder")
 async def send_renewal_reminder(sub_id: str, current_user: dict = Depends(require_admin)):
-    # In production this would trigger an email. For now, log the action.
-    await _get_sub_or_404(sub_id)
+    doc = await _get_sub_or_404(sub_id)
+    name = doc.get("customer_name") or "there"
+    sent = False
+    if doc.get("customer_email"):
+        subj, html = email_renewal_reminder(name, doc)
+        send_email(doc["customer_email"], subj, html)
+        sent = True
+    if doc.get("customer_phone"):
+        send_sms(
+            doc["customer_phone"],
+            f"Sree Svadista Prasada: your Dabba Wala ends {doc.get('end_date','soon')}. Renew at sreesvadistaprasada.com/dabbawala",
+        )
+        sent = True
     entry = audit_entry(current_user, "renewal_reminder_sent", None, datetime.utcnow().isoformat())
     await db.subscriptions.update_one({"id": sub_id}, {"$push": {"audit_trail": entry}})
-    return {"ok": True, "message": "Renewal reminder logged (email integration pending)"}
+    return {"ok": True, "sent": sent}
 
 
 @router.get("/subscriptions/{sub_id}/history")
@@ -363,33 +383,57 @@ async def update_delivery_status(delivery_id: str, payload: dict, current_user: 
         {"$set": {"status": new_status, "updated_at": datetime.utcnow().isoformat()}},
         upsert=True,
     )
-    if new_status == "delivered":
-        try:
-            sub_id, date = delivery_id.rsplit("_", 1)
-        except ValueError:
-            sub_id, date = None, None
-        if sub_id and date:
-            sub = await db.subscriptions.find_one({"id": sub_id}, {"_id": 0})
-            if sub:
-                menu_doc = await db.weekly_menu_days.find_one(
-                    {"date": date, "box_type": sub.get("box_type", "prasada")}, {"_id": 0}
-                )
-                from routes.reviews import ensure_meal_day_review_stub
-                await ensure_meal_day_review_stub(sub, date, menu_doc)
+    try:
+        sub_id, date = delivery_id.rsplit("_", 1)
+    except ValueError:
+        sub_id, date = None, None
+
+    if sub_id and date:
+        sub = await db.subscriptions.find_one({"id": sub_id}, {"_id": 0})
+        if sub and sub.get("customer_phone"):
+            sms_copy = {
+                "out_for_delivery": f"Sree Svadista Prasada: your Dabba Wala box for {date} is on the way. Please keep your phone handy.",
+                "delivered": f"Sree Svadista Prasada: your Dabba Wala box for {date} has been delivered — enjoy! Rate today's meal on your dashboard.",
+            }.get(new_status)
+            if sms_copy:
+                send_sms(sub["customer_phone"], sms_copy)
+        if new_status == "delivered" and sub:
+            menu_doc = await db.weekly_menu_days.find_one(
+                {"date": date, "box_type": sub.get("box_type", "prasada")}, {"_id": 0}
+            )
+            from routes.reviews import ensure_meal_day_review_stub
+            await ensure_meal_day_review_stub(sub, date, menu_doc)
     return {"ok": True}
 
 
 @router.post("/dabba-wala/deliveries/{delivery_id}/issue")
 async def flag_delivery_issue(delivery_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+    description = payload.get("description", "")
     await db.delivery_tracking.update_one(
         {"delivery_id": delivery_id},
         {"$set": {
             "status": "issue",
-            "issue_description": payload.get("description", ""),
+            "issue_description": description,
             "updated_at": datetime.utcnow().isoformat()
         }},
         upsert=True,
     )
+    try:
+        sub_id, date = delivery_id.rsplit("_", 1)
+    except ValueError:
+        sub_id, date = None, None
+    if sub_id and date:
+        sub = await db.subscriptions.find_one({"id": sub_id}, {"_id": 0})
+        if sub:
+            name = sub.get("customer_name") or "there"
+            if sub.get("customer_email"):
+                subj, html = email_delivery_issue(name, date, description)
+                send_email(sub["customer_email"], subj, html)
+            notify_admin(
+                f"Delivery issue flagged · {name} · {date}",
+                f"<p><b>{name}</b> ({sub.get('customer_email','—')}) — delivery {delivery_id}:</p>"
+                f"<p>{description or '(no description)'}</p>",
+            )
     return {"ok": True}
 
 

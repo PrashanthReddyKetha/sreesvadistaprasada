@@ -4,6 +4,11 @@ from datetime import datetime, timedelta
 from database import db
 from models import Subscription, SubscriptionCreate, SubscriptionStatusUpdate, SubscriptionStatus
 from auth import get_current_user, get_optional_user, require_admin
+from notifications import (
+    send_email, send_sms, notify_admin,
+    email_subscription_confirmation, email_delivery_skipped,
+    email_subscription_cancelled, email_subscription_expired,
+)
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
@@ -45,6 +50,17 @@ async def create_subscription(
         cancellation_window_expires=cancellation_window,
     )
     await db.subscriptions.insert_one(subscription.model_dump())
+    subj, html = email_subscription_confirmation(subscription.model_dump(), payload.customer_name)
+    send_email(payload.customer_email, subj, html)
+    send_sms(
+        payload.customer_phone,
+        f"Sree Svadista Prasada: your {payload.plan} Dabba Wala subscription is confirmed. Starts {payload.start_date}.",
+    )
+    notify_admin(
+        f"New subscription · {payload.plan} · {payload.customer_name}",
+        f"<p>{payload.customer_name} ({payload.customer_email}) started a <b>{payload.plan}</b> "
+        f"{payload.box_type} plan from {payload.start_date}.</p>",
+    )
     return subscription
 
 
@@ -66,7 +82,13 @@ async def get_subscriptions(
     for s in subs:
         if s.get("status") == "active" and s.get("end_date") and s["end_date"] < today:
             s["status"] = "expired"
-            await db.subscriptions.update_one({"id": s["id"]}, {"$set": {"status": "expired"}})
+            update = {"status": "expired"}
+            if not s.get("expired_notified_at"):
+                update["expired_notified_at"] = datetime.utcnow().isoformat()
+                if s.get("customer_email"):
+                    subj, html = email_subscription_expired(s.get("customer_name") or "there", s)
+                    send_email(s["customer_email"], subj, html)
+            await db.subscriptions.update_one({"id": s["id"]}, {"$set": update})
 
     return subs
 
@@ -164,6 +186,22 @@ async def skip_delivery(sub_id: str, date: str, current_user: dict = Depends(get
         }},
         upsert=True,
     )
+
+    name = sub.get("customer_name") or "there"
+    if sub.get("customer_email"):
+        subj, html = email_delivery_skipped(name, date, short_notice)
+        send_email(sub["customer_email"], subj, html)
+    if sub.get("customer_phone"):
+        send_sms(
+            sub["customer_phone"],
+            f"Sree Svadista Prasada: your Dabba Wala on {date} is skipped. Plan resumes after that day.",
+        )
+    if short_notice:
+        notify_admin(
+            f"Short-notice skip · {name} · {date}",
+            f"<p><b>{name}</b> ({sub.get('customer_email','—')}) skipped <b>{date}</b> "
+            f"with less than 12 hours notice. Kitchen may have already started prep.</p>",
+        )
     return {"ok": True, "short_notice": short_notice}
 
 
@@ -180,8 +218,21 @@ async def update_subscription_status(
     if current_user.get("role") != "admin" and doc.get("user_id") != current_user["sub"]:
         raise HTTPException(status_code=403, detail="Access denied")
 
+    old_status = doc.get("status")
+    new_status = payload.status.value
     await db.subscriptions.update_one(
-        {"id": sub_id}, {"$set": {"status": payload.status.value}}
+        {"id": sub_id}, {"$set": {"status": new_status}}
     )
-    doc["status"] = payload.status.value
+    doc["status"] = new_status
+
+    if old_status != new_status and new_status == "cancelled":
+        name = doc.get("customer_name") or "there"
+        if doc.get("customer_email"):
+            subj, html = email_subscription_cancelled(name, doc)
+            send_email(doc["customer_email"], subj, html)
+        notify_admin(
+            f"Subscription cancelled · {name}",
+            f"<p><b>{name}</b> ({doc.get('customer_email','—')}) cancelled their "
+            f"<b>{doc.get('plan','')}</b> plan.</p>",
+        )
     return doc

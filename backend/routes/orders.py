@@ -4,6 +4,10 @@ from datetime import datetime
 from database import db
 from models import Order, OrderCreate, OrderStatusUpdate, OrderStatus
 from auth import get_current_user, get_optional_user, require_admin
+from notifications import (
+    send_email, send_sms, notify_admin,
+    email_order_confirmation, email_order_status,
+)
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -35,6 +39,20 @@ async def create_order(payload: OrderCreate, current_user: Optional[dict] = Depe
         user_id=user_id,
     )
     await db.orders.insert_one(order.model_dump())
+
+    subj, html = email_order_confirmation(order.model_dump(), payload.customer_name)
+    send_email(payload.customer_email, subj, html)
+    short_id = order.id[:8].upper()
+    send_sms(
+        payload.customer_phone,
+        f"Sree Svadista Prasada: order #{short_id} received — £{order.total:.2f}. We'll text you when it's on the way.",
+    )
+    notify_admin(
+        f"New order · £{order.total:.2f} · {payload.customer_name}",
+        f"<p>New order <b>#{short_id}</b> from {payload.customer_name} "
+        f"({payload.customer_email} · {payload.customer_phone}).</p>"
+        f"<p>Total <b>£{order.total:.2f}</b> — open the admin dashboard to confirm.</p>",
+    )
     return order
 
 
@@ -79,9 +97,23 @@ async def update_order_status(
         raise HTTPException(status_code=404, detail="Order not found")
 
     doc = await db.orders.find_one({"id": order_id}, {"_id": 0})
-    if doc and payload.status.value == "delivered":
-        from routes.reviews import ensure_order_review_stub
-        await ensure_order_review_stub(doc)
+    if doc:
+        name = doc.get("customer_name") or "Customer"
+        subj, html = email_order_status(doc, name, payload.status.value)
+        if doc.get("customer_email"):
+            send_email(doc["customer_email"], subj, html)
+        sms_copy = {
+            "confirmed": f"Order #{order_id[:8].upper()} confirmed. We'll start prepping shortly.",
+            "preparing": f"Order #{order_id[:8].upper()} is being prepared now.",
+            "out_for_delivery": f"Order #{order_id[:8].upper()} is on the way. Please keep your phone handy.",
+            "delivered": f"Order #{order_id[:8].upper()} delivered — enjoy! Rate it on your dashboard.",
+            "cancelled": f"Order #{order_id[:8].upper()} was cancelled. Reply to your confirmation email if this is wrong.",
+        }.get(payload.status.value)
+        if sms_copy and doc.get("customer_phone"):
+            send_sms(doc["customer_phone"], f"Sree Svadista Prasada: {sms_copy}")
+        if payload.status.value == "delivered":
+            from routes.reviews import ensure_order_review_stub
+            await ensure_order_review_stub(doc)
     return doc
 
 
