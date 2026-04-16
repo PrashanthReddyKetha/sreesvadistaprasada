@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, MapPin } from 'lucide-react';
+import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '../data/mockData';
 import HeroSlider from '../components/HeroSlider';
 import api from '../api';
@@ -193,10 +193,10 @@ const Home = () => {
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {dailySpecials.map((s) => {
-                const content = (
+                const card = (
                   <div
-                    className="flex-shrink-0 rounded-lg overflow-hidden bg-white transition-all duration-200 group"
-                    style={{ width: '200px', boxShadow: '0 2px 10px rgba(128,0,32,0.06)', border: '1px solid rgba(244,196,48,0.4)' }}
+                    className="rounded-lg overflow-hidden bg-white transition-all duration-200 group h-full"
+                    style={{ boxShadow: '0 2px 10px rgba(128,0,32,0.06)', border: '1px solid rgba(244,196,48,0.4)' }}
                   >
                     <div className="relative h-28 overflow-hidden">
                       <img
@@ -209,7 +209,7 @@ const Home = () => {
                       </span>
                     </div>
                     <div className="p-3">
-                      <h3 className="text-sm font-bold leading-tight mb-1 line-clamp-2" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>
+                      <h3 className="text-sm font-bold leading-tight mb-1 line-clamp-2 group-hover:underline" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>
                         {s.title}
                       </h3>
                       {s.subtitle && (
@@ -222,9 +222,24 @@ const Home = () => {
                   </div>
                 );
                 return s.link ? (
-                  <Link key={s.id} to={s.link} data-testid={`daily-special-${s.id}`}>{content}</Link>
+                  <Link
+                    key={s.id}
+                    to={s.link}
+                    className="flex-shrink-0 block"
+                    style={{ width: '200px' }}
+                    data-testid={`daily-special-${s.id}`}
+                  >
+                    {card}
+                  </Link>
                 ) : (
-                  <div key={s.id} data-testid={`daily-special-${s.id}`}>{content}</div>
+                  <div
+                    key={s.id}
+                    className="flex-shrink-0"
+                    style={{ width: '200px' }}
+                    data-testid={`daily-special-${s.id}`}
+                  >
+                    {card}
+                  </div>
                 );
               })}
             </div>
@@ -366,48 +381,57 @@ const Home = () => {
       </section>
 
       {/* ============================================ */}
-      {/* DABBA WALA — SLIM BAND (moved up, compact) */}
+      {/* DABBA WALA EXPLAINED */}
       {/* ============================================ */}
-      <section className="py-8 md:py-10 px-4 md:px-8" data-testid="dabba-wala-band">
-        <div className="max-w-7xl mx-auto">
-          <Link to="/subscriptions" className="block group">
-            <div
-              className="relative overflow-hidden rounded-lg flex flex-col md:flex-row items-center md:items-stretch"
-              style={{
-                background: 'linear-gradient(90deg, #800020 0%, #9a0026 100%)',
-                border: '1px solid rgba(244,196,48,0.4)',
-                boxShadow: '0 6px 24px rgba(128,0,32,0.18)',
-              }}
-            >
-              {/* Left: icon badge */}
-              <div className="flex items-center justify-center px-6 md:px-8 py-5 md:py-0" style={{ borderRight: '1px solid rgba(244,196,48,0.25)' }}>
-                <div className="w-14 h-14 rounded-full flex items-center justify-center border-2" style={{ borderColor: '#F4C430' }}>
-                  <Package size={22} style={{ color: '#F4C430' }} />
+      <section className="py-12 md:py-20 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: '#800020' }} data-testid="dabba-wala-section">
+        <div className="absolute inset-0 grain-overlay opacity-5" />
+        <div className="max-w-7xl mx-auto relative">
+          <div className="text-center mb-8 md:mb-16">
+            <p className="text-[11px] md:text-sm uppercase tracking-[0.25em] mb-2 md:mb-3" style={{ color: '#F4C430' }}>
+              Your daily dose of home love
+            </p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+              The Dabba Wala Service
+            </h2>
+            <div className="w-12 h-0.5 mx-auto mt-3 md:mt-4" style={{ backgroundColor: '#F4C430' }} />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 md:gap-12 mb-8 md:mb-12">
+            {[
+              { num: '01', icon: Package, title: 'Choose Your Box', desc: 'Pick from Prasada (Pure Veg), Svadista (Non-Veg), or Mixed. Weekly or Monthly plans.' },
+              { num: '02', icon: Calendar, title: 'Set Your Schedule', desc: 'Choose delivery days and time. Pause, resume, or change preferences anytime.' },
+              { num: '03', icon: Truck, title: 'Enjoy Daily Meals', desc: 'Freshly prepared homely food delivered to your doorstep. Just like mother used to pack.' },
+            ].map((step) => (
+              <div key={step.num} className="text-center" data-testid={`dabba-step-${step.num}`}>
+                <div className="relative inline-block mb-3 md:mb-6">
+                  <div className="w-12 h-12 md:w-20 md:h-20 rounded-full flex items-center justify-center border-2" style={{ borderColor: '#F4C430' }}>
+                    <step.icon className="w-5 h-5 md:w-7 md:h-7" style={{ color: '#F4C430' }} />
+                  </div>
+                  <span className="absolute -top-1 -right-1 md:-top-2 md:-right-2 text-[9px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
+                    {step.num}
+                  </span>
                 </div>
-              </div>
-              {/* Middle: pitch */}
-              <div className="flex-1 px-4 md:px-6 py-4 md:py-5 text-center md:text-left">
-                <p className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: '#F4C430' }}>
-                  Weekly &amp; Monthly plans
-                </p>
-                <h3 className="text-lg md:text-xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-                  Dabba Wala · Homely meals to your door
+                <h3 className="text-xs md:text-xl font-bold text-white mb-1 md:mb-3 leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  {step.title}
                 </h3>
-                <p className="text-xs md:text-sm text-gray-200 mt-1 hidden sm:block">
-                  Pick a box · Set your days · Pause anytime. From £45/week.
+                <p className="text-[10px] md:text-sm text-gray-300 leading-snug md:leading-relaxed max-w-xs mx-auto hidden sm:block">
+                  {step.desc}
                 </p>
               </div>
-              {/* Right: CTA */}
-              <div className="flex items-center justify-center px-5 md:px-8 pb-5 md:pb-0">
-                <span
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold tracking-wide uppercase rounded-sm transition-all duration-300 group-hover:shadow-lg whitespace-nowrap"
-                  style={{ backgroundColor: '#F4C430', color: '#2D2422' }}
-                >
-                  Start Subscription <ArrowRight size={14} />
-                </span>
-              </div>
-            </div>
-          </Link>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link to="/subscriptions">
+              <button
+                className="px-6 md:px-8 py-2.5 md:py-3.5 text-xs md:text-sm font-semibold tracking-wide uppercase rounded-sm transition-all duration-300 hover:shadow-lg"
+                style={{ backgroundColor: '#F4C430', color: '#2D2422' }}
+                data-testid="dabba-subscribe-btn"
+              >
+                Start Your Subscription <ArrowRight size={16} className="inline ml-2" />
+              </button>
+            </Link>
+          </div>
         </div>
       </section>
 
