@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Truck, Calendar, MapPin, Search } from 'lucide-react';
+import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, MapPin } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '../data/mockData';
 import HeroSlider from '../components/HeroSlider';
 import api from '../api';
@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext';
 
 const Home = () => {
   const trendingRef = useRef(null);
+  const specialsRef = useRef(null);
   const navigate = useNavigate();
   const [postcode, setPostcode] = useState('');
   const [postcodeResult, setPostcodeResult] = useState(null);
@@ -15,10 +16,14 @@ const Home = () => {
   const { addToCart } = useCart();
   const [liveItems, setLiveItems] = useState([]);
   const [chefSpecialId, setChefSpecialId] = useState(null);
+  const [dailySpecials, setDailySpecials] = useState([]);
 
   useEffect(() => {
     api.get('/menu?available=true&featured=true')
       .then(r => setLiveItems(r.data))
+      .catch(() => {});
+    api.get('/daily-specials')
+      .then(r => setDailySpecials(r.data || []))
       .catch(() => {});
   }, []);
 
@@ -35,6 +40,16 @@ const Home = () => {
       trendingRef.current.scrollBy({
         left: direction === 'right' ? scrollAmount : -scrollAmount,
         behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollSpecials = (direction) => {
+    if (specialsRef.current) {
+      const scrollAmount = 220;
+      specialsRef.current.scrollBy({
+        left: direction === 'right' ? scrollAmount : -scrollAmount,
+        behavior: 'smooth',
       });
     }
   };
@@ -136,6 +151,86 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* ============================================ */}
+      {/* TODAY'S SPECIALS (horizontal scroll strip) */}
+      {/* ============================================ */}
+      {dailySpecials.length > 0 && (
+        <section className="py-10 md:py-12 px-4 md:px-8" style={{ backgroundColor: '#FDF5E6' }} data-testid="todays-specials-section">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-end justify-between mb-5">
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] mb-1" style={{ color: '#B8860B' }}>
+                  Fresh off the kitchen
+                </p>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                  Today's Specials
+                </h2>
+              </div>
+              <div className="hidden md:flex gap-2">
+                <button
+                  onClick={() => scrollSpecials('left')}
+                  className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors duration-200 hover:bg-[#800020] hover:text-white hover:border-[#800020]"
+                  style={{ borderColor: '#800020', color: '#800020' }}
+                  data-testid="specials-scroll-left"
+                >
+                  <ChevronRight size={16} className="rotate-180" />
+                </button>
+                <button
+                  onClick={() => scrollSpecials('right')}
+                  className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors duration-200 hover:bg-[#800020] hover:text-white hover:border-[#800020]"
+                  style={{ borderColor: '#800020', color: '#800020' }}
+                  data-testid="specials-scroll-right"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            <div
+              ref={specialsRef}
+              className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {dailySpecials.map((s) => {
+                const content = (
+                  <div
+                    className="flex-shrink-0 rounded-lg overflow-hidden bg-white transition-all duration-200 group"
+                    style={{ width: '200px', boxShadow: '0 2px 10px rgba(128,0,32,0.06)', border: '1px solid rgba(244,196,48,0.4)' }}
+                  >
+                    <div className="relative h-28 overflow-hidden">
+                      <img
+                        src={s.image || 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400'}
+                        alt={s.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-sm" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
+                        Today
+                      </span>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="text-sm font-bold leading-tight mb-1 line-clamp-2" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>
+                        {s.title}
+                      </h3>
+                      {s.subtitle && (
+                        <p className="text-[11px] text-gray-500 leading-snug mb-2 line-clamp-2">{s.subtitle}</p>
+                      )}
+                      {typeof s.price === 'number' && (
+                        <p className="text-sm font-bold" style={{ color: '#800020' }}>£{s.price.toFixed(2)}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+                return s.link ? (
+                  <Link key={s.id} to={s.link} data-testid={`daily-special-${s.id}`}>{content}</Link>
+                ) : (
+                  <div key={s.id} data-testid={`daily-special-${s.id}`}>{content}</div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ============================================ */}
       {/* TRENDING & LOVED */}
@@ -271,6 +366,52 @@ const Home = () => {
       </section>
 
       {/* ============================================ */}
+      {/* DABBA WALA — SLIM BAND (moved up, compact) */}
+      {/* ============================================ */}
+      <section className="py-8 md:py-10 px-4 md:px-8" data-testid="dabba-wala-band">
+        <div className="max-w-7xl mx-auto">
+          <Link to="/subscriptions" className="block group">
+            <div
+              className="relative overflow-hidden rounded-lg flex flex-col md:flex-row items-center md:items-stretch"
+              style={{
+                background: 'linear-gradient(90deg, #800020 0%, #9a0026 100%)',
+                border: '1px solid rgba(244,196,48,0.4)',
+                boxShadow: '0 6px 24px rgba(128,0,32,0.18)',
+              }}
+            >
+              {/* Left: icon badge */}
+              <div className="flex items-center justify-center px-6 md:px-8 py-5 md:py-0" style={{ borderRight: '1px solid rgba(244,196,48,0.25)' }}>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center border-2" style={{ borderColor: '#F4C430' }}>
+                  <Package size={22} style={{ color: '#F4C430' }} />
+                </div>
+              </div>
+              {/* Middle: pitch */}
+              <div className="flex-1 px-4 md:px-6 py-4 md:py-5 text-center md:text-left">
+                <p className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: '#F4C430' }}>
+                  Weekly &amp; Monthly plans
+                </p>
+                <h3 className="text-lg md:text-xl font-bold text-white leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  Dabba Wala · Homely meals to your door
+                </h3>
+                <p className="text-xs md:text-sm text-gray-200 mt-1 hidden sm:block">
+                  Pick a box · Set your days · Pause anytime. From £45/week.
+                </p>
+              </div>
+              {/* Right: CTA */}
+              <div className="flex items-center justify-center px-5 md:px-8 pb-5 md:pb-0">
+                <span
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold tracking-wide uppercase rounded-sm transition-all duration-300 group-hover:shadow-lg whitespace-nowrap"
+                  style={{ backgroundColor: '#F4C430', color: '#2D2422' }}
+                >
+                  Start Subscription <ArrowRight size={14} />
+                </span>
+              </div>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* ============================================ */}
       {/* CHEF'S SPECIAL + MEAL MOMENTS (Split Layout) */}
       {/* ============================================ */}
       <section className="py-16 md:py-24 px-4 md:px-8" data-testid="chef-special-section">
@@ -356,61 +497,6 @@ const Home = () => {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================ */}
-      {/* DABBA WALA EXPLAINED */}
-      {/* ============================================ */}
-      <section className="py-16 md:py-24 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: '#800020' }} data-testid="dabba-wala-section">
-        <div className="absolute inset-0 grain-overlay opacity-5" />
-        <div className="max-w-7xl mx-auto relative">
-          <div className="text-center mb-12 md:mb-16">
-            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#F4C430' }}>
-              Your daily dose of home love
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
-              The Dabba Wala Service
-            </h2>
-            <div className="w-12 h-0.5 mx-auto mt-4" style={{ backgroundColor: '#F4C430' }} />
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 md:gap-12 mb-12">
-            {[
-              { num: '01', icon: Package, title: 'Choose Your Box', desc: 'Pick from Prasada (Pure Veg), Svadista (Non-Veg), or Mixed. Weekly or Monthly plans available.' },
-              { num: '02', icon: Calendar, title: 'Set Your Schedule', desc: 'Choose delivery days and time. Pause, resume, or change preferences anytime you want.' },
-              { num: '03', icon: Truck, title: 'Enjoy Daily Meals', desc: 'Freshly prepared homely food delivered to your doorstep. Just like mother used to pack.' },
-            ].map((step) => (
-              <div key={step.num} className="text-center" data-testid={`dabba-step-${step.num}`}>
-                <div className="relative inline-block mb-6">
-                  <div className="w-20 h-20 rounded-full flex items-center justify-center border-2" style={{ borderColor: '#F4C430' }}>
-                    <step.icon size={28} style={{ color: '#F4C430' }} />
-                  </div>
-                  <span className="absolute -top-2 -right-2 text-xs font-bold px-2 py-1 rounded-full" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
-                    {step.num}
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>
-                  {step.title}
-                </h3>
-                <p className="text-sm text-gray-300 leading-relaxed max-w-xs mx-auto">
-                  {step.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center">
-            <Link to="/subscriptions">
-              <button
-                className="px-8 py-3.5 text-sm font-semibold tracking-wide uppercase rounded-sm transition-all duration-300 hover:shadow-lg"
-                style={{ backgroundColor: '#F4C430', color: '#2D2422' }}
-                data-testid="dabba-subscribe-btn"
-              >
-                Start Your Subscription <ArrowRight size={16} className="inline ml-2" />
-              </button>
-            </Link>
           </div>
         </div>
       </section>

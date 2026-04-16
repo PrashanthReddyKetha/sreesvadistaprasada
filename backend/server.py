@@ -5,8 +5,8 @@ import os
 import logging
 
 from database import client
-from seed import seed_menu, create_indexes, create_admin_user
-from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews
+from seed import seed_menu, create_indexes, create_admin_user, seed_daily_specials
+from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews, daily_specials
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -17,6 +17,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting up...")
     await create_indexes()
     await seed_menu()
+    await seed_daily_specials()
     await create_admin_user()
     yield
     logger.info("Shutting down...")
@@ -51,6 +52,7 @@ app.include_router(delivery.router, prefix="/api")
 app.include_router(admin_dabba_wala.router, prefix="/api")
 app.include_router(payments.router, prefix="/api")
 app.include_router(reviews.router, prefix="/api")
+app.include_router(daily_specials.router, prefix="/api")
 
 
 @app.get("/api")

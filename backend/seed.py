@@ -1176,12 +1176,47 @@ async def seed_menu():
     await update_item_categories()
 
 
+SAMPLE_DAILY_SPECIALS = [
+    {"title": "Hyderabadi Chicken Dum Biryani", "subtitle": "Today only — slow-cooked on embers", "price": 11.99, "image": IMG["biryani"], "link": None, "display_order": 1},
+    {"title": "Gongura Mutton", "subtitle": "Chef's pick · Fresh gongura leaves", "price": 14.50, "image": IMG["curry"], "link": None, "display_order": 2},
+    {"title": "Masala Dosa Combo", "subtitle": "With sambar + 3 chutneys", "price": 7.99, "image": IMG["dosa"], "link": None, "display_order": 3},
+    {"title": "Andhra Thali", "subtitle": "15-item full meal · Limited plates", "price": 13.99, "image": IMG["rice"], "link": None, "display_order": 4},
+    {"title": "Pesarattu Upma", "subtitle": "Breakfast special until 11am", "price": 6.50, "image": IMG["pulihora"], "link": None, "display_order": 5},
+    {"title": "Avakaya Jar (200g)", "subtitle": "Fresh mango pickle · Small batch", "price": 5.99, "image": IMG["pickle"], "link": None, "display_order": 6},
+    {"title": "Paneer Tikka Masala", "subtitle": "Clay-oven paneer · Rich gravy", "price": 10.99, "image": IMG["paneer"], "link": None, "display_order": 7},
+    {"title": "Mysore Bonda + Filter Coffee", "subtitle": "Evening snack combo", "price": 4.50, "image": IMG["veg_starter"], "link": None, "display_order": 8},
+]
+
+
+async def seed_daily_specials():
+    """Seed a starter set of daily specials if the collection is empty."""
+    import uuid
+    from datetime import datetime
+
+    count = await db.daily_specials.count_documents({})
+    if count > 0:
+        return
+    docs = [
+        {
+            "id": str(uuid.uuid4()),
+            "active": True,
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+            **item,
+        }
+        for item in SAMPLE_DAILY_SPECIALS
+    ]
+    await db.daily_specials.insert_many(docs)
+    print(f"Seeded {len(docs)} daily specials.")
+
+
 async def create_indexes():
     await db.menu_items.create_index("id", unique=True)
     await db.menu_items.create_index("category")
     await db.users.create_index("id", unique=True)
     await db.users.create_index("email", unique=True)
     await db.orders.create_index("id", unique=True)
+    await db.daily_specials.create_index("id", unique=True)
 
 
 import os

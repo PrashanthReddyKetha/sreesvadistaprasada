@@ -7,10 +7,11 @@ import {
   TrendingUp, Clock, CheckCircle, XCircle, RefreshCw,
   ChevronDown, ChevronRight, LayoutDashboard,
   ArrowLeft, Send, CheckCheck, AlertCircle,
-  Calendar, Utensils, Star
+  Calendar, Utensils, Star, Sparkles
 } from 'lucide-react';
 import DabbaWalaTab from '../components/admin/DabbaWalaTab';
 import MenuTab from '../components/admin/MenuTab';
+import DailySpecialsTab from '../components/admin/DailySpecialsTab';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -801,6 +802,7 @@ const TABS = [
   { id:'dabba',         label:'Dabba Wala',    icon:Calendar     },
   { id:'subscriptions', label:'Subscriptions', icon:Package      },
   { id:'menu',          label:'Menu',          icon:Utensils     },
+  { id:'specials',      label:"Today's Specials", icon:Sparkles  },
   { id:'users',         label:'Users',         icon:Users        },
   { id:'enquiries',     label:'Enquiries',     icon:MessageSquare},
   { id:'reviews',       label:'Reviews',       icon:Star         },
@@ -928,6 +930,7 @@ const Admin = () => {
               {activeTab==='dabba'         && <DabbaWalaTab />}
               {activeTab==='subscriptions' && <SubscriptionsTab subscriptions={data.subscriptions} onStatusUpdate={handleStatusUpdate} />}
               {activeTab==='menu'          && <MenuTab />}
+              {activeTab==='specials'      && <DailySpecialsTab />}
               {activeTab==='users'         && <UsersTab users={data.users} />}
               {activeTab==='enquiries'     && <EnquiriesTab contacts={data.contacts} catering={data.catering} onStatusUpdate={handleStatusUpdate} reload={fetchAll} />}
               {activeTab==='reviews'       && <ReviewsTab />}

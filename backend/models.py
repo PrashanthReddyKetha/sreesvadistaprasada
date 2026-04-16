@@ -237,6 +237,34 @@ class Subscription(SubscriptionCreate):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+# --- Daily Specials ---
+
+class DailySpecialCreate(BaseModel):
+    title: str
+    subtitle: Optional[str] = None
+    price: Optional[float] = None
+    image: Optional[str] = None
+    link: Optional[str] = None
+    active: bool = True
+    display_order: int = 0
+
+
+class DailySpecialUpdate(BaseModel):
+    title: Optional[str] = None
+    subtitle: Optional[str] = None
+    price: Optional[float] = None
+    image: Optional[str] = None
+    link: Optional[str] = None
+    active: Optional[bool] = None
+    display_order: Optional[int] = None
+
+
+class DailySpecial(DailySpecialCreate):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 # --- Weekly Menu ---
 
 class WeeklyMenuDay(BaseModel):
