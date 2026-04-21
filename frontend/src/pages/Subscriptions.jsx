@@ -868,18 +868,24 @@ const SubscriptionsInner = () => {
                   const social = BOX_SOCIAL[box.id];
                   const isSelected = selectedBox === box.id;
                   return (
-                    <div key={box.id} className="rounded-xl overflow-hidden" style={{ border: isSelected ? `2px solid ${box.border}` : '0.5px solid #e0d9d0', boxShadow: isSelected ? `0 4px 20px ${box.border}18` : '0 2px 6px rgba(0,0,0,0.04)' }}>
+                    <div key={box.id} className="rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg"
+                      onClick={() => setSelectedBox(box.id)}
+                      style={{
+                        border: isSelected ? `2.5px solid ${box.border}` : '1.5px solid #d5cec4',
+                        boxShadow: isSelected ? `0 6px 24px ${box.border}22` : '0 2px 8px rgba(0,0,0,0.06)',
+                        backgroundColor: isSelected ? (box.id === 'prasada' ? '#F0FFF8' : '#FFF5F5') : '#FDFBF7',
+                      }}>
                       <button onClick={() => setSelectedBox(box.id)}
                         className="relative w-full flex items-center gap-4 p-5 text-left transition-all duration-200"
-                        style={{ backgroundColor: 'white' }}>
+                        style={{ backgroundColor: 'transparent' }}>
                         {box.mostChosen && (
                           <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white" style={{ backgroundColor: C.primary }}>Most chosen</span>
                         )}
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: box.iconBg }}>
-                          <BoxIcon size={18} style={{ color: box.iconColor }} />
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: box.iconBg, border: `1.5px solid ${box.iconColor}30` }}>
+                          <BoxIcon size={20} style={{ color: box.iconColor }} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold mb-0.5" style={{ fontSize: 15, color: C.dark }}>{box.name}</p>
+                          <p className="font-bold mb-0.5" style={{ fontSize: 16, color: C.dark }}>{box.name}</p>
                           <p className="text-sm" style={{ color: C.muted }}>{box.desc}</p>
                           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                             <StarRating count={social.rating} reviewCount={social.reviewCount} />
@@ -888,10 +894,16 @@ const SubscriptionsInner = () => {
                             </span>
                           </div>
                         </div>
-                        {isSelected && <div className="ml-2 shrink-0"><Check size={16} style={{ color: box.border }} /></div>}
+                        {isSelected ? (
+                          <div className="ml-2 shrink-0 w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: box.border }}>
+                            <Check size={14} className="text-white" />
+                          </div>
+                        ) : (
+                          <div className="ml-2 shrink-0 w-6 h-6 rounded-full" style={{ border: '2px solid #d5cec4' }} />
+                        )}
                       </button>
                       {/* Review teaser */}
-                      <div className="px-5 pb-4" style={{ backgroundColor: 'white', borderTop: '0.5px solid rgba(128,0,32,0.06)' }}>
+                      <div className="px-5 pb-4" style={{ backgroundColor: 'transparent', borderTop: `0.5px solid ${isSelected ? box.border + '20' : 'rgba(128,0,32,0.06)'}` }}>
                         <ReviewCarousel boxId={box.id} />
                       </div>
                     </div>
