@@ -110,10 +110,12 @@ const Breakfast = () => {
                     </div>
                     <div className="p-4 flex flex-col h-[200px]">
                       <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <h3 className="font-bold text-sm leading-snug" style={{ color: '#92400E' }}>{dish.name}</h3>
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="font-bold text-sm leading-snug" style={{ color: '#92400E' }}>{dish.name}</h3>
+                          {dish.spice_level > 0 && <SpiceBar level={dish.spice_level} />}
+                        </div>
                         <span className="text-sm font-bold flex-shrink-0" style={{ color: '#B45309' }}>{fmt(dish.price)}</span>
                       </div>
-                      {dish.spice_level > 0 && <div className="mb-2"><SpiceBar level={dish.spice_level} /></div>}
                       {dish.description && (
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3 flex-1">{dish.description}</p>
                       )}

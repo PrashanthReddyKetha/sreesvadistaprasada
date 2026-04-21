@@ -329,15 +329,20 @@ const Home = () => {
                   </div>
                 </div>
                 <div className="p-5">
-                  <div className="flex items-center gap-1 mb-2">
-                    {Array(spice).fill(0).map((_, i) => (
-                      <Flame key={i} size={12} className="text-red-500 fill-red-500" />
-                    ))}
-                    {spice === 0 && <span className="text-xs text-gray-400">Mild</span>}
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <h3 className="text-lg font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>
+                      {dish.name}
+                    </h3>
+                    {spice > 0 ? (
+                      <div className="flex gap-0.5 shrink-0">
+                        {Array(spice).fill(0).map((_, i) => (
+                          <Flame key={i} size={12} className="text-red-500 fill-red-500" />
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">Mild</span>
+                    )}
                   </div>
-                  <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>
-                    {dish.name}
-                  </h3>
                   <p className="text-xs text-gray-500 leading-relaxed mb-2 line-clamp-2">
                     {dish.description}
                   </p>

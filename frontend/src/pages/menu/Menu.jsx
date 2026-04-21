@@ -136,14 +136,16 @@ const Menu = () => {
                       </div>
                     )}
                     <div className="p-4 flex flex-col h-[180px]">
-                      {dish.spice_level > 0 && (
-                        <div className="flex gap-0.5 mb-1.5">
-                          {Array(dish.spice_level).fill(0).map((_, i) => (
-                            <Flame key={i} size={10} className="text-red-500 fill-red-500" />
-                          ))}
-                        </div>
-                      )}
-                      <h3 className="text-sm font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <h3 className="text-sm font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
+                        {dish.spice_level > 0 && (
+                          <div className="flex gap-0.5 shrink-0">
+                            {Array(dish.spice_level).fill(0).map((_, i) => (
+                              <Flame key={i} size={10} className="text-red-500 fill-red-500" />
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-500 line-clamp-1 mb-2 flex-1">{dish.description}</p>
                       <div className="flex justify-between items-center">
                         <span className="text-base font-bold" style={{ color: '#800020' }}>£{dish.price.toFixed(2)}</span>

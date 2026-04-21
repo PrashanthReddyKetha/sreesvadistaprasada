@@ -108,14 +108,16 @@ const Snacks = () => {
                     </div>
                   )}
                   <div className="p-5 flex flex-col h-[180px]">
-                    {item.spice_level > 0 && (
-                      <div className="flex gap-0.5 mb-2">
-                        {Array(item.spice_level).fill(0).map((_, i) => (
-                          <Flame key={i} size={11} className="text-red-500 fill-red-500" />
-                        ))}
-                      </div>
-                    )}
-                    <h3 className="text-base font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{item.name}</h3>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <h3 className="text-base font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{item.name}</h3>
+                      {item.spice_level > 0 && (
+                        <div className="flex gap-0.5 shrink-0">
+                          {Array(item.spice_level).fill(0).map((_, i) => (
+                            <Flame key={i} size={11} className="text-red-500 fill-red-500" />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2 flex-1">{item.description}</p>
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold" style={{ color: '#800020' }}>£{item.price.toFixed(2)}</span>
