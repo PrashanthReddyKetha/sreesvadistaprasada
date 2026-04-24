@@ -7,14 +7,15 @@ import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
 import useTabHistory from '../../hooks/useTabHistory';
 
-const TABS = ['All', 'Starters & Evening Delights', 'Indo-Chinese', 'Curries & Dal', '🪔 Naivedyam', 'Biryani & Rice'];
+const TABS = ['All', 'Starters and Evening Delights', 'Indo Chinese', 'Curries & Daal', '🪔 Naivedyam', 'Biriyanis & Rice', 'Rice Bowls'];
 
 const SECTION_MESSAGES = {
-  'Starters & Evening Delights': { icon: '🌿', text: 'Light bites and crispy evening delights — the perfect way to begin.' },
-  'Indo-Chinese': { icon: '🥢', text: 'Desi-Chinese fusion with a South Indian soul — bold, tangy, utterly addictive.' },
-  'Curries & Dal': { icon: '🫕', text: 'Slow-cooked gravies and lentils, simmered in generations-old spice blends.' },
+  'Starters and Evening Delights': { icon: '🌿', text: 'Light bites and crispy evening delights — the perfect way to begin.' },
+  'Indo Chinese': { icon: '🥢', text: 'Desi-Chinese fusion with a South Indian soul — bold, tangy, utterly addictive.' },
+  'Curries & Daal': { icon: '🫕', text: 'Slow-cooked gravies and lentils, simmered in generations-old spice blends.' },
   '🪔 Naivedyam': { icon: '🪔', text: 'Sacred rice offerings, prepared with devotion.' },
-  'Biryani & Rice': { icon: '🌾', text: 'Fragrant long-grain rice layered with spices, herbs, and wholesome vegetables.' },
+  'Biriyanis & Rice': { icon: '🌾', text: 'Fragrant long-grain rice layered with spices, herbs, and wholesome vegetables.' },
+  'Rice Bowls': { icon: '🍱', text: 'Complete meals in a bowl — rice, dal, pickle and more.' },
 };
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
@@ -47,11 +48,15 @@ const Prasada = () => {
   }, []);
 
   const SUBCATEGORY_MAP = {
-    'Starters & Evening Delights': 'Starters & Snacks',
-    '🪔 Naivedyam': 'Rice Specials',
+    '🪔 Naivedyam': 'Naivedyam',
   };
   const subcategoryKey = SUBCATEGORY_MAP[activeTab] || activeTab;
-  const filtered = activeTab === 'All' ? items : items.filter(i => i.subcategory === subcategoryKey);
+  const filtered = activeTab === 'All'
+    ? [...items].sort((a, b) => a.name.localeCompare(b.name))
+    : [...items].filter(i =>
+        i.subcategory === subcategoryKey ||
+        (i.extra_categories || []).some(ec => ec.category === 'veg' && ec.subcategory === subcategoryKey)
+      ).sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>

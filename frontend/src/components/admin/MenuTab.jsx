@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Plus, X, Save, RefreshCw, Utensils, Leaf, Flame, Edit2 } from 'lucide-react';
+import { Plus, X, Save, RefreshCw, Utensils, Leaf, Flame, Edit2, Trash2 } from 'lucide-react';
 import api from '../../api';
 
 const CATEGORIES = ['nonVeg','veg','prasada','breakfast','pickles','podis'];
@@ -145,6 +145,12 @@ export default function MenuTab() {
 
   const toggleAvail = async (item) => {
     await api.put(`/menu/${item.id}`, { available: !item.available });
+    await load();
+  };
+
+  const deleteItem = async (item) => {
+    if (!window.confirm(`Permanently delete "${item.name}"? This cannot be undone.`)) return;
+    await api.delete(`/menu/${item.id}`);
     await load();
   };
 
@@ -404,6 +410,9 @@ export default function MenuTab() {
                   <button onClick={()=>startEdit(item)} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg font-semibold border"
                     style={{ borderColor:'#800020', color:'#800020' }}>
                     <Edit2 size={12} /> Edit
+                  </button>
+                  <button onClick={()=>deleteItem(item)} className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg font-semibold border border-red-200 text-red-500 hover:bg-red-50 transition-all">
+                    <Trash2 size={12} />
                   </button>
                 </div>
               </div>

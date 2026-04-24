@@ -164,7 +164,7 @@ const Home = () => {
                   Straight off this morning's stove
                 </p>
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                  Fresh on the Stove Today
+                  Today's Specials
                 </h2>
               </div>
               <div className="hidden md:flex gap-2">

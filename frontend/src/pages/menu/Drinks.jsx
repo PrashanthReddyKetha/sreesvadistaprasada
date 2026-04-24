@@ -54,7 +54,7 @@ const Drinks = () => {
             <MenuLoader color="#7E22CE" />
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {items.map(drink => (
+              {[...items].sort((a, b) => a.name.localeCompare(b.name)).map(drink => (
                 <Link key={drink.id} to={`/item/${drink.id}`} onClick={e => e.target.closest('button') && e.preventDefault()}>
                   <div className="rounded-xl overflow-hidden bg-white group transition-all duration-300 hover:-translate-y-1 h-full cursor-pointer"
                     style={{ boxShadow: '0 4px 20px rgba(126,34,206,0.08)', border: '1px solid rgba(126,34,206,0.08)' }}>

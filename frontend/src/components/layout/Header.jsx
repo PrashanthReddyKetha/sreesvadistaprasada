@@ -47,6 +47,7 @@ const Header = () => {
         { name: 'Svadista (Non-Veg)', path: '/svadista' },
         { name: 'Breakfast', path: '/breakfast' },
         { name: 'Street Food', path: '/street-food' },
+        { name: 'Ragi Specials', path: '/ragi-specials' },
         { name: 'Drinks', path: '/drinks' },
         { name: 'Full Menu', path: '/menu' },
       ]

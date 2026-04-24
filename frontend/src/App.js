@@ -28,6 +28,7 @@ import Dashboard from "./pages/Dashboard";
 import ItemDetail from "./pages/ItemDetail";
 import Checkout from "./pages/Checkout";
 import StreetFood from "./pages/menu/StreetFood";
+import RagiSpecials from "./pages/menu/RagiSpecials";
 import Drinks from "./pages/menu/Drinks";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndServices from "./pages/TermsAndServices";
@@ -77,6 +78,7 @@ function App() {
             <Route path="/item/:itemId" element={<ItemDetail />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/street-food" element={<StreetFood />} />
+            <Route path="/ragi-specials" element={<RagiSpecials />} />
             <Route path="/drinks" element={<Drinks />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<Admin />} />

@@ -42,6 +42,7 @@ class MenuCategory(str, Enum):
     drinks = "drinks"
     pickles = "pickles"
     podis = "podis"
+    ragiSpecials = "ragiSpecials"
 
 
 # --- Shared ---
@@ -115,6 +116,9 @@ class MenuItemCreate(BaseModel):
     price: float
     category: MenuCategory
     subcategory: Optional[str] = None
+    # extra_categories allows a single DB item to appear on multiple menu pages.
+    # Each entry: {"category": "streetFood", "subcategory": "..."}
+    extra_categories: List[dict] = []
     spice_level: int = Field(default=0, ge=0, le=5)
     is_veg: bool = True
     image: Optional[str] = None
@@ -132,6 +136,7 @@ class MenuItemUpdate(BaseModel):
     price: Optional[float] = None
     category: Optional[MenuCategory] = None
     subcategory: Optional[str] = None
+    extra_categories: Optional[List[dict]] = None
     spice_level: Optional[int] = Field(default=None, ge=0, le=5)
     is_veg: Optional[bool] = None
     image: Optional[str] = None

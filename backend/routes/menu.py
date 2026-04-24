@@ -18,16 +18,24 @@ async def get_menu(
 ):
     query = {}
     if category:
-        query["category"] = category.value
+        # Match items whose primary category OR any extra_category matches
+        query["$or"] = [
+            {"category": category.value},
+            {"extra_categories.category": category.value},
+        ]
     if available is not None:
         query["available"] = available
     if featured is not None:
         query["featured"] = featured
     if search:
-        query["$or"] = [
+        search_clause = [
             {"name": {"$regex": search, "$options": "i"}},
             {"description": {"$regex": search, "$options": "i"}},
         ]
+        if "$or" in query:
+            query = {"$and": [{"$or": query["$or"]}, {"$or": search_clause}]}
+        else:
+            query["$or"] = search_clause
 
     items = await db.menu_items.find(query, {"_id": 0}).to_list(500)
     return items

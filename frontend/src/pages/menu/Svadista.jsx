@@ -7,7 +7,7 @@ import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
 import useTabHistory from '../../hooks/useTabHistory';
 
-const TABS = ['All', 'Starters', 'Indo-Chinese', 'Egg Specials', 'Curries', 'Biryani'];
+const TABS = ['All', 'Starters', 'Indo - Chinese', 'Egg Specials', 'Curries', 'Biriyani', 'Rice Bowls'];
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
@@ -38,7 +38,9 @@ const Svadista = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = activeTab === 'All' ? items : items.filter(i => i.subcategory === activeTab);
+  const filtered = activeTab === 'All'
+    ? [...items].sort((a, b) => a.name.localeCompare(b.name))
+    : [...items].filter(i => i.subcategory === activeTab).sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
