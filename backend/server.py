@@ -31,6 +31,8 @@ ALLOWED_ORIGINS = [
     "https://sreesvadistaprasada-git-main-prasanthreddykethas-projects.vercel.app",
     "https://sreesvadistaprasada.com",
     "https://www.sreesvadistaprasada.com",
+    "https://ssp-nextjs.vercel.app",
+    "https://ssp-nextjs-git-main-prashanthketha-9745s-projects.vercel.app",
     "http://localhost:3000",
     "http://localhost:3001",
 ]
