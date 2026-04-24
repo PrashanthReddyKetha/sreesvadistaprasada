@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, ArrowRight, Package, Truck, MessageCircle } from 'lucide-react';
+import { Flame, ArrowRight, Package, Truck, MessageCircle, Search, X } from 'lucide-react';
 import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
 import useTabHistory from '../../hooks/useTabHistory';
 
-const categories = ['All', 'Pickles', 'Podis'];
+const categories = ['Pickles', 'Podis', 'All'];
 
 const Snacks = () => {
   const [allItems, setAllItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('All');
-  const selectTab = useTabHistory(activeFilter, setActiveFilter, 'All');
+  const [activeFilter, setActiveFilter] = useState('Pickles');
+  const [search, setSearch] = useState('');
+  const selectTab = useTabHistory(activeFilter, setActiveFilter, 'Pickles');
   useEffect(() => {
     const key = 'snacks';
     const cached = getCached(key);
@@ -30,9 +31,13 @@ const Snacks = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = activeFilter === 'All'
+  const byFilter = activeFilter === 'All'
     ? allItems
     : allItems.filter(d => d.type === activeFilter);
+
+  const filtered = search.trim()
+    ? byFilter.filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()))
+    : byFilter;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
@@ -73,20 +78,29 @@ const Snacks = () => {
       <div id="section-tabs-anchor" />
       {/* Sticky Filter */}
       <div id="section-tabs" className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8" style={{ backgroundColor: '#FDFBF7', borderBottom: '1px solid rgba(128,0,32,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} data-testid="snacks-filters">
-        <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => { selectTab(cat); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
-              className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                activeFilter === cat ? 'text-white' : 'text-gray-600 hover:bg-[#800020]/10'
-              }`}
-              style={activeFilter === cat ? { backgroundColor: '#800020' } : {}}
-              data-testid={`snacks-filter-${cat.toLowerCase()}`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="max-w-7xl mx-auto flex items-center gap-2">
+          <div className="flex gap-2 overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => { selectTab(cat); setSearch(''); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
+                className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                  activeFilter === cat ? 'text-white' : 'text-gray-600 hover:bg-[#800020]/10'
+                }`}
+                style={activeFilter === cat ? { backgroundColor: '#800020' } : {}}
+                data-testid={`snacks-filter-${cat.toLowerCase()}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          <div className="relative flex-shrink-0">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
+              className="pl-7 pr-7 py-1.5 rounded-full text-xs border outline-none focus:ring-2 w-32 md:w-44"
+              style={{ borderColor: 'rgba(128,0,32,0.3)', backgroundColor: 'white', color: '#374151' }} />
+            {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={11} /></button>}
+          </div>
         </div>
       </div>
 
@@ -131,7 +145,7 @@ const Snacks = () => {
             ))}
           </div>
           )}
-          {!loading && filtered.length === 0 && <p className="text-center text-gray-500 py-12">No products in this category yet.</p>}
+          {!loading && filtered.length === 0 && <p className="text-center text-gray-500 py-12">{search ? `No results for "${search}"` : 'No products in this category yet.'}</p>}
         </div>
       </section>
 

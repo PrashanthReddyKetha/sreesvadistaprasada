@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Sun } from 'lucide-react';
+import { ShoppingCart, Sun, Search, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
 import useTabHistory from '../../hooks/useTabHistory';
 
-const TABS = ['All', 'Idli & Vada', 'Dosas', 'Poori & Others'];
+const TABS = ['Idli & Vada', 'Dosas', 'Poori & Others', 'All'];
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
@@ -24,8 +24,9 @@ function SpiceBar({ level }) {
 const Breakfast = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('All');
-  const selectTab = useTabHistory(activeTab, setActiveTab, 'All');
+  const [activeTab, setActiveTab] = useState('Idli & Vada');
+  const [search, setSearch] = useState('');
+  const selectTab = useTabHistory(activeTab, setActiveTab, 'Idli & Vada');
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -38,9 +39,13 @@ const Breakfast = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = activeTab === 'All'
+  const byTab = activeTab === 'All'
     ? [...items].sort((a, b) => a.name.localeCompare(b.name))
     : [...items].filter(i => i.subcategory === activeTab).sort((a, b) => a.name.localeCompare(b.name));
+
+  const filtered = search.trim()
+    ? byTab.filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()))
+    : byTab;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
@@ -74,17 +79,26 @@ const Breakfast = () => {
       {/* Sticky tabs */}
       <div id="section-tabs" className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8"
         style={{ backgroundColor: '#FFFBEB', borderBottom: '1px solid rgba(180,101,11,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-        <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {TABS.map(tab => (
-            <button key={tab} onClick={() => { selectTab(tab); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
-              className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
-              style={{
-                backgroundColor: activeTab === tab ? '#B45309' : 'transparent',
-                color: activeTab === tab ? 'white' : '#374151',
-              }}>
-              {tab}
-            </button>
-          ))}
+        <div className="max-w-7xl mx-auto flex items-center gap-2">
+          <div className="flex gap-2 overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+            {TABS.map(tab => (
+              <button key={tab} onClick={() => { selectTab(tab); setSearch(''); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
+                className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
+                style={{
+                  backgroundColor: activeTab === tab ? '#B45309' : 'transparent',
+                  color: activeTab === tab ? 'white' : '#374151',
+                }}>
+                {tab}
+              </button>
+            ))}
+          </div>
+          <div className="relative flex-shrink-0">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
+              className="pl-7 pr-7 py-1.5 rounded-full text-xs border outline-none focus:ring-2 w-32 md:w-44"
+              style={{ borderColor: 'rgba(180,101,11,0.3)', backgroundColor: 'white', color: '#374151' }} />
+            {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={11} /></button>}
+          </div>
         </div>
       </div>
 
@@ -134,7 +148,7 @@ const Breakfast = () => {
             </div>
           )}
           {!loading && filtered.length === 0 && (
-            <div className="text-center py-20 text-gray-400">No items in this category yet.</div>
+            <div className="text-center py-20 text-gray-400">{search ? `No results for "${search}"` : 'No items in this category yet.'}</div>
           )}
         </div>
       </section>

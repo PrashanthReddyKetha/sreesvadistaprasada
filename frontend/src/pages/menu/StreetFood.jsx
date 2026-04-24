@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, ShoppingCart } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, Search, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -10,17 +10,19 @@ const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 const StreetFood = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const { addToCart } = useCart();
 
   useEffect(() => {
-    // Fetch street food, snacks, and Prasada starters/evening delights
     api.get('/menu?category=streetFood&available=true')
-      .then(r => {
-        setItems(r.data);
-      })
+      .then(r => { setItems(r.data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const filtered = search.trim()
+    ? [...items].sort((a, b) => a.name.localeCompare(b.name)).filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()))
+    : [...items].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
@@ -49,15 +51,29 @@ const StreetFood = () => {
         </div>
       </section>
 
+      {/* Sticky search bar */}
+      <div className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8"
+        style={{ backgroundColor: '#EFF6FF', borderBottom: '1px solid rgba(30,58,138,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+        <div className="max-w-7xl mx-auto flex justify-end">
+          <div className="relative">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dishes…"
+              className="pl-7 pr-7 py-1.5 rounded-full text-xs border outline-none focus:ring-2 w-48 md:w-64"
+              style={{ borderColor: 'rgba(30,58,138,0.3)', backgroundColor: 'white', color: '#374151' }} />
+            {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={11} /></button>}
+          </div>
+        </div>
+      </div>
+
       {/* Grid */}
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
-          {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{items.length} items</p>}
+          {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} items</p>}
           {loading ? (
             <MenuLoader color="#1D4ED8" />
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {items.map(dish => (
+              {filtered.map(dish => (
                 <Link key={dish.id} to={`/item/${dish.id}`} onClick={e => e.target.closest('button') && e.preventDefault()}>
                   <div className="rounded-xl overflow-hidden bg-white group transition-all duration-300 hover:-translate-y-1 h-full cursor-pointer"
                     style={{ boxShadow: '0 4px 20px rgba(30,58,138,0.08)', border: '1px solid rgba(30,58,138,0.08)' }}>
@@ -90,6 +106,9 @@ const StreetFood = () => {
                 </Link>
               ))}
             </div>
+          )}
+          {!loading && filtered.length === 0 && (
+            <div className="text-center py-20 text-gray-400">{search ? `No results for "${search}"` : 'No items yet.'}</div>
           )}
         </div>
       </section>

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Leaf, ShoppingCart, Star, Flame } from 'lucide-react';
+import { Leaf, ShoppingCart, Star, Flame, Search, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
 import useTabHistory from '../../hooks/useTabHistory';
 
-const TABS = ['All', 'Starters and Evening Delights', 'Indo Chinese', 'Curries & Daal', '🪔 Naivedyam', 'Biriyanis & Rice', 'Rice Bowls'];
+const TABS = ['Starters and Evening Delights', 'Indo Chinese', 'Curries & Daal', '🪔 Naivedyam', 'Biriyanis & Rice', 'Rice Bowls', 'All'];
 
 const SECTION_MESSAGES = {
   'Starters and Evening Delights': { icon: '🌿', text: 'Light bites and crispy evening delights — the perfect way to begin.' },
@@ -33,8 +33,9 @@ function SpiceBar({ level }) {
 const Prasada = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('All');
-  const selectTab = useTabHistory(activeTab, setActiveTab, 'All');
+  const [activeTab, setActiveTab] = useState('Starters and Evening Delights');
+  const [search, setSearch] = useState('');
+  const selectTab = useTabHistory(activeTab, setActiveTab, 'Starters and Evening Delights');
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -51,12 +52,16 @@ const Prasada = () => {
     '🪔 Naivedyam': 'Naivedyam',
   };
   const subcategoryKey = SUBCATEGORY_MAP[activeTab] || activeTab;
-  const filtered = activeTab === 'All'
+  const byTab = activeTab === 'All'
     ? [...items].sort((a, b) => a.name.localeCompare(b.name))
     : [...items].filter(i =>
         i.subcategory === subcategoryKey ||
         (i.extra_categories || []).some(ec => ec.category === 'veg' && ec.subcategory === subcategoryKey)
       ).sort((a, b) => a.name.localeCompare(b.name));
+
+  const filtered = search.trim()
+    ? byTab.filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()))
+    : byTab;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
@@ -91,24 +96,33 @@ const Prasada = () => {
       {/* Sticky tabs */}
       <div id="section-tabs" className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8"
         style={{ backgroundColor: '#F0FFF4', borderBottom: '1px solid rgba(22,101,52,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-        <div className="max-w-7xl mx-auto flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {TABS.map(tab => (
-            <button key={tab} onClick={() => { selectTab(tab); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
-              className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
-              style={{
-                backgroundColor: activeTab === tab ? '#166534' : 'transparent',
-                color: activeTab === tab ? 'white' : '#374151',
-              }}>
-              {tab}
-            </button>
-          ))}
+        <div className="max-w-7xl mx-auto flex items-center gap-2">
+          <div className="flex gap-2 overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+            {TABS.map(tab => (
+              <button key={tab} onClick={() => { selectTab(tab); setSearch(''); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
+                className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
+                style={{
+                  backgroundColor: activeTab === tab ? '#166534' : 'transparent',
+                  color: activeTab === tab ? 'white' : '#374151',
+                }}>
+                {tab}
+              </button>
+            ))}
+          </div>
+          <div className="relative flex-shrink-0">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
+              className="pl-7 pr-7 py-1.5 rounded-full text-xs border outline-none focus:ring-2 w-32 md:w-44"
+              style={{ borderColor: 'rgba(22,101,52,0.3)', backgroundColor: 'white', color: '#374151' }} />
+            {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={11} /></button>}
+          </div>
         </div>
       </div>
 
       {/* Grid */}
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
-          {!loading && SECTION_MESSAGES[activeTab] && (
+          {!loading && SECTION_MESSAGES[activeTab] && !search && (
             <div className="mb-8 -mt-2 text-center">
               <div className="inline-flex items-center gap-3 max-w-full">
                 <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to right, transparent, #d97706)' }} />
@@ -167,7 +181,7 @@ const Prasada = () => {
             </div>
           )}
           {!loading && filtered.length === 0 && (
-            <div className="text-center py-20 text-gray-400">No items in this category yet.</div>
+            <div className="text-center py-20 text-gray-400">{search ? `No results for "${search}"` : 'No items in this category yet.'}</div>
           )}
         </div>
       </section>
