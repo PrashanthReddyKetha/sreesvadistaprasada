@@ -92,6 +92,8 @@ export default function MenuTab() {
   const [addForm, setAddForm]     = useState(BLANK_ITEM);
   const [addSaving, setAddSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [selected, setSelected]   = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -151,7 +153,29 @@ export default function MenuTab() {
   const deleteItem = async (item) => {
     if (!window.confirm(`Permanently delete "${item.name}"? This cannot be undone.`)) return;
     await api.delete(`/menu/${item.id}`);
+    setSelected(s => { const n = new Set(s); n.delete(item.id); return n; });
     await load();
+  };
+
+  const deleteSelected = async () => {
+    if (selected.size === 0) return;
+    const names = [...selected].map(id => items.find(i => i.id === id)?.name).filter(Boolean);
+    if (!window.confirm(`Permanently delete ${selected.size} item${selected.size > 1 ? 's' : ''}?\n\n${names.join('\n')}\n\nThis cannot be undone.`)) return;
+    setBulkDeleting(true);
+    await Promise.all([...selected].map(id => api.delete(`/menu/${id}`).catch(() => {})));
+    setSelected(new Set());
+    await load();
+    setBulkDeleting(false);
+  };
+
+  const toggleSelect = (id) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const allFilteredSelected = filtered => filtered.length > 0 && filtered.every(i => selected.has(i.id));
+  const toggleSelectAll = (filtered) => {
+    if (allFilteredSelected(filtered)) {
+      setSelected(s => { const n = new Set(s); filtered.forEach(i => n.delete(i.id)); return n; });
+    } else {
+      setSelected(s => { const n = new Set(s); filtered.forEach(i => n.add(i.id)); return n; });
+    }
   };
 
   const addItem = async () => {
@@ -202,6 +226,28 @@ export default function MenuTab() {
         </div>
       </div>
       {search && <p className="text-xs" style={{ color:'#9C7B6B' }}>{filtered.length} result{filtered.length !== 1 ? 's' : ''} for "<strong>{search}</strong>"</p>}
+
+      {/* Bulk action bar */}
+      {filtered.length > 0 && (
+        <div className="flex items-center gap-3 px-1">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox"
+              checked={allFilteredSelected(filtered)}
+              onChange={() => toggleSelectAll(filtered)}
+              className="w-4 h-4 accent-[#800020]" />
+            <span className="text-xs text-gray-500">
+              {allFilteredSelected(filtered) ? 'Deselect all' : `Select all (${filtered.length})`}
+            </span>
+          </label>
+          {selected.size > 0 && (
+            <button onClick={deleteSelected} disabled={bulkDeleting}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-60 transition-all"
+              style={{ backgroundColor: '#991B1B' }}>
+              <Trash2 size={12} /> {bulkDeleting ? 'Deleting…' : `Delete selected (${selected.size})`}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Add New Item form */}
       {adding && (
@@ -380,6 +426,8 @@ export default function MenuTab() {
               </div>
             ) : (
               <div className="flex items-center gap-4 p-4">
+                <input type="checkbox" checked={selected.has(item.id)} onChange={() => toggleSelect(item.id)}
+                  className="w-4 h-4 accent-[#800020] flex-shrink-0 cursor-pointer" />
                 {item.image ? (
                   <img src={item.image} alt={item.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
                 ) : (
