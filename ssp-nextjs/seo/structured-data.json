@@ -1,0 +1,55 @@
+{
+  "_note": "These schemas are embedded in src/app/layout.tsx (restaurant) and src/app/dabba-wala/page.tsx (product). This file is for reference and validation only.",
+  "restaurant": {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    "name": "Sree Svadista Prasada",
+    "description": "Milton Keynes authentic South Indian kitchen from Andhra and Telugu traditions.",
+    "url": "https://sreesvadistaprasada.com",
+    "telephone": "+447307119962",
+    "servesCuisine": ["South Indian", "Andhra", "Telugu", "Indian", "Vegetarian Indian"],
+    "priceRange": "££",
+    "hasMenu": "https://sreesvadistaprasada.com/menu",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "24 Oxman Ln",
+      "addressLocality": "Greenleys",
+      "addressRegion": "Milton Keynes",
+      "postalCode": "MK12 6LF",
+      "addressCountry": "GB"
+    },
+    "geo": { "@type": "GeoCoordinates", "latitude": 52.0663, "longitude": -0.7820 },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        "opens": "07:00",
+        "closes": "23:00"
+      }
+    ],
+    "potentialAction": {
+      "@type": "OrderAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://sreesvadistaprasada.vercel.app",
+        "inLanguage": "en-GB"
+      }
+    },
+    "areaServed": [
+      { "@type": "Place", "name": "Greenleys" },
+      { "@type": "Place", "name": "Wolverton" },
+      { "@type": "Place", "name": "Stony Stratford" },
+      { "@type": "City", "name": "Milton Keynes" }
+    ]
+  },
+  "dabba_wala_product": {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Dabba Wala — Weekly South Indian Meal Subscription",
+    "description": "Weekly home-cooked South Indian meal plan delivered to your door in Milton Keynes.",
+    "brand": { "@type": "Brand", "name": "Sree Svadista Prasada" },
+    "offers": { "@type": "Offer", "priceCurrency": "GBP", "availability": "https://schema.org/InStock" },
+    "category": "Meal Subscription",
+    "areaServed": { "@type": "City", "name": "Milton Keynes" }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "business": "Sree Svadista Prasada",
+  "location": "Milton Keynes, UK",
+  "generated": "2026-04-24",
+  "clusters": {
+    "Local discovery": {
+      "description": "High-intent local searches. Use in H1, meta titles, homepage copy.",
+      "keywords": [
+        { "kw": "South Indian restaurant Milton Keynes", "vol": 720, "diff": 42, "priority": "High", "page": "/" },
+        { "kw": "South Indian takeaway Milton Keynes", "vol": 590, "diff": 38, "priority": "High", "page": "/" },
+        { "kw": "Indian takeaway Milton Keynes", "vol": 1300, "diff": 65, "priority": "High", "page": "/" },
+        { "kw": "South Indian food delivery Milton Keynes", "vol": 210, "diff": 25, "priority": "High", "page": "/" },
+        { "kw": "best South Indian takeaway Milton Keynes", "vol": 170, "diff": 30, "priority": "High", "page": "/" },
+        { "kw": "authentic South Indian Milton Keynes", "vol": 140, "diff": 22, "priority": "High", "page": "/" }
+      ]
+    },
+    "Hyperlocal": {
+      "description": "Neighbourhood-level searches. Very low competition, very high conversion.",
+      "keywords": [
+        { "kw": "Indian takeaway Greenleys", "vol": 90, "diff": 8, "priority": "Quick Win", "page": "/contact" },
+        { "kw": "Indian food delivery Greenleys MK12", "vol": 70, "diff": 5, "priority": "Quick Win", "page": "/contact" },
+        { "kw": "Indian takeaway Wolverton", "vol": 130, "diff": 12, "priority": "High", "page": "/contact" },
+        { "kw": "South Indian delivery Stony Stratford", "vol": 60, "diff": 5, "priority": "Quick Win", "page": "/contact" },
+        { "kw": "Indian food MK12", "vol": 80, "diff": 6, "priority": "Quick Win", "page": "/" }
+      ]
+    },
+    "Dish specific": {
+      "description": "Dish-level searches. Each dish should have a keyword-optimised description on the menu page.",
+      "keywords": [
+        { "kw": "dosa delivery Milton Keynes", "vol": 110, "diff": 10, "priority": "Quick Win", "page": "/menu" },
+        { "kw": "idli takeaway Milton Keynes", "vol": 60, "diff": 5, "priority": "Quick Win", "page": "/menu" },
+        { "kw": "biryani delivery Milton Keynes", "vol": 390, "diff": 48, "priority": "High", "page": "/menu" },
+        { "kw": "Andhra biryani near me", "vol": 80, "diff": 8, "priority": "Quick Win", "page": "/menu" },
+        { "kw": "crispy dosa Milton Keynes", "vol": 90, "diff": 14, "priority": "Quick Win", "page": "/menu" },
+        { "kw": "veg biryani delivery MK", "vol": 70, "diff": 8, "priority": "Quick Win", "page": "/menu" }
+      ]
+    },
+    "Dabba Wala": {
+      "description": "HIGHEST PRIORITY. Zero local competitors. Own these before anyone else does.",
+      "keywords": [
+        { "kw": "Indian meal subscription Milton Keynes", "vol": 50, "diff": 3, "priority": "Quick Win", "page": "/dabba-wala" },
+        { "kw": "weekly Indian meal delivery MK", "vol": 40, "diff": 2, "priority": "Quick Win", "page": "/dabba-wala" },
+        { "kw": "home cooked Indian food delivery Milton Keynes", "vol": 70, "diff": 5, "priority": "High", "page": "/dabba-wala" },
+        { "kw": "tiffin delivery Milton Keynes", "vol": 60, "diff": 4, "priority": "Quick Win", "page": "/dabba-wala" },
+        { "kw": "dabba delivery Milton Keynes", "vol": 30, "diff": 2, "priority": "Quick Win", "page": "/dabba-wala" },
+        { "kw": "Indian food subscription MK12", "vol": 25, "diff": 2, "priority": "Quick Win", "page": "/dabba-wala" }
+      ]
+    },
+    "Cuisine specific": {
+      "description": "Heritage searches from the South Asian community. Low competition, high relevance.",
+      "keywords": [
+        { "kw": "Telugu food Milton Keynes", "vol": 50, "diff": 3, "priority": "Quick Win", "page": "/about" },
+        { "kw": "Andhra food Milton Keynes", "vol": 45, "diff": 3, "priority": "Quick Win", "page": "/about" },
+        { "kw": "Telugu restaurant near me", "vol": 90, "diff": 6, "priority": "Quick Win", "page": "/about" },
+        { "kw": "home style Indian food delivery MK", "vol": 55, "diff": 4, "priority": "Quick Win", "page": "/" }
+      ]
+    }
+  },
+  "top_opportunity": "Dabba Wala keywords — zero local competitors"
+}
