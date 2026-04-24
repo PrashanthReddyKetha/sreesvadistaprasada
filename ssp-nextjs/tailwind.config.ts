@@ -8,29 +8,28 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        // Brand colours — Sree Svadista Prasada (warm amber/brown palette matching live site)
-        brand: {
-          DEFAULT: '#5C2406',
-          dark: '#3B1504',
-          light: '#FEF3E2',
-        },
-        accent: {
-          DEFAULT: '#92400E',
-          dark: '#6B2D0A',
-          light: '#FFFBEB',
-        },
-        gold: {
-          DEFAULT: '#B8860B',
-          light: '#FEF9C3',
-        },
-      },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         serif: ["'Playfair Display'", 'Georgia', 'serif'],
+        sans: ['Lato', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
-      spacing: {
-        section: '5rem',
+      colors: {
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+        popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
+        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
     },
   },

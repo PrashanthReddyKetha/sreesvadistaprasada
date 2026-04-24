@@ -8,10 +8,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "validate-seo": "node scripts/validate-seo.js",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.5",
+    "@stripe/react-stripe-js": "^6.1.0",
+    "@stripe/stripe-js": "^9.1.0",
+    "axios": "^1.8.4",
+    "firebase": "^12.12.0",
+    "lucide-react": "^0.507.0",
     "next": "14.2.3",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
