@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Header />
               <CartDrawer />
               <AuthModal />
-              <main className="flex-1 pt-[calc(32px+74px)] md:pt-[calc(32px+80px)]">
+              <main className="flex-1">
                 {children}
               </main>
               <Footer />
