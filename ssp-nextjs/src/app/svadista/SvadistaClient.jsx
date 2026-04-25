@@ -28,7 +28,7 @@ const Svadista = ({ initialItems = [] }) => {
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeTab, setActiveTab] = useState('Starters');
   const [search, setSearch] = useState('');
-  const selectTab = useTabHistory(activeTab, setActiveTab, 'Starters');
+  const selectTab = useTabHistory(activeTab, setActiveTab, 'Starters', TABS);
   const { addToCart } = useCart();
 
   useEffect(() => {

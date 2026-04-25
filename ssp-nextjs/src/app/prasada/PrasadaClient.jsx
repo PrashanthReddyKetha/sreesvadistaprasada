@@ -37,7 +37,7 @@ const Prasada = ({ initialItems = [] }) => {
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeTab, setActiveTab] = useState('Starters and Evening Delights');
   const [search, setSearch] = useState('');
-  const selectTab = useTabHistory(activeTab, setActiveTab, 'Starters and Evening Delights');
+  const selectTab = useTabHistory(activeTab, setActiveTab, 'Starters and Evening Delights', TABS);
   const { addToCart } = useCart();
 
   useEffect(() => {

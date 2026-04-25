@@ -14,7 +14,7 @@ const Snacks = ({ initialItems = [] }) => {
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeFilter, setActiveFilter] = useState('Pickles');
   const [search, setSearch] = useState('');
-  const selectTab = useTabHistory(activeFilter, setActiveFilter, 'Pickles');
+  const selectTab = useTabHistory(activeFilter, setActiveFilter, 'Pickles', categories);
   useEffect(() => {
     const key = 'snacks';
     const cached = getCached(key);

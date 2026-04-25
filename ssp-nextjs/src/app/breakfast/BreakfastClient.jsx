@@ -28,7 +28,7 @@ const Breakfast = ({ initialItems = [] }) => {
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeTab, setActiveTab] = useState('Idli & Vada');
   const [search, setSearch] = useState('');
-  const selectTab = useTabHistory(activeTab, setActiveTab, 'Idli & Vada');
+  const selectTab = useTabHistory(activeTab, setActiveTab, 'Idli & Vada', TABS);
   const { addToCart } = useCart();
 
   useEffect(() => {
