@@ -301,7 +301,7 @@ const Home = () => {
                 key={dish.id}
                 className="flex-shrink-0 w-72 md:w-80 rounded-lg overflow-hidden group card-hover bg-white"
                 style={{ boxShadow: '0 4px 20px rgba(128, 0, 32, 0.06)', cursor: itemPath ? 'pointer' : 'default' }}
-                onClick={() => itemPath && navigate(itemPath)}
+                onClick={() => itemPath && router.push(itemPath)}
                 data-testid={`trending-dish-${dish.id}`}
               >
                 <div className="block relative h-48 overflow-hidden">
