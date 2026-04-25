@@ -116,6 +116,7 @@ class MenuItemCreate(BaseModel):
     price: float
     category: MenuCategory
     subcategory: Optional[str] = None
+    slug: Optional[str] = None
     # extra_categories allows a single DB item to appear on multiple menu pages.
     # Each entry: {"category": "streetFood", "subcategory": "..."}
     extra_categories: List[dict] = []
@@ -136,6 +137,7 @@ class MenuItemUpdate(BaseModel):
     price: Optional[float] = None
     category: Optional[MenuCategory] = None
     subcategory: Optional[str] = None
+    slug: Optional[str] = None
     extra_categories: Optional[List[dict]] = None
     spice_level: Optional[int] = Field(default=None, ge=0, le=5)
     is_veg: Optional[bool] = None

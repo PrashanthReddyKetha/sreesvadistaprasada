@@ -39,12 +39,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   const items = await getMenuItems()
-  const itemRoutes: MetadataRoute.Sitemap = items.map(item => ({
-    url: `${BASE_URL}/item/${item.id}`,
-    priority: 0.7,
-    changeFrequency: 'weekly',
-    lastModified: item.updated_at ? new Date(item.updated_at) : now,
-  }))
+  const itemRoutes: MetadataRoute.Sitemap = items
+    .filter((item: any) => item.slug && item.category && (item.subcategory || true))
+    .map((item: any) => {
+      const CATEGORY_TO_MENU: Record<string, string> = {
+        nonVeg: 'svadista', veg: 'prasada', breakfast: 'breakfast',
+        pickles: 'snacks', podis: 'snacks', drinks: 'drinks',
+        streetFood: 'street-food', ragiSpecials: 'ragi-specials',
+      }
+      const CATEGORY_DEFAULT_SUB: Record<string, string> = {
+        pickles: 'pickles', podis: 'podis', drinks: 'beverages',
+        streetFood: 'street-bites', ragiSpecials: 'specials',
+      }
+      const slugify = (t: string) => t.toLowerCase().replace(/[^\w\s-]/g,'').trim().replace(/[\s_]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'')
+      const menu = CATEGORY_TO_MENU[item.category] || item.category
+      const subsection = item.subcategory ? slugify(item.subcategory) : (CATEGORY_DEFAULT_SUB[item.category] || 'general')
+      return {
+        url: `${BASE_URL}/${menu}/${subsection}/${item.slug}`,
+        priority: 0.7,
+        changeFrequency: 'weekly' as const,
+        lastModified: item.updated_at ? new Date(item.updated_at) : now,
+      }
+    })
 
   return [...staticRoutes, ...itemRoutes]
 }

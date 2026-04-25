@@ -7,6 +7,7 @@ import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from 
 import HeroSlider from '@/components/HeroSlider';
 import api from '@/api';
 import { useCart } from '@/context/CartContext';
+import { buildItemUrl } from '@/lib/itemUrl';
 
 const Home = () => {
   const trendingRef = useRef(null);
@@ -17,7 +18,7 @@ const Home = () => {
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const { addToCart } = useCart();
   const [liveItems, setLiveItems] = useState([]);
-  const [chefSpecialId, setChefSpecialId] = useState(null);
+  const [chefSpecialItem, setChefSpecialItem] = useState(null);
   const [dailySpecials, setDailySpecials] = useState([]);
 
   useEffect(() => {
@@ -32,7 +33,7 @@ const Home = () => {
   // Look up the chef's special item by name to get its real ID for the detail page link
   useEffect(() => {
     api.get('/menu?available=true&search=Pulihora')
-      .then(r => { if (r.data?.[0]?.id) setChefSpecialId(r.data[0].id); })
+      .then(r => { if (r.data?.[0]) setChefSpecialItem(r.data[0]); })
       .catch(() => {});
   }, []);
 
@@ -294,7 +295,7 @@ const Home = () => {
               const isVeg = isLive ? dish.is_veg : dish.category !== 'Non-Veg';
               const spice = isLive ? (dish.spice_level || 0) : (dish.spiceLevel || 0);
               const price = isLive ? `£${dish.price?.toFixed(2)}` : dish.price;
-              const itemPath = isLive ? `/item/${dish.id}` : null;
+              const itemPath = isLive ? buildItemUrl(dish) : null;
               return (
               <div
                 key={dish.id}
@@ -458,7 +459,7 @@ const Home = () => {
               </h2>
 
               <div className="relative rounded-lg overflow-hidden group" style={{ boxShadow: '0 8px 32px rgba(128, 0, 32, 0.08)' }}>
-                <Link href={chefSpecialId ? `/item/${chefSpecialId}` : '/prasada'} className="block">
+                <Link href={chefSpecialItem ? buildItemUrl(chefSpecialItem) : '/prasada'} className="block">
                 <div className="relative h-64 md:h-80 overflow-hidden">
                   <img
                     src={chefSpecial.image}

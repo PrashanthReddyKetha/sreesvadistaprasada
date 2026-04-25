@@ -1,12 +1,45 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from datetime import datetime, timedelta
-import os, json
+import os, json, re
 from database import db
 from models import MenuItem, MenuItemCreate, MenuItemUpdate, MenuCategory, Review, ReviewCreate
 from auth import require_admin, get_current_user, get_optional_user
 
 router = APIRouter(prefix="/menu", tags=["menu"])
+
+
+def slugify(text: str) -> str:
+    text = text.lower()
+    text = re.sub(r'[^\w\s-]', '', text)
+    text = re.sub(r'[\s_]+', '-', text.strip())
+    text = re.sub(r'-+', '-', text)
+    return text.strip('-')
+
+
+async def generate_unique_slug(name: str, exclude_id: str = None) -> str:
+    base = slugify(name)
+    slug = base
+    n = 2
+    while True:
+        q = {"slug": slug}
+        if exclude_id:
+            q["id"] = {"$ne": exclude_id}
+        existing = await db.menu_items.find_one(q, {"_id": 0, "id": 1})
+        if not existing:
+            return slug
+        slug = f"{base}-{n}"
+        n += 1
+
+
+async def migrate_slugs():
+    items = await db.menu_items.find(
+        {"$or": [{"slug": {"$exists": False}}, {"slug": None}]},
+        {"_id": 0, "id": 1, "name": 1}
+    ).to_list(1000)
+    for item in items:
+        slug = await generate_unique_slug(item["name"], exclude_id=item["id"])
+        await db.menu_items.update_one({"id": item["id"]}, {"$set": {"slug": slug}})
 
 
 @router.get("", response_model=List[MenuItem])
@@ -112,6 +145,14 @@ async def get_weekly_preview(
     return {"days": results, "dietary_notes": dietary_notes}
 
 
+@router.get("/slug/{slug}", response_model=MenuItem)
+async def get_menu_item_by_slug(slug: str):
+    doc = await db.menu_items.find_one({"slug": slug}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    return doc
+
+
 @router.get("/{item_id}", response_model=MenuItem)
 async def get_menu_item(item_id: str):
     doc = await db.menu_items.find_one({"id": item_id}, {"_id": 0})
@@ -122,7 +163,10 @@ async def get_menu_item(item_id: str):
 
 @router.post("", response_model=MenuItem)
 async def create_menu_item(payload: MenuItemCreate, _: dict = Depends(require_admin)):
-    item = MenuItem(**payload.model_dump())
+    data = payload.model_dump()
+    if not data.get("slug"):
+        data["slug"] = await generate_unique_slug(data["name"])
+    item = MenuItem(**data)
     await db.menu_items.insert_one(item.model_dump())
     return item
 
@@ -132,6 +176,8 @@ async def update_menu_item(item_id: str, payload: MenuItemUpdate, _: dict = Depe
     updates = {k: v for k, v in payload.model_dump().items() if v is not None}
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
+    if "name" in updates and "slug" not in updates:
+        updates["slug"] = await generate_unique_slug(updates["name"], exclude_id=item_id)
 
     result = await db.menu_items.update_one({"id": item_id}, {"$set": updates})
     if result.matched_count == 0:

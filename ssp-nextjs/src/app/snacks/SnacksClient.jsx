@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { buildItemUrl } from '@/lib/itemUrl';
 import { Flame, ArrowRight, Package, Truck, MessageCircle, Search, X } from 'lucide-react';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
@@ -112,7 +113,7 @@ const Snacks = ({ initialItems = [] }) => {
           {loading ? <div className="text-center py-20 text-gray-400">Loading...</div> : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filtered.map(item => (
-              <Link key={item.id} href={`/item/${item.id}`} onClick={e => e.target.closest('button') && e.preventDefault()}>
+              <Link key={item.id} href={buildItemUrl(item)} onClick={e => e.target.closest('button') && e.preventDefault()}>
                 <div className="rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }} data-testid={`snack-item-${item.id}`}>
                   {item.image && (
                     <div className="relative h-40 overflow-hidden">

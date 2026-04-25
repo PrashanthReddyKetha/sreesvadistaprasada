@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { buildItemUrl } from '@/lib/itemUrl';
 import { ShoppingCart, Sun, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
@@ -112,7 +113,7 @@ const Breakfast = ({ initialItems = [] }) => {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filtered.map(dish => (
-                <Link key={dish.id} href={`/item/${dish.id}`} onClick={e => e.target.closest('button') && e.preventDefault()}>
+                <Link key={dish.id} href={buildItemUrl(dish)} onClick={e => e.target.closest('button') && e.preventDefault()}>
                   <div className="rounded-xl overflow-hidden bg-white group transition-all duration-300 hover:-translate-y-1 h-full cursor-pointer"
                     style={{ boxShadow: '0 4px 20px rgba(180,101,11,0.08)', border: '1px solid rgba(180,101,11,0.1)' }}>
                     <div className="relative h-44 overflow-hidden">

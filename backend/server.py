@@ -7,6 +7,7 @@ import logging
 from database import client
 from seed import seed_menu, create_indexes, create_admin_user, seed_daily_specials
 from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews, daily_specials
+from routes.menu import migrate_slugs
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI):
     await seed_menu()
     await seed_daily_specials()
     await create_admin_user()
+    await migrate_slugs()
     yield
     logger.info("Shutting down...")
     client.close()

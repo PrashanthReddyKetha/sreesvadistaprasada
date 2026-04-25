@@ -1,18 +1,35 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   Heart, ShoppingCart, Star, ChevronDown, ChevronUp,
   Flame, Leaf, AlertTriangle, Users, Plus, Minus,
-  ArrowLeft, Share2, CheckCircle, Award, Clock, Package
+  CheckCircle, Award, Clock, Package
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import api from '@/api';
+import { buildItemUrl } from '@/lib/itemUrl';
 
 // ── constants ──────────────────────────────────────────────────────────────
-const CAT_LABELS = { nonVeg:'Non-Veg', veg:'Veg', prasada:'Prasada', breakfast:'Breakfast', pickles:'Pickles', podis:'Podis' };
+const CAT_LABELS = {
+  nonVeg:'Non-Veg', veg:'Vegetarian', prasada:'Prasada',
+  breakfast:'Breakfast', pickles:'Pickles', podis:'Podis',
+  drinks:'Drinks', streetFood:'Street Food', ragiSpecials:'Ragi Specials',
+};
+
+const MENU_PATHS = {
+  nonVeg: '/svadista', veg: '/prasada', breakfast: '/breakfast',
+  pickles: '/snacks', podis: '/snacks', drinks: '/drinks',
+  streetFood: '/street-food', ragiSpecials: '/ragi-specials',
+};
+
+const MENU_LABELS = {
+  nonVeg: 'Svadista', veg: 'Prasada', breakfast: 'Breakfast',
+  pickles: 'Snacks', podis: 'Snacks', drinks: 'Drinks',
+  streetFood: 'Street Food', ragiSpecials: 'Ragi Specials',
+};
 
 const COMPLEMENTS = {
   nonVeg:    ['pickles','podis'],
@@ -32,17 +49,13 @@ const ALLERGEN_COLORS = {
 const CATEGORY_FAQS = {
   nonVeg: [
     { q:'Is the meat halal?', a:'Yes, all our meat is sourced from halal-certified suppliers.' },
-    { q:'Can I request a different spice level?', a:'Absolutely — add a note in Special Instructions at checkout and we\'ll adjust it for you.' },
+    { q:'Can I request a different spice level?', a:"Absolutely — add a note in Special Instructions at checkout and we'll adjust it for you." },
     { q:'What sides go best with this?', a:'Our homemade pickles and podis pair beautifully. Check the "Goes Best With" section below.' },
   ],
   veg: [
     { q:'Is this suitable for vegans?', a:'Most veg dishes use ghee. For vegan preparation, add a note at checkout and we\'ll accommodate you.' },
     { q:'Are veg dishes cooked separately from non-veg?', a:'Yes — we use dedicated cookware and utensils for all vegetarian preparations.' },
     { q:'Are the spices freshly ground?', a:'Yes, we grind our own masala blends fresh every morning using traditional stone grinding.' },
-  ],
-  prasada: [
-    { q:'What makes Prasada different?', a:'Prasada is temple-style cooking — sattvic food prepared without onion or garlic, offering spiritual nourishment alongside taste.' },
-    { q:'Is Prasada suitable for fasting?', a:'Most items are suitable for fasting. Check allergen info or ask us directly.' },
   ],
   breakfast: [
     { q:'Can I order breakfast items for lunch or dinner?', a:'Absolutely! Our breakfast items are made fresh throughout the day.' },
@@ -91,7 +104,7 @@ const SpiceDots = ({ level }) => (
 const MiniCard = ({ item }) => {
   const { addToCart } = useCart();
   return (
-    <Link href={`/item/${item.id}`} className="flex-shrink-0 w-44 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow" style={{ border:'1px solid rgba(244,196,48,0.2)' }}>
+    <Link href={buildItemUrl(item)} className="flex-shrink-0 w-44 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow" style={{ border:'1px solid rgba(244,196,48,0.2)' }}>
       {item.image ? (
         <img src={item.image} alt={item.name} className="w-full h-28 object-cover" />
       ) : (
@@ -114,73 +127,63 @@ const MiniCard = ({ item }) => {
   );
 };
 
-// ── main page ──────────────────────────────────────────────────────────────
-export default function ItemDetail() {
-  const params = useParams();
-  const itemId = params?.itemId;
+// ── main component ─────────────────────────────────────────────────────────
+export default function ItemDetailClient({ initialItem }) {
   const router = useRouter();
   const { user, setAuthOpen } = useAuth();
   const { addToCart } = useCart();
 
-  const [item, setItem]         = useState(null);
-  const [reviews, setReviews]   = useState([]);
-  const [social, setSocial]     = useState({ likes:0, order_count:0, user_liked:false, user_reviewed:false });
+  const [item]                = useState(initialItem);
+  const [reviews, setReviews] = useState([]);
+  const [social, setSocial]   = useState({ likes:0, order_count:0, user_liked:false, user_reviewed:false });
   const [goesWith, setGoesWith] = useState([]);
   const [similar, setSimilar]   = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [notFound, setNotFound] = useState(false);
 
-  const [qty, setQty]           = useState(1);
-  const [added, setAdded]       = useState(false);
-  const [liking, setLiking]     = useState(false);
+  const [qty, setQty]   = useState(1);
+  const [added, setAdded] = useState(false);
+  const [liking, setLiking] = useState(false);
 
-  const [reviewForm, setReviewForm]           = useState({ rating:5, comment:'' });
+  const [reviewForm, setReviewForm]             = useState({ rating:5, comment:'' });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
-  const [reviewError, setReviewError]         = useState('');
-  const [reviewSuccess, setReviewSuccess]     = useState(false);
+  const [reviewError, setReviewError]           = useState('');
+  const [reviewSuccess, setReviewSuccess]       = useState(false);
 
-  const [openFaq, setOpenFaq] = useState(null);
+  const [openFaq, setOpenFaq]   = useState(null);
   const [activeTab, setActiveTab] = useState('about');
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [itemId]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [initialItem?.id]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const loadDynamic = useCallback(async () => {
+    if (!item) return;
     try {
-      const [itemRes, reviewsRes, socialRes] = await Promise.all([
-        api.get(`/menu/${itemId}`),
-        api.get(`/menu/${itemId}/reviews`),
-        api.get(`/menu/${itemId}/social`),
+      const [reviewsRes, socialRes] = await Promise.all([
+        api.get(`/menu/${item.id}/reviews`),
+        api.get(`/menu/${item.id}/social`),
       ]);
-      const it = itemRes.data;
-      setItem(it);
       setReviews(reviewsRes.data);
       setSocial(socialRes.data);
 
-      const cats = COMPLEMENTS[it.category] || [];
-      const promises = [api.get(`/menu?category=${it.category}&available=true`)];
+      const cats = COMPLEMENTS[item.category] || [];
+      const promises = [api.get(`/menu?category=${item.category}&available=true`)];
 
-      // If item has manual pairs_with, fetch those specific items; otherwise fetch by category
-      if (it.pairs_with?.length > 0) {
-        promises.push(...it.pairs_with.slice(0, 6).map(id => api.get(`/menu/${id}`)));
+      if (item.pairs_with?.length > 0) {
+        promises.push(...item.pairs_with.slice(0, 6).map(id => api.get(`/menu/${id}`)));
       } else if (cats[0]) {
         promises.push(api.get(`/menu?category=${cats[0]}&available=true`));
       }
 
       const [simRes, ...pairResults] = await Promise.all(promises);
-      setSimilar(simRes.data.filter(i => i.id !== itemId).slice(0, 8));
+      setSimilar(simRes.data.filter(i => i.id !== item.id).slice(0, 8));
 
-      if (it.pairs_with?.length > 0) {
+      if (item.pairs_with?.length > 0) {
         setGoesWith(pairResults.map(r => r.data).filter(Boolean));
       } else if (pairResults[0]) {
         setGoesWith(pairResults[0].data.slice(0, 6));
       }
-    } catch (e) {
-      if (e.response?.status === 404) setNotFound(true);
-    } finally { setLoading(false); }
-  }, [itemId]);
+    } catch { /* ignore */ }
+  }, [item]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadDynamic(); }, [loadDynamic]);
 
   const handleAddToCart = () => {
     for (let i = 0; i < qty; i++) {
@@ -194,7 +197,7 @@ export default function ItemDetail() {
     if (!user) { setAuthOpen(true); return; }
     setLiking(true);
     try {
-      const res = await api.post(`/menu/${itemId}/like`);
+      const res = await api.post(`/menu/${item.id}/like`);
       setSocial(p => ({ ...p, user_liked: res.data.liked, likes: p.likes + (res.data.liked ? 1 : -1) }));
     } catch { /* ignore */ }
     finally { setLiking(false); }
@@ -205,40 +208,30 @@ export default function ItemDetail() {
     if (!user) { setAuthOpen(true); return; }
     setReviewSubmitting(true); setReviewError('');
     try {
-      const res = await api.post(`/menu/${itemId}/reviews`, reviewForm);
+      const res = await api.post(`/menu/${item.id}/reviews`, reviewForm);
       setReviews(p => [res.data, ...p]);
       setSocial(p => ({ ...p, user_reviewed: true }));
       setReviewSuccess(true);
       setReviewForm({ rating:5, comment:'' });
-    } catch (e) {
-      setReviewError(e.response?.data?.detail || 'Could not submit review. Please try again.');
+    } catch (err) {
+      setReviewError(err.response?.data?.detail || 'Could not submit review. Please try again.');
     } finally { setReviewSubmitting(false); }
   };
 
-  const avgRating = reviews.length ? reviews.reduce((s,r) => s+r.rating, 0) / reviews.length : 0;
-  const ratingDist = [5,4,3,2,1].map(n => ({ n, count: reviews.filter(r => r.rating === n).length }));
-  // Custom item FAQs first, then category FAQs, then general
-  const faqs = [
-    ...(item?.faqs?.filter(f => f.q && f.a) || []),
-    ...(CATEGORY_FAQS[item?.category] || []),
-    ...GENERAL_FAQS,
-  ];
-
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center pt-24" style={{ backgroundColor:'#FAF8F4' }}>
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-12 h-12 rounded-full border-4 border-[#800020] border-t-transparent animate-spin" />
-        <p className="text-sm" style={{ color:'#9C7B6B' }}>Loading dish details…</p>
-      </div>
-    </div>
-  );
-
-  if (notFound || !item) return (
+  if (!item) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 pt-24" style={{ backgroundColor:'#FAF8F4' }}>
       <p className="text-xl font-semibold" style={{ color:'#800020' }}>Dish not found</p>
       <button onClick={() => router.back()} className="text-sm font-semibold" style={{ color:'#B8860B' }}>← Go back</button>
     </div>
   );
+
+  const avgRating = reviews.length ? reviews.reduce((s,r) => s+r.rating, 0) / reviews.length : 0;
+  const ratingDist = [5,4,3,2,1].map(n => ({ n, count: reviews.filter(r => r.rating === n).length }));
+  const faqs = [
+    ...(item.faqs?.filter(f => f.q && f.a) || []),
+    ...(CATEGORY_FAQS[item.category] || []),
+    ...GENERAL_FAQS,
+  ];
 
   return (
     <div className="min-h-screen pt-20 md:pt-24 pb-16" style={{ backgroundColor:'#FAF8F4' }}>
@@ -248,16 +241,16 @@ export default function ItemDetail() {
         <div className="flex items-center gap-2 text-xs mb-6 flex-wrap" style={{ color:'#9C7B6B' }}>
           <Link href="/" className="hover:underline">Home</Link>
           <span>/</span>
-          <Link href="/menus" className="hover:underline">Menus</Link>
-          <span>/</span>
-          <span className="capitalize">{CAT_LABELS[item.category]}</span>
+          <Link href={MENU_PATHS[item.category] || '/menu'} className="hover:underline capitalize">
+            {MENU_LABELS[item.category] || item.category}
+          </Link>
+          {item.subcategory && <><span>/</span><span className="capitalize">{item.subcategory}</span></>}
           <span>/</span>
           <span style={{ color:'#3D2B1F' }}>{item.name}</span>
         </div>
 
         {/* ── Hero ── */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
-          {/* Image */}
           <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio:'4/3' }}>
             {item.image ? (
               <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -266,12 +259,10 @@ export default function ItemDetail() {
                 <ShoppingCart size={64} style={{ color:'#800020', opacity:0.3 }} />
               </div>
             )}
-            {/* Tag badge */}
             {item.tag && (
               <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg"
                 style={{ backgroundColor:'#F4C430', color:'#3D2B1F' }}>{item.tag}</div>
             )}
-            {/* Veg / Non-veg indicator */}
             <div className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center shadow-lg bg-white">
               {item.is_veg
                 ? <Leaf size={16} style={{ color:'#166534' }} />
@@ -279,17 +270,16 @@ export default function ItemDetail() {
             </div>
           </div>
 
-          {/* Info card */}
           <div className="flex flex-col justify-between">
             <div>
               <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color:'#B8860B' }}>
                 {CAT_LABELS[item.category]}
+                {item.subcategory && ` · ${item.subcategory}`}
               </p>
               <h1 className="text-3xl md:text-4xl font-bold mb-3 leading-tight" style={{ fontFamily:"'Playfair Display',serif", color:'#3D2B1F' }}>
                 {item.name}
               </h1>
 
-              {/* Rating + social proof */}
               <div className="flex items-center gap-4 mb-4 flex-wrap">
                 {reviews.length > 0 ? (
                   <div className="flex items-center gap-2">
@@ -309,13 +299,11 @@ export default function ItemDetail() {
 
               <p className="text-sm leading-relaxed mb-5" style={{ color:'#5C4B47' }}>{item.description}</p>
 
-              {/* Spice level */}
               <div className="mb-4">
                 <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color:'#9C7B6B' }}>Spice Level</p>
                 <SpiceDots level={item.spice_level} />
               </div>
 
-              {/* Allergens */}
               {item.allergens?.length > 0 && (
                 <div className="mb-4">
                   <div className="flex items-center gap-1.5 mb-2">
@@ -334,7 +322,6 @@ export default function ItemDetail() {
               )}
             </div>
 
-            {/* Price + add to cart */}
             <div className="rounded-2xl p-5 space-y-4" style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.25)' }}>
               <div className="flex items-center justify-between">
                 <div>
@@ -349,7 +336,6 @@ export default function ItemDetail() {
                 </button>
               </div>
 
-              {/* Quantity */}
               <div className="flex items-center gap-3">
                 <p className="text-sm font-semibold" style={{ color:'#5C4B47' }}>Quantity</p>
                 <div className="flex items-center gap-2 rounded-xl overflow-hidden" style={{ border:'1px solid rgba(128,0,32,0.2)' }}>
@@ -378,10 +364,10 @@ export default function ItemDetail() {
         {/* ── Quick Info Bar ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
           {[
-            { icon: Clock,    label:'Prep Time',     value:'30–45 min' },
-            { icon: Users,    label:'Serves',        value:'1 person' },
-            { icon: Award,    label:'Authenticity',  value:'Village Recipe' },
-            { icon: Package,  label:'Packaging',     value:'Eco-friendly' },
+            { icon: Clock,   label:'Prep Time',    value:'30–45 min' },
+            { icon: Users,   label:'Serves',       value:'1 person' },
+            { icon: Award,   label:'Authenticity', value:'Village Recipe' },
+            { icon: Package, label:'Packaging',    value:'Eco-friendly' },
           ].map(({ icon:Icon, label, value }) => (
             <div key={label} className="rounded-xl p-4 text-center" style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)' }}>
               <Icon size={20} className="mx-auto mb-1.5" style={{ color:'#B8860B' }} />
@@ -411,6 +397,7 @@ export default function ItemDetail() {
               <div className="space-y-2">
                 {[
                   ['Category',    CAT_LABELS[item.category]],
+                  ['Section',     item.subcategory || '—'],
                   ['Dietary',     item.is_veg ? '🌿 Vegetarian' : '🍖 Non-Vegetarian'],
                   ['Spice Level', `${item.spice_level}/5`],
                 ].map(([k,v]) => (
@@ -445,7 +432,6 @@ export default function ItemDetail() {
         {/* ── Reviews Tab ── */}
         {activeTab === 'reviews' && (
           <div className="space-y-6 mb-10">
-            {/* Rating summary */}
             {reviews.length > 0 && (
               <div className="rounded-2xl p-6" style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)' }}>
                 <div className="grid md:grid-cols-2 gap-6">
@@ -470,7 +456,6 @@ export default function ItemDetail() {
               </div>
             )}
 
-            {/* Write review */}
             {!social.user_reviewed ? (
               <div className="rounded-2xl p-6" style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)' }}>
                 <h3 className="font-bold mb-4" style={{ fontFamily:"'Playfair Display',serif", color:'#800020' }}>
@@ -508,11 +493,10 @@ export default function ItemDetail() {
             ) : (
               <div className="rounded-2xl p-4 flex items-center gap-3" style={{ backgroundColor:'#DCFCE7', border:'1px solid #BBF7D0' }}>
                 <CheckCircle size={18} style={{ color:'#166534' }} />
-                <p className="text-sm font-semibold" style={{ color:'#166534' }}>You've already reviewed this item. Thank you!</p>
+                <p className="text-sm font-semibold" style={{ color:'#166534' }}>You have already reviewed this item. Thank you!</p>
               </div>
             )}
 
-            {/* Review list */}
             {reviews.length === 0 ? (
               <div className="text-center py-10" style={{ color:'#9C7B6B' }}>
                 <Star size={32} className="mx-auto mb-3 opacity-30" />
@@ -579,7 +563,7 @@ export default function ItemDetail() {
         )}
 
         {/* ── Combo Deal ── */}
-        {goesWith.length > 0 && item && (
+        {goesWith.length > 0 && (
           <div className="rounded-2xl p-6 mb-10" style={{ background:'linear-gradient(135deg, #800020 0%, #5C0015 100%)' }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color:'rgba(244,196,48,0.8)' }}>Combo Deal</p>
             <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily:"'Playfair Display',serif" }}>

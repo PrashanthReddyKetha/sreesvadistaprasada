@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { buildItemUrl } from '@/lib/itemUrl';
 import { Flame, ShoppingCart, ArrowRight, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
@@ -124,7 +125,7 @@ const Menu = ({ initialItems = [] }) => {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filtered.map((dish) => (
-                <Link key={dish.id} href={`/item/${dish.id}`} onClick={e => e.target.closest('button') && e.preventDefault()} data-testid={`menu-dish-${dish.id}`}>
+                <Link key={dish.id} href={buildItemUrl(dish)} onClick={e => e.target.closest('button') && e.preventDefault()} data-testid={`menu-dish-${dish.id}`}>
                   <div className="rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }}>
                     {dish.image && (
                       <div className="relative h-40 overflow-hidden">
