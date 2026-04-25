@@ -54,6 +54,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/faq`,            priority: 0.7,  changeFrequency: 'monthly', lastModified: now },
     { url: `${BASE_URL}/privacy-policy`, priority: 0.3,  changeFrequency: 'yearly',  lastModified: now },
     { url: `${BASE_URL}/terms`,          priority: 0.3,  changeFrequency: 'yearly',  lastModified: now },
+    // About sub-pages
+    { url: `${BASE_URL}/ragi-specials/about`,  priority: 0.85, changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/subscriptions/about`,  priority: 0.85, changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/svadista/about`,       priority: 0.8,  changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/prasada/about`,        priority: 0.8,  changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/breakfast/about`,      priority: 0.75, changeFrequency: 'monthly', lastModified: now },
     // City landing pages
     { url: `${BASE_URL}/milton-keynes`,  priority: 0.9,  changeFrequency: 'monthly', lastModified: now },
     { url: `${BASE_URL}/edinburgh`,      priority: 0.9,  changeFrequency: 'monthly', lastModified: now },

@@ -101,6 +101,15 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
         </div>
       </section>
 
+      {/* About link */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-2" style={{ backgroundColor: '#F0FFF4' }}>
+        <p className="text-sm" style={{ color: '#5C4B47' }}>
+          <a href="/prasada/about" className="underline underline-offset-2 hover:text-[#800020]">
+            The story behind Prasada →
+          </a>
+        </p>
+      </div>
+
       {/* Anchor for tab scroll */}
       <div id="section-tabs-anchor" />
       {/* Sticky tabs */}

@@ -53,6 +53,15 @@ const RagiSpecials = ({ initialItems = [] }) => {
         </div>
       </section>
 
+      {/* About link */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-2" style={{ backgroundColor: '#FFFBEB' }}>
+        <p className="text-sm" style={{ color: '#5C4B47' }}>
+          <a href="/ragi-specials/about" className="underline underline-offset-2 hover:text-[#800020]">
+            What is Ragi Sangati? →
+          </a>
+        </p>
+      </div>
+
       {/* Sticky search bar */}
       <div className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8"
         style={{ backgroundColor: '#FFFBEB', borderBottom: '1px solid rgba(92,36,6,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
