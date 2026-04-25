@@ -20,5 +20,5 @@ async function getItems() {
 
 export default async function SnacksPage() {
   const initialItems = await getItems();
-  return <SnacksClient initialItems={initialItems} />;
+  return <SnacksClient initialItems={initialItems} initialTab="All" />;
 }

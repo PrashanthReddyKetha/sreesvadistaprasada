@@ -18,5 +18,5 @@ async function getItems() {
 
 export default async function SvadistaPage() {
   const initialItems = await getItems();
-  return <SvadistaClient initialItems={initialItems} />;
+  return <SvadistaClient initialItems={initialItems} initialTab="All" />;
 }

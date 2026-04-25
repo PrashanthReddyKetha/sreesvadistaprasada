@@ -7,7 +7,8 @@ import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
-import useTabHistory from '@/hooks/useTabHistory';
+import { useRouter } from 'next/navigation';
+import { slugify } from '@/lib/itemUrl';
 
 const TABS = ['Starters and Evening Delights', 'Indo Chinese', 'Curries & Daal', '🪔 Naivedyam', 'Biriyanis & Rice', 'Rice Bowls', 'All'];
 
@@ -32,12 +33,19 @@ function SpiceBar({ level }) {
   );
 }
 
-const Prasada = ({ initialItems = [] }) => {
+const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
+  const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
-  const [activeTab, setActiveTab] = useState('Starters and Evening Delights');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [search, setSearch] = useState('');
-  const selectTab = useTabHistory(activeTab, setActiveTab, 'Starters and Evening Delights', TABS);
+
+  useEffect(() => { setActiveTab(initialTab); setSearch(''); }, [initialTab]);
+
+  const selectTab = (tab) => {
+    if (tab === 'All') router.push('/prasada');
+    else router.push(`/prasada/${slugify(tab)}`);
+  };
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -101,7 +109,7 @@ const Prasada = ({ initialItems = [] }) => {
         <div className="max-w-7xl mx-auto flex items-center gap-2">
           <div className="flex gap-2 overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
             {TABS.map(tab => (
-              <button key={tab} onClick={() => { selectTab(tab); setSearch(''); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
+              <button key={tab} onClick={() => selectTab(tab)}
                 className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
                 style={{
                   backgroundColor: activeTab === tab ? '#166534' : 'transparent',

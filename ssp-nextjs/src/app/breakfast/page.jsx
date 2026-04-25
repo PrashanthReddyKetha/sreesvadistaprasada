@@ -18,5 +18,5 @@ async function getItems() {
 
 export default async function BreakfastPage() {
   const initialItems = await getItems();
-  return <BreakfastClient initialItems={initialItems} />;
+  return <BreakfastClient initialItems={initialItems} initialTab="All" />;
 }

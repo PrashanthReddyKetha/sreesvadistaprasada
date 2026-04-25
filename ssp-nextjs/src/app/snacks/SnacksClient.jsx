@@ -5,16 +5,24 @@ import { buildItemUrl } from '@/lib/itemUrl';
 import { Flame, ArrowRight, Package, Truck, MessageCircle, Search, X } from 'lucide-react';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
-import useTabHistory from '@/hooks/useTabHistory';
+import { useRouter } from 'next/navigation';
+import { slugify } from '@/lib/itemUrl';
 
 const categories = ['Pickles', 'Podis', 'All'];
 
-const Snacks = ({ initialItems = [] }) => {
+const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
+  const router = useRouter();
   const [allItems, setAllItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
-  const [activeFilter, setActiveFilter] = useState('Pickles');
+  const [activeFilter, setActiveFilter] = useState(initialTab);
   const [search, setSearch] = useState('');
-  const selectTab = useTabHistory(activeFilter, setActiveFilter, 'Pickles', categories);
+
+  useEffect(() => { setActiveFilter(initialTab); setSearch(''); }, [initialTab]);
+
+  const selectTab = (filter) => {
+    if (filter === 'All') router.push('/snacks');
+    else router.push(`/snacks/${slugify(filter)}`);
+  };
   useEffect(() => {
     const key = 'snacks';
     const cached = getCached(key);
@@ -85,7 +93,7 @@ const Snacks = ({ initialItems = [] }) => {
             {categories.map(cat => (
               <button
                 key={cat}
-                onClick={() => { selectTab(cat); setSearch(''); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
+                onClick={() => selectTab(cat)}
                 className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                   activeFilter === cat ? 'text-white' : 'text-gray-600 hover:bg-[#800020]/10'
                 }`}
