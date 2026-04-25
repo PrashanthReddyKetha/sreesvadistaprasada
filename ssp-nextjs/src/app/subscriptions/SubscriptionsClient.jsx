@@ -666,7 +666,8 @@ const SubscriptionsInner = () => {
             setSelectedPrefs(lapsedSub.preferences || []);
             const addr = lapsedSub.delivery_address || {};
             setCustomer(prev => ({ ...prev, line1: addr.line1 || '', line2: addr.line2 || '', city: addr.city || '', postcode: addr.postcode || '' }));
-            setPageState('wizard'); setStep(4);
+            if (addr.postcode) checkPostcode(addr.postcode);
+            setPageState('wizard'); setStep(3);
           }} className="px-8 py-3.5 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: C.primary }}>
             Re-subscribe with same preferences
           </button>
@@ -936,7 +937,16 @@ const SubscriptionsInner = () => {
             <div>
               <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>What's coming your way</h2>
 
-              {/* Closed message */}
+              {/* Always-visible notice: orders for this week are closed */}
+              {!weekCfg.closedMessage && (
+                <div className="mb-4">
+                  <InfoBox bg="#EFF6FF" border="#93C5FD" color="#1E40AF">
+                    📦 Orders are closed for this week — our kitchen is already prepping. You can start your subscription from <strong>{weekRange(weekCfg.weeks[0].monday)}</strong>. See the menu below.
+                  </InfoBox>
+                </div>
+              )}
+
+              {/* Closed message (Sunday 17:00+ — even next week is closed) */}
               {weekCfg.closedMessage && (
                 <div className="mb-4">
                   <InfoBox bg="#FFF8E1" border="#F4C430" color="#854F0B">{weekCfg.closedMessage}</InfoBox>

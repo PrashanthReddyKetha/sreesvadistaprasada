@@ -29,7 +29,7 @@ export default async function SvadistaPage() {
         Morningside, Southside Edinburgh) and Glasgow (Pollokshields, Shawlands,
         Govanhill, Finnieston, West End, Partick).
       </p>
-      <SvadistaClient initialItems={initialItems} initialTab="All" />
+      <SvadistaClient initialItems={initialItems} initialTab="Starters" />
     </>
   );
 }

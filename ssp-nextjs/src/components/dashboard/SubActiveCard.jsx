@@ -105,14 +105,22 @@ export default function SubActiveCard({ sub }) {
     return `${y}-${m}-${day}`;
   }, []);
 
+  // If subscription hasn't started yet, show the start week's menu instead of this week's
+  const displayWeekMonday = useMemo(() => {
+    if (sub.start_date && sub.start_date > thisWeekMonday) return sub.start_date;
+    return thisWeekMonday;
+  }, [sub.start_date, thisWeekMonday]);
+
+  const isUpcomingSubscription = displayWeekMonday !== thisWeekMonday;
+
   useEffect(() => {
     if (!sub.box_type) return;
     setMenuLoading(true);
-    api.get(`/menu/weekly-preview?week=${thisWeekMonday}&box_type=${sub.box_type}`)
+    api.get(`/menu/weekly-preview?week=${displayWeekMonday}&box_type=${sub.box_type}`)
       .then(r => setWeekMenu(r.data))
       .catch(() => {})
       .finally(() => setMenuLoading(false));
-  }, [sub.box_type, thisWeekMonday]);
+  }, [sub.box_type, displayWeekMonday]);
 
   const loadDeliveries = () => {
     if (!sub.id) return;
@@ -159,14 +167,16 @@ export default function SubActiveCard({ sub }) {
   const nextDeliveryDate = useMemo(() => {
     const skippedStatuses = new Set(['skipped', 'cancelled', 'delivered', 'missed']);
     const weekDates = weekMenu ? Object.keys(weekMenu.days || {}) : [];
-    const candidates = weekDates.filter(d => d >= today && !skippedStatuses.has(deliveryByDate[d]?.status));
+    // For upcoming subscriptions, any date in the start week is a candidate
+    const startFrom = isUpcomingSubscription ? displayWeekMonday : today;
+    const candidates = weekDates.filter(d => d >= startFrom && !skippedStatuses.has(deliveryByDate[d]?.status));
     if (candidates.length) return candidates.sort()[0];
     // roll to next week's Monday
     const d = new Date(today + 'T12:00:00');
     const daysToMon = ((8 - d.getDay()) % 7) || 7;
     d.setDate(d.getDate() + daysToMon);
     return d.toISOString().split('T')[0];
-  }, [weekMenu, deliveryByDate, today]);
+  }, [weekMenu, deliveryByDate, today, isUpcomingSubscription, displayWeekMonday]);
 
   const nextDaysAway = nextDeliveryDate ? Math.round((new Date(nextDeliveryDate + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000) : null;
 
@@ -194,7 +204,7 @@ export default function SubActiveCard({ sub }) {
 
       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(244,196,48,0.2)', backgroundColor: '#FDFBF7' }}>
         <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '0.5px solid rgba(244,196,48,0.15)' }}>
-          <p className="font-semibold text-sm" style={{ color: '#800020' }}>This week's meals</p>
+          <p className="font-semibold text-sm" style={{ color: '#800020' }}>{isUpcomingSubscription ? 'Your first week\'s meals' : 'This week\'s meals'}</p>
           {savingsInfo && (
             <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full"
               style={{ backgroundColor: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0' }}>
