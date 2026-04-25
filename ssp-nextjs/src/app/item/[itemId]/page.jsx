@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'next/link' /* router */;
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Heart, ShoppingCart, Star, ChevronDown, ChevronUp,
   Flame, Leaf, AlertTriangle, Users, Plus, Minus,
@@ -115,7 +116,8 @@ const MiniCard = ({ item }) => {
 
 // ── main page ──────────────────────────────────────────────────────────────
 export default function ItemDetail() {
-  const { itemId } = useParams();
+  const params = useParams();
+  const itemId = params?.itemId;
   const router = useRouter();
   const { user, setAuthOpen } = useAuth();
   const { addToCart } = useCart();
@@ -234,7 +236,7 @@ export default function ItemDetail() {
   if (notFound || !item) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 pt-24" style={{ backgroundColor:'#FAF8F4' }}>
       <p className="text-xl font-semibold" style={{ color:'#800020' }}>Dish not found</p>
-      <button onClick={() => navigate(-1)} className="text-sm font-semibold" style={{ color:'#B8860B' }}>← Go back</button>
+      <button onClick={() => router.back()} className="text-sm font-semibold" style={{ color:'#B8860B' }}>← Go back</button>
     </div>
   );
 
