@@ -1,33 +1,50 @@
 import { MetadataRoute } from 'next'
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const base = 'https://www.sreesvadistaprasada.com'
+const BASE_URL = 'https://www.sreesvadistaprasada.com'
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com'
+
+async function getMenuItems(): Promise<{ id: string; updated_at?: string }[]> {
+  try {
+    const res = await fetch(`${API_URL}/api/menu?available=true`, {
+      next: { revalidate: 3600 },
+    })
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
 
-  const routes = [
-    { url: '/',               priority: 1.0,  changeFrequency: 'daily'   },
-    { url: '/menu',           priority: 0.9,  changeFrequency: 'daily'   },
-    { url: '/prasada',        priority: 0.9,  changeFrequency: 'daily'   },
-    { url: '/svadista',       priority: 0.9,  changeFrequency: 'daily'   },
-    { url: '/breakfast',      priority: 0.8,  changeFrequency: 'weekly'  },
-    { url: '/street-food',    priority: 0.8,  changeFrequency: 'weekly'  },
-    { url: '/ragi-specials',  priority: 0.8,  changeFrequency: 'weekly'  },
-    { url: '/drinks',         priority: 0.7,  changeFrequency: 'weekly'  },
-    { url: '/snacks',         priority: 0.8,  changeFrequency: 'weekly'  },
-    { url: '/subscriptions',  priority: 0.9,  changeFrequency: 'weekly'  },
-    { url: '/catering',       priority: 0.8,  changeFrequency: 'monthly' },
-    { url: '/story',          priority: 0.6,  changeFrequency: 'monthly' },
-    { url: '/gallery',        priority: 0.6,  changeFrequency: 'weekly'  },
-    { url: '/contact',        priority: 0.7,  changeFrequency: 'monthly' },
-    { url: '/faq',            priority: 0.7,  changeFrequency: 'monthly' },
-    { url: '/privacy-policy', priority: 0.3,  changeFrequency: 'yearly'  },
-    { url: '/terms',          priority: 0.3,  changeFrequency: 'yearly'  },
-  ] as const
+  const staticRoutes: MetadataRoute.Sitemap = [
+    { url: `${BASE_URL}/`,               priority: 1.0,  changeFrequency: 'daily',   lastModified: now },
+    { url: `${BASE_URL}/menu`,           priority: 0.9,  changeFrequency: 'daily',   lastModified: now },
+    { url: `${BASE_URL}/prasada`,        priority: 0.9,  changeFrequency: 'daily',   lastModified: now },
+    { url: `${BASE_URL}/svadista`,       priority: 0.9,  changeFrequency: 'daily',   lastModified: now },
+    { url: `${BASE_URL}/breakfast`,      priority: 0.8,  changeFrequency: 'weekly',  lastModified: now },
+    { url: `${BASE_URL}/street-food`,    priority: 0.8,  changeFrequency: 'weekly',  lastModified: now },
+    { url: `${BASE_URL}/ragi-specials`,  priority: 0.8,  changeFrequency: 'weekly',  lastModified: now },
+    { url: `${BASE_URL}/drinks`,         priority: 0.7,  changeFrequency: 'weekly',  lastModified: now },
+    { url: `${BASE_URL}/snacks`,         priority: 0.8,  changeFrequency: 'weekly',  lastModified: now },
+    { url: `${BASE_URL}/subscriptions`,  priority: 0.9,  changeFrequency: 'weekly',  lastModified: now },
+    { url: `${BASE_URL}/catering`,       priority: 0.8,  changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/story`,          priority: 0.6,  changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/gallery`,        priority: 0.6,  changeFrequency: 'weekly',  lastModified: now },
+    { url: `${BASE_URL}/contact`,        priority: 0.7,  changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/faq`,            priority: 0.7,  changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/privacy-policy`, priority: 0.3,  changeFrequency: 'yearly',  lastModified: now },
+    { url: `${BASE_URL}/terms`,          priority: 0.3,  changeFrequency: 'yearly',  lastModified: now },
+  ]
 
-  return routes.map(({ url, priority, changeFrequency }) => ({
-    url: `${base}${url}`,
-    lastModified: now,
-    changeFrequency,
-    priority,
+  const items = await getMenuItems()
+  const itemRoutes: MetadataRoute.Sitemap = items.map(item => ({
+    url: `${BASE_URL}/item/${item.id}`,
+    priority: 0.7,
+    changeFrequency: 'weekly',
+    lastModified: item.updated_at ? new Date(item.updated_at) : now,
   }))
+
+  return [...staticRoutes, ...itemRoutes]
 }
