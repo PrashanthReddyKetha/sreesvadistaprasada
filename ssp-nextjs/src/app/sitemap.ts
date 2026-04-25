@@ -54,6 +54,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/faq`,            priority: 0.7,  changeFrequency: 'monthly', lastModified: now },
     { url: `${BASE_URL}/privacy-policy`, priority: 0.3,  changeFrequency: 'yearly',  lastModified: now },
     { url: `${BASE_URL}/terms`,          priority: 0.3,  changeFrequency: 'yearly',  lastModified: now },
+    // City landing pages
+    { url: `${BASE_URL}/milton-keynes`,  priority: 0.9,  changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/edinburgh`,      priority: 0.9,  changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/glasgow`,        priority: 0.9,  changeFrequency: 'monthly', lastModified: now },
   ]
 
   const items = await getMenuItems()

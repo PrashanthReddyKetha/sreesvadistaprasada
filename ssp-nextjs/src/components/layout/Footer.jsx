@@ -83,7 +83,7 @@ const Footer = () => {
 
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-12 pb-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-10">
           {/* Brand */}
           <div>
             <h3 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
@@ -153,6 +153,35 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
+            </ul>
+          </div>
+
+          {/* Delivery Areas */}
+          <div>
+            <h4 className="text-base font-semibold mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
+              Delivery Areas
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              {[
+                { name: 'Milton Keynes', path: '/milton-keynes' },
+                { name: 'Edinburgh', path: '/edinburgh' },
+                { name: 'Glasgow', path: '/glasgow' },
+              ].map((city) => (
+                <li key={city.path}>
+                  <Link
+                    href={city.path}
+                    className="transition-colors duration-200 hover:text-white"
+                    style={{ color: '#A09890' }}
+                  >
+                    {city.name}
+                  </Link>
+                </li>
+              ))}
+              <li className="pt-1">
+                <p className="text-xs" style={{ color: '#A09890' }}>
+                  Snacks & pickles ship UK-wide
+                </p>
+              </li>
             </ul>
           </div>
 
