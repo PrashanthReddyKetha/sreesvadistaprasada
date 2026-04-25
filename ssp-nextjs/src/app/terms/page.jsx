@@ -1,7 +1,7 @@
 import TermsClient from './TermsClient';
 
 export const metadata = {
-  title: 'Terms of Service',
+  title: 'Terms & Conditions — Sree Svadista Prasada',
   description: 'Terms and conditions for ordering food from Sree Svadista Prasada online.',
 };
 

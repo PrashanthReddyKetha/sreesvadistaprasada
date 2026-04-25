@@ -4,21 +4,22 @@ const BASE_URL = 'https://www.sreesvadistaprasada.com';
 
 export const metadata = {
   title: 'South Indian Food Delivery in Edinburgh | Sree Svadista Prasada',
-  description: 'Authentic South Indian takeaway delivered across Edinburgh. Order dosas, Gongura chicken, biryani, curries & Dabba Wala weekly meal plans. Free delivery over £30.',
+  description: 'Authentic South Indian food delivery across Edinburgh — Leith, Marchmont, Newington, Bruntsfield, Tollcross, Morningside, Southside, Old Town, New Town, Portobello and all EH postcodes. Only Andhra kitchen in Edinburgh. Dabba Wala subscriptions available.',
   alternates: { canonical: `${BASE_URL}/edinburgh` },
 };
 
 const data = {
   city: 'Edinburgh',
-  tagline: 'Grandmother\'s recipes from our kitchen — Andhra flavours delivered fresh across Edinburgh in 45–75 minutes.',
+  tagline: 'Edinburgh\'s only Andhra kitchen — delivering to Leith, Marchmont, Newington, Bruntsfield, Morningside and across the city in 45–75 minutes.',
   deliveryTime: '45–75 minutes',
   minOrder: '£15',
   freeDeliveryThreshold: '£30',
   isKitchen: false,
   areas: [
-    'City Centre', 'Leith', 'Morningside', 'Portobello',
-    'Stockbridge', 'Bruntsfield', 'Newington', 'Corstorphine',
-    'Tollcross', 'Marchmont', 'Gorgie', 'Murrayfield',
+    'Leith', 'Marchmont', 'Newington', 'Bruntsfield',
+    'Tollcross', 'Morningside', 'Southside Edinburgh', 'Old Town',
+    'New Town', 'Portobello', 'Stockbridge', 'Haymarket',
+    'Gorgie', 'Dalry', 'Corstorphine', 'Musselburgh',
   ],
 };
 

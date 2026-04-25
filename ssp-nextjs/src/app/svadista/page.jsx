@@ -3,8 +3,8 @@ import SvadistaClient from './SvadistaClient';
 export const revalidate = 3600;
 
 export const metadata = {
-  title: 'Svadista — Non-Vegetarian South Indian Menu',
-  description: 'Authentic non-veg South Indian dishes: Gongura Chicken, Natu Kodi Biryani, Mutton Curry, Egg specials and more. Cooked fresh in Milton Keynes, delivered to Edinburgh & Glasgow.',
+  title: 'Svadista — Halal Non-Veg South Indian Food, Milton Keynes',
+  description: 'Halal-certified non-veg South Indian food in Milton Keynes, Edinburgh & Glasgow. Gongura Chicken, Natu Kodi Biryani, Mutton Curry — bold Andhra flavours. Delivering to Wolverton, Stony Stratford, Leith, Pollokshields and surrounding areas.',
 };
 
 async function getItems() {
@@ -18,5 +18,18 @@ async function getItems() {
 
 export default async function SvadistaPage() {
   const initialItems = await getItems();
-  return <SvadistaClient initialItems={initialItems} initialTab="All" />;
+  return (
+    <>
+      <p className="sr-only">
+        All our meat is sourced from halal-certified suppliers. Bold, rustic Andhra
+        and Telugu non-vegetarian cooking — Gongura Chicken, Natu Kodi Biryani,
+        Mutton Curry, Egg Specials and Indo-Chinese dishes. Delivered across Milton
+        Keynes (Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley,
+        Westcroft, Central MK), Edinburgh (Leith, Marchmont, Newington, Bruntsfield,
+        Morningside, Southside Edinburgh) and Glasgow (Pollokshields, Shawlands,
+        Govanhill, Finnieston, West End, Partick).
+      </p>
+      <SvadistaClient initialItems={initialItems} initialTab="All" />
+    </>
+  );
 }

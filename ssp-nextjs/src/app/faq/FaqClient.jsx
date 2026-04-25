@@ -81,11 +81,12 @@ const FAQ = () => {
                           style={{ color: '#800020' }}
                         />
                       </button>
-                      {isOpen && (
-                        <div className="px-4 md:px-5 pb-4 md:pb-5">
-                          <p className="text-sm text-gray-600 leading-relaxed">{item.a}</p>
-                        </div>
-                      )}
+                      <div
+                        className="px-4 md:px-5 pb-4 md:pb-5"
+                        style={{ display: isOpen ? 'block' : 'none' }}
+                      >
+                        <p className="text-sm text-gray-600 leading-relaxed">{item.a}</p>
+                      </div>
                     </div>
                   );
                 })}

@@ -23,7 +23,10 @@ const jsonLd = {
       hasMap: 'https://maps.google.com/?q=Milton+Keynes',
       address: {
         '@type': 'PostalAddress',
-        addressLocality: 'Milton Keynes',
+        streetAddress: '24 Oxman Ln',
+        addressLocality: 'Greenleys, Milton Keynes',
+        addressRegion: 'Buckinghamshire',
+        postalCode: 'MK12 6LF',
         addressCountry: 'GB',
       },
       areaServed: [
@@ -33,6 +36,7 @@ const jsonLd = {
       ],
       sameAs: [
         'https://www.instagram.com/sreesvadistaprasada/',
+        'https://www.facebook.com/sreesvadistaprasada',
       ],
       hasOfferCatalog: {
         '@type': 'OfferCatalog',

@@ -4,21 +4,22 @@ const BASE_URL = 'https://www.sreesvadistaprasada.com';
 
 export const metadata = {
   title: 'South Indian Food Delivery in Glasgow | Sree Svadista Prasada',
-  description: 'Authentic South Indian takeaway delivered across Glasgow. Order dosas, Gongura chicken, biryani, curries & Dabba Wala weekly meal plans. Free delivery over £30.',
+  description: 'Authentic South Indian food delivery across Glasgow — Pollokshields, Shawlands, Govanhill, Southside Glasgow, Finnieston, West End, Partick, Merchant City and all G postcodes. Halal non-veg, pure veg Prasada, Dabba Wala meal subscriptions.',
   alternates: { canonical: `${BASE_URL}/glasgow` },
 };
 
 const data = {
   city: 'Glasgow',
-  tagline: 'Traditional Andhra cooking, slow-cooked and delivered to your Glasgow door in 45–75 minutes.',
+  tagline: 'Slow-cooked Andhra and Telugu food delivered to Pollokshields, Shawlands, Govanhill, Finnieston, West End and across Glasgow in 45–75 minutes.',
   deliveryTime: '45–75 minutes',
   minOrder: '£15',
   freeDeliveryThreshold: '£30',
   isKitchen: false,
   areas: [
-    'City Centre', 'West End', 'Southside', 'East End',
-    'Partick', 'Shawlands', 'Finnieston', 'Govan',
-    'Dennistoun', 'Pollokshields', 'Hillhead', 'Maryhill',
+    'Pollokshields', 'Shawlands', 'Govanhill', 'Southside Glasgow',
+    'Finnieston', 'West End', 'Partick', 'Merchant City',
+    'Dennistoun', 'Maryhill', 'Hillhead', 'Byres Road',
+    'East End', 'Springburn', 'Govan', 'City Centre',
   ],
 };
 

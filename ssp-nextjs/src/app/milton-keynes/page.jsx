@@ -4,21 +4,22 @@ const BASE_URL = 'https://www.sreesvadistaprasada.com';
 
 export const metadata = {
   title: 'South Indian Food Delivery in Milton Keynes | Sree Svadista Prasada',
-  description: 'Authentic South Indian takeaway delivered in Milton Keynes. Order dosas, biryani, Gongura chicken, curries & more. Dabba Wala weekly meal plans from £7. Free delivery over £30.',
+  description: 'Authentic South Indian food delivery in Milton Keynes — Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley, Westcroft, Central MK and all MK postcodes. Halal non-veg, pure veg Prasada, Dabba Wala subscriptions from £7/meal.',
   alternates: { canonical: `${BASE_URL}/milton-keynes` },
 };
 
 const data = {
   city: 'Milton Keynes',
-  tagline: 'Cooked fresh right here in our Milton Keynes kitchen and delivered to your door in 30–60 minutes.',
+  tagline: 'Cooked fresh in our Greenleys kitchen and delivered to Wolverton, Stony Stratford, Newport Pagnell, Bletchley, Central MK and all MK postcodes in 30–60 minutes.',
   deliveryTime: '30–60 minutes',
   minOrder: '£15',
   freeDeliveryThreshold: '£30',
   isKitchen: true,
   areas: [
-    'Central MK', 'Bletchley', 'Newport Pagnell', 'Woburn Sands',
-    'Stony Stratford', 'Wolverton', 'Olney', 'Buckingham',
-    'Winslow', 'Fenny Stratford', 'Walnut Tree', 'Shenley Church End',
+    'Wolverton', 'Stony Stratford', 'Greenleys', 'Newport Pagnell',
+    'Bletchley', 'Westcroft', 'Central MK', 'Emerson Valley',
+    'Shenley Brook End', 'Walnut Tree', 'Monkston', 'Brinklow',
+    'Furzton', 'Two Mile Ash', 'Bradwell Common', 'Loughton',
   ],
 };
 

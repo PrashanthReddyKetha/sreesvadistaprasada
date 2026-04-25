@@ -193,9 +193,19 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <MapPin size={16} className="mt-1 flex-shrink-0" style={{ color: '#F4C430' }} />
-                <p className="text-sm" style={{ color: '#A09890' }}>
-                  <strong className="text-white">Milton Keynes</strong> (Main), Edinburgh & Glasgow
-                </p>
+                <address
+                  itemScope
+                  itemType="https://schema.org/PostalAddress"
+                  style={{ fontStyle: 'normal', color: '#A09890' }}
+                  className="text-sm"
+                >
+                  <strong className="text-white">Sree Svadista Prasada</strong><br />
+                  <span itemProp="streetAddress">24 Oxman Ln</span>,{' '}
+                  <span itemProp="addressLocality">Greenleys</span>,{' '}
+                  <span itemProp="addressRegion">Milton Keynes</span>{' '}
+                  <span itemProp="postalCode">MK12 6LF</span><br />
+                  <span style={{ color: '#A09890' }}>Also serving Edinburgh &amp; Glasgow</span>
+                </address>
               </div>
               <div className="flex items-center gap-3">
                 <Phone size={16} className="flex-shrink-0" style={{ color: '#F4C430' }} />
