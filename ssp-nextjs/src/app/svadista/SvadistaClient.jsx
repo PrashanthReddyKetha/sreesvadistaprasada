@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { ShoppingCart, Flame, Search, X } from 'lucide-react';
@@ -7,7 +7,6 @@ import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
-import { useRouter } from 'next/navigation';
 import { slugify } from '@/lib/itemUrl';
 
 const TABS = ['Starters', 'Indo - Chinese', 'Egg Specials', 'Curries', 'Biriyani', 'Rice Bowls', 'All'];
@@ -25,18 +24,25 @@ function SpiceBar({ level }) {
 }
 
 const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
-  const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [search, setSearch] = useState('');
+  const tabRowRef = useRef(null);
 
   useEffect(() => { setActiveTab(initialTab); setSearch(''); }, [initialTab]);
 
   const selectTab = (tab) => {
-    if (tab === 'All') router.push('/svadista');
-    else router.push(`/svadista/${slugify(tab)}`);
+    setActiveTab(tab);
+    const url = tab === 'All' ? '/svadista' : `/svadista/${slugify(tab)}`;
+    window.history.replaceState(null, '', url);
   };
+
+  useEffect(() => {
+    if (!tabRowRef.current) return;
+    const active = tabRowRef.current.querySelector('[data-active="true"]');
+    if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }, [activeTab]);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -109,9 +115,10 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
               {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={13} /></button>}
             </div>
           </div>
-          <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          <div ref={tabRowRef} className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
             {TABS.map(tab => (
               <button key={tab} onClick={() => selectTab(tab)}
+                data-active={activeTab === tab ? 'true' : 'false'}
                 className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
                 style={{
                   backgroundColor: activeTab === tab ? '#800020' : 'transparent',
