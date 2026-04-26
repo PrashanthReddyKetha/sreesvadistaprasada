@@ -50,7 +50,7 @@ const TABS = [
 function DashboardInner() {
   const { user, logout, login, initialized } = useAuth();
   const router = useRouter();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [orders, setOrders] = useState([]);
   const [subs, setSubs] = useState([]);
@@ -138,7 +138,7 @@ function DashboardInner() {
             return (
               <button
                 key={t.id}
-                onClick={() => { setActiveTab(t.id); setSearchParams({ tab: t.id }); }}
+                onClick={() => { setActiveTab(t.id); router.replace(`?tab=${t.id}`, { scroll: false }); }}
                 className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all"
                 style={{
                   backgroundColor: active ? '#800020' : '#FDFBF7',
