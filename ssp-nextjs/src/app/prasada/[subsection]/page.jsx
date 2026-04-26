@@ -4,12 +4,12 @@ import PrasadaClient from '../PrasadaClient';
 export const revalidate = 3600;
 
 const SLUG_TO_TAB = {
-  'starters-and-evening-delights': 'Starters and Evening Delights',
-  'indo-chinese':                  'Indo Chinese',
-  'curries-daal':                  'Curries & Daal',
-  'naivedyam':                     '🪔 Naivedyam',
-  'biriyanis-rice':                'Biriyanis & Rice',
-  'rice-bowls':                    'Rice Bowls',
+  'bites-starters':  'Bites & Starters',
+  'curries-daal':    'Curries & Daal',
+  'biriyanis-rice':  'Biriyanis & Rice',
+  'rice-bowls':      'Rice Bowls',
+  'indo-chinese':    'Indo Chinese',
+  'naivedyam':       '🪔 Naivedyam',
 };
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';

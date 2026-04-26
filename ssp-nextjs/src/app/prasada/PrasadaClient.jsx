@@ -9,10 +9,10 @@ import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 import { slugify } from '@/lib/itemUrl';
 
-const TABS = ['Starters and Evening Delights', 'Indo Chinese', 'Curries & Daal', '🪔 Naivedyam', 'Biriyanis & Rice', 'Rice Bowls', 'All'];
+const TABS = ['Bites & Starters', 'Curries & Daal', 'Biriyanis & Rice', 'Rice Bowls', 'Indo Chinese', '🪔 Naivedyam', 'All'];
 
 const SECTION_MESSAGES = {
-  'Starters and Evening Delights': { icon: '🌿', text: 'Light bites and crispy evening delights — the perfect way to begin.' },
+  'Bites & Starters': { icon: '🌿', text: 'Light bites and crispy evening delights — the perfect way to begin.' },
   'Indo Chinese': { icon: '🥢', text: 'Desi-Chinese fusion with a South Indian soul — bold, tangy, utterly addictive.' },
   'Curries & Daal': { icon: '🫕', text: 'Slow-cooked gravies and lentils, simmered in generations-old spice blends.' },
   '🪔 Naivedyam': { icon: '🪔', text: 'Sacred rice offerings, prepared with devotion.' },
@@ -65,6 +65,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
   }, []);
 
   const SUBCATEGORY_MAP = {
+    'Bites & Starters': 'Starters and Evening Delights',
     '🪔 Naivedyam': 'Naivedyam',
   };
   const subcategoryKey = SUBCATEGORY_MAP[activeTab] || activeTab;

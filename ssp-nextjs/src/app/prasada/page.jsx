@@ -18,5 +18,5 @@ async function getItems() {
 
 export default async function PrasadaPage() {
   const initialItems = await getItems();
-  return <PrasadaClient initialItems={initialItems} initialTab="Starters and Evening Delights" />;
+  return <PrasadaClient initialItems={initialItems} initialTab="Bites & Starters" />;
 }

@@ -9,7 +9,7 @@ import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 import { slugify } from '@/lib/itemUrl';
 
-const TABS = ['Starters', 'Indo - Chinese', 'Egg Specials', 'Curries', 'Biriyani', 'Rice Bowls', 'All'];
+const TABS = ['Starters', 'Curries', 'Biriyani', 'Rice Bowls', 'Egg Specials', 'Indo - Chinese', 'All'];
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
