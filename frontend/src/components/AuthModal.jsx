@@ -622,6 +622,16 @@ const AuthModal = () => {
                 )}
               </div>
 
+              {/* Loyalty teaser — register only */}
+              <div className="border border-[#F4C430]/50 rounded-xl p-3.5 bg-[#F4C430]/5 text-center">
+                <div className="text-lg mb-0.5">🎁</div>
+                <p className="text-sm font-semibold text-[#800020]">Free dish every 5 orders</p>
+                <p className="text-xs text-[#5C4B47] mt-1 leading-relaxed">
+                  Every 5 orders, choose any dish from our menu — completely free.
+                  No minimum order. Only the delivery fee.
+                </p>
+              </div>
+
               <label className="flex items-start gap-2.5 cursor-pointer pt-1">
                 <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
                   terms ? 'border-[#800020] bg-[#800020]' : 'border-gray-300'

@@ -9,7 +9,7 @@ from models import (
     GoogleAuthRequest, GoogleCompleteRequest,
 )
 from auth import hash_password, verify_password, create_access_token, get_current_user, require_admin
-from notifications import send_email, email_welcome
+from notifications import send_email, email_welcome, create_notification
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -98,6 +98,18 @@ async def register(payload: UserCreate):
     await db.users.insert_one(user.model_dump())
     subj, html = email_welcome(user.name)
     send_email(user.email, subj, html)
+    await create_notification(
+        user_id=user.id,
+        title="Welcome to Sree Svadista Prasada",
+        body=(
+            "Your account is ready. "
+            "Every 5 orders earns you a free dish from our entire menu — "
+            "any item, no minimum order, only the delivery fee. "
+            "Your journey starts with your very first order."
+        ),
+        notif_type="welcome",
+        action_url="/dashboard?tab=loyalty",
+    )
     token = create_access_token(user.id, user.role.value)
     return TokenResponse(access_token=token, user=User(**user.model_dump()))
 
@@ -218,6 +230,18 @@ async def google_complete(payload: GoogleCompleteRequest):
     await db.users.insert_one(user.model_dump())
     subj, html = email_welcome(user.name)
     send_email(user.email, subj, html)
+    await create_notification(
+        user_id=user.id,
+        title="Welcome to Sree Svadista Prasada",
+        body=(
+            "Your account is ready. "
+            "Every 5 orders earns you a free dish from our entire menu — "
+            "any item, no minimum order, only the delivery fee. "
+            "Your journey starts with your very first order."
+        ),
+        notif_type="welcome",
+        action_url="/dashboard?tab=loyalty",
+    )
     token = create_access_token(user.id, user.role.value)
     return TokenResponse(access_token=token, user=User(**user.model_dump()))
 

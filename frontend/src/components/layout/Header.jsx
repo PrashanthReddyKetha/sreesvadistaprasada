@@ -4,6 +4,7 @@ import { Menu, X, ShoppingCart, User, ChevronDown } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import LogoMark from '../LogoMark';
+import api from '../../api';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,6 +12,8 @@ const Header = () => {
   const { user, logout, setAuthOpen } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [loyaltyPending, setLoyaltyPending] = useState(false);
+  const [rewardBarDismissed, setRewardBarDismissed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -25,6 +28,15 @@ const Header = () => {
     setIsMenuOpen(false);
     setOpenDropdown(null);
   }, [location]);
+
+  useEffect(() => {
+    if (user) {
+      api.get('/loyalty/status').then(r => setLoyaltyPending(r.data?.pending_reward ?? false)).catch(() => {});
+    } else {
+      setLoyaltyPending(false);
+      setRewardBarDismissed(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -68,15 +80,29 @@ const Header = () => {
 
   return (
     <>
-      {/* Notification Bar */}
-      <div
-        data-testid="notification-bar"
-        className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-medium tracking-wide overflow-hidden"
-        style={{ backgroundColor: '#800020', color: '#FDFBF7' }}
-      >
-        <span className="hidden sm:inline">Swagatam — welcome home &nbsp;·&nbsp; Hot meals in Milton Keynes, Edinburgh &amp; Glasgow &nbsp;·&nbsp; Free delivery over £30</span>
-        <span className="sm:hidden whitespace-nowrap">Swagatam · welcome home &nbsp;·&nbsp; Free delivery £30+</span>
-      </div>
+      {/* Loyalty reward bar — shown when pending reward, dismissable */}
+      {loyaltyPending && !rewardBarDismissed ? (
+        <div className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-8 text-center text-xs sm:text-sm font-semibold"
+          style={{ backgroundColor: '#F4C430', color: '#800020' }}>
+          🎁 Your free dish is ready — choose any item from our menu!{' '}
+          <Link to="/dashboard?tab=loyalty" className="underline ml-1">Claim now →</Link>
+          <button
+            onClick={() => setRewardBarDismissed(true)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 text-base leading-none"
+            aria-label="Dismiss"
+          >✕</button>
+        </div>
+      ) : (
+        /* Default notification bar */
+        <div
+          data-testid="notification-bar"
+          className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-medium tracking-wide overflow-hidden"
+          style={{ backgroundColor: '#800020', color: '#FDFBF7' }}
+        >
+          <span className="hidden sm:inline">Swagatam — welcome home &nbsp;·&nbsp; Hot meals in Milton Keynes, Edinburgh &amp; Glasgow &nbsp;·&nbsp; Free delivery over £30</span>
+          <span className="sm:hidden whitespace-nowrap">Swagatam · welcome home &nbsp;·&nbsp; Free delivery £30+</span>
+        </div>
+      )}
 
       {/* Header */}
       <header

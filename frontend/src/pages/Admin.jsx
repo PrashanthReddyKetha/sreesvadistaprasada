@@ -7,11 +7,12 @@ import {
   TrendingUp, Clock, CheckCircle, XCircle, RefreshCw,
   ChevronDown, ChevronRight, LayoutDashboard,
   ArrowLeft, Send, CheckCheck, AlertCircle,
-  Calendar, Utensils, Star, Sparkles
+  Calendar, Utensils, Star, Sparkles, Gift
 } from 'lucide-react';
 import DabbaWalaTab from '../components/admin/DabbaWalaTab';
 import MenuTab from '../components/admin/MenuTab';
 import DailySpecialsTab from '../components/admin/DailySpecialsTab';
+import AdminLoyaltyTab from '../components/admin/AdminLoyaltyTab';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -201,10 +202,16 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
                 <div className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 cursor-pointer"
                   onClick={() => setExpandedId(expandedId === o.id ? null : o.id)}>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-sm text-gray-900">#{o.id?.slice(-6).toUpperCase()}</span>
                       <span className="text-sm text-gray-600">{o.customer_name}</span>
                       <span className="text-xs text-gray-400">{o.customer_email}</span>
+                      {o.delivery_type === 'takeaway' && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold" style={{ backgroundColor: '#FEF9C3', color: '#854D0E' }}>🛵 Collection</span>
+                      )}
+                      {o.is_loyalty_redemption && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }}>🎁 {o.loyalty_free_item_name || 'Free item'}</span>
+                      )}
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">{fmtDate(o.created_at)} · {o.items?.length} item{o.items?.length!==1?'s':''}</p>
                   </div>
@@ -234,15 +241,26 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
                           <div className="flex justify-between text-sm font-bold" style={{ color:'#800020' }}><span>Total</span><span>£{o.total?.toFixed(2)}</span></div>
                         </div>
                       </div>
-                      {/* Delivery */}
+                      {/* Delivery / Collection */}
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Delivery Address</p>
-                        <p className="text-sm text-gray-700">{o.delivery_address?.line1}</p>
-                        {o.delivery_address?.line2 && <p className="text-sm text-gray-700">{o.delivery_address.line2}</p>}
-                        <p className="text-sm text-gray-700">{o.delivery_address?.city}</p>
-                        <p className="text-sm font-semibold text-gray-700">{o.delivery_address?.postcode}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+                          {o.delivery_type === 'takeaway' ? 'Collection Order' : 'Delivery Address'}
+                        </p>
+                        {o.delivery_type === 'takeaway' ? (
+                          <p className="text-sm font-medium" style={{ color: '#854D0E' }}>🛵 Customer will collect from kitchen</p>
+                        ) : (
+                          <>
+                            <p className="text-sm text-gray-700">{o.delivery_address?.line1}</p>
+                            {o.delivery_address?.line2 && <p className="text-sm text-gray-700">{o.delivery_address.line2}</p>}
+                            <p className="text-sm text-gray-700">{o.delivery_address?.city}</p>
+                            <p className="text-sm font-semibold text-gray-700">{o.delivery_address?.postcode}</p>
+                          </>
+                        )}
                         {o.customer_phone && <p className="text-xs text-gray-400 mt-2">📞 {o.customer_phone}</p>}
                         {o.special_instructions && <p className="text-xs italic text-gray-500 mt-1">"{o.special_instructions}"</p>}
+                        {o.is_loyalty_redemption && (
+                          <p className="text-xs mt-2 font-semibold" style={{ color: '#800020' }}>🎁 Free: {o.loyalty_free_item_name}</p>
+                        )}
                       </div>
                       {/* Actions */}
                       <div>
@@ -805,6 +823,7 @@ const TABS = [
   { id:'specials',      label:"Today's Specials", icon:Sparkles  },
   { id:'users',         label:'Users',         icon:Users        },
   { id:'enquiries',     label:'Enquiries',     icon:MessageSquare},
+  { id:'loyalty',       label:'Loyalty',       icon:Gift         },
   { id:'reviews',       label:'Reviews',       icon:Star         },
   { id:'newsletter',    label:'Newsletter',    icon:Mail         },
 ];
@@ -933,6 +952,7 @@ const Admin = () => {
               {activeTab==='specials'      && <DailySpecialsTab />}
               {activeTab==='users'         && <UsersTab users={data.users} />}
               {activeTab==='enquiries'     && <EnquiriesTab contacts={data.contacts} catering={data.catering} onStatusUpdate={handleStatusUpdate} reload={fetchAll} />}
+              {activeTab==='loyalty'       && <AdminLoyaltyTab />}
               {activeTab==='reviews'       && <ReviewsTab />}
               {activeTab==='newsletter'    && <NewsletterTab newsletter={data.newsletter} reload={fetchAll} />}
             </>

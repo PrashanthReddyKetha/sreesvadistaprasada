@@ -14,11 +14,50 @@ from __future__ import annotations
 import os
 import asyncio
 import logging
+from datetime import datetime
 from typing import Optional
 
 import httpx
 
 logger = logging.getLogger(__name__)
+
+# Lazy import to avoid circular imports
+_db = None
+def _get_db():
+    global _db
+    if _db is None:
+        from database import db as _database
+        _db = _database
+    return _db
+
+
+async def create_notification(
+    user_id: str,
+    title: str,
+    body: str,
+    notif_type: str = "info",
+    action_url: str = "/dashboard",
+) -> None:
+    """Write an in-app notification to the notifications collection."""
+    import uuid
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "title": title,
+        "body": body,
+        "type": notif_type,
+        "action_url": action_url,
+        "read": False,
+        "created_at": datetime.utcnow().isoformat(),
+        # Legacy fields kept for compatibility with existing notification queries
+        "enquiry_id": None,
+        "enquiry_type": None,
+    }
+    try:
+        await _get_db().notifications.insert_one(doc)
+    except Exception as e:
+        logger.error("Failed to create notification for user %s: %s", user_id, e)
+
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
 RESEND_FROM = os.environ.get(

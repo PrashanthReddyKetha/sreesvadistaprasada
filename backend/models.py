@@ -85,6 +85,12 @@ class User(BaseModel):
     role: UserRole = UserRole.customer
     google_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    # Loyalty
+    loyalty_order_count: int = 0
+    loyalty_rewards_earned: int = 0
+    loyalty_rewards_redeemed: int = 0
+    loyalty_pending_reward: bool = False
+    loyalty_last_updated: Optional[datetime] = None
 
 
 class UserInDB(User):
@@ -190,6 +196,13 @@ class OrderCreate(BaseModel):
     notes: Optional[str] = None
     user_id: Optional[str] = None
     payment_intent_id: Optional[str] = None
+    # Delivery type
+    delivery_type: str = "delivery"   # "delivery" | "takeaway"
+    # Loyalty redemption
+    is_loyalty_redemption: bool = False
+    loyalty_free_item_id: Optional[str] = None
+    loyalty_free_item_name: Optional[str] = None
+    loyalty_free_item_original_price: float = 0.0
 
 
 class OrderStatusUpdate(BaseModel):
@@ -200,12 +213,17 @@ class Order(OrderCreate):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     subtotal: float = 0.0
     delivery_fee: float = 0.0
+    takeaway_discount: float = 0.0
+    free_item_discount: float = 0.0
     total: float = 0.0
     status: OrderStatus = OrderStatus.pending
     payment_intent_id: Optional[str] = None
     payment_status: str = "pending"
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    # Loyalty tracking
+    is_loyalty_qualifying: bool = True
+    loyalty_order_number: Optional[int] = None
 
 
 # --- Subscriptions ---

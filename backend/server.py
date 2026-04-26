@@ -6,7 +6,7 @@ import logging
 
 from database import client
 from seed import seed_menu, create_indexes, create_admin_user, seed_daily_specials
-from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews, daily_specials
+from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews, daily_specials, loyalty, admin_loyalty
 from routes.menu import migrate_slugs
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -57,6 +57,8 @@ app.include_router(admin_dabba_wala.router, prefix="/api")
 app.include_router(payments.router, prefix="/api")
 app.include_router(reviews.router, prefix="/api")
 app.include_router(daily_specials.router, prefix="/api")
+app.include_router(loyalty.router, prefix="/api")
+app.include_router(admin_loyalty.router, prefix="/api")
 
 
 @app.get("/api")

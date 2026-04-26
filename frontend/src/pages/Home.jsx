@@ -5,6 +5,7 @@ import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from 
 import HeroSlider from '../components/HeroSlider';
 import api from '../api';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
   const trendingRef = useRef(null);
@@ -14,6 +15,7 @@ const Home = () => {
   const [postcodeResult, setPostcodeResult] = useState(null);
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const { addToCart } = useCart();
+  const { user, setAuthOpen } = useAuth();
   const [liveItems, setLiveItems] = useState([]);
   const [chefSpecialId, setChefSpecialId] = useState(null);
   const [dailySpecials, setDailySpecials] = useState([]);
@@ -246,6 +248,22 @@ const Home = () => {
           </div>
         </section>
       )}
+
+      {/* ── Loyalty + takeaway banner ── */}
+      <div className="bg-[#800020] text-white text-center py-4 px-4">
+        <p className="text-sm max-w-2xl mx-auto">
+          <span className="font-semibold">🎁 Loyalty rewards —</span>{' '}
+          order 5 times and earn a free dish from our entire menu. No minimum order. Only delivery fee.{' '}
+          {user ? (
+            <a href="/dashboard?tab=loyalty" className="underline font-semibold">Check your progress →</a>
+          ) : (
+            <button onClick={() => setAuthOpen(true)} className="underline font-semibold">Sign in to start earning →</button>
+          )}
+          <span className="mx-3 opacity-40">|</span>
+          <span className="font-semibold">🛵 Collect instead?</span>{' '}
+          Get 10% off every order.
+        </p>
+      </div>
 
       {/* ============================================ */}
       {/* TRENDING & LOVED */}
@@ -597,6 +615,27 @@ const Home = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+              {/* Takeaway nudge */}
+              <div className="mt-4 pt-4 border-t flex items-start gap-2.5" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
+                <span className="text-base flex-shrink-0">🛵</span>
+                <div>
+                  <p className="text-sm font-semibold leading-snug" style={{ color: '#800020' }}>
+                    Collect instead? Get 10% off every order.
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                    Pick up from our Greenleys kitchen and we'll knock 10% off your food total automatically.{' '}
+                    <a
+                      href="https://maps.google.com/?q=Greenleys,+Milton+Keynes"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:opacity-70"
+                      style={{ color: '#800020' }}
+                    >
+                      Get directions →
+                    </a>
+                  </p>
+                </div>
               </div>
             </div>
           </div>

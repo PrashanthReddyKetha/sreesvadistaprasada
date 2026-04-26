@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ShoppingBag, Truck, CheckCircle, MapPin, User, Mail, Phone, FileText,
-  Plus, Minus, Trash2, ArrowLeft, X, Zap, Lock, Eye, EyeOff,
-  LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard
+  Plus, Minus, Trash2, ArrowLeft, X, Lock, Eye, EyeOff,
+  LogIn, UserPlus, ChevronDown, ChevronUp, CreditCard, Gift
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import LoyaltyProgressBar from '../components/LoyaltyProgressBar';
 import api from '../api';
 
 const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
@@ -85,9 +86,10 @@ function DeliveryBar({ total, onAddMore }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, updateQuantity, removeFromCart, deliveryFee }) {
+function OrderSummary({ cartItems, cartTotal, updateQuantity, removeFromCart, deliveryFee, deliveryType, freeItemDiscount, freeItem, takeawayDiscount }) {
   const [collapsed, setCollapsed] = useState(false);
-  const grandTotal = cartTotal + deliveryFee;
+  const effectiveSubtotal = cartTotal + freeItemDiscount;
+  const grandTotal = cartTotal - takeawayDiscount + deliveryFee;
 
   return (
     <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }}>
@@ -139,20 +141,60 @@ function OrderSummary({ cartItems, cartTotal, updateQuantity, removeFromCart, de
             </div>
           ))}
 
+          {/* Free item row — struck-through price + FREE badge */}
+          {freeItem && (
+            <div className="flex items-center gap-3 pt-1 pb-2 border-t border-dashed" style={{ borderColor: '#F4C430' }}>
+              {freeItem.image
+                ? <img src={freeItem.image} alt={freeItem.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 ring-2 ring-[#F4C430]" />
+                : <div className="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center bg-[#F4C430]/20 ring-2 ring-[#F4C430]">
+                    <Gift size={18} style={{ color: '#800020' }} />
+                  </div>
+              }
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#2D2422' }}>{freeItem.name}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-sm line-through text-gray-400">{fmt(freeItemDiscount)}</span>
+                  <span className="text-xs font-bold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: '#800020' }}>FREE</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="pt-3 space-y-2 border-t" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
             <div className="flex justify-between text-sm text-gray-500">
-              <span>Subtotal</span><span>{fmt(cartTotal)}</span>
+              <span>Subtotal</span>
+              <span>{fmt(effectiveSubtotal)}</span>
             </div>
+            {freeItemDiscount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="flex items-center gap-1.5" style={{ color: '#166534' }}>
+                  <Gift size={13} /> Loyalty reward
+                </span>
+                <span className="font-semibold" style={{ color: '#166534' }}>-{fmt(freeItemDiscount)}</span>
+              </div>
+            )}
+            {takeawayDiscount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="flex items-center gap-1.5" style={{ color: '#166534' }}>
+                  🛵 Takeaway 10% off
+                </span>
+                <span className="font-semibold" style={{ color: '#166534' }}>-{fmt(takeawayDiscount)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm">
-              <span className="flex items-center gap-1.5 text-gray-500"><Truck size={13} /> Delivery</span>
+              <span className="flex items-center gap-1.5 text-gray-500">
+                {deliveryType === 'takeaway' ? '🛵 Collection' : <><Truck size={13} /> Delivery</>}
+              </span>
               {deliveryFee === 0
-                ? <span className="font-semibold" style={{ color: '#166534' }}>Free</span>
+                ? <span className="font-semibold" style={{ color: '#166534' }}>
+                    {deliveryType === 'takeaway' ? 'Free' : 'Free'}
+                  </span>
                 : <span className="text-gray-600">{fmt(deliveryFee)}</span>
               }
             </div>
             <div className="flex justify-between font-bold text-base pt-2 border-t" style={{ borderColor: 'rgba(128,0,32,0.12)', color: '#800020' }}>
               <span style={{ color: '#2D2422' }}>Total</span>
-              <span>{fmt(cartTotal + deliveryFee)}</span>
+              <span>{fmt(grandTotal)}</span>
             </div>
           </div>
         </div>
@@ -274,7 +316,6 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal }) {
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative z-10 w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col"
         style={{ maxHeight: '90vh' }}>
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b flex-shrink-0"
           style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
           <div>
@@ -288,7 +329,6 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal }) {
           </button>
         </div>
 
-        {/* Category tabs */}
         <div className="flex gap-2 px-4 py-2.5 overflow-x-auto border-b flex-shrink-0"
           style={{ borderColor: 'rgba(128,0,32,0.08)', scrollbarWidth: 'none' }}>
           {categories.map(cat => (
@@ -300,7 +340,6 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal }) {
           ))}
         </div>
 
-        {/* Items */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
           {loading && <div className="flex justify-center py-12"><span className="w-6 h-6 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" /></div>}
           {!loading && shown.map(item => {
@@ -352,14 +391,18 @@ const CheckoutInner = () => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
+  const location = useLocation();
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, addToCart } = useCart();
   const { user, login, setAuthOpen } = useAuth();
 
-  const [guestMode, setGuestMode] = useState(false); // true = proceed as guest
+  // Loyalty & delivery state from CartDrawer
+  const { deliveryType = 'delivery', freeItem = null } = location.state || {};
+
+  const [guestMode, setGuestMode] = useState(false);
   const [showBrowse, setShowBrowse] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(null); // { orderId }
+  const [success, setSuccess] = useState(null); // { orderId, isRedemption, loyaltyStatus }
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '',
@@ -391,6 +434,17 @@ const CheckoutInner = () => {
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
+  // Pricing calculations — cartTotal = regular items only (freeItem is NOT in CartContext)
+  const freeItemDiscount = freeItem ? price(freeItem.original_price) : 0;
+  // effectiveSubtotal = what you'd pay if no discounts (all items at full price)
+  const effectiveSubtotal = cartTotal + freeItemDiscount;
+  // Takeaway discount applies to the paying portion (regular items only)
+  const takeawayDiscount = deliveryType === 'takeaway' && cartTotal >= 15
+    ? Math.round(cartTotal * 0.10 * 100) / 100 : 0;
+  // Delivery threshold counts effectiveSubtotal (all food, including free dish needs delivery)
+  const deliveryFee = deliveryType === 'takeaway' ? 0 : (effectiveSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE);
+  const grandTotal = cartTotal - takeawayDiscount + deliveryFee;
+
   // Fallback: postcodes.io for city auto-fill
   const fallbackPostcodeIo = async (pc) => {
     try {
@@ -412,7 +466,6 @@ const CheckoutInner = () => {
       if (apiKey) {
         const r = await fetch(`https://api.getaddress.io/find/${encodeURIComponent(pc.trim())}?api-key=${apiKey}&expand=true`);
         if (r.status === 404 || r.status === 429 || !r.ok) {
-          // getAddress.io failed — fall back to postcodes.io for city
           await fallbackPostcodeIo(pc);
           return;
         }
@@ -422,7 +475,7 @@ const CheckoutInner = () => {
           line1: a.line_1 || '', line2: a.line_2 || '', city: a.town_or_city || '',
         }));
         if (addrs.length === 0) {
-          await fallbackPostcodeIo(pc); // at least fill city
+          await fallbackPostcodeIo(pc);
           return;
         }
         setAddressOptions(addrs); setAddressDropdown(true);
@@ -440,12 +493,11 @@ const CheckoutInner = () => {
     setAddressDropdown(false);
   };
 
-  const deliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-  const grandTotal  = cartTotal + deliveryFee;
-
   const handleOrder = async () => {
     setError('');
-    const required = ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
+    const required = deliveryType === 'takeaway'
+      ? ['name', 'email', 'phone']
+      : ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
     if (required.some(k => !form[k].trim())) { setError('Please fill in all required fields.'); return; }
     if (!stripe || !elements) { setError('Payment not ready. Please wait a moment.'); return; }
     const cardNumberElement = elements.getElement(CardNumberElement);
@@ -456,7 +508,7 @@ const CheckoutInner = () => {
       const intentRes = await api.post('/payments/create-intent', { amount: grandTotal });
       const { client_secret, payment_intent_id } = intentRes.data;
 
-      // 2. Confirm card payment with Stripe using individual elements
+      // 2. Confirm card payment
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: {
           card: cardNumberElement,
@@ -466,16 +518,21 @@ const CheckoutInner = () => {
       if (stripeError) { setError(stripeError.message || 'Payment failed. Please try again.'); return; }
       if (paymentIntent.status !== 'succeeded') { setError('Payment was not completed. Please try again.'); return; }
 
-      // 3. Create order in our system
+      // 3. Create order
       const res = await api.post('/orders', {
         customer_name:  form.name,
         customer_email: form.email,
         customer_phone: form.phone,
-        items: cartItems.map(i => ({
-          menu_item_id: i.id, name: i.name,
-          price: price(i.price), quantity: i.quantity,
-        })),
-        delivery_address: {
+        items: [
+          ...cartItems.map(i => ({
+            menu_item_id: i.id, name: i.name,
+            price: price(i.price), quantity: i.quantity,
+          })),
+          // Include free item in items array so backend can see it in the receipt
+          // Backend uses loyalty_free_item_original_price to apply the discount
+          ...(freeItem ? [{ menu_item_id: freeItem.id, name: freeItem.name, price: freeItemDiscount, quantity: 1 }] : []),
+        ],
+        delivery_address: deliveryType === 'takeaway' ? undefined : {
           line1: form.line1,
           line2: form.line2 || undefined,
           city:  form.city,
@@ -483,23 +540,34 @@ const CheckoutInner = () => {
         },
         notes: form.notes || undefined,
         payment_intent_id,
+        delivery_type: deliveryType,
+        is_loyalty_redemption: !!freeItem,
+        loyalty_free_item_id: freeItem?.id || undefined,
+        loyalty_free_item_name: freeItem?.name || undefined,
+        loyalty_free_item_original_price: freeItem ? freeItemDiscount : undefined,
       });
-      setSuccess({ orderId: res.data?.id?.slice(-6).toUpperCase() || '' });
+
+      const orderId = res.data?.id?.slice(-6).toUpperCase() || '';
+      setSuccess({ orderId, isRedemption: !!freeItem, loyaltyStatus: null });
       clearCart();
+
+      // Fetch updated loyalty status for success screen
+      if (user) {
+        api.get('/loyalty/status')
+          .then(r => setSuccess(s => ({ ...s, loyaltyStatus: r.data })))
+          .catch(() => {});
+      }
     } catch (e) {
       setError(e.response?.data?.detail || 'Something went wrong. Please try again.');
     } finally { setSubmitting(false); }
   };
 
-  // Redirect if cart is empty (and not on success screen)
-  useEffect(() => {
-    if (cartItems.length === 0 && !success) {
-      // small delay so post-order clearCart doesn't trigger this
-    }
-  }, [cartItems, success]);
-
   /* ── SUCCESS ─────────────────────────────────────────────────────────── */
   if (success) {
+    const loyaltyOrderCount = success.loyaltyStatus?.order_count ?? null;
+    const loyaltyPending = success.loyaltyStatus?.pending_reward ?? false;
+    const position = loyaltyPending ? 5 : (loyaltyOrderCount !== null ? loyaltyOrderCount % 5 : null);
+
     return (
       <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#FAF7F2' }}>
         <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
@@ -520,7 +588,52 @@ const CheckoutInner = () => {
             Your order has been received and is being prepared. We'll send a confirmation to{' '}
             <strong>{form.email}</strong>.
           </p>
-          <p className="text-sm text-gray-400 mb-8">Estimated time: 30–45 minutes</p>
+          <p className="text-sm text-gray-400 mb-6">
+            {deliveryType === 'takeaway' ? 'We'll call you when it's ready to collect.' : 'Estimated time: 30–45 minutes'}
+          </p>
+
+          {/* Loyalty block */}
+          {user && (
+            <div className="mb-6 pt-5 border-t" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
+              {success.isRedemption ? (
+                /* Redemption order — new cycle started */
+                <div className="rounded-xl px-4 py-3.5 text-center" style={{ backgroundColor: '#800020', color: 'white' }}>
+                  <p className="font-semibold text-sm">🎁 Your free dish is on the way!</p>
+                  <p className="text-xs mt-1 opacity-85">Your next loyalty cycle has started — 5 more orders for your next free dish.</p>
+                </div>
+              ) : loyaltyPending || position === 0 ? (
+                /* Just hit the 5th order — reward unlocked (crimson) */
+                <div className="rounded-xl px-4 py-3.5 text-center" style={{ backgroundColor: '#800020', color: 'white' }}>
+                  <p className="font-semibold text-sm">🎁 You've earned a free dish!</p>
+                  <p className="text-xs mt-1 opacity-85">Open the cart on your next order to claim any item — completely free.</p>
+                </div>
+              ) : position === 4 ? (
+                /* One away (gold) */
+                <div className="rounded-xl px-4 py-3.5 text-center" style={{ backgroundColor: '#FEF9C3', border: '1px solid rgba(184,134,11,0.3)' }}>
+                  <p className="font-semibold text-sm" style={{ color: '#854D0E' }}>⭐ One more order and your free dish is yours!</p>
+                  <p className="text-xs mt-1" style={{ color: '#92400E' }}>You're on order {loyaltyOrderCount} — next one unlocks a free dish from our full menu.</p>
+                </div>
+              ) : position === 3 ? (
+                /* Halfway (green) */
+                <div className="rounded-xl px-4 py-3.5 text-center" style={{ backgroundColor: '#F0FFF4', border: '1px solid rgba(22,101,52,0.2)' }}>
+                  <p className="font-semibold text-sm" style={{ color: '#166534' }}>🌿 Halfway there!</p>
+                  <p className="text-xs mt-1" style={{ color: '#166534' }}>2 more orders and you earn a free dish from our entire menu.</p>
+                </div>
+              ) : position === 1 ? (
+                /* Journey started (blue) */
+                <div className="rounded-xl px-4 py-3.5 text-center" style={{ backgroundColor: '#EFF6FF', border: '1px solid rgba(59,130,246,0.2)' }}>
+                  <p className="font-semibold text-sm" style={{ color: '#1D4ED8' }}>🍱 Your loyalty journey has started!</p>
+                  <p className="text-xs mt-1" style={{ color: '#1E40AF' }}>Order 4 more times to earn a completely free dish from our menu.</p>
+                </div>
+              ) : loyaltyOrderCount !== null ? (
+                /* Position 2 or other — show progress bar */
+                <div>
+                  <LoyaltyProgressBar orderCount={loyaltyOrderCount} pendingReward={false} compact={true} />
+                </div>
+              ) : null}
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-3">
             <button onClick={() => navigate('/')}
               className="flex-1 py-3 text-sm font-semibold rounded-xl border-2 transition-all hover:bg-gray-50"
@@ -584,8 +697,20 @@ const CheckoutInner = () => {
           <h1 className="text-xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
             Almost at the doorstep
           </h1>
-          <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
-            <Lock size={12} /> Secure order
+          <div className="ml-auto flex items-center gap-2">
+            {deliveryType === 'takeaway' && (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                style={{ backgroundColor: '#FEF9C3', color: '#854D0E' }}>
+                🛵 Collection · 10% off
+              </span>
+            )}
+            {freeItem && (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                style={{ backgroundColor: 'rgba(22,101,52,0.1)', color: '#166534' }}>
+                <Gift size={11} /> Free dish added
+              </span>
+            )}
+            <span className="flex items-center gap-1 text-xs text-gray-400"><Lock size={12} /> Secure</span>
           </div>
         </div>
       </div>
@@ -606,13 +731,18 @@ const CheckoutInner = () => {
               />
             )}
 
-            {/* Delivery details */}
+            {/* Contact & delivery details */}
             {canCheckout && (
               <div className="bg-white rounded-2xl shadow-sm p-6 space-y-5"
                 style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
                 <div className="flex items-center gap-2">
-                  <MapPin size={16} style={{ color: '#800020' }} />
-                  <h2 className="font-bold text-base" style={{ color: '#800020' }}>Delivery Details</h2>
+                  {deliveryType === 'takeaway'
+                    ? <span className="text-base">🛵</span>
+                    : <MapPin size={16} style={{ color: '#800020' }} />
+                  }
+                  <h2 className="font-bold text-base" style={{ color: '#800020' }}>
+                    {deliveryType === 'takeaway' ? 'Collection Details' : 'Delivery Details'}
+                  </h2>
                   {user && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold ml-auto"
                       style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
@@ -632,64 +762,72 @@ const CheckoutInner = () => {
                   placeholder="you@example.com" locked={!!user?.email && form.email === user.email}
                   hint={user ? 'Order confirmation will be sent here' : ''} required />
 
-                {/* Postcode */}
-                <div>
-                  <label className="text-xs font-semibold block mb-1" style={{ color: '#5C4B47' }}>
-                    Postcode <span className="text-red-400">*</span>
-                    <span className="font-normal text-gray-400 ml-1">— we'll find your address</span>
-                  </label>
-                  <div className="relative">
-                    <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text" placeholder="e.g. MK9 1AB"
-                      value={form.postcode}
-                      onChange={e => {
-                        // Only allow alphanumeric characters and spaces
-                        const sanitized = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase();
-                        set('postcode')(sanitized);
-                        setPcError(''); setAddressDropdown(false);
-                        clearTimeout(pcDebounceRef.current);
-                        if (sanitized.replace(/\s/g, '').length >= 5) {
-                          pcDebounceRef.current = setTimeout(() => lookupPostcode(sanitized), 600);
-                        }
-                      }}
-                      onBlur={() => { clearTimeout(pcDebounceRef.current); lookupPostcode(form.postcode); }}
-                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border-2 text-sm uppercase focus:outline-none transition-colors"
-                      style={{
-                        borderColor: form.postcode ? 'rgba(128,0,32,0.3)' : '#E5E7EB',
-                        color: '#2D2422',
-                      }}
-                    />
-                    {pcLookingUp && <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" />}
-                    {!pcLookingUp && form.line1 && <CheckCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#166534' }} />}
+                {/* Takeaway: show collection info instead of address */}
+                {deliveryType === 'takeaway' ? (
+                  <div className="rounded-xl p-4 space-y-1.5" style={{ backgroundColor: '#FFFBEB', border: '1px solid rgba(184,134,11,0.3)' }}>
+                    <p className="text-sm font-semibold" style={{ color: '#854D0E' }}>🛵 Collection order</p>
+                    <p className="text-xs leading-relaxed" style={{ color: '#92400E' }}>
+                      Your order will be ready to collect from our Greenleys kitchen. We'll call you on the number above when it's ready. Please arrive within 15 minutes of our call.
+                    </p>
                   </div>
+                ) : (
+                  <>
+                    {/* Postcode */}
+                    <div>
+                      <label className="text-xs font-semibold block mb-1" style={{ color: '#5C4B47' }}>
+                        Postcode <span className="text-red-400">*</span>
+                        <span className="font-normal text-gray-400 ml-1">— we'll find your address</span>
+                      </label>
+                      <div className="relative">
+                        <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text" placeholder="e.g. MK9 1AB"
+                          value={form.postcode}
+                          onChange={e => {
+                            const sanitized = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase();
+                            set('postcode')(sanitized);
+                            setPcError(''); setAddressDropdown(false);
+                            clearTimeout(pcDebounceRef.current);
+                            if (sanitized.replace(/\s/g, '').length >= 5) {
+                              pcDebounceRef.current = setTimeout(() => lookupPostcode(sanitized), 600);
+                            }
+                          }}
+                          onBlur={() => { clearTimeout(pcDebounceRef.current); lookupPostcode(form.postcode); }}
+                          className="w-full pl-9 pr-10 py-2.5 rounded-xl border-2 text-sm uppercase focus:outline-none transition-colors"
+                          style={{ borderColor: form.postcode ? 'rgba(128,0,32,0.3)' : '#E5E7EB', color: '#2D2422' }}
+                        />
+                        {pcLookingUp && <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" />}
+                        {!pcLookingUp && form.line1 && <CheckCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#166534' }} />}
+                      </div>
 
-                  {addressDropdown && addressOptions.length > 0 && (
-                    <div className="mt-1.5 border-2 rounded-xl overflow-hidden shadow-lg"
-                      style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto' }}>
-                      <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider bg-gray-50 sticky top-0" style={{ color: '#9C7B6B' }}>
-                        {addressOptions.length} addresses — select yours
-                      </p>
-                      {addressOptions.map((addr, i) => (
-                        <button key={i} type="button" onClick={() => selectAddress(addr)}
-                          className="w-full text-left px-3 py-2.5 text-sm border-t hover:bg-[#800020]/5 transition-colors"
-                          style={{ borderColor: 'rgba(128,0,32,0.06)', color: '#2D2422' }}>
-                          {addr.label}
-                        </button>
-                      ))}
+                      {addressDropdown && addressOptions.length > 0 && (
+                        <div className="mt-1.5 border-2 rounded-xl overflow-hidden shadow-lg"
+                          style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto' }}>
+                          <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider bg-gray-50 sticky top-0" style={{ color: '#9C7B6B' }}>
+                            {addressOptions.length} addresses — select yours
+                          </p>
+                          {addressOptions.map((addr, i) => (
+                            <button key={i} type="button" onClick={() => selectAddress(addr)}
+                              className="w-full text-left px-3 py-2.5 text-sm border-t hover:bg-[#800020]/5 transition-colors"
+                              style={{ borderColor: 'rgba(128,0,32,0.06)', color: '#2D2422' }}>
+                              {addr.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                {form.postcode.replace(/\s/g, '').length >= 5 && (
-                  <div className="space-y-4">
-                    <Field label="Address Line 1" icon={MapPin} value={form.line1} onChange={set('line1')}
-                      placeholder="123 High Street" locked={!!form.line1 && !addressDropdown} required />
-                    <Field label="Address Line 2 (optional)" icon={null} value={form.line2} onChange={set('line2')}
-                      placeholder="Flat / Apartment" />
-                    <Field label="Town / City" icon={null} value={form.city} onChange={set('city')}
-                      placeholder="Milton Keynes" locked={!!form.city && !addressDropdown} required />
-                  </div>
+                    {form.postcode.replace(/\s/g, '').length >= 5 && (
+                      <div className="space-y-4">
+                        <Field label="Address Line 1" icon={MapPin} value={form.line1} onChange={set('line1')}
+                          placeholder="123 High Street" locked={!!form.line1 && !addressDropdown} required />
+                        <Field label="Address Line 2 (optional)" icon={null} value={form.line2} onChange={set('line2')}
+                          placeholder="Flat / Apartment" />
+                        <Field label="Town / City" icon={null} value={form.city} onChange={set('city')}
+                          placeholder="Milton Keynes" locked={!!form.city && !addressDropdown} required />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -698,10 +836,10 @@ const CheckoutInner = () => {
             {canCheckout && (
               <div className="bg-white rounded-2xl shadow-sm p-6" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
                 <label className="text-xs font-semibold block mb-2 flex items-center gap-1.5" style={{ color: '#5C4B47' }}>
-                  <FileText size={13} /> Delivery Notes <span className="font-normal text-gray-400">(optional)</span>
+                  <FileText size={13} /> {deliveryType === 'takeaway' ? 'Collection Notes' : 'Delivery Notes'} <span className="font-normal text-gray-400">(optional)</span>
                 </label>
                 <textarea value={form.notes} onChange={e => set('notes')(e.target.value)}
-                  placeholder="e.g. Leave at the door, ring bell twice…"
+                  placeholder={deliveryType === 'takeaway' ? 'e.g. Extra spicy please, no onions…' : 'e.g. Leave at the door, ring bell twice…'}
                   rows={3}
                   className="w-full px-4 py-3 rounded-xl border-2 text-sm resize-none focus:outline-none focus:border-[#800020] transition-colors"
                   style={{ borderColor: '#E5E7EB', color: '#2D2422' }}
@@ -719,8 +857,21 @@ const CheckoutInner = () => {
           <div className="lg:col-span-2">
             <div className="lg:sticky lg:top-6 space-y-4">
 
-              {/* Delivery nudge */}
-              <DeliveryBar total={cartTotal} onAddMore={() => setShowBrowse(true)} />
+              {/* Takeaway savings banner or delivery nudge */}
+              {deliveryType === 'takeaway' ? (
+                takeawayDiscount > 0 && (
+                  <div className="p-4 rounded-xl" style={{ backgroundColor: '#F0FFF4' }}>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm">🛵</span>
+                      <span className="text-sm font-semibold" style={{ color: '#166534' }}>
+                        Saving {fmt(takeawayDiscount)} by collecting!
+                      </span>
+                    </div>
+                  </div>
+                )
+              ) : (
+                <DeliveryBar total={cartTotal} onAddMore={() => setShowBrowse(true)} />
+              )}
 
               {/* Order summary */}
               <OrderSummary
@@ -729,6 +880,10 @@ const CheckoutInner = () => {
                 updateQuantity={updateQuantity}
                 removeFromCart={removeFromCart}
                 deliveryFee={deliveryFee}
+                deliveryType={deliveryType}
+                freeItemDiscount={freeItemDiscount}
+                freeItem={freeItem}
+                takeawayDiscount={takeawayDiscount}
               />
 
               {/* Card payment */}
@@ -740,11 +895,9 @@ const CheckoutInner = () => {
                     <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-400"><Lock size={10} /> Stripe</span>
                   </div>
                   <div className="space-y-2">
-                    {/* Card number - full width */}
                     <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
                       <CardNumberElement options={CARD_STYLE} placeholder="Card number" />
                     </div>
-                    {/* Expiry, CVC, Postcode - single row */}
                     <div className="grid grid-cols-3 gap-2">
                       <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
                         <CardExpiryElement options={CARD_STYLE} placeholder="MM / YY" />
@@ -777,9 +930,13 @@ const CheckoutInner = () => {
                 </button>
               )}
 
-              {/* Trust badges — compact */}
+              {/* Trust badges */}
               <div className="flex items-center justify-center gap-4 py-2">
-                {[['🔒', 'Secure'], ['⚡', '30–45 min'], ['🍛', 'Fresh']].map(([icon, label]) => (
+                {[
+                  ['🔒', 'Secure'],
+                  deliveryType === 'takeaway' ? ['🛵', 'Collect'] : ['⚡', '30–45 min'],
+                  ['🍛', 'Fresh'],
+                ].map(([icon, label]) => (
                   <div key={label} className="flex items-center gap-1">
                     <span className="text-sm">{icon}</span>
                     <span className="text-[11px] text-gray-400">{label}</span>
