@@ -86,18 +86,12 @@ const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
             <p className="text-sm text-yellow-200 leading-relaxed max-w-md">
               Authentic South Indian tiffins made fresh every morning. Start your day the right way.
             </p>
+            <a href="/breakfast/about" className="inline-block mt-4 text-sm font-medium text-white/70 hover:text-white underline underline-offset-2 transition-colors duration-150">
+              The story behind our breakfast →
+            </a>
           </div>
         </div>
       </section>
-
-      {/* About link */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-2" style={{ backgroundColor: '#FFFBEB' }}>
-        <p className="text-sm" style={{ color: '#5C4B47' }}>
-          <a href="/breakfast/about" className="underline underline-offset-2 hover:text-[#800020]">
-            The story behind our breakfast →
-          </a>
-        </p>
-      </div>
 
       {/* Anchor for tab scroll */}
       <div id="section-tabs-anchor" />

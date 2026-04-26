@@ -103,18 +103,12 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
             <p className="text-sm text-green-200 leading-relaxed max-w-md">
               Crispy starters, hearty curries, fragrant rice specials and more. Every dish made fresh with love.
             </p>
+            <a href="/prasada/about" className="inline-block mt-4 text-sm font-medium text-white/70 hover:text-white underline underline-offset-2 transition-colors duration-150">
+              The story behind Prasada →
+            </a>
           </div>
         </div>
       </section>
-
-      {/* About link */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-2" style={{ backgroundColor: '#F0FFF4' }}>
-        <p className="text-sm" style={{ color: '#5C4B47' }}>
-          <a href="/prasada/about" className="underline underline-offset-2 hover:text-[#800020]">
-            The story behind Prasada →
-          </a>
-        </p>
-      </div>
 
       {/* Anchor for tab scroll */}
       <div id="section-tabs-anchor" />

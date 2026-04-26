@@ -87,18 +87,12 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
             <p className="text-sm text-red-200 leading-relaxed max-w-md">
               Starters, biryanis, rich curries and egg specials. Slow-cooked with Andhra soul.
             </p>
+            <a href="/svadista/about" className="inline-block mt-4 text-sm font-medium text-white/70 hover:text-white underline underline-offset-2 transition-colors duration-150">
+              The story behind Svadista →
+            </a>
           </div>
         </div>
       </section>
-
-      {/* About link */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-2" style={{ backgroundColor: '#FDF5E6' }}>
-        <p className="text-sm" style={{ color: '#5C4B47' }}>
-          <a href="/svadista/about" className="underline underline-offset-2 hover:text-[#800020]">
-            The story behind Svadista →
-          </a>
-        </p>
-      </div>
 
       {/* Anchor for tab scroll */}
       <div id="section-tabs-anchor" />
