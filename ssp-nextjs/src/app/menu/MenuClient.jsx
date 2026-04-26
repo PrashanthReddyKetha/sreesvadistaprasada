@@ -12,9 +12,9 @@ const categories = [
   { id: 'all', name: 'All Dishes' },
   { id: 'nonVeg', name: 'Non-Veg' },
   { id: 'veg', name: 'Vegetarian' },
-  { id: 'prasada', name: 'Prasada' },
   { id: 'breakfast', name: 'Breakfast' },
   { id: 'streetFood', name: 'Street Food' },
+  { id: 'ragiSpecials', name: 'Ragi Specials' },
   { id: 'drinks', name: 'Drinks' },
   { id: 'naivedyam', name: '🪔 Naivedyam' },
   { id: 'pickles', name: 'Pickles' },
@@ -41,7 +41,7 @@ const Menu = ({ initialItems = [] }) => {
   const filtered = allDishes
     .filter(dish => {
       if (activeCategory === 'all') return true;
-      if (activeCategory === 'naivedyam') return dish.category === 'veg' && dish.subcategory === 'Rice Specials';
+      if (activeCategory === 'naivedyam') return dish.subcategory === 'Naivedyam';
       return dish.category === activeCategory;
     })
     .filter(dish =>

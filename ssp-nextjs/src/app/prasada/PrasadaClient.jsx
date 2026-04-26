@@ -115,8 +115,17 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
       {/* Sticky tabs */}
       <div id="section-tabs" className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-30 py-3 px-4 md:px-8"
         style={{ backgroundColor: '#F0FFF4', borderBottom: '1px solid rgba(22,101,52,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-        <div className="max-w-7xl mx-auto flex flex-col gap-2 md:flex-row md:items-center">
-          <div className="flex gap-2 overflow-x-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="relative flex-1 max-w-sm">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dishes..."
+                className="w-full pl-9 pr-8 py-2 rounded-full text-sm border outline-none transition-colors"
+                style={{ borderColor: 'rgba(22,101,52,0.3)', backgroundColor: 'white', color: '#374151' }} />
+              {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={13} /></button>}
+            </div>
+          </div>
+          <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
             {TABS.map(tab => (
               <button key={tab} onClick={() => selectTab(tab)}
                 className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
@@ -127,13 +136,6 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
                 {tab}
               </button>
             ))}
-          </div>
-          <div className="relative flex-shrink-0 self-end md:self-auto">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
-              className="pl-7 pr-7 py-1.5 rounded-full text-xs border outline-none focus:ring-2 w-40 md:w-44"
-              style={{ borderColor: 'rgba(22,101,52,0.3)', backgroundColor: 'white', color: '#374151' }} />
-            {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={11} /></button>}
           </div>
         </div>
       </div>
