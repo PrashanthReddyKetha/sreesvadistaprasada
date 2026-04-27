@@ -212,6 +212,7 @@ class OrderStatusUpdate(BaseModel):
 class Order(OrderCreate):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     subtotal: float = 0.0
+    small_order_fee: float = 0.0
     delivery_fee: float = 0.0
     takeaway_discount: float = 0.0
     free_item_discount: float = 0.0

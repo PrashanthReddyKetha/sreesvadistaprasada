@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from datetime import datetime
 import math
+import re
 from database import db
 from models import Order, OrderCreate, OrderStatusUpdate, OrderStatus
 from auth import get_current_user, get_optional_user, require_admin
@@ -13,48 +14,109 @@ from notifications import (
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
-DELIVERY_FEE = 3.99
-MIN_ORDER = 15.0
+# ── Zone-based delivery pricing ───────────────────────────────────────────────
+
+POSTCODE_ZONES = {
+    # Zone 1 — 0 to 2 miles from MK12 6LF
+    "MK12": 1, "MK11": 1, "MK13": 1, "MK8": 1, "MK19": 1,
+    # Zone 2 — 2 to 5 miles
+    "MK9": 2, "MK14": 2, "MK16": 2, "MK5": 2, "MK6": 2,
+    # Zone 3 — 5 to 8 miles
+    "MK4": 3, "MK7": 3, "MK10": 3, "MK15": 3, "MK3": 3, "MK2": 3,
+    # Zone 4 — 8 to 12 miles
+    "MK1": 4, "MK17": 4, "MK18": 4,
+}
+
+ZONE_DELIVERY_FEE = {1: 2.49, 2: 2.99, 3: 3.99, 4: 4.99}
+ZONE_FREE_DELIVERY_THRESHOLD = {1: 28.00, 2: 30.00, 3: 35.00, 4: 40.00}
+
+MINIMUM_ORDER         = 15.00
+SMALL_ORDER_FEE       = 1.50
+SMALL_ORDER_THRESHOLD = 19.99   # small order fee applies if subtotal <= this
+TAKEAWAY_DISCOUNT_PCT = 0.10
 
 
-# ── Pricing ───────────────────────────────────────────────────────────────────
+# ── Pricing helpers ───────────────────────────────────────────────────────────
 
-def _calculate_totals(
-    items: list,
-    delivery_type: str,
-    is_loyalty_redemption: bool,
-    free_item_original_price: float,
-    postcode: str,
+def get_zone_from_postcode(postcode: str) -> Optional[int]:
+    """Returns zone 1-4 for MK postcodes, None if outside delivery area."""
+    if not postcode:
+        return None
+    clean = postcode.upper().replace(" ", "")
+    match = re.match(r'^(MK\d{1,2})', clean)
+    if match:
+        return POSTCODE_ZONES.get(match.group(1))
+    return None
+
+
+def calculate_order_total(
+    items: list,           # list of dicts: {"price": float, "quantity": int}
+    order_type: str,       # "delivery" | "takeaway"
+    postcode: str = "",
+    free_item_price: float = 0.0,
 ) -> dict:
-    subtotal = round(sum(i.price * i.quantity for i in items), 2)
+    """
+    Single source of truth for all order pricing.
+    Always called server-side — never trust the client total.
+    items must be plain dicts with 'price' and 'quantity' keys.
+    """
+    # 1. Gross subtotal (free item included at full price in items list)
+    subtotal = round(sum(i["price"] * i["quantity"] for i in items), 2)
 
-    free_item_discount = 0.0
-    if is_loyalty_redemption and free_item_original_price > 0:
-        free_item_discount = round(free_item_original_price, 2)
+    # 2. Minimum order check on gross subtotal
+    if subtotal < MINIMUM_ORDER:
+        raise ValueError(
+            f"Minimum order is £{MINIMUM_ORDER:.2f}. "
+            f"Your basket is £{subtotal:.2f}."
+        )
 
+    # 3. Loyalty free item discount
+    free_item_discount = round(free_item_price, 2) if free_item_price > 0 else 0.0
     subtotal_after_free = round(subtotal - free_item_discount, 2)
 
-    takeaway_discount = 0.0
-    if delivery_type == "takeaway" and subtotal_after_free >= MIN_ORDER:
-        takeaway_discount = round(subtotal_after_free * 0.10, 2)
+    if order_type == "takeaway":
+        small_order_fee   = 0.0
+        delivery_fee      = 0.0
+        free_delivery_at  = None
+        zone              = None
+        takeaway_discount = round(subtotal_after_free * TAKEAWAY_DISCOUNT_PCT, 2)
 
-    food_total = round(subtotal_after_free - takeaway_discount, 2)
+    elif order_type == "delivery":
+        # Small order fee — delivery only, on subtotal after free item
+        if MINIMUM_ORDER <= subtotal_after_free <= SMALL_ORDER_THRESHOLD:
+            small_order_fee = SMALL_ORDER_FEE
+        else:
+            small_order_fee = 0.0
 
-    if delivery_type == "takeaway":
-        delivery_fee = 0.0
-    elif subtotal >= 30:
-        delivery_fee = 0.0
+        zone = get_zone_from_postcode(postcode)
+        if zone is None:
+            raise ValueError(
+                "We don't deliver to this postcode yet. "
+                "Please choose Collect or enter a valid MK postcode."
+            )
+
+        free_delivery_at = ZONE_FREE_DELIVERY_THRESHOLD[zone]
+        delivery_fee = 0.0 if subtotal_after_free >= free_delivery_at else ZONE_DELIVERY_FEE[zone]
+        takeaway_discount = 0.0
+
     else:
-        delivery_fee = DELIVERY_FEE
+        raise ValueError("order_type must be 'delivery' or 'takeaway'")
 
-    grand_total = round(food_total + delivery_fee, 2)
+    grand_total = round(
+        subtotal_after_free + small_order_fee + delivery_fee - takeaway_discount, 2
+    )
 
     return {
-        "subtotal": subtotal,
+        "subtotal":          subtotal,
         "free_item_discount": free_item_discount,
+        "small_order_fee":   small_order_fee,
+        "delivery_fee":      delivery_fee,
         "takeaway_discount": takeaway_discount,
-        "delivery_fee": delivery_fee,
-        "total": grand_total,
+        "grand_total":       grand_total,
+        "order_type":        order_type,
+        "zone":              zone,
+        "free_delivery_at":  free_delivery_at,
+        "postcode":          postcode.upper() if postcode else None,
     }
 
 
@@ -154,6 +216,48 @@ async def _update_loyalty_on_completion(user_id: str, order_id: str):
     await db.users.update_one({"id": user_id}, {"$set": update_data})
 
 
+# ── Pricing endpoints ─────────────────────────────────────────────────────────
+
+@router.get("/check-postcode")
+async def check_delivery_postcode(postcode: str):
+    """Zone lookup — no auth. Called by CartDrawer and checkout on postcode entry."""
+    zone = get_zone_from_postcode(postcode)
+    if zone is None:
+        return {
+            "deliverable": False,
+            "postcode": postcode.upper(),
+            "message": "We don't deliver here yet. You can still collect — choose Takeaway.",
+        }
+    return {
+        "deliverable": True,
+        "postcode": postcode.upper(),
+        "zone": zone,
+        "delivery_fee": ZONE_DELIVERY_FEE[zone],
+        "free_delivery_over": ZONE_FREE_DELIVERY_THRESHOLD[zone],
+        "minimum_order": MINIMUM_ORDER,
+        "small_order_threshold": SMALL_ORDER_THRESHOLD,
+        "small_order_fee": SMALL_ORDER_FEE,
+    }
+
+
+@router.post("/calculate")
+async def preview_calculate(body: dict):
+    """
+    Live pricing preview — no auth. Called on every cart/postcode/type change.
+    Does NOT create an order or charge anything.
+    """
+    try:
+        result = calculate_order_total(
+            items=body.get("items", []),
+            order_type=body.get("order_type", "delivery"),
+            postcode=body.get("postcode", ""),
+            free_item_price=float(body.get("free_item_price", 0.0)),
+        )
+        return {"ok": True, **result}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 # ── Create order ───────────────────────────────────────────────────────────────
 
 @router.post("", response_model=Order)
@@ -163,12 +267,7 @@ async def create_order(
 ):
     user_id = current_user["sub"] if current_user else payload.user_id
 
-    # Validate minimum order
-    subtotal = round(sum(i.price * i.quantity for i in payload.items), 2)
-    if subtotal < MIN_ORDER:
-        raise HTTPException(400, f"Minimum order is £{MIN_ORDER:.0f}")
-
-    # Validate loyalty redemption
+    # Validate loyalty redemption before pricing
     if payload.is_loyalty_redemption:
         if not user_id:
             raise HTTPException(400, "Must be logged in to redeem a loyalty reward")
@@ -180,13 +279,17 @@ async def create_order(
             if not item:
                 raise HTTPException(404, "Free item not available")
 
-    totals = _calculate_totals(
-        items=payload.items,
-        delivery_type=payload.delivery_type,
-        is_loyalty_redemption=payload.is_loyalty_redemption,
-        free_item_original_price=payload.loyalty_free_item_original_price,
-        postcode=payload.delivery_address.postcode,
-    )
+    # Server-side pricing — never trust the client total
+    items_data = [{"price": i.price, "quantity": i.quantity} for i in payload.items]
+    try:
+        totals = calculate_order_total(
+            items=items_data,
+            order_type=payload.delivery_type,
+            postcode=payload.delivery_address.postcode if payload.delivery_address else "",
+            free_item_price=payload.loyalty_free_item_original_price,
+        )
+    except ValueError as e:
+        raise HTTPException(400, detail=str(e))
 
     # Redemption orders don't count toward loyalty
     is_qualifying = not payload.is_loyalty_redemption
@@ -194,10 +297,11 @@ async def create_order(
     order = Order(
         **payload.model_dump(exclude={"user_id"}),
         subtotal=totals["subtotal"],
+        small_order_fee=totals["small_order_fee"],
         delivery_fee=totals["delivery_fee"],
         takeaway_discount=totals["takeaway_discount"],
         free_item_discount=totals["free_item_discount"],
-        total=totals["total"],
+        total=totals["grand_total"],
         user_id=user_id,
         is_loyalty_qualifying=is_qualifying,
     )

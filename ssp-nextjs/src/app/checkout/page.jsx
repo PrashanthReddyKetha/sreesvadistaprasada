@@ -16,8 +16,7 @@ import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
-const FREE_DELIVERY_THRESHOLD = 30;
-const DELIVERY_FEE = 3.99;
+const MINIMUM_ORDER = 15.00;
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
 const fmt   = (n)   => `£${Number(n).toFixed(2)}`;
 
@@ -53,10 +52,10 @@ function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange,
 }
 
 /* ── Delivery bar ────────────────────────────────────────────────────────── */
-function DeliveryBar({ total, onAddMore }) {
-  const remaining = FREE_DELIVERY_THRESHOLD - total;
-  const pct = Math.min((total / FREE_DELIVERY_THRESHOLD) * 100, 100);
-  const isFree = total >= FREE_DELIVERY_THRESHOLD;
+function DeliveryBar({ total, freeOver, onAddMore }) {
+  const remaining = freeOver - total;
+  const pct = Math.min((total / freeOver) * 100, 100);
+  const isFree = total >= freeOver;
   return (
     <div className="p-4 rounded-xl" style={{ backgroundColor: isFree ? '#F0FFF4' : '#FFFBEB' }}>
       <div className="flex items-center justify-between mb-2">
@@ -87,9 +86,9 @@ function DeliveryBar({ total, onAddMore }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, updateQuantity, removeFromCart, deliveryFee }) {
+function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp }) {
   const [collapsed, setCollapsed] = useState(false);
-  const grandTotal = cartTotal - takeawayDiscount + deliveryFee;
+  const grandTotal = grandTotalProp ?? (cartTotal - takeawayDiscount + (deliveryFee || 0));
 
   return (
     <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }}>
@@ -153,6 +152,12 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
             {takeawayDiscount > 0 && (
               <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
                 <span>Takeaway 10% off</span><span>-{fmt(takeawayDiscount)}</span>
+              </div>
+            )}
+            {smallOrderFee > 0 && (
+              <div className="flex justify-between text-sm" style={{ color: '#92400E' }}>
+                <span>Small order fee <span className="text-xs text-gray-400">(orders under £20)</span></span>
+                <span>{fmt(smallOrderFee)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
@@ -267,12 +272,12 @@ const CATEGORY_LABELS = {
   breakfast: 'Breakfast', snacks: 'Snacks', pickles: 'Pickles', podis: 'Podis',
 };
 
-function BrowseModal({ cartItems, onAdd, onClose, cartTotal }) {
+function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
   const [allItems, setAllItems] = useState([]);
   const [activeCat, setActiveCat] = useState('all');
   const [loading, setLoading] = useState(true);
   const cartIds = new Set(cartItems.map(i => i.id));
-  const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - cartTotal);
+  const remaining = freeDeliveryAt ? Math.max(0, freeDeliveryAt - cartTotal) : 0;
 
   useEffect(() => {
     api.get('/menu?available=true').then(r => setAllItems(r.data)).catch(() => {}).finally(() => setLoading(false));
@@ -373,9 +378,11 @@ const CheckoutInner = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
 
-  // Delivery type + loyalty — read from sessionStorage (set by CartDrawer)
+  // Delivery type + loyalty + zone — read from sessionStorage (set by CartDrawer)
   const [deliveryType, setDeliveryType] = useState('delivery');
   const [freeItem, setFreeItem] = useState(null);
+  const [zoneInfo, setZoneInfo] = useState(null);       // from CartDrawer postcode check
+  const [serverPricing, setServerPricing] = useState(null); // from /orders/calculate
   const [postOrderLoyalty, setPostOrderLoyalty] = useState(null);
 
   const [form, setForm] = useState({
@@ -390,14 +397,15 @@ const CheckoutInner = () => {
   const [addressOptions, setAddressOptions] = useState([]);
   const [addressDropdown, setAddressDropdown] = useState(false);
 
-  // Read cart state from sessionStorage
+  // Read cart state + zone from sessionStorage (set by CartDrawer)
   useEffect(() => {
     try {
       const stored = sessionStorage.getItem('ssp_checkout_state');
       if (stored) {
-        const { deliveryType: dt, freeItem: fi } = JSON.parse(stored);
+        const { deliveryType: dt, freeItem: fi, zoneInfo: zi } = JSON.parse(stored);
         if (dt) setDeliveryType(dt);
         if (fi) setFreeItem(fi);
+        if (zi) setZoneInfo(zi);
       }
     } catch {}
   }, []);
@@ -471,11 +479,37 @@ const CheckoutInner = () => {
 
   const freeItemDiscount = freeItem ? price(freeItem.price) : 0;
   const effectiveSubtotal = cartTotal + freeItemDiscount;
-  const takeawayDiscount = deliveryType === 'takeaway' && cartTotal >= 15
-    ? Math.round(cartTotal * 0.10 * 100) / 100 : 0;
-  const deliveryFee = deliveryType === 'takeaway' ? 0
-    : (effectiveSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE);
-  const grandTotal = cartTotal - takeawayDiscount + deliveryFee;
+
+  // Call /orders/calculate for live server pricing
+  const recalculate = useCallback(async () => {
+    const postcode = form.postcode.replace(/\s/g, '');
+    if (deliveryType === 'delivery' && postcode.length < 3) return;
+    try {
+      const items = cartItems.map(i => ({ price: price(i.price), quantity: i.quantity }));
+      const r = await api.post('/orders/calculate', {
+        items,
+        order_type: deliveryType,
+        postcode: form.postcode,
+        free_item_price: freeItemDiscount,
+      });
+      setServerPricing(r.data);
+    } catch (e) {
+      // Only show pricing error if it's not just "missing postcode"
+      if (e.response?.status === 400) setServerPricing(null);
+    }
+  }, [cartItems, deliveryType, form.postcode, freeItemDiscount]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { recalculate(); }, [recalculate]);
+
+  // Derived display values — prefer server pricing, fall back to client estimate
+  const takeawayDiscount = serverPricing?.takeaway_discount
+    ?? (deliveryType === 'takeaway' && effectiveSubtotal >= MINIMUM_ORDER ? Math.round(effectiveSubtotal * 0.10 * 100) / 100 : 0);
+  const deliveryFee = serverPricing?.delivery_fee
+    ?? (deliveryType === 'takeaway' ? 0 : zoneInfo?.delivery_fee ?? 0);
+  const smallOrderFee = serverPricing?.small_order_fee ?? 0;
+  const grandTotal = serverPricing?.grand_total
+    ?? Math.round((effectiveSubtotal - takeawayDiscount + deliveryFee) * 100) / 100;
+  const freeDeliveryAt = serverPricing?.free_delivery_at ?? zoneInfo?.free_delivery_over ?? null;
 
   const handleOrder = async () => {
     setError('');
@@ -488,7 +522,9 @@ const CheckoutInner = () => {
     if (!cardNumberElement) { setError('Card details are missing.'); return; }
     setSubmitting(true);
     try {
-      const intentRes = await api.post('/payments/create-intent', { amount: grandTotal });
+      // Always use server-calculated total — never trust client amount
+      const chargeAmount = serverPricing?.grand_total ?? grandTotal;
+      const intentRes = await api.post('/payments/create-intent', { amount: chargeAmount });
       const { client_secret, payment_intent_id } = intentRes.data;
 
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
@@ -660,6 +696,7 @@ const CheckoutInner = () => {
           onAdd={addToCart}
           onClose={() => setShowBrowse(false)}
           cartTotal={cartTotal}
+          freeDeliveryAt={freeDeliveryAt}
         />
       )}
 
@@ -819,8 +856,10 @@ const CheckoutInner = () => {
           <div className="lg:col-span-2">
             <div className="lg:sticky lg:top-6 space-y-4">
 
-              {/* Delivery nudge */}
-              <DeliveryBar total={effectiveSubtotal} onAddMore={() => setShowBrowse(true)} />
+              {/* Delivery nudge — only show for delivery with known zone */}
+              {deliveryType === 'delivery' && freeDeliveryAt && (
+                <DeliveryBar total={effectiveSubtotal} freeOver={freeDeliveryAt} onAddMore={() => setShowBrowse(true)} />
+              )}
 
               {/* Order summary */}
               <OrderSummary
@@ -829,9 +868,11 @@ const CheckoutInner = () => {
                 freeItem={freeItem}
                 freeItemDiscount={freeItemDiscount}
                 takeawayDiscount={takeawayDiscount}
+                smallOrderFee={smallOrderFee}
                 updateQuantity={updateQuantity}
                 removeFromCart={removeFromCart}
                 deliveryFee={deliveryFee}
+                grandTotal={grandTotal}
               />
 
               {/* Card payment */}
