@@ -158,6 +158,7 @@ export default function AdminLoyaltyTab() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [showAdjust, setShowAdjust] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [backfillState, setBackfillState] = useState(null); // null | 'loading' | { updated, skipped }
 
   const load = async () => {
     setLoading(true);
@@ -192,6 +193,19 @@ export default function AdminLoyaltyTab() {
     loadUserDetail(u.id);
   };
 
+  const handleBackfill = async () => {
+    if (backfillState?.updated !== undefined) return; // already done
+    setBackfillState('loading');
+    try {
+      const r = await api.post('/admin/loyalty/backfill');
+      setBackfillState(r.data);
+      load(); // refresh stats
+    } catch (e) {
+      setBackfillState(null);
+      alert(e.response?.data?.detail || 'Backfill failed');
+    }
+  };
+
   const handleAdjustDone = () => {
     setShowAdjust(false);
     load();
@@ -218,6 +232,30 @@ export default function AdminLoyaltyTab() {
           onDone={handleAdjustDone}
         />
       )}
+
+      {/* Backfill banner */}
+      <div className="rounded-xl border px-5 py-4 flex items-center justify-between gap-4"
+        style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: 'rgba(244,196,48,0.06)' }}>
+        <div>
+          <p className="text-sm font-semibold" style={{ color: '#2D2422' }}>Credit existing customers</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Scans all past delivered orders and sets loyalty counts for users who joined before the programme launched.
+            Safe to run once — skips users already initialised.
+          </p>
+          {backfillState && backfillState !== 'loading' && (
+            <p className="text-xs font-semibold mt-1.5" style={{ color: '#166534' }}>
+              Done — {backfillState.updated} users updated, {backfillState.skipped_already_initialised} already had loyalty data.
+            </p>
+          )}
+        </div>
+        <button
+          onClick={handleBackfill}
+          disabled={backfillState === 'loading' || (backfillState && backfillState !== 'loading')}
+          className="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50 transition-all"
+          style={{ backgroundColor: '#800020' }}>
+          {backfillState === 'loading' ? 'Running…' : backfillState ? 'Done ✓' : 'Run backfill'}
+        </button>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

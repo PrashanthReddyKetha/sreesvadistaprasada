@@ -149,3 +149,54 @@ async def loyalty_adjust(body: dict, admin: dict = Depends(require_admin)):
         )
 
     return {"ok": True}
+
+
+@router.post("/backfill")
+async def loyalty_backfill(_: dict = Depends(require_admin)):
+    """
+    One-time migration: credit existing users with loyalty counts
+    based on their historical delivered orders.
+    Only touches users who have no loyalty_order_count set yet (field missing or 0
+    with no qualifying orders in DB that were already counted).
+    Safe to re-run — skips users already initialised.
+    """
+    users = await db.users.find(
+        {"loyalty_order_count": {"$exists": False}},
+        {"_id": 0, "id": 1, "name": 1},
+    ).to_list(None)
+
+    updated = 0
+    skipped = 0
+
+    for user in users:
+        uid = user["id"]
+        # Count past delivered qualifying orders
+        count = await db.orders.count_documents({
+            "user_id": uid,
+            "status": "delivered",
+            "is_loyalty_qualifying": True,
+        })
+
+        position = count % 5
+        rewards_earned = count // 5
+        pending = position == 0 and count > 0
+
+        await db.users.update_one(
+            {"id": uid},
+            {"$set": {
+                "loyalty_order_count": count,
+                "loyalty_rewards_earned": rewards_earned,
+                "loyalty_pending_reward": pending,
+                "loyalty_last_updated": datetime.utcnow().isoformat(),
+            }},
+        )
+        updated += 1
+
+    # Also count users already initialised (skipped)
+    skipped = await db.users.count_documents({"loyalty_order_count": {"$exists": True}})
+
+    return {
+        "ok": True,
+        "updated": updated,
+        "skipped_already_initialised": skipped,
+    }
