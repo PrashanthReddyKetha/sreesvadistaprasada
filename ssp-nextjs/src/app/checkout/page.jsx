@@ -779,7 +779,7 @@ const CheckoutInner = () => {
                       ))}
                     </div>
                   )}
-                </div>
+                </div>}
 
                 {deliveryType === 'delivery' && form.postcode.replace(/\s/g, '').length >= 5 && (
                   <div className="space-y-4">
