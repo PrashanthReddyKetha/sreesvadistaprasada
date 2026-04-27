@@ -187,19 +187,25 @@ function PostcodeInput({ onZoneFound }) {
         saveZone(r.data);
         onZoneFound(r.data);
       } else {
-        setError(r.data.message);
+        setError("We don't deliver to this postcode yet — switch to Collect & save 10%.");
       }
-    } catch {
-      setError('Could not check postcode — try again.');
+    } catch (e) {
+      if (e.response?.status === 404) {
+        setError("We don't deliver to this postcode yet — switch to Collect & save 10%.");
+      } else {
+        setError('Could not verify postcode — please try again.');
+      }
     } finally { setChecking(false); }
   };
 
   const handleChange = (e) => {
     const val = e.target.value.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
     setPc(val);
+    setError('');
     clearTimeout(debounceRef.current);
-    if (val.replace(/\s/g, '').length >= 3) {
-      debounceRef.current = setTimeout(() => check(val), 700);
+    // Wait for at least a full district code — MK + 1-2 digits = 4-5 chars min
+    if (val.replace(/\s/g, '').length >= 4) {
+      debounceRef.current = setTimeout(() => check(val), 800);
     }
   };
 
@@ -221,7 +227,7 @@ function PostcodeInput({ onZoneFound }) {
       </div>
       {error
         ? <p className="text-[11px] mt-1.5 font-medium" style={{ color: '#EF4444' }}>{error}</p>
-        : <p className="text-[11px] mt-1 text-gray-400">We deliver across Milton Keynes (MK postcodes)</p>
+        : <p className="text-[11px] mt-1 text-gray-400">We deliver to MK postcodes · Enter your full postcode</p>
       }
     </div>
   );
