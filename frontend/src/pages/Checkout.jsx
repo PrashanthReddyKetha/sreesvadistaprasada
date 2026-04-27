@@ -589,7 +589,7 @@ const CheckoutInner = () => {
             <strong>{form.email}</strong>.
           </p>
           <p className="text-sm text-gray-400 mb-6">
-            {deliveryType === 'takeaway' ? 'We'll call you when it's ready to collect.' : 'Estimated time: 30–45 minutes'}
+            {deliveryType === 'takeaway' ? "We'll call you when it's ready to collect." : 'Estimated time: 30\u201345 minutes'}
           </p>
 
           {/* Loyalty block */}
