@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, ShoppingCart, User, ChevronDown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import api from '@/api';
 import LogoMark from '../LogoMark';
 
 const Header = () => {
@@ -13,6 +14,7 @@ const Header = () => {
   const { user, logout, setAuthOpen } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [pendingReward, setPendingReward] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const dropdownRef = useRef(null);
@@ -27,6 +29,11 @@ const Header = () => {
     setIsMenuOpen(false);
     setOpenDropdown(null);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!user) { setPendingReward(false); return; }
+    api.get('/loyalty/status').then(r => setPendingReward(!!r.data?.pending_reward)).catch(() => {});
+  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -74,10 +81,18 @@ const Header = () => {
       <div
         data-testid="notification-bar"
         className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-medium tracking-wide overflow-hidden"
-        style={{ backgroundColor: '#800020', color: '#FDFBF7' }}
+        style={{ backgroundColor: pendingReward ? '#F4C430' : '#800020', color: pendingReward ? '#800020' : '#FDFBF7' }}
       >
-        <span className="hidden sm:inline">Swagatam — welcome home &nbsp;·&nbsp; Hot meals in Milton Keynes, Edinburgh &amp; Glasgow &nbsp;·&nbsp; Free delivery over £30</span>
-        <span className="sm:hidden whitespace-nowrap">Swagatam · welcome home &nbsp;·&nbsp; Free delivery £30+</span>
+        {pendingReward ? (
+          <Link href="/dashboard?tab=loyalty" className="font-bold hover:underline">
+            🎁 Your free dish is ready — choose it on your next order →
+          </Link>
+        ) : (
+          <>
+            <span className="hidden sm:inline">Swagatam — welcome home &nbsp;·&nbsp; Hot meals in Milton Keynes, Edinburgh &amp; Glasgow &nbsp;·&nbsp; Free delivery over £30</span>
+            <span className="sm:hidden whitespace-nowrap">Swagatam · welcome home &nbsp;·&nbsp; Free delivery £30+</span>
+          </>
+        )}
       </div>
 
       {/* Header */}

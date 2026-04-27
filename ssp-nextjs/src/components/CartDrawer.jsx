@@ -1,12 +1,14 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, Truck, Zap } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, Truck, Zap, Gift } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
 const FREE_DELIVERY_THRESHOLD = 30;
 const DELIVERY_FEE = 3.99;
+const MIN_ORDER_FOR_TAKEAWAY_DISCOUNT = 15;
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
 const fmt = (n) => `£${n.toFixed(2)}`;
 
@@ -20,10 +22,10 @@ function DeliveryBar({ total }) {
         <div className="flex items-center gap-1.5">
           <Truck size={13} style={{ color: isFree ? '#166534' : '#B8860B' }} />
           {isFree ? (
-            <span className="text-xs font-semibold" style={{ color: '#166534' }}>Delivery's on us.</span>
+            <span className="text-xs font-semibold" style={{ color: '#166534' }}>Delivery&apos;s on us.</span>
           ) : (
             <span className="text-xs font-medium text-gray-600">
-              Add <strong style={{ color: '#800020' }}>{fmt(remaining)}</strong> more and delivery's on us
+              Add <strong style={{ color: '#800020' }}>{fmt(remaining)}</strong> more and delivery&apos;s on us
             </span>
           )}
         </div>
@@ -99,11 +101,105 @@ function UpsellRow({ cartItems, onAdd }) {
   );
 }
 
+function FreeItemPicker({ onSelect, onSkip }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    api.get('/menu?available=true').then(r => setItems(r.data)).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const shown = items.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="flex flex-col" style={{ maxHeight: '70vh' }}>
+      <div className="px-5 py-3 border-b" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
+        <p className="text-sm font-bold mb-1" style={{ color: '#800020' }}>🎁 Choose your free dish</p>
+        <p className="text-xs text-gray-500 mb-2">Any item from our full menu — completely free.</p>
+        <input
+          type="text"
+          placeholder="Search dishes…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full px-3 py-2 rounded-xl border text-sm focus:outline-none"
+          style={{ borderColor: 'rgba(128,0,32,0.2)', color: '#2D2422' }}
+        />
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
+        {loading && <div className="flex justify-center py-8"><span className="w-5 h-5 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" /></div>}
+        {shown.map(item => (
+          <button key={item.id} onClick={() => onSelect(item)}
+            className="w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:border-[#800020]/40 hover:bg-[#800020]/3"
+            style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
+            {item.image && <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate" style={{ color: '#2D2422' }}>{item.name}</p>
+              <p className="text-xs line-through text-gray-400">{fmt(price(item.price))}</p>
+            </div>
+            <span className="text-xs font-bold px-2 py-1 rounded-full flex-shrink-0"
+              style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>FREE</span>
+          </button>
+        ))}
+      </div>
+      <div className="px-5 py-3 border-t" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
+        <button onClick={onSkip} className="w-full text-xs text-center text-gray-400 hover:text-gray-600 transition-colors">
+          Skip for now — choose at checkout
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const CartDrawer = () => {
   const router = useRouter();
   const { cartItems, cartCount, cartTotal, cartOpen, setCartOpen, updateQuantity, removeFromCart, addToCart } = useCart();
-  const deliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-  const grandTotal = cartTotal + deliveryFee;
+  const { user } = useAuth();
+
+  const [deliveryType, setDeliveryType] = useState('delivery');
+  const [loyaltyStatus, setLoyaltyStatus] = useState(null);
+  const [freeItem, setFreeItem] = useState(null);
+  const [showPicker, setShowPicker] = useState(false);
+
+  // Fetch loyalty status when drawer opens and user is logged in
+  useEffect(() => {
+    if (cartOpen && user) {
+      api.get('/loyalty/status').then(r => setLoyaltyStatus(r.data)).catch(() => {});
+    }
+    if (!cartOpen) {
+      setShowPicker(false);
+    }
+  }, [cartOpen, user]);
+
+  const pendingReward = loyaltyStatus?.pending_reward ?? false;
+  const freeItemPrice = freeItem ? price(freeItem.price) : 0;
+
+  // Pricing
+  const takeawayDiscount = deliveryType === 'takeaway' && cartTotal >= MIN_ORDER_FOR_TAKEAWAY_DISCOUNT
+    ? Math.round(cartTotal * 0.10 * 100) / 100 : 0;
+  const effectiveSubtotal = cartTotal + freeItemPrice;
+  const deliveryFee = deliveryType === 'takeaway' ? 0
+    : (effectiveSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE);
+  const grandTotal = cartTotal - takeawayDiscount + deliveryFee;
+
+  const handleSelectFreeItem = async (item) => {
+    try {
+      await api.post('/loyalty/redeem', { item_id: item.id });
+    } catch (e) {
+      if (e.response?.status === 400 || e.response?.status === 403) return;
+    }
+    setFreeItem(item);
+    setShowPicker(false);
+  };
+
+  const handleCheckout = () => {
+    // Store delivery state for checkout page
+    try {
+      sessionStorage.setItem('ssp_checkout_state', JSON.stringify({ deliveryType, freeItem }));
+    } catch {}
+    setCartOpen(false);
+    router.push('/checkout');
+  };
 
   if (!cartOpen) return null;
 
@@ -111,6 +207,8 @@ const CartDrawer = () => {
     <>
       <div className="fixed inset-0 z-[200] bg-black/50" onClick={() => setCartOpen(false)} />
       <div className="fixed right-0 top-0 bottom-0 z-[201] w-full max-w-md flex flex-col bg-white shadow-2xl">
+
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
           style={{ borderColor: 'rgba(128,0,32,0.12)', background: 'linear-gradient(135deg, #800020 0%, #5C0018 100%)' }}>
           <div className="flex items-center gap-2">
@@ -129,9 +227,46 @@ const CartDrawer = () => {
             <p className="text-xs text-gray-400 mb-5 italic">Start with a dish you miss.</p>
             <button onClick={() => setCartOpen(false)} className="text-sm font-semibold" style={{ color: '#800020' }}>Open the Menu →</button>
           </div>
+        ) : showPicker ? (
+          <FreeItemPicker onSelect={handleSelectFreeItem} onSkip={() => setShowPicker(false)} />
         ) : (
           <>
-            <DeliveryBar total={cartTotal} />
+            {/* Delivery type toggle */}
+            <div className="px-6 py-3 border-b flex gap-2" style={{ borderColor: 'rgba(128,0,32,0.08)', backgroundColor: '#FDFBF7' }}>
+              {[
+                { id: 'delivery', label: '🚚 Delivery' },
+                { id: 'takeaway', label: '🛵 Collect & save 10%' },
+              ].map(opt => (
+                <button key={opt.id} onClick={() => setDeliveryType(opt.id)}
+                  className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                  style={{
+                    backgroundColor: deliveryType === opt.id ? '#800020' : 'white',
+                    color: deliveryType === opt.id ? 'white' : '#5C4B47',
+                    border: deliveryType === opt.id ? 'none' : '1px solid rgba(128,0,32,0.2)',
+                  }}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <DeliveryBar total={effectiveSubtotal} />
+
+            {/* Loyalty reward banner */}
+            {pendingReward && !freeItem && (
+              <div className="px-6 py-3 border-b flex items-center justify-between gap-3"
+                style={{ backgroundColor: 'rgba(128,0,32,0.04)', borderColor: 'rgba(128,0,32,0.1)' }}>
+                <div className="flex items-center gap-2">
+                  <Gift size={16} style={{ color: '#800020' }} />
+                  <p className="text-xs font-semibold" style={{ color: '#800020' }}>You have a free dish reward!</p>
+                </div>
+                <button onClick={() => setShowPicker(true)}
+                  className="flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg text-white"
+                  style={{ backgroundColor: '#800020' }}>
+                  Choose →
+                </button>
+              </div>
+            )}
+
             <div className="flex-1 overflow-y-auto">
               <div className="px-6 py-4 space-y-3">
                 {cartItems.map(item => (
@@ -158,25 +293,55 @@ const CartDrawer = () => {
                     </div>
                   </div>
                 ))}
+
+                {/* Free item row */}
+                {freeItem && (
+                  <div className="flex items-center gap-3 pb-3 border-b" style={{ borderColor: '#f0ebe6', backgroundColor: 'rgba(220,252,231,0.3)', borderRadius: '12px', padding: '12px' }}>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Gift size={16} style={{ color: '#166534' }} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold truncate" style={{ color: '#166534' }}>{freeItem.name}</p>
+                        <p className="text-xs line-through text-gray-400">{fmt(price(freeItem.price))}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>FREE</span>
+                      <button onClick={() => setFreeItem(null)} className="text-gray-300 hover:text-red-400 transition-colors"><X size={14} /></button>
+                    </div>
+                  </div>
+                )}
               </div>
               <UpsellRow cartItems={cartItems} onAdd={addToCart} />
             </div>
+
             <div className="flex-shrink-0 px-6 py-4 border-t space-y-3" style={{ borderColor: 'rgba(128,0,32,0.12)', backgroundColor: '#FDFBF7' }}>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-gray-500"><span>Subtotal</span><span>{fmt(cartTotal)}</span></div>
+                {freeItem && (
+                  <div className="flex justify-between text-xs" style={{ color: '#166534' }}>
+                    <span>🎁 {freeItem.name}</span><span>FREE</span>
+                  </div>
+                )}
+                {takeawayDiscount > 0 && (
+                  <div className="flex justify-between text-xs font-semibold" style={{ color: '#166534' }}>
+                    <span>Takeaway 10% off</span><span>-{fmt(takeawayDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-xs">
                   <span className="flex items-center gap-1 text-gray-500"><Truck size={11} /> Delivery</span>
-                  {deliveryFee === 0 ? <span className="font-semibold text-xs" style={{ color: '#166534' }}>Free</span> : <span className="text-gray-500">{fmt(deliveryFee)}</span>}
+                  {deliveryFee === 0
+                    ? <span className="font-semibold text-xs" style={{ color: '#166534' }}>Free</span>
+                    : <span className="text-gray-500">{fmt(deliveryFee)}</span>}
                 </div>
                 <div className="flex justify-between font-bold pt-1 border-t" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
                   <span style={{ color: '#2D2422' }}>Total</span>
                   <span style={{ color: '#800020' }}>{fmt(grandTotal)}</span>
                 </div>
               </div>
-              <button onClick={() => { setCartOpen(false); router.push('/checkout'); }}
+              <button onClick={handleCheckout}
                 className="w-full py-3.5 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-2 hover:shadow-lg transition-all"
                 style={{ backgroundColor: '#800020' }}>
-                Send it Home <ArrowRight size={16} />
+                {deliveryType === 'takeaway' ? 'Collect my order' : 'Send it Home'} <ArrowRight size={16} />
               </button>
             </div>
           </>

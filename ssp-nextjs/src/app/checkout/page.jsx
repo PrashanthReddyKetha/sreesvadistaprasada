@@ -11,8 +11,9 @@ import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcEle
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
+import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
 
-const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 const FREE_DELIVERY_THRESHOLD = 30;
@@ -86,9 +87,9 @@ function DeliveryBar({ total, onAddMore }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, updateQuantity, removeFromCart, deliveryFee }) {
+function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, updateQuantity, removeFromCart, deliveryFee }) {
   const [collapsed, setCollapsed] = useState(false);
-  const grandTotal = cartTotal + deliveryFee;
+  const grandTotal = cartTotal - takeawayDiscount + deliveryFee;
 
   return (
     <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }}>
@@ -144,6 +145,16 @@ function OrderSummary({ cartItems, cartTotal, updateQuantity, removeFromCart, de
             <div className="flex justify-between text-sm text-gray-500">
               <span>Subtotal</span><span>{fmt(cartTotal)}</span>
             </div>
+            {freeItem && (
+              <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
+                <span>🎁 {freeItem.name}</span><span>FREE</span>
+              </div>
+            )}
+            {takeawayDiscount > 0 && (
+              <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
+                <span>Takeaway 10% off</span><span>-{fmt(takeawayDiscount)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm">
               <span className="flex items-center gap-1.5 text-gray-500"><Truck size={13} /> Delivery</span>
               {deliveryFee === 0
@@ -153,7 +164,7 @@ function OrderSummary({ cartItems, cartTotal, updateQuantity, removeFromCart, de
             </div>
             <div className="flex justify-between font-bold text-base pt-2 border-t" style={{ borderColor: 'rgba(128,0,32,0.12)', color: '#800020' }}>
               <span style={{ color: '#2D2422' }}>Total</span>
-              <span>{fmt(cartTotal + deliveryFee)}</span>
+              <span>{fmt(grandTotal)}</span>
             </div>
           </div>
         </div>
@@ -356,11 +367,16 @@ const CheckoutInner = () => {
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, addToCart } = useCart();
   const { user, login, setAuthOpen } = useAuth();
 
-  const [guestMode, setGuestMode] = useState(false); // true = proceed as guest
+  const [guestMode, setGuestMode] = useState(false);
   const [showBrowse, setShowBrowse] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(null); // { orderId }
+  const [success, setSuccess] = useState(null);
+
+  // Delivery type + loyalty — read from sessionStorage (set by CartDrawer)
+  const [deliveryType, setDeliveryType] = useState('delivery');
+  const [freeItem, setFreeItem] = useState(null);
+  const [postOrderLoyalty, setPostOrderLoyalty] = useState(null);
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '',
@@ -373,6 +389,18 @@ const CheckoutInner = () => {
   const [pcError, setPcError] = useState('');
   const [addressOptions, setAddressOptions] = useState([]);
   const [addressDropdown, setAddressDropdown] = useState(false);
+
+  // Read cart state from sessionStorage
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem('ssp_checkout_state');
+      if (stored) {
+        const { deliveryType: dt, freeItem: fi } = JSON.parse(stored);
+        if (dt) setDeliveryType(dt);
+        if (fi) setFreeItem(fi);
+      }
+    } catch {}
+  }, []);
 
   // Pre-fill from user
   useEffect(() => {
@@ -441,23 +469,28 @@ const CheckoutInner = () => {
     setAddressDropdown(false);
   };
 
-  const deliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-  const grandTotal  = cartTotal + deliveryFee;
+  const freeItemDiscount = freeItem ? price(freeItem.price) : 0;
+  const effectiveSubtotal = cartTotal + freeItemDiscount;
+  const takeawayDiscount = deliveryType === 'takeaway' && cartTotal >= 15
+    ? Math.round(cartTotal * 0.10 * 100) / 100 : 0;
+  const deliveryFee = deliveryType === 'takeaway' ? 0
+    : (effectiveSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE);
+  const grandTotal = cartTotal - takeawayDiscount + deliveryFee;
 
   const handleOrder = async () => {
     setError('');
-    const required = ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
+    const required = deliveryType === 'takeaway'
+      ? ['name', 'email', 'phone']
+      : ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
     if (required.some(k => !form[k].trim())) { setError('Please fill in all required fields.'); return; }
     if (!stripe || !elements) { setError('Payment not ready. Please wait a moment.'); return; }
     const cardNumberElement = elements.getElement(CardNumberElement);
     if (!cardNumberElement) { setError('Card details are missing.'); return; }
     setSubmitting(true);
     try {
-      // 1. Create payment intent
       const intentRes = await api.post('/payments/create-intent', { amount: grandTotal });
       const { client_secret, payment_intent_id } = intentRes.data;
 
-      // 2. Confirm card payment with Stripe using individual elements
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: {
           card: cardNumberElement,
@@ -467,25 +500,38 @@ const CheckoutInner = () => {
       if (stripeError) { setError(stripeError.message || 'Payment failed. Please try again.'); return; }
       if (paymentIntent.status !== 'succeeded') { setError('Payment was not completed. Please try again.'); return; }
 
-      // 3. Create order in our system
+      const items = [
+        ...cartItems.map(i => ({ menu_item_id: i.id, name: i.name, price: price(i.price), quantity: i.quantity })),
+        ...(freeItem ? [{ menu_item_id: freeItem.id, name: freeItem.name, price: freeItemDiscount, quantity: 1 }] : []),
+      ];
+
       const res = await api.post('/orders', {
         customer_name:  form.name,
         customer_email: form.email,
         customer_phone: form.phone,
-        items: cartItems.map(i => ({
-          menu_item_id: i.id, name: i.name,
-          price: price(i.price), quantity: i.quantity,
-        })),
-        delivery_address: {
+        items,
+        delivery_type: deliveryType,
+        delivery_address: deliveryType === 'delivery' ? {
           line1: form.line1,
           line2: form.line2 || undefined,
           city:  form.city,
           postcode: form.postcode,
-        },
+        } : undefined,
         notes: form.notes || undefined,
         payment_intent_id,
+        is_loyalty_redemption: !!freeItem,
+        loyalty_free_item_id: freeItem?.id,
+        loyalty_free_item_name: freeItem?.name,
+        loyalty_free_item_original_price: freeItemDiscount,
       });
-      setSuccess({ orderId: res.data?.id?.slice(-6).toUpperCase() || '' });
+
+      // Fetch updated loyalty status for success screen
+      if (user) {
+        api.get('/loyalty/status').then(r => setPostOrderLoyalty(r.data)).catch(() => {});
+      }
+
+      try { sessionStorage.removeItem('ssp_checkout_state'); } catch {}
+      setSuccess({ orderId: res.data?.id?.slice(-6).toUpperCase() || '', isRedemption: !!freeItem });
       clearCart();
     } catch (e) {
       setError(e.response?.data?.detail || 'Something went wrong. Please try again.');
@@ -501,6 +547,46 @@ const CheckoutInner = () => {
 
   /* ── SUCCESS ─────────────────────────────────────────────────────────── */
   if (success) {
+    const loyaltyPending = postOrderLoyalty?.pending_reward ?? false;
+    const position = loyaltyPending ? 0 : ((postOrderLoyalty?.order_count ?? 0) % 5);
+
+    const LoyaltyBanner = () => {
+      if (!user || !postOrderLoyalty) return null;
+      if (success.isRedemption) return (
+        <div className="rounded-xl px-4 py-3 text-center mb-6" style={{ backgroundColor: '#800020', color: 'white' }}>
+          <p className="font-semibold text-sm">🎁 Your free dish is on the way!</p>
+          <p className="text-xs mt-1 opacity-85">Your next loyalty cycle has started — 5 more orders for your next free dish.</p>
+        </div>
+      );
+      if (loyaltyPending || position === 0) return (
+        <div className="rounded-xl px-4 py-3 text-center mb-6" style={{ backgroundColor: '#800020', color: 'white' }}>
+          <p className="font-semibold text-sm">🎁 You&apos;ve earned a free dish!</p>
+          <p className="text-xs mt-1 opacity-85">Choose any item on your next order — completely free.</p>
+        </div>
+      );
+      if (position === 4) return (
+        <div className="rounded-xl px-4 py-3 text-center mb-6" style={{ backgroundColor: '#FEF9C3', color: '#854D0E' }}>
+          <p className="font-semibold text-sm">⭐ One more order and your free dish is yours!</p>
+        </div>
+      );
+      if (position === 3) return (
+        <div className="rounded-xl px-4 py-3 text-center mb-6" style={{ backgroundColor: '#F0FFF4', color: '#166534' }}>
+          <p className="font-semibold text-sm">🌿 Halfway there — 3 orders done, 2 to go!</p>
+        </div>
+      );
+      if (position === 1) return (
+        <div className="rounded-xl px-4 py-3 text-center mb-6" style={{ backgroundColor: '#EFF6FF', color: '#1E40AF' }}>
+          <p className="font-semibold text-sm">🍱 Your loyalty journey has started!</p>
+          <p className="text-xs mt-1 opacity-80">5 orders earns you a free dish. You&apos;re 1 down.</p>
+        </div>
+      );
+      return (
+        <div className="mb-6">
+          <LoyaltyProgressBar orderCount={postOrderLoyalty.order_count} pendingReward={false} compact={false} />
+        </div>
+      );
+    };
+
     return (
       <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#FAF7F2' }}>
         <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
@@ -518,10 +604,13 @@ const CheckoutInner = () => {
             </div>
           )}
           <p className="text-gray-600 mb-2 leading-relaxed">
-            Your order has been received and is being prepared. We'll send a confirmation to{' '}
+            Your order has been received and is being prepared. We&apos;ll send a confirmation to{' '}
             <strong>{form.email}</strong>.
           </p>
-          <p className="text-sm text-gray-400 mb-8">Estimated time: 30–45 minutes</p>
+          <p className="text-sm text-gray-400 mb-6">
+            {deliveryType === 'takeaway' ? "We'll call you when it's ready to collect." : 'Estimated time: 30\u201345 minutes'}
+          </p>
+          <LoyaltyBanner />
           <div className="flex flex-col sm:flex-row gap-3">
             <button onClick={() => router.push('/')}
               className="flex-1 py-3 text-sm font-semibold rounded-xl border-2 transition-all hover:bg-gray-50"
@@ -577,7 +666,7 @@ const CheckoutInner = () => {
       {/* Page header */}
       <div className="border-b bg-white" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
-          <button onClick={() => navigate(-1)}
+          <button onClick={() => router.back()}
             className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:opacity-70"
             style={{ color: '#800020' }}>
             <ArrowLeft size={16} /> Back
@@ -613,7 +702,9 @@ const CheckoutInner = () => {
                 style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
                 <div className="flex items-center gap-2">
                   <MapPin size={16} style={{ color: '#800020' }} />
-                  <h2 className="font-bold text-base" style={{ color: '#800020' }}>Delivery Details</h2>
+                  <h2 className="font-bold text-base" style={{ color: '#800020' }}>
+                    {deliveryType === 'takeaway' ? 'Collection Details' : 'Delivery Details'}
+                  </h2>
                   {user && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold ml-auto"
                       style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
@@ -621,6 +712,15 @@ const CheckoutInner = () => {
                     </span>
                   )}
                 </div>
+
+                {/* Collection info for takeaway */}
+                {deliveryType === 'takeaway' && (
+                  <div className="rounded-xl p-4 text-sm" style={{ backgroundColor: 'rgba(244,196,48,0.1)', border: '1px solid rgba(244,196,48,0.4)' }}>
+                    <p className="font-semibold mb-1" style={{ color: '#2D2422' }}>🛵 Collection from our Greenleys kitchen</p>
+                    <p className="text-xs text-gray-500 mb-2">24 Oxman Lane, Greenleys, Milton Keynes, MK12 6LF</p>
+                    <p className="text-xs font-semibold" style={{ color: '#166534' }}>10% discount applied automatically</p>
+                  </div>
+                )}
 
                 {/* Contact */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -633,8 +733,7 @@ const CheckoutInner = () => {
                   placeholder="you@example.com" locked={!!user?.email && form.email === user.email}
                   hint={user ? 'Order confirmation will be sent here' : ''} required />
 
-                {/* Postcode */}
-                <div>
+                {deliveryType === 'delivery' && <div>
                   <label className="text-xs font-semibold block mb-1" style={{ color: '#5C4B47' }}>
                     Postcode <span className="text-red-400">*</span>
                     <span className="font-normal text-gray-400 ml-1">— we'll find your address</span>
@@ -682,7 +781,7 @@ const CheckoutInner = () => {
                   )}
                 </div>
 
-                {form.postcode.replace(/\s/g, '').length >= 5 && (
+                {deliveryType === 'delivery' && form.postcode.replace(/\s/g, '').length >= 5 && (
                   <div className="space-y-4">
                     <Field label="Address Line 1" icon={MapPin} value={form.line1} onChange={set('line1')}
                       placeholder="123 High Street" locked={!!form.line1 && !addressDropdown} required />
@@ -721,12 +820,15 @@ const CheckoutInner = () => {
             <div className="lg:sticky lg:top-6 space-y-4">
 
               {/* Delivery nudge */}
-              <DeliveryBar total={cartTotal} onAddMore={() => setShowBrowse(true)} />
+              <DeliveryBar total={effectiveSubtotal} onAddMore={() => setShowBrowse(true)} />
 
               {/* Order summary */}
               <OrderSummary
                 cartItems={cartItems}
                 cartTotal={cartTotal}
+                freeItem={freeItem}
+                freeItemDiscount={freeItemDiscount}
+                takeawayDiscount={takeawayDiscount}
                 updateQuantity={updateQuantity}
                 removeFromCart={removeFromCart}
                 deliveryFee={deliveryFee}
@@ -773,7 +875,7 @@ const CheckoutInner = () => {
                   style={{ background: 'linear-gradient(135deg, #800020, #5C0018)' }}>
                   {submitting
                     ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
-                    : <>Pay {fmt(grandTotal)}</>
+                    : <>{deliveryType === 'takeaway' ? 'Pay & collect' : 'Pay'} {fmt(grandTotal)}</>
                   }
                 </button>
               )}

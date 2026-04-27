@@ -2,12 +2,13 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, CheckCheck, Leaf, Flame, Shield, Star } from 'lucide-react';
+import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, CheckCheck, Leaf, Flame, Shield, Star, Gift } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
 import SubActiveCard, { BOX_META, DishCards, daysUntil } from '@/components/dashboard/SubActiveCard';
 import EnquiriesTab from '@/components/dashboard/EnquiriesTab';
 import ReviewsTab from '@/components/dashboard/ReviewsTab';
+import LoyaltyTab from '@/components/dashboard/LoyaltyTab';
 
 /* ── helpers ─────────────────────────────────────────── */
 const STATUS_COLORS = {
@@ -41,6 +42,7 @@ const TABS = [
   { id: 'overview',       label: 'Overview',      icon: Package },
   { id: 'orders',         label: 'Orders',         icon: ShoppingBag },
   { id: 'subscriptions',  label: 'Dabba Wala',     icon: Calendar },
+  { id: 'loyalty',        label: 'Loyalty',        icon: Gift },
   { id: 'enquiries',      label: 'Enquiries',      icon: MessageSquare },
   { id: 'reviews',        label: 'Reviews',        icon: Star },
   { id: 'account',        label: 'My Account',     icon: User },
@@ -59,6 +61,7 @@ function DashboardInner() {
   const [enquiries, setEnquiries] = useState({ contact: [], catering: [] });
   const [unreadCount, setUnreadCount] = useState(0);
   const [reviews, setReviews] = useState([]);
+  const [loyaltyPending, setLoyaltyPending] = useState(false);
 
   /* redirect if not logged in */
   useEffect(() => {
@@ -69,18 +72,20 @@ function DashboardInner() {
     if (!user) return;
     setLoading(true);
     try {
-      const [oRes, sRes, eRes, nRes, rRes] = await Promise.all([
+      const [oRes, sRes, eRes, nRes, rRes, lRes] = await Promise.all([
         api.get('/orders'),
         api.get('/subscriptions'),
         api.get('/enquiries/my'),
         api.get('/enquiries/notifications/unread-count'),
         api.get('/reviews/mine'),
+        api.get('/loyalty/status').catch(() => ({ data: {} })),
       ]);
       setOrders(oRes.data);
       setSubs(sRes.data);
       setEnquiries(eRes.data);
       setUnreadCount(nRes.data.count || 0);
       setReviews(rRes.data || []);
+      setLoyaltyPending(lRes.data?.pending_reward ?? false);
     } catch { /* token may have expired */ }
     finally { setLoading(false); }
   }, [user]);
@@ -135,6 +140,7 @@ function DashboardInner() {
             const active = activeTab === t.id;
             const badge = t.id === 'enquiries' ? unreadCount : t.id === 'reviews' ? pendingReviews : 0;
             const hasUnread = badge > 0;
+            const hasGift = t.id === 'loyalty' && loyaltyPending;
             return (
               <button
                 key={t.id}
@@ -148,6 +154,7 @@ function DashboardInner() {
               >
                 <Icon size={15} />
                 {t.label}
+                {hasGift && <span className="text-[12px] leading-none">🎁</span>}
                 {hasUnread && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white"
                     style={{ backgroundColor: '#DC2626' }}>
@@ -168,6 +175,7 @@ function DashboardInner() {
             {activeTab === 'overview'      && <OverviewTab orders={orders} subs={subs} pending={pending} active={active} delivered={delivered} totalSpent={totalSpent} activeSub={activeSub} setActiveTab={setActiveTab} unreadEnquiries={unreadCount} pendingReviews={pendingReviews} />}
             {activeTab === 'orders'        && <OrdersTab orders={orders} reload={load} expandedOrder={expandedOrder} setExpandedOrder={setExpandedOrder} />}
             {activeTab === 'subscriptions' && <SubsTab subs={subs} reload={load} />}
+            {activeTab === 'loyalty'       && <LoyaltyTab />}
             {activeTab === 'enquiries'     && <EnquiriesTab enquiries={enquiries} reload={load} />}
             {activeTab === 'reviews'       && <ReviewsTab reviews={reviews} reload={load} />}
             {activeTab === 'account'       && <AccountTab user={user} login={login} />}
