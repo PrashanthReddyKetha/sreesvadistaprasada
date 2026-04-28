@@ -23,6 +23,16 @@ function SpiceBar({ level }) {
   );
 }
 
+const scrollToTabs = () => {
+  const anchor = document.getElementById('section-tabs-anchor');
+  if (!anchor) return;
+  const headerH = document.querySelector('header')?.offsetHeight ?? 96;
+  const anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
+  if (window.scrollY < anchorTop - headerH - 8) {
+    window.scrollTo({ top: anchorTop - headerH, behavior: 'smooth' });
+  }
+};
+
 const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
@@ -30,12 +40,14 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
   const [search, setSearch] = useState('');
   const tabRowRef = useRef(null);
 
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
   useEffect(() => { setActiveTab(initialTab); setSearch(''); }, [initialTab]);
 
   const selectTab = (tab) => {
     setActiveTab(tab);
     const url = tab === 'All' ? '/svadista' : `/svadista/${slugify(tab)}`;
     window.history.replaceState(null, '', url);
+    scrollToTabs();
   };
 
   useEffect(() => {
