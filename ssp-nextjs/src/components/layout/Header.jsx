@@ -89,8 +89,8 @@ const Header = () => {
           </Link>
         ) : (
           <>
-            <span className="hidden sm:inline">Swagatam — welcome home &nbsp;·&nbsp; Hot meals in Milton Keynes, Edinburgh &amp; Glasgow &nbsp;·&nbsp; Free delivery over £30</span>
-            <span className="sm:hidden whitespace-nowrap">Swagatam · welcome home &nbsp;·&nbsp; Free delivery £30+</span>
+            <span className="hidden sm:inline">Swagatam 🙏 &nbsp;·&nbsp; Now serving Milton Keynes &nbsp;·&nbsp; 10% off Takeaways &nbsp;·&nbsp; Delivery available</span>
+            <span className="sm:hidden whitespace-nowrap">Swagatam 🙏 &nbsp;·&nbsp; 10% off Takeaways &nbsp;·&nbsp; Delivery available</span>
           </>
         )}
       </div>
