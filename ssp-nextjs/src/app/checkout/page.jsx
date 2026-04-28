@@ -181,77 +181,19 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
 }
 
 /* ── Inline sign-in / guest prompt ──────────────────────────────────────── */
-function GuestPrompt({ onSignedIn, onGuest, onRegister, login }) {
-  const [mode, setMode]       = useState('options'); // 'options' | 'signin'
-  const [email, setEmail]     = useState('');
-  const [pw, setPw]           = useState('');
-  const [showPw, setShowPw]   = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
-
-  const handleSignIn = async (e) => {
-    e.preventDefault();
-    setError(''); setLoading(true);
-    try {
-      const res = await api.post('/auth/login', { email, password: pw });
-      login(res.data.user, res.data.access_token);
-      onSignedIn();
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid email or password.');
-    } finally { setLoading(false); }
-  };
-
-  if (mode === 'signin') {
-    return (
-      <div className="rounded-2xl border-2 p-5 space-y-4" style={{ borderColor: 'rgba(128,0,32,0.2)' }}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <LogIn size={16} style={{ color: '#800020' }} />
-            <p className="text-sm font-bold" style={{ color: '#800020' }}>Sign in to your account</p>
-          </div>
-          <button onClick={() => setMode('options')} className="text-gray-400 hover:text-gray-600">
-            <X size={16} />
-          </button>
-        </div>
-        <form onSubmit={handleSignIn} className="space-y-3">
-          {error && <p className="text-xs p-2.5 rounded-lg" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{error}</p>}
-          <div className="relative">
-            <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
-              className="w-full pl-9 pr-3 py-2.5 rounded-xl border-2 text-sm focus:outline-none transition-colors"
-              style={{ borderColor: email ? 'rgba(128,0,32,0.3)' : '#E5E7EB', color: '#2D2422' }} />
-          </div>
-          <div className="relative">
-            <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type={showPw ? 'text' : 'password'} placeholder="Password" value={pw} onChange={e => setPw(e.target.value)} required
-              className="w-full pl-9 pr-10 py-2.5 rounded-xl border-2 text-sm focus:outline-none transition-colors"
-              style={{ borderColor: pw ? 'rgba(128,0,32,0.3)' : '#E5E7EB', color: '#2D2422' }} />
-            <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
-          </div>
-          <button type="submit" disabled={loading}
-            className="w-full py-3 text-sm font-bold text-white rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-md disabled:opacity-60"
-            style={{ backgroundColor: '#800020' }}>
-            {loading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Signing in…</> : 'Sign In & Continue →'}
-          </button>
-        </form>
-      </div>
-    );
-  }
-
+function GuestPrompt({ onGuest, onSignIn }) {
   return (
     <div className="rounded-2xl border-2 p-5 space-y-3" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }}>
       <p className="text-sm font-bold" style={{ color: '#2D2422' }}>How would you like to continue?</p>
       <div className="grid grid-cols-2 gap-3">
-        <button onClick={() => setMode('signin')}
+        <button onClick={onSignIn}
           className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:border-[#800020] hover:bg-white"
           style={{ borderColor: 'rgba(128,0,32,0.2)' }}>
           <LogIn size={20} style={{ color: '#800020' }} />
           <span className="text-xs font-semibold text-center" style={{ color: '#2D2422' }}>Sign In</span>
-          <span className="text-[10px] text-gray-400 text-center">Auto-fill your saved details</span>
+          <span className="text-[10px] text-gray-400 text-center">Incl. Google · auto-fill details</span>
         </button>
-        <button onClick={onRegister}
+        <button onClick={onSignIn}
           className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:border-[#800020] hover:bg-white"
           style={{ borderColor: 'rgba(128,0,32,0.2)' }}>
           <UserPlus size={20} style={{ color: '#800020' }} />
@@ -264,6 +206,68 @@ function GuestPrompt({ onSignedIn, onGuest, onRegister, login }) {
         style={{ borderColor: '#E5E7EB', color: '#5C4B47' }}>
         Continue as Guest
       </button>
+    </div>
+  );
+}
+
+/* ── Postcode checker (shown on checkout when no zone confirmed yet) ──────── */
+function CheckoutPostcodeInput({ onZoneFound }) {
+  const [pc, setPc]             = useState('');
+  const [checking, setChecking] = useState(false);
+  const [error, setError]       = useState('');
+
+  const check = async (val) => {
+    const stripped = val.replace(/\s/g, '');
+    if (stripped.length < 3) return;
+    setChecking(true); setError('');
+    try {
+      const r = await api.get(`/orders/check-postcode?postcode=${encodeURIComponent(val)}`);
+      if (r.data.deliverable) {
+        onZoneFound(r.data);
+      } else {
+        setError("We don't deliver to this postcode yet — switch to Collect & save 10%.");
+      }
+    } catch (e) {
+      if (e.response?.status === 404) {
+        setError("We don't deliver to this postcode yet — switch to Collect & save 10%.");
+      } else {
+        setError('Could not verify postcode — please try again.');
+      }
+    } finally { setChecking(false); }
+  };
+
+  return (
+    <div className="rounded-2xl border-2 p-5 space-y-3" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }}>
+      <p className="text-sm font-semibold flex items-center gap-1.5" style={{ color: '#5C4B47' }}>
+        <MapPin size={14} style={{ color: '#800020' }} />
+        What&apos;s your delivery postcode?
+      </p>
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <input
+            type="text" value={pc}
+            onChange={e => { setPc(e.target.value.toUpperCase().replace(/[^A-Z0-9\s]/g, '')); setError(''); }}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); check(pc); } }}
+            placeholder="e.g. MK12 6LF" maxLength={8}
+            className="w-full px-3 py-2.5 rounded-xl border text-sm uppercase focus:outline-none transition-colors"
+            style={{ borderColor: error ? '#EF4444' : 'rgba(128,0,32,0.2)', color: '#2D2422', backgroundColor: 'white' }}
+          />
+          {checking && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" />
+          )}
+        </div>
+        <button
+          onClick={() => check(pc)}
+          disabled={checking || pc.replace(/\s/g, '').length < 3}
+          className="px-4 py-2.5 rounded-xl text-xs font-semibold text-white flex-shrink-0 transition-opacity disabled:opacity-40"
+          style={{ backgroundColor: '#800020' }}>
+          Check
+        </button>
+      </div>
+      {error
+        ? <p className="text-[11px] font-medium" style={{ color: '#EF4444' }}>{error}</p>
+        : <p className="text-[11px] text-gray-400">Enter your postcode and press Enter or Check</p>
+      }
     </div>
   );
 }
@@ -419,10 +423,17 @@ const CheckoutInner = () => {
         line1:    f.line1    || user.address?.line1    || '',
         line2:    f.line2    || user.address?.line2    || '',
         city:     f.city     || user.address?.city     || '',
-        postcode: f.postcode || user.address?.postcode || '',
+        postcode: f.postcode || user.address?.postcode || zoneInfo?.postcode || '',
       }));
     }
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pre-fill postcode from validated zone (cart drawer check) if form still empty
+  useEffect(() => {
+    if (zoneInfo?.postcode) {
+      setForm(f => ({ ...f, postcode: f.postcode || zoneInfo.postcode }));
+    }
+  }, [zoneInfo?.postcode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
@@ -523,9 +534,10 @@ const CheckoutInner = () => {
     ?? (deliveryType === 'takeaway' && effectiveSubtotal >= MINIMUM_ORDER ? Math.round(effectiveSubtotal * 0.10 * 100) / 100 : 0);
   const deliveryFee = validPricing?.delivery_fee
     ?? (deliveryType === 'takeaway' ? 0 : zoneInfo?.delivery_fee ?? 0);
-  const smallOrderFee = validPricing?.small_order_fee ?? 0;
+  const smallOrderFee = validPricing?.small_order_fee
+    ?? (deliveryType === 'delivery' && zoneInfo && effectiveSubtotal > 0 && effectiveSubtotal <= 19.99 ? 1.50 : 0);
   const grandTotal = validPricing?.grand_total
-    ?? Math.round((effectiveSubtotal - takeawayDiscount + deliveryFee) * 100) / 100;
+    ?? Math.round((effectiveSubtotal - takeawayDiscount + deliveryFee + smallOrderFee) * 100) / 100;
   const freeDeliveryAt = validPricing?.free_delivery_at ?? zoneInfo?.free_delivery_over ?? null;
 
   const handleOrder = async () => {
@@ -780,13 +792,17 @@ const CheckoutInner = () => {
                 </div>
               )}
 
-              {/* No zone yet — nudge to fill postcode in form below */}
+              {/* No zone yet — inline postcode checker */}
               {deliveryType === 'delivery' && !zoneInfo && (
-                <div className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg"
-                  style={{ backgroundColor: '#FFFBEB', color: '#92400E' }}>
-                  <MapPin size={12} />
-                  Enter your delivery postcode below to see your delivery fee.
-                </div>
+                <CheckoutPostcodeInput
+                  onZoneFound={data => setZoneInfo({
+                    postcode:           data.postcode,
+                    delivery_fee:       data.delivery_fee,
+                    free_delivery_over: data.free_delivery_over ?? data.free_delivery_at,
+                    zone:               data.zone,
+                    deliverable:        true,
+                  })}
+                />
               )}
 
               {/* Takeaway savings callout */}
@@ -801,10 +817,8 @@ const CheckoutInner = () => {
             {/* Guest prompt */}
             {showGuestPrompt && (
               <GuestPrompt
-                onSignedIn={() => {}}
                 onGuest={() => setGuestMode(true)}
-                onRegister={() => { setAuthOpen(true); }}
-                login={login}
+                onSignIn={() => setAuthOpen(true)}
               />
             )}
 

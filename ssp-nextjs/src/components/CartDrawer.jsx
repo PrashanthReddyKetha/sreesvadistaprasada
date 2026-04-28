@@ -387,6 +387,21 @@ const CartDrawer = () => {
               </div>
             )}
 
+            {/* Takeaway nudge — shown on delivery to encourage switching */}
+            {deliveryType === 'delivery' && meetsMinimum && (
+              <div className="px-6 py-2 border-b flex items-center justify-between gap-2"
+                style={{ backgroundColor: '#FFFBEB', borderColor: 'rgba(180,101,11,0.15)' }}>
+                <span className="text-[11px] font-medium" style={{ color: '#92400E' }}>
+                  🛵 Collect & save <strong>10%</strong> — switch above to apply
+                </span>
+                <button onClick={() => setDeliveryType('takeaway')}
+                  className="text-[11px] font-bold px-2 py-0.5 rounded-md flex-shrink-0"
+                  style={{ backgroundColor: '#B45309', color: 'white' }}>
+                  Switch
+                </button>
+              </div>
+            )}
+
             {/* Min order bar or free delivery bar */}
             {!meetsMinimum
               ? <MinOrderBar subtotal={effectiveSubtotal} />

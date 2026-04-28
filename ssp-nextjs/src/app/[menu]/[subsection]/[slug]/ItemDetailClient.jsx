@@ -91,11 +91,11 @@ const StarRow = ({ rating, size = 16, interactive = false, onRate }) => (
 );
 
 const SpiceDots = ({ level }) => (
-  <div className="flex gap-1 items-center">
+  <div className="flex gap-0.5 items-center">
     {[1,2,3,4,5].map(i => (
-      <div key={i} className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: i <= level ? '#C62828' : '#E5E7EB' }} />
+      <span key={i} style={{ fontSize: '16px', opacity: i <= level ? 1 : 0.2 }}>🌶️</span>
     ))}
-    <span className="text-xs ml-1" style={{ color:'#9C7B6B' }}>
+    <span className="text-xs ml-1.5" style={{ color:'#9C7B6B' }}>
       {level === 0 ? 'No spice' : level <= 1 ? 'Mild' : level <= 2 ? 'Medium' : level <= 3 ? 'Spicy' : level <= 4 ? 'Very Spicy' : 'Extremely Hot'}
     </span>
   </div>
@@ -234,11 +234,11 @@ export default function ItemDetailClient({ initialItem }) {
   ];
 
   return (
-    <div className="min-h-screen pt-20 md:pt-24 pb-16" style={{ backgroundColor:'#FAF8F4' }}>
+    <div className="min-h-screen pt-20 md:pt-28 pb-16" style={{ backgroundColor:'#FAF8F4' }}>
       <div className="max-w-6xl mx-auto px-4 md:px-8">
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs mb-6 flex-wrap" style={{ color:'#9C7B6B' }}>
+        <div className="flex items-center gap-2 text-xs mb-4 flex-wrap" style={{ color:'#9C7B6B' }}>
           <Link href="/" className="hover:underline">Home</Link>
           <span>/</span>
           <Link href={MENU_PATHS[item.category] || '/menu'} className="hover:underline capitalize">
@@ -250,8 +250,8 @@ export default function ItemDetailClient({ initialItem }) {
         </div>
 
         {/* ── Hero ── */}
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
-          <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio:'4/3' }}>
+        <div className="grid md:grid-cols-2 gap-6 mb-10">
+          <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio:'1/1', maxHeight:'420px' }}>
             {item.image ? (
               <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
             ) : (
@@ -322,7 +322,7 @@ export default function ItemDetailClient({ initialItem }) {
               )}
             </div>
 
-            <div className="rounded-2xl p-5 space-y-4" style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.25)' }}>
+            <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.25)' }}>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-3xl font-bold" style={{ color:'#800020' }}>£{item.price.toFixed(2)}</p>

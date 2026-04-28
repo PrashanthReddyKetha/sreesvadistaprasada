@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { Leaf, ShoppingCart, Star, Flame, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -33,6 +34,7 @@ function SpiceBar({ level }) {
 }
 
 const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
+  const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -44,7 +46,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
   const selectTab = (tab) => {
     setActiveTab(tab);
     const url = tab === 'All' ? '/prasada' : `/prasada/${slugify(tab)}`;
-    window.history.replaceState(null, '', url);
+    router.replace(url, { scroll: false });
   };
 
   useEffect(() => {
@@ -110,6 +112,12 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
         </div>
       </section>
 
+      {/* Takeaway promo strip */}
+      <div className="px-4 md:px-8 py-2.5 flex items-center justify-center gap-2 text-xs font-semibold"
+        style={{ backgroundColor: '#FEF3C7', color: '#92400E', borderBottom: '1px solid rgba(180,101,11,0.2)' }}>
+        🛵 Collect & save <strong>10%</strong> on your whole order — switch to &ldquo;Collect&rdquo; at checkout
+      </div>
+
       {/* Anchor for tab scroll */}
       <div id="section-tabs-anchor" />
       {/* Sticky tabs */}
@@ -167,7 +175,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
                     style={{ boxShadow: '0 4px 20px rgba(22,101,52,0.08)', border: '1px solid rgba(22,101,52,0.08)' }}>
                     <div className="relative h-44 overflow-hidden">
                       {dish.image
-                        ? <img src={dish.image} alt={dish.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ? <img key={dish.image} src={dish.image} alt={dish.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         : <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: '#F0FFF4' }}><Leaf size={32} className="text-green-200" /></div>
                       }
                       {dish.tag && (
@@ -179,7 +187,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
                           style={{ backgroundColor: 'rgba(22,101,52,0.85)' }}>Featured</span>
                       )}
                     </div>
-                    <div className="p-4 flex flex-col h-[200px]">
+                    <div className="p-4 flex flex-col h-[220px]">
                       <div className="flex items-start justify-between gap-2 mb-1.5">
                         <div className="flex items-center gap-1.5">
                           <h3 className="font-bold text-sm leading-snug" style={{ color: '#166534' }}>{dish.name}</h3>
@@ -188,7 +196,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
                         <span className="text-sm font-bold flex-shrink-0" style={{ color: '#166534' }}>{fmt(dish.price)}</span>
                       </div>
                       {dish.description && (
-                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3 flex-1">{dish.description}</p>
+                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3 flex-1">{dish.description}</p>
                       )}
                       <button
                         onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: dish.id, name: dish.name, price: dish.price, image: dish.image, category: dish.category }); }}

@@ -1,14 +1,14 @@
 import { notFound } from 'next/navigation';
 import ItemDetailClient from './ItemDetailClient';
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';
 
 async function getItem(slug) {
   try {
     const res = await fetch(`${BASE}/api/menu/slug/${slug}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 60 },
     });
     if (!res.ok) return null;
     return res.json();

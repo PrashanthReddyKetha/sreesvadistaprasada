@@ -125,13 +125,13 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
                 <div className="rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }} data-testid={`snack-item-${item.id}`}>
                   {item.image && (
                     <div className="relative h-40 overflow-hidden">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <img key={item.image} src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                       <span className="absolute top-3 left-3 px-2 py-1 rounded-sm text-xs font-medium text-white" style={{ backgroundColor: '#800020' }}>
                         {item.type}
                       </span>
                     </div>
                   )}
-                  <div className="p-5 flex flex-col h-[180px]">
+                  <div className="p-5 flex flex-col h-[200px]">
                     <div className="flex items-center gap-1.5 mb-1">
                       <h3 className="text-base font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{item.name}</h3>
                       {item.spice_level > 0 && (
@@ -142,7 +142,7 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2 flex-1">{item.description}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-3 flex-1">{item.description}</p>
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold" style={{ color: '#800020' }}>£{item.price.toFixed(2)}</span>
                       <a href={`https://wa.me/447307119962?text=${encodeURIComponent(`Hi, I'd like to order ${item.name} (£${item.price.toFixed(2)}).`)}`} target="_blank" rel="noopener noreferrer" onClick={e => { e.preventDefault(); e.stopPropagation(); window.open(e.currentTarget.href, '_blank'); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#25D366' }} data-testid={`snack-wa-${item.id}`}>

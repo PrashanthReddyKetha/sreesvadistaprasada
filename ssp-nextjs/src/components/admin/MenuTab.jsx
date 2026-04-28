@@ -3,9 +3,26 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Plus, X, Save, RefreshCw, Utensils, Leaf, Flame, Edit2, Trash2 } from 'lucide-react';
 import api from '@/api';
 
-const CATEGORIES = ['nonVeg','veg','prasada','breakfast','pickles','podis'];
-const CAT_LABELS  = { nonVeg:'Non-Veg', veg:'Veg', prasada:'Prasada', breakfast:'Breakfast', pickles:'Pickles', podis:'Podis' };
-const BLANK_ITEM  = { name:'', description:'', price:'', category:'nonVeg', subcategory:'', spice_level:0, is_veg:false, available:true, featured:false, image:'', tag:'', allergens:[], faqs:[], pairs_with:[] };
+const CATEGORIES = ['nonVeg','veg','breakfast','pickles','podis','drinks','streetFood','ragiSpecials'];
+const CAT_LABELS  = { nonVeg:'Svadista (Non-Veg)', veg:'Prasada (Veg)', breakfast:'Breakfast', pickles:'Snacks — Pickles', podis:'Snacks — Podis', drinks:'Drinks', streetFood:'Street Food', ragiSpecials:'Ragi Specials' };
+const BLANK_ITEM  = { name:'', description:'', price:'', category:'nonVeg', extraCats:[], subcategory:'', spice_level:0, is_veg:false, available:true, featured:false, image:'', tag:'', allergens:[], faqs:[], pairs_with:[] };
+
+// Multi-select category picker (for appearing in multiple menu sections)
+const CategoryPicker = ({ primary, value = [], onChange }) => {
+  const others = CATEGORIES.filter(c => c !== primary);
+  return (
+    <div className="flex flex-wrap gap-2">
+      {others.map(c => (
+        <label key={c} className="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+          style={{ backgroundColor: value.includes(c) ? '#DBEAFE' : '#F3F4F6', color: value.includes(c) ? '#1E40AF' : '#374151' }}>
+          <input type="checkbox" className="hidden" checked={value.includes(c)}
+            onChange={e => onChange(e.target.checked ? [...value, c] : value.filter(x => x !== c))} />
+          {CAT_LABELS[c]}
+        </label>
+      ))}
+    </div>
+  );
+};
 const ALLERGEN_LIST = ['gluten','dairy','eggs','nuts','sesame','mustard','soy','celery'];
 
 const AllergenPicker = ({ value=[], onChange }) => (
@@ -109,7 +126,9 @@ export default function MenuTab() {
     setEditingId(item.id);
     setEditForm({
       name: item.name, description: item.description, price: item.price,
-      category: item.category, subcategory: item.subcategory || '',
+      category: item.category,
+      extraCats: (item.extra_categories || []).map(e => e.category),
+      subcategory: item.subcategory || '',
       spice_level: item.spice_level, is_veg: item.is_veg, available: item.available,
       featured: item.featured, image: item.image || '', tag: item.tag || '',
       allergens: item.allergens || [], faqs: item.faqs || [], pairs_with: item.pairs_with || [],
@@ -139,7 +158,7 @@ export default function MenuTab() {
   const save = async (id) => {
     setSaving(true);
     try {
-      await api.put(`/menu/${id}`, { ...editForm, price: parseFloat(editForm.price), spice_level: parseInt(editForm.spice_level) });
+      await api.put(`/menu/${id}`, { ...editForm, price: parseFloat(editForm.price), spice_level: parseInt(editForm.spice_level), extra_categories: (editForm.extraCats || []).map(c => ({ category: c })) });
       setMsg('Saved!'); setEditingId(null); await load();
       setTimeout(() => setMsg(''), 2000);
     } catch { setMsg('Save failed.'); }
@@ -183,7 +202,7 @@ export default function MenuTab() {
     if (!addForm.name || !addForm.description || !addForm.price) { setMsg('Name, description and price are required.'); return; }
     setAddSaving(true);
     try {
-      await api.post('/menu', { ...addForm, price: parseFloat(addForm.price), spice_level: parseInt(addForm.spice_level) });
+      await api.post('/menu', { ...addForm, price: parseFloat(addForm.price), spice_level: parseInt(addForm.spice_level), extra_categories: (addForm.extraCats || []).map(c => ({ category: c })) });
       setMsg('Item added!'); setAdding(false); setAddForm(BLANK_ITEM); await load();
       setTimeout(() => setMsg(''), 2000);
     } catch (e) { setMsg(e.response?.data?.detail || 'Failed to add item.'); }
@@ -273,12 +292,14 @@ export default function MenuTab() {
               <textarea rows={3} value={addForm.description} onChange={e=>setAddForm(p=>({...p,description:e.target.value}))}
                 className="w-full border rounded-lg px-3 py-2 text-sm resize-none" style={{ borderColor:'#d1d5db' }} placeholder="Describe the dish..." />
             </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Category</label>
+            <div className="md:col-span-2">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Primary Menu Section</label>
               <select value={addForm.category} onChange={e=>setAddForm(p=>({...p,category:e.target.value}))}
                 className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }}>
                 {CATEGORIES.map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
               </select>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mt-3 mb-2">Also show in <span className="normal-case font-normal">(multi-select)</span></label>
+              <CategoryPicker primary={addForm.category} value={addForm.extraCats||[]} onChange={v=>setAddForm(p=>({...p,extraCats:v}))} />
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Spice Level (0–5)</label>
@@ -362,12 +383,14 @@ export default function MenuTab() {
                     <textarea rows={3} value={editForm.description} onChange={e=>setEditForm(p=>({...p,description:e.target.value}))}
                       className="w-full border rounded-lg px-3 py-2 text-sm resize-none" style={{ borderColor:'#d1d5db' }} />
                   </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Category</label>
+                  <div className="md:col-span-2">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Primary Menu Section</label>
                     <select value={editForm.category} onChange={e=>setEditForm(p=>({...p,category:e.target.value}))}
                       className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }}>
                       {CATEGORIES.map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
                     </select>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mt-3 mb-2">Also show in <span className="normal-case font-normal">(multi-select)</span></label>
+                    <CategoryPicker primary={editForm.category} value={editForm.extraCats||[]} onChange={v=>setEditForm(p=>({...p,extraCats:v}))} />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Spice Level (0–5)</label>
