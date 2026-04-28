@@ -723,6 +723,47 @@ const CheckoutInner = () => {
           {/* ── LEFT: Form ───────────────────────────────────────────── */}
           <div className="lg:col-span-3 space-y-6">
 
+            {/* ── Delivery / Takeaway toggle ───────────────────────── */}
+            <div className="bg-white rounded-2xl shadow-sm p-5 space-y-3"
+              style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
+              <p className="text-xs font-semibold" style={{ color: '#5C4B47' }}>
+                How would you like to receive your order?
+              </p>
+              <div className="flex gap-2">
+                {[
+                  { id: 'delivery', label: '🚚 Delivery' },
+                  { id: 'takeaway', label: '🛵 Collect & save 10%' },
+                ].map(opt => (
+                  <button key={opt.id} onClick={() => setDeliveryType(opt.id)}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                    style={{
+                      backgroundColor: deliveryType === opt.id ? '#800020' : 'white',
+                      color: deliveryType === opt.id ? 'white' : '#5C4B47',
+                      border: deliveryType === opt.id ? 'none' : '1px solid rgba(128,0,32,0.2)',
+                    }}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Zone confirmed pill */}
+              {deliveryType === 'delivery' && zoneInfo && (
+                <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg"
+                  style={{ backgroundColor: '#F0FFF4', color: '#166534' }}>
+                  <CheckCircle size={13} />
+                  Delivering to {zoneInfo.postcode} · {fmt(zoneInfo.delivery_fee)} fee · Free over {fmt(zoneInfo.free_delivery_over)}
+                </div>
+              )}
+
+              {/* Takeaway savings callout */}
+              {deliveryType === 'takeaway' && takeawayDiscount > 0 && (
+                <div className="text-xs font-semibold px-3 py-2 rounded-lg"
+                  style={{ backgroundColor: '#F0FFF4', color: '#166534' }}>
+                  🎉 You save {fmt(takeawayDiscount)} by collecting — no delivery fee either!
+                </div>
+              )}
+            </div>
+
             {/* Guest prompt */}
             {showGuestPrompt && (
               <GuestPrompt
