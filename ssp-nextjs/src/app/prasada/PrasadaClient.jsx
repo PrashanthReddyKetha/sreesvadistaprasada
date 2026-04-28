@@ -92,30 +92,34 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(22,101,52,0.92) 0%, rgba(15,118,110,0.8) 50%, rgba(22,101,52,0.6) 100%)' }} />
-        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
-          <div className="max-w-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Leaf size={18} className="text-green-300" />
-              <span className="text-xs uppercase tracking-[0.25em] text-green-200 font-medium">Pure Vegetarian</span>
+        <div className="relative h-full w-full px-4 md:px-8 flex items-center">
+          <div className="max-w-7xl mx-auto w-full">
+            <div className="max-w-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <Leaf size={18} className="text-green-300" />
+                <span className="text-xs uppercase tracking-[0.25em] text-green-200 font-medium">Pure Vegetarian</span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Prasada
+              </h1>
+              <p className="text-lg text-green-100 leading-relaxed mb-1">From starters to biryanis — all pure veg.</p>
+              <p className="text-sm text-green-200 leading-relaxed max-w-md">
+                Crispy starters, hearty curries, fragrant rice specials and more. Every dish made fresh with love.
+              </p>
+              <a href="/prasada/about" className="inline-block mt-4 text-sm font-medium text-white/70 hover:text-white underline underline-offset-2 transition-colors duration-150">
+                The story behind Prasada →
+              </a>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Prasada
-            </h1>
-            <p className="text-lg text-green-100 leading-relaxed mb-1">From starters to biryanis — all pure veg.</p>
-            <p className="text-sm text-green-200 leading-relaxed max-w-md">
-              Crispy starters, hearty curries, fragrant rice specials and more. Every dish made fresh with love.
-            </p>
-            <a href="/prasada/about" className="inline-block mt-4 text-sm font-medium text-white/70 hover:text-white underline underline-offset-2 transition-colors duration-150">
-              The story behind Prasada →
-            </a>
           </div>
         </div>
       </section>
 
       {/* Takeaway promo strip */}
-      <div className="px-4 md:px-8 py-2.5 flex items-center justify-center gap-2 text-xs font-semibold"
-        style={{ backgroundColor: '#FEF3C7', color: '#92400E', borderBottom: '1px solid rgba(180,101,11,0.2)' }}>
-        🛵 Collect & save <strong>10%</strong> on your whole order — switch to &ldquo;Collect&rdquo; at checkout
+      <div className="px-4 md:px-8 py-2"
+        style={{ backgroundColor: '#FEF3C7', borderBottom: '1px solid rgba(180,101,11,0.2)' }}>
+        <div className="max-w-7xl mx-auto text-center text-xs font-semibold" style={{ color: '#92400E' }}>
+          🛵 Collect & save <strong>10%</strong> on your whole order — switch to &ldquo;Collect&rdquo; at checkout
+        </div>
       </div>
 
       {/* Anchor for tab scroll */}
@@ -196,11 +200,11 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
                         <span className="text-sm font-bold flex-shrink-0" style={{ color: '#166534' }}>{fmt(dish.price)}</span>
                       </div>
                       {dish.description && (
-                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3 flex-1">{dish.description}</p>
+                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{dish.description}</p>
                       )}
                       <button
                         onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: dish.id, name: dish.name, price: dish.price, image: dish.image, category: dish.category }); }}
-                        className="w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
+                        className="mt-auto w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
                         style={{ backgroundColor: '#166534' }}>
                         <ShoppingCart size={13} /> Add to Basket
                       </button>

@@ -142,7 +142,7 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-3 flex-1">{item.description}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-3">{item.description}</p>
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold" style={{ color: '#800020' }}>£{item.price.toFixed(2)}</span>
                       <a href={`https://wa.me/447307119962?text=${encodeURIComponent(`Hi, I'd like to order ${item.name} (£${item.price.toFixed(2)}).`)}`} target="_blank" rel="noopener noreferrer" onClick={e => { e.preventDefault(); e.stopPropagation(); window.open(e.currentTarget.href, '_blank'); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#25D366' }} data-testid={`snack-wa-${item.id}`}>
