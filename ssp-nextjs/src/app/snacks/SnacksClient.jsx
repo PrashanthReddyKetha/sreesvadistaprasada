@@ -9,16 +9,20 @@ import { getCached, setCached } from '@/api/menuCache';
 const categories = ['Pickles', 'Podis', 'All'];
 
 const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
+  const SK = 'ssp_snacks_tab';
   const [allItems, setAllItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
-  const [activeFilter, setActiveFilter] = useState(initialTab);
+  const [activeFilter, setActiveFilter] = useState(() => sessionStorage.getItem(SK) || initialTab);
   const [search, setSearch] = useState('');
   const tabMounted = useRef(false);
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
-  useEffect(() => { setActiveFilter(initialTab); setSearch(''); }, [initialTab]);
+  useEffect(() => {
+    const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
+    if (!isBack) window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+  useEffect(() => { setActiveFilter(sessionStorage.getItem(SK) || initialTab); setSearch(''); }, [initialTab]);
 
-  const selectTab = (filter) => { setActiveFilter(filter); };
+  const selectTab = (filter) => { setActiveFilter(filter); sessionStorage.setItem(SK, filter); };
 
   useEffect(() => {
     if (!tabMounted.current) { tabMounted.current = true; return; }

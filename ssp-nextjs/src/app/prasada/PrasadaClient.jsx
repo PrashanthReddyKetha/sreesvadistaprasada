@@ -32,17 +32,21 @@ function SpiceBar({ level }) {
 }
 
 const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
+  const SK = 'ssp_prasada_tab';
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem(SK) || initialTab);
   const [search, setSearch] = useState('');
   const tabRowRef = useRef(null);
   const tabMounted = useRef(false);
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
-  useEffect(() => { setActiveTab(initialTab); setSearch(''); }, [initialTab]);
+  useEffect(() => {
+    const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
+    if (!isBack) window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+  useEffect(() => { setActiveTab(sessionStorage.getItem(SK) || initialTab); setSearch(''); }, [initialTab]);
 
-  const selectTab = (tab) => { setActiveTab(tab); };
+  const selectTab = (tab) => { setActiveTab(tab); sessionStorage.setItem(SK, tab); };
 
   // After tab changes (not on mount): always scroll to top of section
   useEffect(() => {
