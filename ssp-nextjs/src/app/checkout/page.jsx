@@ -496,8 +496,22 @@ const CheckoutInner = () => {
         free_item_price: freeItemDiscount,
       });
       setServerPricing(r.data);
+      // Keep zone pill in sync with whatever postcode is in the address form
+      if (r.data.order_type === 'delivery' && r.data.zone) {
+        setZoneInfo({
+          postcode:           r.data.postcode,
+          delivery_fee:       r.data.delivery_fee,
+          free_delivery_over: r.data.free_delivery_at,
+          zone:               r.data.zone,
+          deliverable:        true,
+        });
+      }
     } catch (e) {
-      if (e.response?.status === 400) setServerPricing(null);
+      if (e.response?.status === 400) {
+        setServerPricing(null);
+        // Invalid postcode for delivery — clear zone pill so user knows it failed
+        if (deliveryType === 'delivery') setZoneInfo(null);
+      }
     }
   }, [cartItems, deliveryType, form.postcode, freeItemDiscount]); // eslint-disable-line react-hooks/exhaustive-deps
 
