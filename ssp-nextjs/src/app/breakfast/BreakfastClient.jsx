@@ -158,7 +158,7 @@ const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
                           style={{ backgroundColor: 'rgba(180,101,11,0.85)' }}>{dish.tag}</span>
                       )}
                     </div>
-                    <div className="p-4 flex flex-col h-[220px]">
+                    <div className="p-4 flex flex-col flex-1">
                       <div className="flex items-start justify-between gap-2 mb-1.5">
                         <div className="flex items-center gap-1.5">
                           <h3 className="font-bold text-sm leading-snug" style={{ color: '#92400E' }}>{dish.name}</h3>
@@ -167,11 +167,11 @@ const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
                         <span className="text-sm font-bold flex-shrink-0" style={{ color: '#B45309' }}>{fmt(dish.price)}</span>
                       </div>
                       {dish.description && (
-                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3">{dish.description}</p>
+                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3 flex-1">{dish.description}</p>
                       )}
                       <button
                         onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: dish.id, name: dish.name, price: dish.price, image: dish.image, category: dish.category }); }}
-                        className="mt-auto w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
+                        className="w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
                         style={{ backgroundColor: '#B45309' }}>
                         <ShoppingCart size={13} /> Add to Basket
                       </button>
