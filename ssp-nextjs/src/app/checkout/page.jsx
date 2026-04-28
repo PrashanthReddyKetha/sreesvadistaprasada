@@ -86,7 +86,7 @@ function DeliveryBar({ total, freeOver, onAddMore }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp }) {
+function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery' }) {
   const [collapsed, setCollapsed] = useState(false);
   const grandTotal = grandTotalProp ?? (cartTotal - takeawayDiscount + (deliveryFee || 0));
 
@@ -154,19 +154,21 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
                 <span>Takeaway 10% off</span><span>-{fmt(takeawayDiscount)}</span>
               </div>
             )}
-            {smallOrderFee > 0 && (
+            {deliveryType === 'delivery' && smallOrderFee > 0 && (
               <div className="flex justify-between text-sm" style={{ color: '#92400E' }}>
                 <span>Small order fee <span className="text-xs text-gray-400">(orders under £20)</span></span>
                 <span>{fmt(smallOrderFee)}</span>
               </div>
             )}
-            <div className="flex justify-between text-sm">
-              <span className="flex items-center gap-1.5 text-gray-500"><Truck size={13} /> Delivery</span>
-              {deliveryFee === 0
-                ? <span className="font-semibold" style={{ color: '#166534' }}>Free</span>
-                : <span className="text-gray-600">{fmt(deliveryFee)}</span>
-              }
-            </div>
+            {deliveryType === 'delivery' && (
+              <div className="flex justify-between text-sm">
+                <span className="flex items-center gap-1.5 text-gray-500"><Truck size={13} /> Delivery</span>
+                {deliveryFee === 0
+                  ? <span className="font-semibold" style={{ color: '#166534' }}>Free</span>
+                  : <span className="text-gray-600">{fmt(deliveryFee)}</span>
+                }
+              </div>
+            )}
             <div className="flex justify-between font-bold text-base pt-2 border-t" style={{ borderColor: 'rgba(128,0,32,0.12)', color: '#800020' }}>
               <span style={{ color: '#2D2422' }}>Total</span>
               <span>{fmt(grandTotal)}</span>
@@ -369,7 +371,8 @@ const CheckoutInner = () => {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
-  const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, addToCart } = useCart();
+  const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, addToCart,
+          deliveryType, setDeliveryType, zoneInfo, setZoneInfo } = useCart();
   const { user, login, setAuthOpen } = useAuth();
 
   const [guestMode, setGuestMode] = useState(false);
@@ -378,11 +381,8 @@ const CheckoutInner = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
 
-  // Delivery type + loyalty + zone — read from sessionStorage (set by CartDrawer)
-  const [deliveryType, setDeliveryType] = useState('delivery');
   const [freeItem, setFreeItem] = useState(null);
-  const [zoneInfo, setZoneInfo] = useState(null);       // from CartDrawer postcode check
-  const [serverPricing, setServerPricing] = useState(null); // from /orders/calculate
+  const [serverPricing, setServerPricing] = useState(null);
   const [postOrderLoyalty, setPostOrderLoyalty] = useState(null);
 
   const [form, setForm] = useState({
@@ -397,15 +397,13 @@ const CheckoutInner = () => {
   const [addressOptions, setAddressOptions] = useState([]);
   const [addressDropdown, setAddressDropdown] = useState(false);
 
-  // Read cart state + zone from sessionStorage (set by CartDrawer)
+  // Read freeItem from sessionStorage (deliveryType + zoneInfo live in CartContext)
   useEffect(() => {
     try {
       const stored = sessionStorage.getItem('ssp_checkout_state');
       if (stored) {
-        const { deliveryType: dt, freeItem: fi, zoneInfo: zi } = JSON.parse(stored);
-        if (dt) setDeliveryType(dt);
+        const { freeItem: fi } = JSON.parse(stored);
         if (fi) setFreeItem(fi);
-        if (zi) setZoneInfo(zi);
       }
     } catch {}
   }, []);
@@ -950,6 +948,7 @@ const CheckoutInner = () => {
                 removeFromCart={removeFromCart}
                 deliveryFee={deliveryFee}
                 grandTotal={grandTotal}
+                deliveryType={deliveryType}
               />
 
               {/* Card payment */}

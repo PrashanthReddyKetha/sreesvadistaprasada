@@ -10,11 +10,6 @@ const MINIMUM_ORDER = 15.00;
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
 const fmt   = (n)   => `£${Number(n).toFixed(2)}`;
 
-// ── Zone state persisted to localStorage ─────────────────────────────────────
-const LS_KEY = 'ssp_delivery_zone';
-function saveZone(data) { try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch {} }
-function loadZone()     { try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch { return null; } }
-
 // ── Free delivery progress bar ────────────────────────────────────────────────
 function DeliveryBar({ subtotal, freeOver }) {
   const remaining = freeOver - subtotal;
@@ -185,8 +180,7 @@ function PostcodeInput({ onZoneFound }) {
     try {
       const r = await api.get(`/orders/check-postcode?postcode=${encodeURIComponent(val)}`);
       if (r.data.deliverable) {
-        saveZone(r.data);
-        onZoneFound(r.data);
+        onZoneFound(r.data); // context setter handles persistence
       } else {
         setError("We don't deliver to this postcode yet — switch to Collect & save 10%.");
       }
@@ -248,21 +242,16 @@ function PostcodeInput({ onZoneFound }) {
 // ── Main CartDrawer ───────────────────────────────────────────────────────────
 const CartDrawer = () => {
   const router = useRouter();
-  const { cartItems, cartCount, cartTotal, cartOpen, setCartOpen, updateQuantity, removeFromCart, addToCart } = useCart();
+  const { cartItems, cartCount, cartTotal, cartOpen, setCartOpen, updateQuantity, removeFromCart, addToCart,
+          deliveryType, setDeliveryType, zoneInfo, setZoneInfo } = useCart();
   const { user } = useAuth();
 
-  const [deliveryType, setDeliveryType]   = useState('delivery');
-  const [zoneInfo, setZoneInfo]           = useState(null);
   const [loyaltyStatus, setLoyaltyStatus] = useState(null);
   const [freeItem, setFreeItem]           = useState(null);
   const [showPicker, setShowPicker]       = useState(false);
 
-  // Load saved zone on open
+  // Hide picker when cart closes
   useEffect(() => {
-    if (cartOpen) {
-      const saved = loadZone();
-      if (saved) setZoneInfo(saved);
-    }
     if (!cartOpen) setShowPicker(false);
   }, [cartOpen]);
 
@@ -311,7 +300,8 @@ const CartDrawer = () => {
 
   const handleCheckout = () => {
     try {
-      sessionStorage.setItem('ssp_checkout_state', JSON.stringify({ deliveryType, freeItem, zoneInfo }));
+      // deliveryType + zoneInfo already live in context/storage; only freeItem needs handoff
+      sessionStorage.setItem('ssp_checkout_state', JSON.stringify({ freeItem }));
     } catch {}
     setCartOpen(false);
     router.push('/checkout');
@@ -390,7 +380,7 @@ const CartDrawer = () => {
                     Delivering to {zoneInfo.postcode} · {fmt(zoneInfo.delivery_fee)} fee
                   </span>
                 </div>
-                <button onClick={() => { setZoneInfo(null); try { localStorage.removeItem(LS_KEY); } catch {} }}
+                <button onClick={() => setZoneInfo(null)}
                   className="text-[11px] underline" style={{ color: '#5C4B47' }}>
                   Change
                 </button>
