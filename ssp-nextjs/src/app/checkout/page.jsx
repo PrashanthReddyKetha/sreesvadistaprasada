@@ -483,7 +483,10 @@ const CheckoutInner = () => {
   // Call /orders/calculate for live server pricing
   const recalculate = useCallback(async () => {
     const postcode = form.postcode.replace(/\s/g, '');
-    if (deliveryType === 'delivery' && postcode.length < 3) return;
+    if (deliveryType === 'delivery' && postcode.length < 3) {
+      setServerPricing(null); // clear stale data when postcode missing
+      return;
+    }
     try {
       const items = cartItems.map(i => ({ price: price(i.price), quantity: i.quantity }));
       const r = await api.post('/orders/calculate', {
@@ -494,22 +497,24 @@ const CheckoutInner = () => {
       });
       setServerPricing(r.data);
     } catch (e) {
-      // Only show pricing error if it's not just "missing postcode"
       if (e.response?.status === 400) setServerPricing(null);
     }
   }, [cartItems, deliveryType, form.postcode, freeItemDiscount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { recalculate(); }, [recalculate]);
 
+  // Only use serverPricing if it matches the current delivery type — prevents stale data on toggle
+  const validPricing = serverPricing?.order_type === deliveryType ? serverPricing : null;
+
   // Derived display values — prefer server pricing, fall back to client estimate
-  const takeawayDiscount = serverPricing?.takeaway_discount
+  const takeawayDiscount = validPricing?.takeaway_discount
     ?? (deliveryType === 'takeaway' && effectiveSubtotal >= MINIMUM_ORDER ? Math.round(effectiveSubtotal * 0.10 * 100) / 100 : 0);
-  const deliveryFee = serverPricing?.delivery_fee
+  const deliveryFee = validPricing?.delivery_fee
     ?? (deliveryType === 'takeaway' ? 0 : zoneInfo?.delivery_fee ?? 0);
-  const smallOrderFee = serverPricing?.small_order_fee ?? 0;
-  const grandTotal = serverPricing?.grand_total
+  const smallOrderFee = validPricing?.small_order_fee ?? 0;
+  const grandTotal = validPricing?.grand_total
     ?? Math.round((effectiveSubtotal - takeawayDiscount + deliveryFee) * 100) / 100;
-  const freeDeliveryAt = serverPricing?.free_delivery_at ?? zoneInfo?.free_delivery_over ?? null;
+  const freeDeliveryAt = validPricing?.free_delivery_at ?? zoneInfo?.free_delivery_over ?? null;
 
   const handleOrder = async () => {
     setError('');
@@ -523,7 +528,7 @@ const CheckoutInner = () => {
     setSubmitting(true);
     try {
       // Always use server-calculated total — never trust client amount
-      const chargeAmount = serverPricing?.grand_total ?? grandTotal;
+      const chargeAmount = validPricing?.grand_total ?? grandTotal;
       const intentRes = await api.post('/payments/create-intent', { amount: chargeAmount });
       const { client_secret, payment_intent_id } = intentRes.data;
 
@@ -746,12 +751,29 @@ const CheckoutInner = () => {
                 ))}
               </div>
 
-              {/* Zone confirmed pill */}
+              {/* Zone confirmed pill — with Change button */}
               {deliveryType === 'delivery' && zoneInfo && (
-                <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg"
-                  style={{ backgroundColor: '#F0FFF4', color: '#166534' }}>
-                  <CheckCircle size={13} />
-                  Delivering to {zoneInfo.postcode} · {fmt(zoneInfo.delivery_fee)} fee · Free over {fmt(zoneInfo.free_delivery_over)}
+                <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg"
+                  style={{ backgroundColor: '#F0FFF4' }}>
+                  <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#166534' }}>
+                    <CheckCircle size={13} />
+                    Delivering to {zoneInfo.postcode} · {fmt(zoneInfo.delivery_fee)} fee · Free over {fmt(zoneInfo.free_delivery_over)}
+                  </div>
+                  <button
+                    onClick={() => setZoneInfo(null)}
+                    className="text-[11px] underline flex-shrink-0"
+                    style={{ color: '#5C4B47' }}>
+                    Change
+                  </button>
+                </div>
+              )}
+
+              {/* No zone yet — nudge to fill postcode in form below */}
+              {deliveryType === 'delivery' && !zoneInfo && (
+                <div className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg"
+                  style={{ backgroundColor: '#FFFBEB', color: '#92400E' }}>
+                  <MapPin size={12} />
+                  Enter your delivery postcode below to see your delivery fee.
                 </div>
               )}
 
