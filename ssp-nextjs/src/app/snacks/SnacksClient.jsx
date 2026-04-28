@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { Flame, ArrowRight, Package, Truck, MessageCircle, Search, X } from 'lucide-react';
@@ -9,21 +9,12 @@ import { slugify } from '@/lib/itemUrl';
 
 const categories = ['Pickles', 'Podis', 'All'];
 
-const scrollToTabs = () => {
-  const anchor = document.getElementById('section-tabs-anchor');
-  if (!anchor) return;
-  const headerH = document.querySelector('header')?.offsetHeight ?? 96;
-  const anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
-  if (window.scrollY < anchorTop - headerH - 8) {
-    window.scrollTo({ top: anchorTop - headerH, behavior: 'smooth' });
-  }
-};
-
 const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
   const [allItems, setAllItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeFilter, setActiveFilter] = useState(initialTab);
   const [search, setSearch] = useState('');
+  const tabMounted = useRef(false);
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
   useEffect(() => { setActiveFilter(initialTab); setSearch(''); }, [initialTab]);
@@ -32,8 +23,18 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
     setActiveFilter(filter);
     const url = filter === 'All' ? '/snacks' : `/snacks/${slugify(filter)}`;
     window.history.replaceState(null, '', url);
-    scrollToTabs();
   };
+
+  useEffect(() => {
+    if (!tabMounted.current) { tabMounted.current = true; return; }
+    const anchor = document.getElementById('section-tabs-anchor');
+    if (!anchor) return;
+    const headerH = document.querySelector('header')?.offsetHeight ?? 96;
+    const anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
+    if (window.scrollY < anchorTop - headerH - 8) {
+      window.scrollTo({ top: anchorTop - headerH, behavior: 'smooth' });
+    }
+  }, [activeFilter]);
   useEffect(() => {
     const key = 'snacks';
     const cached = getCached(key);

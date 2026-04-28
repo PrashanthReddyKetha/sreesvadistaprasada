@@ -32,22 +32,13 @@ function SpiceBar({ level }) {
   );
 }
 
-const scrollToTabs = () => {
-  const anchor = document.getElementById('section-tabs-anchor');
-  if (!anchor) return;
-  const headerH = document.querySelector('header')?.offsetHeight ?? 96;
-  const anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
-  if (window.scrollY < anchorTop - headerH - 8) {
-    window.scrollTo({ top: anchorTop - headerH, behavior: 'smooth' });
-  }
-};
-
 const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [search, setSearch] = useState('');
   const tabRowRef = useRef(null);
+  const tabMounted = useRef(false);
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
   useEffect(() => { setActiveTab(initialTab); setSearch(''); }, [initialTab]);
@@ -56,8 +47,19 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
     setActiveTab(tab);
     const url = tab === 'All' ? '/prasada' : `/prasada/${slugify(tab)}`;
     window.history.replaceState(null, '', url);
-    scrollToTabs();
   };
+
+  // After tab changes (not on mount): scroll to section if user is above tabs
+  useEffect(() => {
+    if (!tabMounted.current) { tabMounted.current = true; return; }
+    const anchor = document.getElementById('section-tabs-anchor');
+    if (!anchor) return;
+    const headerH = document.querySelector('header')?.offsetHeight ?? 96;
+    const anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
+    if (window.scrollY < anchorTop - headerH - 8) {
+      window.scrollTo({ top: anchorTop - headerH, behavior: 'smooth' });
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (!tabRowRef.current) return;
