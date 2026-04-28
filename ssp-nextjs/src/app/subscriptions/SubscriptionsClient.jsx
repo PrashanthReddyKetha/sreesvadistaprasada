@@ -403,9 +403,9 @@ const SubscriptionsInner = () => {
   /* scroll to top on page enter */
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
 
-  /* scroll to wizard top on every step change */
+  /* scroll to wizard top on step advance (not on step 1 — page starts at top) */
   useEffect(() => {
-    if (pageState !== 'wizard') return;
+    if (pageState !== 'wizard' || step === 1) return;
     const el = wizardTopRef.current;
     if (el) {
       const headerH = (document.querySelector('header')?.offsetHeight ?? 96) + 16;
