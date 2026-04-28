@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { ShoppingCart, Sun, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -25,7 +24,6 @@ function SpiceBar({ level }) {
 }
 
 const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
-  const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -37,7 +35,7 @@ const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
   const selectTab = (tab) => {
     setActiveTab(tab);
     const url = tab === 'All' ? '/breakfast' : `/breakfast/${slugify(tab)}`;
-    router.replace(url, { scroll: false });
+    window.history.replaceState(null, '', url);
   };
 
   useEffect(() => {

@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { Leaf, ShoppingCart, Star, Flame, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -34,7 +33,6 @@ function SpiceBar({ level }) {
 }
 
 const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
-  const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -46,7 +44,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
   const selectTab = (tab) => {
     setActiveTab(tab);
     const url = tab === 'All' ? '/prasada' : `/prasada/${slugify(tab)}`;
-    router.replace(url, { scroll: false });
+    window.history.replaceState(null, '', url);
   };
 
   useEffect(() => {

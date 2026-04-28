@@ -5,13 +5,11 @@ import { buildItemUrl } from '@/lib/itemUrl';
 import { Flame, ArrowRight, Package, Truck, MessageCircle, Search, X } from 'lucide-react';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
-import { useRouter } from 'next/navigation';
 import { slugify } from '@/lib/itemUrl';
 
 const categories = ['Pickles', 'Podis', 'All'];
 
 const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
-  const router = useRouter();
   const [allItems, setAllItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeFilter, setActiveFilter] = useState(initialTab);
@@ -20,8 +18,9 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
   useEffect(() => { setActiveFilter(initialTab); setSearch(''); }, [initialTab]);
 
   const selectTab = (filter) => {
-    if (filter === 'All') router.push('/snacks');
-    else router.push(`/snacks/${slugify(filter)}`);
+    setActiveFilter(filter);
+    const url = filter === 'All' ? '/snacks' : `/snacks/${slugify(filter)}`;
+    window.history.replaceState(null, '', url);
   };
   useEffect(() => {
     const key = 'snacks';
