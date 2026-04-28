@@ -546,11 +546,20 @@ const SubscriptionsInner = () => {
     window.history.pushState({ wizard: true }, '', window.location.href);
     const handler = () => {
       if (!wizardActiveRef.current) return;
-      const before = { step: stepRef.current, isGuest: isGuestRef.current };
-      if (goBackRef.current) goBackRef.current();
-      const changed = stepRef.current !== before.step || isGuestRef.current !== before.isGuest;
-      if (changed) window.history.pushState({ wizard: true }, '', window.location.href);
-      // else: step was already 1 — let the browser leave the wizard.
+      if (stepRef.current === 5 && isGuestRef.current) {
+        // Guest sub-step back: show auth options again at step 5.
+        // Re-push so the next browser-back correctly goes to step 4.
+        setIsGuest(false);
+        isGuestRef.current = false;
+        window.history.pushState({ wizard: true }, '', window.location.href);
+      } else if (stepRef.current > 1) {
+        // Normal step back: consume the history entry, decrement step.
+        // Do NOT re-push — each goNext already pushed exactly one entry.
+        const ns = stepRef.current - 1;
+        setStep(ns);
+        stepRef.current = ns;
+      }
+      // step === 1 and not guest: let browser navigate away naturally.
     };
     window.addEventListener('popstate', handler);
     return () => window.removeEventListener('popstate', handler);
