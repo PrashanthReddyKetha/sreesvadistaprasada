@@ -7,7 +7,6 @@ import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
-import { slugify } from '@/lib/itemUrl';
 
 const TABS = ['Bites & Starters', 'Curries & Daal', 'Biriyanis & Rice', 'Rice Bowls', 'Indo Chinese', '🪔 Naivedyam', 'All'];
 
@@ -43,11 +42,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
   useEffect(() => { setActiveTab(initialTab); setSearch(''); }, [initialTab]);
 
-  const selectTab = (tab) => {
-    setActiveTab(tab);
-    const url = tab === 'All' ? '/prasada' : `/prasada/${slugify(tab)}`;
-    window.history.replaceState(null, '', url);
-  };
+  const selectTab = (tab) => { setActiveTab(tab); };
 
   // After tab changes (not on mount): scroll to section if user is above tabs
   useEffect(() => {

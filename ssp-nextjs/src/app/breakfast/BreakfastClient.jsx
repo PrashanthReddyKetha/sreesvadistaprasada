@@ -7,7 +7,6 @@ import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
-import { slugify } from '@/lib/itemUrl';
 
 const TABS = ['Idli & Vada', 'Dosas', 'Poori & Others', 'All'];
 
@@ -34,11 +33,7 @@ const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
   useEffect(() => { setActiveTab(initialTab); setSearch(''); }, [initialTab]);
 
-  const selectTab = (tab) => {
-    setActiveTab(tab);
-    const url = tab === 'All' ? '/breakfast' : `/breakfast/${slugify(tab)}`;
-    window.history.replaceState(null, '', url);
-  };
+  const selectTab = (tab) => { setActiveTab(tab); };
 
   useEffect(() => {
     if (!tabMounted.current) { tabMounted.current = true; return; }

@@ -5,7 +5,6 @@ import { buildItemUrl } from '@/lib/itemUrl';
 import { Flame, ArrowRight, Package, Truck, MessageCircle, Search, X } from 'lucide-react';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
-import { slugify } from '@/lib/itemUrl';
 
 const categories = ['Pickles', 'Podis', 'All'];
 
@@ -19,11 +18,7 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
   useEffect(() => { setActiveFilter(initialTab); setSearch(''); }, [initialTab]);
 
-  const selectTab = (filter) => {
-    setActiveFilter(filter);
-    const url = filter === 'All' ? '/snacks' : `/snacks/${slugify(filter)}`;
-    window.history.replaceState(null, '', url);
-  };
+  const selectTab = (filter) => { setActiveFilter(filter); };
 
   useEffect(() => {
     if (!tabMounted.current) { tabMounted.current = true; return; }
