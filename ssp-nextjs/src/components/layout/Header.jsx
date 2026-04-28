@@ -80,7 +80,7 @@ const Header = () => {
       {/* Notification Bar */}
       <div
         data-testid="notification-bar"
-        className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-medium tracking-wide overflow-hidden"
+        className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-medium tracking-wide overflow-hidden [&_[data-marquee]]:sm:hidden"
         style={{ backgroundColor: pendingReward ? '#F4C430' : '#800020', color: pendingReward ? '#800020' : '#FDFBF7' }}
       >
         {pendingReward ? (
@@ -90,7 +90,11 @@ const Header = () => {
         ) : (
           <>
             <span className="hidden sm:inline">Swagatam 🙏 &nbsp;·&nbsp; Now serving Milton Keynes &nbsp;·&nbsp; 10% off Takeaways &nbsp;·&nbsp; Delivery available</span>
-            <span className="sm:hidden whitespace-nowrap">Swagatam 🙏 &nbsp;·&nbsp; 10% off Takeaways &nbsp;·&nbsp; Delivery available</span>
+            <span className="sm:hidden absolute inset-0 flex items-center overflow-hidden">
+              <span className="whitespace-nowrap animate-[marquee_18s_linear_infinite]">
+                Swagatam 🙏 &nbsp;·&nbsp; Milton Keynes &nbsp;·&nbsp; 10% off Takeaways &nbsp;·&nbsp; Delivery available &nbsp;&nbsp;&nbsp;
+              </span>
+            </span>
           </>
         )}
       </div>
