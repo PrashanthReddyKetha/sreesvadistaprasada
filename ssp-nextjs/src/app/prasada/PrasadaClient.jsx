@@ -44,16 +44,14 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
 
   const selectTab = (tab) => { setActiveTab(tab); };
 
-  // After tab changes (not on mount): scroll to section if user is above tabs
+  // After tab changes (not on mount): always scroll to top of section
   useEffect(() => {
     if (!tabMounted.current) { tabMounted.current = true; return; }
     const anchor = document.getElementById('section-tabs-anchor');
     if (!anchor) return;
     const headerH = document.querySelector('header')?.offsetHeight ?? 96;
     const anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
-    if (window.scrollY < anchorTop - headerH - 8) {
-      window.scrollTo({ top: anchorTop - headerH, behavior: 'smooth' });
-    }
+    window.scrollTo({ top: anchorTop - headerH, behavior: 'smooth' });
   }, [activeTab]);
 
   useEffect(() => {

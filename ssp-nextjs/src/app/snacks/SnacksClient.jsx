@@ -26,9 +26,7 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
     if (!anchor) return;
     const headerH = document.querySelector('header')?.offsetHeight ?? 96;
     const anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
-    if (window.scrollY < anchorTop - headerH - 8) {
-      window.scrollTo({ top: anchorTop - headerH, behavior: 'smooth' });
-    }
+    window.scrollTo({ top: anchorTop - headerH, behavior: 'smooth' });
   }, [activeFilter]);
   useEffect(() => {
     const key = 'snacks';
