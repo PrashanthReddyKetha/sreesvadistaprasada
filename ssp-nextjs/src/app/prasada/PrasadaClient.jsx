@@ -35,7 +35,11 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
   const SK = 'ssp_prasada_tab';
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
-  const [activeTab, setActiveTab] = useState(() => (typeof window !== 'undefined' ? sessionStorage.getItem(SK) : null) || initialTab);
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window === 'undefined') return initialTab;
+    const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
+    return (isBack ? sessionStorage.getItem(SK) : null) || initialTab;
+  });
   const [search, setSearch] = useState('');
   const tabRowRef = useRef(null);
   const tabMounted = useRef(false);
@@ -44,7 +48,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
     const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
     if (!isBack) window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
-  useEffect(() => { setActiveTab(sessionStorage.getItem(SK) || initialTab); setSearch(''); }, [initialTab]);
+  useEffect(() => { setActiveTab(initialTab); setSearch(''); }, [initialTab]);
 
   const selectTab = (tab) => { setActiveTab(tab); sessionStorage.setItem(SK, tab); };
 

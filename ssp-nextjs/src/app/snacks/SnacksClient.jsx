@@ -12,7 +12,11 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
   const SK = 'ssp_snacks_tab';
   const [allItems, setAllItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
-  const [activeFilter, setActiveFilter] = useState(() => (typeof window !== 'undefined' ? sessionStorage.getItem(SK) : null) || initialTab);
+  const [activeFilter, setActiveFilter] = useState(() => {
+    if (typeof window === 'undefined') return initialTab;
+    const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
+    return (isBack ? sessionStorage.getItem(SK) : null) || initialTab;
+  });
   const [search, setSearch] = useState('');
   const tabMounted = useRef(false);
 
@@ -20,7 +24,7 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
     const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
     if (!isBack) window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
-  useEffect(() => { setActiveFilter(sessionStorage.getItem(SK) || initialTab); setSearch(''); }, [initialTab]);
+  useEffect(() => { setActiveFilter(initialTab); setSearch(''); }, [initialTab]);
 
   const selectTab = (filter) => { setActiveFilter(filter); sessionStorage.setItem(SK, filter); };
 
