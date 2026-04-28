@@ -12,7 +12,7 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
   const SK = 'ssp_snacks_tab';
   const [allItems, setAllItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
-  const [activeFilter, setActiveFilter] = useState(() => sessionStorage.getItem(SK) || initialTab);
+  const [activeFilter, setActiveFilter] = useState(() => (typeof window !== 'undefined' ? sessionStorage.getItem(SK) : null) || initialTab);
   const [search, setSearch] = useState('');
   const tabMounted = useRef(false);
 

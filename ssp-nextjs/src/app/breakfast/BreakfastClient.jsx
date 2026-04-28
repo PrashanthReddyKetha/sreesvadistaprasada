@@ -26,7 +26,7 @@ const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
   const SK = 'ssp_breakfast_tab';
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
-  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem(SK) || initialTab);
+  const [activeTab, setActiveTab] = useState(() => (typeof window !== 'undefined' ? sessionStorage.getItem(SK) : null) || initialTab);
   const [search, setSearch] = useState('');
   const tabRowRef = useRef(null);
   const tabMounted = useRef(false);
