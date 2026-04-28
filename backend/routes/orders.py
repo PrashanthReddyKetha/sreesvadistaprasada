@@ -43,7 +43,10 @@ def get_zone_from_postcode(postcode: str) -> Optional[int]:
     if not postcode:
         return None
     clean = postcode.upper().replace(" ", "")
-    match = re.match(r'^(MK\d{1,2})', clean)
+    # UK inward code is always 3 chars (digit+letter+letter).
+    # Strip it to isolate the outward (district) — prevents "MK89BX" matching "MK89".
+    outward = clean[:-3] if len(clean) >= 5 else clean
+    match = re.match(r'^(MK\d{1,2})$', outward)
     if match:
         return POSTCODE_ZONES.get(match.group(1))
     return None

@@ -177,9 +177,10 @@ function PostcodeInput({ onZoneFound }) {
   const [pc, setPc]             = useState('');
   const [checking, setChecking] = useState(false);
   const [error, setError]       = useState('');
-  const debounceRef             = useRef(null);
 
   const check = async (val) => {
+    const stripped = val.replace(/\s/g, '');
+    if (stripped.length < 3) return;
     setChecking(true); setError('');
     try {
       const r = await api.get(`/orders/check-postcode?postcode=${encodeURIComponent(val)}`);
@@ -202,10 +203,12 @@ function PostcodeInput({ onZoneFound }) {
     const val = e.target.value.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
     setPc(val);
     setError('');
-    clearTimeout(debounceRef.current);
-    // Wait for at least a full district code — MK + 1-2 digits = 4-5 chars min
-    if (val.replace(/\s/g, '').length >= 4) {
-      debounceRef.current = setTimeout(() => check(val), 800);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      check(pc);
     }
   };
 
@@ -214,20 +217,29 @@ function PostcodeInput({ onZoneFound }) {
       <p className="text-xs font-semibold mb-2" style={{ color: '#5C4B47' }}>
         <MapPin size={11} className="inline mr-1" />What&apos;s your delivery postcode?
       </p>
-      <div className="relative">
-        <input
-          type="text" value={pc} onChange={handleChange}
-          placeholder="e.g. MK12 6LF" maxLength={8}
-          className="w-full px-3 py-2 rounded-xl border text-sm uppercase focus:outline-none transition-colors"
-          style={{ borderColor: error ? '#EF4444' : 'rgba(128,0,32,0.2)', color: '#2D2422', backgroundColor: 'white' }}
-        />
-        {checking && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" />
-        )}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <input
+            type="text" value={pc} onChange={handleChange} onKeyDown={handleKeyDown}
+            placeholder="e.g. MK12 6LF" maxLength={8}
+            className="w-full px-3 py-2 rounded-xl border text-sm uppercase focus:outline-none transition-colors"
+            style={{ borderColor: error ? '#EF4444' : 'rgba(128,0,32,0.2)', color: '#2D2422', backgroundColor: 'white' }}
+          />
+          {checking && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" />
+          )}
+        </div>
+        <button
+          onClick={() => check(pc)}
+          disabled={checking || pc.replace(/\s/g, '').length < 3}
+          className="px-3 py-2 rounded-xl text-xs font-semibold text-white flex-shrink-0 transition-opacity disabled:opacity-40"
+          style={{ backgroundColor: '#800020' }}>
+          Check
+        </button>
       </div>
       {error
         ? <p className="text-[11px] mt-1.5 font-medium" style={{ color: '#EF4444' }}>{error}</p>
-        : <p className="text-[11px] mt-1 text-gray-400">We deliver to MK postcodes · Enter your full postcode</p>
+        : <p className="text-[11px] mt-1 text-gray-400">Enter your postcode and press Enter or Check</p>
       }
     </div>
   );
