@@ -400,6 +400,9 @@ const SubscriptionsInner = () => {
   const postcodeTimer = useRef(null);
   const wizardTopRef  = useRef(null);
 
+  /* scroll to top on page enter */
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
+
   /* scroll to wizard top on every step change */
   useEffect(() => {
     if (pageState !== 'wizard') return;
