@@ -39,7 +39,6 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
     const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
     if (!isBack) window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
-  useEffect(() => { setActiveTab(initialTab); setSearch(''); }, [initialTab]);
 
   const selectTab = (tab) => { setActiveTab(tab); sessionStorage.setItem(SK, tab); };
 

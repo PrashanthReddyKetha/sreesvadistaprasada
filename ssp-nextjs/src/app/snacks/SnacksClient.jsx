@@ -24,7 +24,6 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
     const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
     if (!isBack) window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
-  useEffect(() => { setActiveFilter(initialTab); setSearch(''); }, [initialTab]);
 
   const selectTab = (filter) => { setActiveFilter(filter); sessionStorage.setItem(SK, filter); };
 
