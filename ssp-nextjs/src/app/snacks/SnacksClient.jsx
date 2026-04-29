@@ -14,8 +14,7 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeFilter, setActiveFilter] = useState(() => {
     if (typeof window === 'undefined') return initialTab;
-    const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
-    return (isBack ? sessionStorage.getItem(SK) : null) || initialTab;
+    return sessionStorage.getItem(SK) || initialTab;
   });
   const [search, setSearch] = useState('');
   const tabMounted = useRef(false);
