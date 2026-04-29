@@ -4,6 +4,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { COLORS, FONTS } from '../constants/theme';
 
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
 import HomeScreen from '../screens/home/HomeScreen';
 import MenuScreen from '../screens/menu/MenuScreen';
 import CategoryScreen from '../screens/menu/CategoryScreen';
@@ -95,6 +97,8 @@ export default function MainNavigator() {
       <Stack.Screen name="About" component={AboutScreen} />
       <Stack.Screen name="DeliveryAreas" component={DeliveryAreasScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
     </Stack.Navigator>
   );
 }

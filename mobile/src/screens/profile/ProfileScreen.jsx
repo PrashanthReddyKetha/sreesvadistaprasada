@@ -16,10 +16,49 @@ function MenuRow({ icon, label, onPress, danger }) {
   );
 }
 
+function GuestPrompt() {
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[guestStyles.container, { paddingTop: insets.top }]}>
+      <View style={guestStyles.header}>
+        <Text style={guestStyles.title}>You</Text>
+      </View>
+      <View style={guestStyles.body}>
+        <Text style={guestStyles.emoji}>👤</Text>
+        <Text style={guestStyles.heading}>Sign in to your account</Text>
+        <Text style={guestStyles.sub}>Track orders, manage your Dabba, earn loyalty rewards.</Text>
+        <TouchableOpacity style={guestStyles.btn} onPress={() => navigation.navigate('Login')}>
+          <Text style={guestStyles.btnText}>Sign In</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={guestStyles.ghostBtn} onPress={() => navigation.navigate('Register')}>
+          <Text style={guestStyles.ghostText}>Create Account</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const guestStyles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.warmWhite },
+  header: { paddingHorizontal: SPACING.xl, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: COLORS.lightGrey },
+  title: { fontFamily: FONTS.heading, fontSize: 22, color: COLORS.crimson },
+  body: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xxxl },
+  emoji: { fontSize: 48, marginBottom: SPACING.lg },
+  heading: { fontFamily: FONTS.heading, fontSize: 22, color: COLORS.brown, textAlign: 'center', marginBottom: 8 },
+  sub: { fontFamily: FONTS.body, fontSize: 13, color: COLORS.grey, textAlign: 'center', lineHeight: 20, marginBottom: SPACING.xxl },
+  btn: { width: '100%', backgroundColor: COLORS.crimson, borderRadius: RADIUS.sm, height: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  btnText: { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.white },
+  ghostBtn: { width: '100%', borderWidth: 1.5, borderColor: COLORS.crimson, borderRadius: RADIUS.sm, height: 46, alignItems: 'center', justifyContent: 'center' },
+  ghostText: { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.crimson },
+});
+
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const { user, logout } = useAuth();
+  const { user, isGuest, logout } = useAuth();
+
+  if (isGuest) return <GuestPrompt />;
   const [orderCount, setOrderCount] = useState(0);
 
   useEffect(() => {

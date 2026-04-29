@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../../constants/theme';
 import ScreenHeader from '../../components/ScreenHeader';
 import EmptyState from '../../components/EmptyState';
@@ -14,6 +15,7 @@ export default function CartScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { cartItems, cartTotal, addToCart, removeFromCart, removeItemCompletely } = useCart();
+  const { isGuest } = useAuth();
   const [orderType, setOrderType] = useState('delivery');
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
@@ -153,7 +155,10 @@ export default function CartScreen() {
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         <TouchableOpacity
           style={styles.placeOrderBtn}
-          onPress={() => navigation.navigate('Checkout', { orderType, total, discount, deliveryFee })}
+          onPress={() => {
+            if (isGuest) { navigation.navigate('Login'); return; }
+            navigation.navigate('Checkout', { orderType, total, discount, deliveryFee });
+          }}
         >
           <Text style={styles.placeOrderText}>Place Order · £{total.toFixed(2)}</Text>
         </TouchableOpacity>

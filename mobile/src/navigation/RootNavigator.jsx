@@ -6,7 +6,7 @@ import MainNavigator from './MainNavigator';
 import { COLORS } from '../constants/theme';
 
 export default function RootNavigator() {
-  const { user, loading } = useAuth();
+  const { user, isGuest, loading } = useAuth();
 
   if (loading) {
     return (
@@ -16,5 +16,5 @@ export default function RootNavigator() {
     );
   }
 
-  return user ? <MainNavigator /> : <AuthNavigator />;
+  return (user || isGuest) ? <MainNavigator /> : <AuthNavigator />;
 }

@@ -246,6 +246,54 @@ async def google_complete(payload: GoogleCompleteRequest):
     return TokenResponse(access_token=token, user=User(**user.model_dump()))
 
 
+# ── Google OAuth (mobile — no phone required) ──────────────────────────────────
+
+@router.post("/google/mobile")
+async def google_auth_mobile(payload: GoogleAuthRequest):
+    """
+    Mobile-only Google Sign In. Verifies the Google access token,
+    creates account from Google profile if new (no phone required).
+    """
+    google_payload = await _verify_google_token(payload.credential)
+
+    google_id = google_payload.get("sub", "")
+    email     = google_payload.get("email", "")
+    name      = google_payload.get("name", email.split("@")[0])
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Could not retrieve email from Google.")
+
+    doc = await db.users.find_one(
+        {"$or": [{"google_id": google_id}, {"email": email}]}, {"_id": 0}
+    )
+    if doc:
+        if not doc.get("google_id"):
+            await db.users.update_one({"email": email}, {"$set": {"google_id": google_id}})
+        user = User(**doc)
+        token = create_access_token(user.id, user.role.value)
+        return TokenResponse(access_token=token, user=user)
+
+    # New user — create without phone
+    user = UserInDB(
+        name=name,
+        email=email,
+        google_id=google_id,
+        password_hash=None,
+    )
+    await db.users.insert_one(user.model_dump())
+    subj, html = email_welcome(user.name)
+    send_email(user.email, subj, html)
+    await create_notification(
+        user_id=user.id,
+        title="Welcome to Sree Svadista Prasada",
+        body="Your account is ready. Every 5 orders earns you a free dish from our entire menu.",
+        notif_type="welcome",
+        action_url="/dashboard?tab=loyalty",
+    )
+    token = create_access_token(user.id, user.role.value)
+    return TokenResponse(access_token=token, user=User(**user.model_dump()))
+
+
 # ── Email / Phone availability checks ─────────────────────────────────────────
 
 @router.get("/check-email")

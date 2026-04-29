@@ -9,6 +9,7 @@ import api from '../../api';
 import { useCart } from '../../context/CartContext';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../../constants/theme';
 import EmptyState from '../../components/EmptyState';
+import { useAuth } from '../../context/AuthContext';
 
 const STATUS_STEPS = ['confirmed', 'preparing', 'out_for_delivery', 'delivered'];
 const STATUS_LABELS = { confirmed: 'Confirmed', preparing: 'Preparing', out_for_delivery: 'On the Way', delivered: 'Delivered', cancelled: 'Cancelled' };
@@ -104,6 +105,7 @@ export default function OrdersScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { addToCart } = useCart();
+  const { isGuest } = useAuth();
   const [tab, setTab] = useState('active');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -121,7 +123,7 @@ export default function OrdersScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { fetchOrders(); }, [fetchOrders]));
+  useFocusEffect(useCallback(() => { if (!isGuest) fetchOrders(); }, [fetchOrders, isGuest]));
 
   const handleReorder = (order) => {
     order.items?.forEach(item => addToCart(item));
@@ -131,6 +133,18 @@ export default function OrdersScreen() {
   const active = orders.filter(o => !['delivered', 'cancelled'].includes(o.status));
   const past = orders.filter(o => ['delivered', 'cancelled'].includes(o.status));
   const displayed = tab === 'active' ? active : past;
+
+  if (isGuest) return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}><Text style={styles.title}>Orders</Text></View>
+      <EmptyState
+        emoji="📦"
+        message="Sign in to track your orders and reorder your favourites."
+        actionLabel="Sign In"
+        onAction={() => navigation.navigate('Login')}
+      />
+    </View>
+  );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
