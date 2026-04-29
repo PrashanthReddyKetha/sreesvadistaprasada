@@ -73,8 +73,11 @@ export default function LoginScreen({ navigation }) {
           </View>
 
           <TouchableOpacity style={styles.btn} onPress={handleLogin} disabled={loading}>
-            <Text style={styles.btnText}>{loading ? 'Signing in...' : 'Sign In'}</Text>
+            <Text style={styles.btnText}>{loading ? 'Waking up the kitchen...' : 'Sign In'}</Text>
           </TouchableOpacity>
+          {loading && (
+            <Text style={styles.wakeNote}>First request may take ~30s — the server was resting 🍵</Text>
+          )}
 
           <TouchableOpacity style={styles.forgotBtn}>
             <Text style={styles.forgotText}>Forgot password?</Text>
@@ -173,6 +176,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.white,
   },
+  wakeNote: { fontFamily: FONTS.body, fontSize: 11, color: COLORS.grey, textAlign: 'center', marginBottom: 8 },
   forgotBtn: { alignItems: 'center', marginBottom: SPACING.xl },
   forgotText: { fontFamily: FONTS.body, fontSize: 12, color: COLORS.grey },
   dividerRow: {
