@@ -1,68 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ScrollView, Alert, Image,
+  KeyboardAvoidingView, Platform, ScrollView, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS, FONTS, SPACING, RADIUS } from '../../constants/theme';
 
-WebBrowser.maybeCompleteAuthSession();
-
-// ─── Replace with your Google OAuth client IDs ───────────────────────────────
-const ANDROID_CLIENT_ID = 'YOUR_ANDROID_CLIENT_ID';
-const IOS_CLIENT_ID     = 'YOUR_IOS_CLIENT_ID';
-const WEB_CLIENT_ID     = 'YOUR_WEB_CLIENT_ID';
-// ─────────────────────────────────────────────────────────────────────────────
-
 export default function LoginScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { login, loginWithGoogle, continueAsGuest } = useAuth();
+  const { login, continueAsGuest } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: ANDROID_CLIENT_ID,
-    iosClientId: IOS_CLIENT_ID,
-    webClientId: WEB_CLIENT_ID,
-  });
-
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const { authentication } = response;
-      handleGoogleToken(authentication.accessToken);
-    } else if (response?.type === 'error') {
-      Alert.alert('', 'Google sign-in failed. Please try again.');
-      setGoogleLoading(false);
-    } else if (response?.type === 'dismiss') {
-      setGoogleLoading(false);
-    }
-  }, [response]);
-
-  const handleGoogleToken = async (accessToken) => {
-    setGoogleLoading(true);
-    try {
-      await loginWithGoogle(accessToken);
-    } catch (err) {
-      Alert.alert('Google sign-in failed', err?.response?.data?.detail || 'Please try again.');
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
-  const handleGooglePress = () => {
-    if (WEB_CLIENT_ID === 'YOUR_WEB_CLIENT_ID') {
-      Alert.alert('Not configured', 'Google Sign-In requires OAuth client IDs.\nSee src/screens/auth/LoginScreen.jsx to set them up.');
-      return;
-    }
-    setGoogleLoading(true);
-    promptAsync();
-  };
 
   const handleLogin = async () => {
     if (!email || !password) { Alert.alert('', 'Please enter your email and password.'); return; }
@@ -74,6 +25,14 @@ export default function LoginScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogle = () => {
+    Alert.alert(
+      'Coming soon',
+      'Google Sign-In will be enabled in the next update.',
+      [{ text: 'OK' }]
+    );
   };
 
   return (
@@ -90,16 +49,9 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.sub}>Sign in to your account</Text>
 
         {/* Google Button */}
-        <TouchableOpacity
-          style={styles.googleBtn}
-          onPress={handleGooglePress}
-          disabled={googleLoading}
-          activeOpacity={0.85}
-        >
+        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogle} activeOpacity={0.85}>
           <Text style={styles.googleIcon}>G</Text>
-          <Text style={styles.googleText}>
-            {googleLoading ? 'Signing in...' : 'Continue with Google'}
-          </Text>
+          <Text style={styles.googleText}>Continue with Google</Text>
         </TouchableOpacity>
 
         <View style={styles.dividerRow}>
@@ -157,7 +109,6 @@ export default function LoginScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
 
-        {/* Skip */}
         <TouchableOpacity style={styles.skipBtn} onPress={continueAsGuest}>
           <Text style={styles.skipText}>Browse as guest →</Text>
         </TouchableOpacity>
@@ -173,12 +124,7 @@ const styles = StyleSheet.create({
   logoDivider: { width: 32, height: 2, backgroundColor: COLORS.gold, alignSelf: 'center', marginTop: 10, marginBottom: 32 },
   heading: { fontFamily: FONTS.heading, fontSize: 28, color: COLORS.brown, marginBottom: 4 },
   sub: { fontFamily: FONTS.body, fontSize: 13, color: COLORS.grey, marginBottom: SPACING.xl },
-  googleBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 10, height: 50, borderRadius: RADIUS.sm,
-    borderWidth: 1.5, borderColor: COLORS.border,
-    backgroundColor: COLORS.white, marginBottom: SPACING.xl,
-  },
+  googleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, height: 50, borderRadius: RADIUS.sm, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.white, marginBottom: SPACING.xl },
   googleIcon: { fontFamily: FONTS.bodyBold, fontSize: 17, color: '#4285F4' },
   googleText: { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.brown },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: SPACING.xl },

@@ -50,15 +50,6 @@ export const AuthProvider = ({ children }) => {
     return res.data.user;
   };
 
-  const loginWithGoogle = async (accessToken) => {
-    const res = await api.post('/auth/google/mobile', { credential: accessToken });
-    await SecureStore.setItemAsync('ssp_token', res.data.access_token);
-    await AsyncStorage.removeItem('ssp_guest');
-    setUser(res.data.user);
-    setIsGuest(false);
-    return res.data.user;
-  };
-
   const continueAsGuest = async () => {
     await AsyncStorage.setItem('ssp_guest', 'true');
     setIsGuest(true);
@@ -76,8 +67,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user, isGuest, loading,
-      login, register, loginWithGoogle,
-      continueAsGuest, logout, updateUser,
+      login, register, continueAsGuest, logout, updateUser,
     }}>
       {children}
     </AuthContext.Provider>

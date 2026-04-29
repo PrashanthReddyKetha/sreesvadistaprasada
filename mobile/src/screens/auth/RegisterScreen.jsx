@@ -1,63 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS, FONTS, SPACING, RADIUS } from '../../constants/theme';
 
-WebBrowser.maybeCompleteAuthSession();
-
-const ANDROID_CLIENT_ID = 'YOUR_ANDROID_CLIENT_ID';
-const IOS_CLIENT_ID     = 'YOUR_IOS_CLIENT_ID';
-const WEB_CLIENT_ID     = 'YOUR_WEB_CLIENT_ID';
-
 export default function RegisterScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { register, loginWithGoogle, continueAsGuest } = useAuth();
+  const { register, continueAsGuest } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: ANDROID_CLIENT_ID,
-    iosClientId: IOS_CLIENT_ID,
-    webClientId: WEB_CLIENT_ID,
-  });
-
-  useEffect(() => {
-    if (response?.type === 'success') {
-      handleGoogleToken(response.authentication.accessToken);
-    } else if (response?.type === 'error' || response?.type === 'dismiss') {
-      setGoogleLoading(false);
-    }
-  }, [response]);
-
-  const handleGoogleToken = async (accessToken) => {
-    setGoogleLoading(true);
-    try {
-      await loginWithGoogle(accessToken);
-    } catch (err) {
-      Alert.alert('Google sign-in failed', err?.response?.data?.detail || 'Please try again.');
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
-  const handleGooglePress = () => {
-    if (WEB_CLIENT_ID === 'YOUR_WEB_CLIENT_ID') {
-      Alert.alert('Not configured', 'Google Sign-In requires OAuth client IDs.\nSee src/screens/auth/LoginScreen.jsx to set them up.');
-      return;
-    }
-    setGoogleLoading(true);
-    promptAsync();
-  };
 
   const handleRegister = async () => {
     if (!name || !email || !password) { Alert.alert('', 'Please fill all fields.'); return; }
@@ -70,6 +27,10 @@ export default function RegisterScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogle = () => {
+    Alert.alert('Coming soon', 'Google Sign-In will be enabled in the next update.', [{ text: 'OK' }]);
   };
 
   return (
@@ -85,17 +46,9 @@ export default function RegisterScreen({ navigation }) {
         <Text style={styles.heading}>Join the family</Text>
         <Text style={styles.sub}>Create your account</Text>
 
-        {/* Google Button */}
-        <TouchableOpacity
-          style={styles.googleBtn}
-          onPress={handleGooglePress}
-          disabled={googleLoading}
-          activeOpacity={0.85}
-        >
+        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogle} activeOpacity={0.85}>
           <Text style={styles.googleIcon}>G</Text>
-          <Text style={styles.googleText}>
-            {googleLoading ? 'Signing in...' : 'Continue with Google'}
-          </Text>
+          <Text style={styles.googleText}>Continue with Google</Text>
         </TouchableOpacity>
 
         <View style={styles.dividerRow}>
