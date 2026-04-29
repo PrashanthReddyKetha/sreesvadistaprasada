@@ -11,6 +11,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Wake the Render backend early so it's ready by the time the user submits
+    api.get('/menu?available=true&limit=1').catch(() => {});
     loadUser();
   }, []);
 
@@ -50,9 +52,9 @@ export const AuthProvider = ({ children }) => {
     return res.data.user;
   };
 
-  const continueAsGuest = async () => {
-    await AsyncStorage.setItem('ssp_guest', 'true');
+  const continueAsGuest = () => {
     setIsGuest(true);
+    AsyncStorage.setItem('ssp_guest', 'true').catch(() => {});
   };
 
   const logout = async () => {

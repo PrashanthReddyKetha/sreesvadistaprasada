@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ScrollView, Alert,
+  KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
@@ -82,9 +82,19 @@ export default function RegisterScreen({ navigation }) {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.btn} onPress={handleRegister} disabled={loading}>
-          <Text style={styles.btnText}>{loading ? 'Creating account...' : 'Create Account'}</Text>
+        <TouchableOpacity style={styles.btn} onPress={handleRegister} disabled={loading} activeOpacity={0.85}>
+          {loading ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <ActivityIndicator size="small" color={COLORS.white} />
+              <Text style={styles.btnText}>Creating account...</Text>
+            </View>
+          ) : (
+            <Text style={styles.btnText}>Create Account</Text>
+          )}
         </TouchableOpacity>
+        {loading && (
+          <Text style={[styles.sub, { textAlign: 'center', marginTop: -8 }]}>First request may take ~30s — the server was resting</Text>
+        )}
 
         <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('Login')}>
           <Text style={styles.loginText}>
