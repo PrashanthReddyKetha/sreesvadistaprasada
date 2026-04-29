@@ -2,8 +2,12 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from datetime import datetime
 import math
+import os
 import re
+import stripe
 from database import db
+
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 from models import Order, OrderCreate, OrderStatusUpdate, OrderStatus
 from auth import get_current_user, get_optional_user, require_admin
 from notifications import (
@@ -293,6 +297,19 @@ async def create_order(
         )
     except ValueError as e:
         raise HTTPException(400, detail=str(e))
+
+    # Verify payment with Stripe before creating the order
+    if not payload.payment_intent_id:
+        raise HTTPException(400, "Payment is required to place an order")
+    try:
+        pi = stripe.PaymentIntent.retrieve(payload.payment_intent_id)
+    except stripe.StripeError:
+        raise HTTPException(400, "Invalid payment — please try again")
+    if pi.status != "succeeded":
+        raise HTTPException(400, "Payment was not completed — please try again")
+    expected_pence = round(totals["grand_total"] * 100)
+    if pi.amount != expected_pence:
+        raise HTTPException(400, "Payment amount does not match order total")
 
     # Redemption orders don't count toward loyalty
     is_qualifying = not payload.is_loyalty_redemption
