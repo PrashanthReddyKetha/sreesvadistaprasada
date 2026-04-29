@@ -132,6 +132,34 @@ async def login(payload: UserLogin):
     return TokenResponse(access_token=token, user=User(**user.model_dump()))
 
 
+# ── Register (mobile — no phone/Firebase required) ────────────────────────────
+
+@router.post("/register/simple", response_model=TokenResponse)
+async def register_simple(payload: UserCreate):
+    """Mobile-only registration without phone/Firebase verification."""
+    existing = await db.users.find_one({"email": payload.email}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user = UserInDB(
+        name=payload.name,
+        email=payload.email,
+        password_hash=hash_password(payload.password),
+    )
+    await db.users.insert_one(user.model_dump())
+    subj, html = email_welcome(user.name)
+    send_email(user.email, subj, html)
+    await create_notification(
+        user_id=user.id,
+        title="Welcome to Sree Svadista Prasada",
+        body="Your account is ready. Every 5 orders earns you a free dish from our entire menu.",
+        notif_type="welcome",
+        action_url="/dashboard?tab=loyalty",
+    )
+    token = create_access_token(user.id, user.role.value)
+    return TokenResponse(access_token=token, user=User(**user.model_dump()))
+
+
 # ── Google OAuth ───────────────────────────────────────────────────────────────
 
 async def _verify_google_token(credential: str) -> dict:

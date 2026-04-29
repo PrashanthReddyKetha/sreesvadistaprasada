@@ -61,10 +61,11 @@ export default function HomeScreen() {
       try {
         const [ordersRes, subRes] = await Promise.all([
           api.get('/orders').catch(() => ({ data: [] })),
-          api.get('/subscriptions').catch(() => ({ data: null })),
+          api.get('/subscriptions').catch(() => ({ data: [] })),
         ]);
         setRecentOrders(ordersRes.data?.slice(0, 5) || []);
-        setSubscription(subRes.data);
+        const activeSub = (subRes.data || []).find(s => s.status === 'active');
+        setSubscription(activeSub || null);
       } catch {}
     }
   }, [user]);

@@ -4,9 +4,7 @@ import {
   TextInput, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import api from '../../api';
-import { useAuth } from '../../context/AuthContext';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../../constants/theme';
 import ScreenHeader from '../../components/ScreenHeader';
 import EmptyState from '../../components/EmptyState';
@@ -14,12 +12,14 @@ import EmptyState from '../../components/EmptyState';
 const STATUS_COLORS = { open: '#1D4ED8', contacted: COLORS.deepGold, resolved: COLORS.green };
 
 function ThreadView({ enquiry, onBack }) {
-  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const flatRef = useRef(null);
   const pollRef = useRef(null);
+
+  // enquiry.enq_type = 'contact' | 'catering'
+  const enqType = enquiry.enq_type || 'contact';
 
   useEffect(() => {
     loadMessages();
@@ -29,7 +29,7 @@ function ThreadView({ enquiry, onBack }) {
 
   const loadMessages = async () => {
     try {
-      const res = await api.get(`/enquiries/${enquiry.id}/messages`);
+      const res = await api.get(`/enquiries/${enqType}/${enquiry.id}/messages`);
       setMessages(res.data || []);
     } catch {}
   };
@@ -38,7 +38,7 @@ function ThreadView({ enquiry, onBack }) {
     if (!reply.trim()) return;
     setSending(true);
     try {
-      await api.post(`/enquiries/${enquiry.id}/messages`, { message: reply.trim() });
+      await api.post(`/enquiries/${enqType}/${enquiry.id}/reply`, { message: reply.trim() });
       setReply('');
       loadMessages();
     } catch {
@@ -54,8 +54,8 @@ function ThreadView({ enquiry, onBack }) {
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Text style={styles.backText}>←</Text>
         </TouchableOpacity>
-        <View>
-          <Text style={styles.threadTitle} numberOfLines={1}>{enquiry.subject}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.threadTitle} numberOfLines={1}>{enquiry.subject || enquiry.name}</Text>
           <Text style={styles.threadSub}>{enquiry.status}</Text>
         </View>
       </View>
@@ -70,12 +70,12 @@ function ThreadView({ enquiry, onBack }) {
         ListEmptyComponent={
           <View style={{ padding: 20, alignItems: 'center' }}>
             <Text style={{ fontFamily: FONTS.headingItalic, fontSize: 14, color: COLORS.grey }}>
-              Start the conversation
+              No messages yet
             </Text>
           </View>
         }
         renderItem={({ item }) => {
-          const isUser = item.sender_role !== 'admin';
+          const isUser = item.sender === 'customer';
           return (
             <View style={[styles.messageWrap, isUser ? styles.messageRight : styles.messageLeft]}>
               {!isUser && <Text style={styles.adminLabel}>Sree Svadista Prasada</Text>}
@@ -102,7 +102,7 @@ function ThreadView({ enquiry, onBack }) {
           multiline
           maxLength={500}
         />
-        <TouchableOpacity style={styles.sendBtn} onPress={sendReply} disabled={sending || !reply.trim()}>
+        <TouchableOpacity style={[styles.sendBtn, !reply.trim() && { opacity: 0.4 }]} onPress={sendReply} disabled={sending || !reply.trim()}>
           <Text style={styles.sendIcon}>➤</Text>
         </TouchableOpacity>
       </View>
@@ -117,8 +117,16 @@ export default function EnquiriesScreen() {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    api.get('/enquiries')
-      .then(r => setEnquiries(r.data || []))
+    api.get('/enquiries/my')
+      .then(r => {
+        // Response: { contact: [...], catering: [...] }
+        const contact = (r.data?.contact || []).map(e => ({ ...e, enq_type: 'contact' }));
+        const catering = (r.data?.catering || []).map(e => ({ ...e, enq_type: 'catering' }));
+        const all = [...contact, ...catering].sort((a, b) =>
+          new Date(b.created_at) - new Date(a.created_at)
+        );
+        setEnquiries(all);
+      })
       .catch(() => setEnquiries([]))
       .finally(() => setLoading(false));
   }, []);
@@ -147,16 +155,23 @@ export default function EnquiriesScreen() {
           renderItem={({ item }) => (
             <TouchableOpacity style={[styles.enquiryRow, SHADOW.light]} onPress={() => setSelected(item)}>
               <View style={styles.enquiryAvatar}>
-                <Text style={styles.enquiryAvatarText}>{item.subject?.[0]?.toUpperCase() || '?'}</Text>
+                <Text style={styles.enquiryAvatarText}>{(item.subject || item.name)?.[0]?.toUpperCase() || '?'}</Text>
               </View>
               <View style={styles.enquiryInfo}>
-                <Text style={styles.enquirySubject} numberOfLines={1}>{item.subject}</Text>
+                <Text style={styles.enquirySubject} numberOfLines={1}>{item.subject || item.name}</Text>
                 <Text style={styles.enquiryDate}>{new Date(item.created_at).toLocaleDateString('en-GB')}</Text>
               </View>
-              <View style={[styles.statusPill, { backgroundColor: `${STATUS_COLORS[item.status] || COLORS.grey}18` }]}>
-                <Text style={[styles.statusText, { color: STATUS_COLORS[item.status] || COLORS.grey }]}>
-                  {item.status}
-                </Text>
+              <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                <View style={[styles.statusPill, { backgroundColor: `${STATUS_COLORS[item.status] || COLORS.grey}18` }]}>
+                  <Text style={[styles.statusText, { color: STATUS_COLORS[item.status] || COLORS.grey }]}>
+                    {item.status}
+                  </Text>
+                </View>
+                {item.unread > 0 && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadText}>{item.unread} new</Text>
+                  </View>
+                )}
               </View>
             </TouchableOpacity>
           )}
@@ -177,10 +192,12 @@ const styles = StyleSheet.create({
   enquiryDate: { fontFamily: FONTS.body, fontSize: 11, color: COLORS.grey, marginTop: 2 },
   statusPill: { borderRadius: RADIUS.full, paddingHorizontal: 8, paddingVertical: 4 },
   statusText: { fontFamily: FONTS.bodyBold, fontSize: 9, textTransform: 'uppercase' },
+  unreadBadge: { backgroundColor: COLORS.crimson, borderRadius: RADIUS.full, paddingHorizontal: 7, paddingVertical: 2 },
+  unreadText: { fontFamily: FONTS.bodyBold, fontSize: 9, color: COLORS.white },
   threadHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: SPACING.lg, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.lightGrey, backgroundColor: COLORS.white },
   backBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   backText: { fontSize: 22, color: COLORS.crimson },
-  threadTitle: { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.brown, flex: 1 },
+  threadTitle: { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.brown },
   threadSub: { fontFamily: FONTS.body, fontSize: 11, color: COLORS.grey, textTransform: 'capitalize' },
   messageList: { padding: SPACING.lg, gap: 10, flexGrow: 1 },
   messageWrap: { maxWidth: '80%', marginBottom: 4 },

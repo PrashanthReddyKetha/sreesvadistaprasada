@@ -38,15 +38,23 @@ export default function CheckoutScreen() {
     setLoading(true);
     try {
       const orderData = {
-        items: cartItems.map(i => ({ item_id: i.id, name: i.name, price: i.price, quantity: i.quantity, image: i.image })),
-        order_type: orderType,
-        total_amount: total,
-        delivery_address: orderType === 'delivery' ? `${address}, ${postcode}` : 'Collection',
-        postcode: postcode,
-        phone: phone,
-        special_instructions: instructions,
-        discount_amount: discount || 0,
-        delivery_fee: deliveryFee || 0,
+        customer_name: user?.name || 'Guest',
+        customer_email: user?.email || 'guest@ssp.com',
+        customer_phone: phone || user?.phone || '00000000000',
+        delivery_type: orderType === 'delivery' ? 'delivery' : 'takeaway',
+        delivery_address: {
+          line1: orderType === 'delivery' ? address : '1 Greenleys',
+          city: orderType === 'delivery' ? 'Milton Keynes' : 'Milton Keynes',
+          postcode: orderType === 'delivery' ? postcode : 'MK12 6HG',
+        },
+        items: cartItems.map(i => ({
+          menu_item_id: i.id,
+          name: i.name,
+          price: i.price,
+          quantity: i.quantity,
+        })),
+        notes: instructions || undefined,
+        user_id: user?.id || undefined,
       };
       const res = await api.post('/orders', orderData);
       clearCart();

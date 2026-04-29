@@ -31,7 +31,10 @@ export default function DabbaWalaScreen() {
 
   useEffect(() => {
     api.get('/subscriptions')
-      .then(r => setSubscription(r.data))
+      .then(r => {
+        const active = (r.data || []).find(s => s.status === 'active');
+        setSubscription(active || null);
+      })
       .catch(() => setSubscription(null))
       .finally(() => setLoading(false));
   }, []);
@@ -64,7 +67,7 @@ export default function DabbaWalaScreen() {
           text: 'Cancel', style: 'destructive',
           onPress: async () => {
             try {
-              await api.delete(`/subscriptions/${subscription.id}`);
+              await api.put(`/subscriptions/${subscription.id}/status`, { status: 'cancelled' });
               setSubscription(null);
             } catch { Alert.alert('', 'Could not cancel. Please contact us.'); }
           }

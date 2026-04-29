@@ -74,7 +74,7 @@ function OrderCard({ order, onReorder }) {
       </Text>
 
       <View style={styles.cardFooter}>
-        <Text style={styles.orderTotal}>£{order.total_amount?.toFixed(2)}</Text>
+        <Text style={styles.orderTotal}>£{(order.total ?? order.total_amount ?? 0).toFixed(2)}</Text>
         {!isActive && (
           <TouchableOpacity style={styles.reorderBtn} onPress={() => onReorder(order)}>
             <Text style={styles.reorderText}>Reorder</Text>
@@ -93,7 +93,11 @@ function OrderCard({ order, onReorder }) {
             </View>
           ))}
           {order.delivery_address && (
-            <Text style={styles.expandedAddress}>📍 {order.delivery_address}</Text>
+            <Text style={styles.expandedAddress}>
+              📍 {typeof order.delivery_address === 'string'
+                ? order.delivery_address
+                : `${order.delivery_address.line1}, ${order.delivery_address.city} ${order.delivery_address.postcode}`}
+            </Text>
           )}
         </View>
       )}
@@ -126,7 +130,12 @@ export default function OrdersScreen() {
   useFocusEffect(useCallback(() => { if (!isGuest) fetchOrders(); }, [fetchOrders, isGuest]));
 
   const handleReorder = (order) => {
-    order.items?.forEach(item => addToCart(item));
+    order.items?.forEach(item => addToCart({
+      id: item.menu_item_id,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+    }));
     navigation.navigate('Cart');
   };
 
