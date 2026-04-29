@@ -358,6 +358,36 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
   );
 }
 
+const BRAND_CONFIG = {
+  visa:       { label: 'VISA',       bg: '#1A1F71', color: '#fff', italic: true },
+  mastercard: { label: 'MC',         bg: '#EB001B', color: '#fff', italic: false },
+  amex:       { label: 'AMEX',       bg: '#2E77BC', color: '#fff', italic: false },
+  discover:   { label: 'DISC',       bg: '#FF6600', color: '#fff', italic: false },
+  maestro:    { label: 'MAESTRO',    bg: '#009BE1', color: '#fff', italic: false },
+  unionpay:   { label: 'UNIONPAY',   bg: '#D0021B', color: '#fff', italic: false },
+  dinersclub: { label: 'DINERS',     bg: '#004A97', color: '#fff', italic: false },
+  jcb:        { label: 'JCB',        bg: '#003087', color: '#fff', italic: false },
+};
+
+function CardBrandBadge({ brand }) {
+  const cfg = BRAND_CONFIG[brand];
+  if (!cfg) return null;
+  return (
+    <span
+      className="text-[10px] font-extrabold px-1.5 py-0.5 rounded select-none"
+      style={{
+        backgroundColor: cfg.bg,
+        color: cfg.color,
+        fontStyle: cfg.italic ? 'italic' : 'normal',
+        letterSpacing: '0.04em',
+        lineHeight: 1,
+      }}
+    >
+      {cfg.label}
+    </span>
+  );
+}
+
 const CARD_STYLE = {
   style: {
     base: {
@@ -388,6 +418,7 @@ const CheckoutInner = () => {
   const [freeItem, setFreeItem] = useState(null);
   const [serverPricing, setServerPricing] = useState(null);
   const [postOrderLoyalty, setPostOrderLoyalty] = useState(null);
+  const [cardBrand, setCardBrand] = useState(null);
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '',
@@ -975,8 +1006,14 @@ const CheckoutInner = () => {
                   </div>
                   <div className="space-y-2">
                     {/* Card number - full width */}
-                    <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
-                      <CardNumberElement options={CARD_STYLE} placeholder="Card number" />
+                    <div className="px-3 py-3 rounded-xl border-2 flex items-center gap-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
+                      <div className="flex-1">
+                        <CardNumberElement
+                          options={CARD_STYLE}
+                          onChange={e => setCardBrand(e.brand && e.brand !== 'unknown' ? e.brand : null)}
+                        />
+                      </div>
+                      {cardBrand && <CardBrandBadge brand={cardBrand} />}
                     </div>
                     {/* Expiry, CVC, Postcode - single row */}
                     <div className="grid grid-cols-3 gap-2">
