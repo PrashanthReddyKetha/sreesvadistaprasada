@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Plus, X, Save, RefreshCw, Utensils, Leaf, Flame, Edit2, Trash2 } from 'lucide-react';
 import api from '@/api';
+import { clearMenuCache } from '@/api/menuCache';
 
 const CATEGORIES = ['nonVeg','veg','breakfast','pickles','podis','drinks','streetFood','ragiSpecials'];
 const CAT_LABELS  = { nonVeg:'Svadista (Non-Veg)', veg:'Prasada (Veg)', breakfast:'Breakfast', pickles:'Snacks — Pickles', podis:'Snacks — Podis', drinks:'Drinks', streetFood:'Street Food', ragiSpecials:'Ragi Specials' };
@@ -159,7 +160,7 @@ export default function MenuTab() {
     setSaving(true);
     try {
       await api.put(`/menu/${id}`, { ...editForm, price: parseFloat(editForm.price), spice_level: parseInt(editForm.spice_level), extra_categories: (editForm.extraCats || []).map(c => ({ category: c })) });
-      setMsg('Saved!'); setEditingId(null); await load();
+      clearMenuCache(); setMsg('Saved!'); setEditingId(null); await load();
       setTimeout(() => setMsg(''), 2000);
     } catch { setMsg('Save failed.'); }
     finally { setSaving(false); }
@@ -167,13 +168,13 @@ export default function MenuTab() {
 
   const toggleAvail = async (item) => {
     await api.put(`/menu/${item.id}`, { available: !item.available });
-    await load();
+    clearMenuCache(); await load();
   };
 
   const deleteItem = async (item) => {
     if (!window.confirm(`Permanently delete "${item.name}"? This cannot be undone.`)) return;
     await api.delete(`/menu/${item.id}`);
-    setSelected(s => { const n = new Set(s); n.delete(item.id); return n; });
+    clearMenuCache(); setSelected(s => { const n = new Set(s); n.delete(item.id); return n; });
     await load();
   };
 
@@ -183,7 +184,7 @@ export default function MenuTab() {
     if (!window.confirm(`Permanently delete ${selected.size} item${selected.size > 1 ? 's' : ''}?\n\n${names.join('\n')}\n\nThis cannot be undone.`)) return;
     setBulkDeleting(true);
     await Promise.all([...selected].map(id => api.delete(`/menu/${id}`).catch(() => {})));
-    setSelected(new Set());
+    clearMenuCache(); setSelected(new Set());
     await load();
     setBulkDeleting(false);
   };
@@ -203,7 +204,7 @@ export default function MenuTab() {
     setAddSaving(true);
     try {
       await api.post('/menu', { ...addForm, price: parseFloat(addForm.price), spice_level: parseInt(addForm.spice_level), extra_categories: (addForm.extraCats || []).map(c => ({ category: c })) });
-      setMsg('Item added!'); setAdding(false); setAddForm(BLANK_ITEM); await load();
+      clearMenuCache(); setMsg('Item added!'); setAdding(false); setAddForm(BLANK_ITEM); await load();
       setTimeout(() => setMsg(''), 2000);
     } catch (e) { setMsg(e.response?.data?.detail || 'Failed to add item.'); }
     finally { setAddSaving(false); }
