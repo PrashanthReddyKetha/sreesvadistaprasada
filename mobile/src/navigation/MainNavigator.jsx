@@ -20,6 +20,10 @@ import EnquiriesScreen from '../screens/profile/EnquiriesScreen';
 import AboutScreen from '../screens/profile/AboutScreen';
 import DeliveryAreasScreen from '../screens/profile/DeliveryAreasScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import ContactScreen from '../screens/profile/ContactScreen';
+import CateringScreen from '../screens/profile/CateringScreen';
+import FAQScreen from '../screens/profile/FAQScreen';
+import GalleryScreen from '../screens/profile/GalleryScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -97,6 +101,10 @@ export default function MainNavigator() {
       <Stack.Screen name="About" component={AboutScreen} />
       <Stack.Screen name="DeliveryAreas" component={DeliveryAreasScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="Contact" component={ContactScreen} />
+      <Stack.Screen name="Catering" component={CateringScreen} />
+      <Stack.Screen name="FAQ" component={FAQScreen} />
+      <Stack.Screen name="Gallery" component={GalleryScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
     </Stack.Navigator>
