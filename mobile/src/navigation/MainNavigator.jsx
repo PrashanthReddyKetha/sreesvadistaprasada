@@ -4,8 +4,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { COLORS, FONTS } from '../constants/theme';
 
-import LoginScreen from '../screens/auth/LoginScreen';
-import RegisterScreen from '../screens/auth/RegisterScreen';
 import HomeScreen from '../screens/home/HomeScreen';
 import MenuScreen from '../screens/menu/MenuScreen';
 import CategoryScreen from '../screens/menu/CategoryScreen';
@@ -26,17 +24,16 @@ import FAQScreen from '../screens/profile/FAQScreen';
 import GalleryScreen from '../screens/profile/GalleryScreen';
 
 const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+const RootStack = createNativeStackNavigator();
+const HomeStack = createNativeStackNavigator();
+const MenuStack = createNativeStackNavigator();
+const OrdersStack = createNativeStackNavigator();
+const ProfileStack = createNativeStackNavigator();
 
 function TabIcon({ label, focused }) {
-  const icons = {
-    Home: focused ? '🏠' : '🏠',
-    Menu: focused ? '🍽' : '🍽',
-    Orders: focused ? '📦' : '📦',
-    You: focused ? '👤' : '👤',
-  };
+  const icons = { Home: '🏠', Menu: '🍽', Orders: '📦', You: '👤' };
   return (
-    <View style={{ alignItems: 'center', paddingTop: 4 }}>
+    <View style={{ alignItems: 'center', paddingTop: 2 }}>
       <Text style={{ fontSize: 20 }}>{icons[label]}</Text>
       <Text style={{
         fontSize: 10,
@@ -47,6 +44,58 @@ function TabIcon({ label, focused }) {
     </View>
   );
 }
+
+// ─── Per-tab stacks (keep tab bar visible on all screens) ────────────────────
+
+function HomeStackNav() {
+  return (
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+      <HomeStack.Screen name="Category" component={CategoryScreen} />
+      <HomeStack.Screen name="ItemDetail" component={ItemDetailScreen} />
+    </HomeStack.Navigator>
+  );
+}
+
+function MenuStackNav() {
+  return (
+    <MenuStack.Navigator screenOptions={{ headerShown: false }}>
+      <MenuStack.Screen name="MenuMain" component={MenuScreen} />
+      <MenuStack.Screen name="Category" component={CategoryScreen} />
+      <MenuStack.Screen name="ItemDetail" component={ItemDetailScreen} />
+    </MenuStack.Navigator>
+  );
+}
+
+function OrdersStackNav() {
+  return (
+    <OrdersStack.Navigator screenOptions={{ headerShown: false }}>
+      <OrdersStack.Screen name="OrdersMain" component={OrdersScreen} />
+      <OrdersStack.Screen name="ItemDetail" component={ItemDetailScreen} />
+    </OrdersStack.Navigator>
+  );
+}
+
+function ProfileStackNav() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStack.Screen name="DabbaWala" component={DabbaWalaScreen} />
+      <ProfileStack.Screen name="Enquiries" component={EnquiriesScreen} />
+      <ProfileStack.Screen name="About" component={AboutScreen} />
+      <ProfileStack.Screen name="DeliveryAreas" component={DeliveryAreasScreen} />
+      <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <ProfileStack.Screen name="Contact" component={ContactScreen} />
+      <ProfileStack.Screen name="Catering" component={CateringScreen} />
+      <ProfileStack.Screen name="FAQ" component={FAQScreen} />
+      <ProfileStack.Screen name="Gallery" component={GalleryScreen} />
+      <ProfileStack.Screen name="Category" component={CategoryScreen} />
+      <ProfileStack.Screen name="ItemDetail" component={ItemDetailScreen} />
+    </ProfileStack.Navigator>
+  );
+}
+
+// ─── Bottom tabs ─────────────────────────────────────────────────────────────
 
 function HomeTabs() {
   return (
@@ -65,48 +114,38 @@ function HomeTabs() {
     >
       <Tab.Screen
         name="HomeTab"
-        component={HomeScreen}
+        component={HomeStackNav}
         options={{ tabBarIcon: ({ focused }) => <TabIcon label="Home" focused={focused} /> }}
       />
       <Tab.Screen
         name="MenuTab"
-        component={MenuScreen}
+        component={MenuStackNav}
         options={{ tabBarIcon: ({ focused }) => <TabIcon label="Menu" focused={focused} /> }}
       />
       <Tab.Screen
         name="OrdersTab"
-        component={OrdersScreen}
+        component={OrdersStackNav}
         options={{ tabBarIcon: ({ focused }) => <TabIcon label="Orders" focused={focused} /> }}
       />
       <Tab.Screen
         name="YouTab"
-        component={ProfileScreen}
+        component={ProfileStackNav}
         options={{ tabBarIcon: ({ focused }) => <TabIcon label="You" focused={focused} /> }}
       />
     </Tab.Navigator>
   );
 }
 
+// ─── Root stack (modal screens sit above tabs, no tab bar) ───────────────────
+
 export default function MainNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Tabs" component={HomeTabs} />
-      <Stack.Screen name="Category" component={CategoryScreen} />
-      <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
-      <Stack.Screen name="Cart" component={CartScreen} />
-      <Stack.Screen name="Checkout" component={CheckoutScreen} />
-      <Stack.Screen name="OrderConfirmed" component={OrderConfirmedScreen} />
-      <Stack.Screen name="DabbaWala" component={DabbaWalaScreen} />
-      <Stack.Screen name="Enquiries" component={EnquiriesScreen} />
-      <Stack.Screen name="About" component={AboutScreen} />
-      <Stack.Screen name="DeliveryAreas" component={DeliveryAreasScreen} />
-      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-      <Stack.Screen name="Contact" component={ContactScreen} />
-      <Stack.Screen name="Catering" component={CateringScreen} />
-      <Stack.Screen name="FAQ" component={FAQScreen} />
-      <Stack.Screen name="Gallery" component={GalleryScreen} />
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
-    </Stack.Navigator>
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      <RootStack.Screen name="Tabs" component={HomeTabs} />
+      {/* Full-screen modal flows — intentionally hide tab bar */}
+      <RootStack.Screen name="Cart" component={CartScreen} options={{ presentation: 'modal' }} />
+      <RootStack.Screen name="Checkout" component={CheckoutScreen} />
+      <RootStack.Screen name="OrderConfirmed" component={OrderConfirmedScreen} options={{ gestureEnabled: false }} />
+    </RootStack.Navigator>
   );
 }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api';
@@ -10,56 +10,73 @@ export const AuthProvider = ({ children }) => {
   const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Warm the Render backend early so it's ready when the user submits
   useEffect(() => {
-    // Wake the Render backend early so it's ready by the time the user submits
     api.get('/menu?available=true&limit=1').catch(() => {});
-    loadUser();
   }, []);
 
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
+    setLoading(true);
     try {
       const token = await SecureStore.getItemAsync('ssp_token');
       if (token) {
-        const res = await api.get('/auth/me');
+        // Attach token manually for this call in case interceptor races
+        const res = await api.get('/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setUser(res.data);
         setIsGuest(false);
         return;
       }
       const guest = await AsyncStorage.getItem('ssp_guest');
-      if (guest === 'true') setIsGuest(true);
+      if (guest === 'true') {
+        setIsGuest(true);
+      } else {
+        setUser(null);
+        setIsGuest(false);
+      }
     } catch {
+      // Token invalid/expired — clear it, drop to auth screen
       await SecureStore.deleteItemAsync('ssp_token');
+      setUser(null);
+      setIsGuest(false);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => { loadUser(); }, [loadUser]);
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
-    await SecureStore.setItemAsync('ssp_token', res.data.access_token);
+    const { access_token, user: userData } = res.data;
+    // Save token BEFORE updating state so interceptor picks it up immediately
+    await SecureStore.setItemAsync('ssp_token', access_token);
     await AsyncStorage.removeItem('ssp_guest');
-    setUser(res.data.user);
     setIsGuest(false);
-    return res.data.user;
+    setUser(userData);
+    return userData;
   };
 
   const register = async (name, email, password) => {
     const res = await api.post('/auth/register/simple', { name, email, password });
-    await SecureStore.setItemAsync('ssp_token', res.data.access_token);
+    const { access_token, user: userData } = res.data;
+    await SecureStore.setItemAsync('ssp_token', access_token);
     await AsyncStorage.removeItem('ssp_guest');
-    setUser(res.data.user);
     setIsGuest(false);
-    return res.data.user;
+    setUser(userData);
+    return userData;
   };
 
-  const continueAsGuest = () => {
+  const continueAsGuest = async () => {
+    await AsyncStorage.setItem('ssp_guest', 'true');
     setIsGuest(true);
-    AsyncStorage.setItem('ssp_guest', 'true').catch(() => {});
   };
 
   const logout = async () => {
     await SecureStore.deleteItemAsync('ssp_token');
     await AsyncStorage.removeItem('ssp_guest');
+    // Clear user AFTER storage ops to prevent race
     setUser(null);
     setIsGuest(false);
   };
@@ -69,7 +86,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user, isGuest, loading,
-      login, register, continueAsGuest, logout, updateUser,
+      login, register, logout, continueAsGuest, updateUser, loadUser,
     }}>
       {children}
     </AuthContext.Provider>

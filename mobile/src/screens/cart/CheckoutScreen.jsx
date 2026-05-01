@@ -25,9 +25,26 @@ export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute();
-  const { orderType, total, discount, deliveryFee } = route.params;
+  const { orderType, discount } = route.params;
   const { cartItems, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
+
+  // Delivery rules (mirrors backend ZONES)
+  const MIN_ORDER_DELIVERY = 15.0;
+  const DELIVERY_FEE = 3.99;
+  const FREE_DELIVERY_OVER = 30.0;
+  const SMALL_ORDER_FEE = 1.99; // charged when delivery order < MIN_ORDER but > 0
+
+  const subtotalAfterDiscount = cartTotal - discount;
+  const isDelivery = orderType === 'delivery';
+
+  // Compute delivery fee: free over £30, else £3.99; add small order fee if under £15
+  const rawDeliveryFee = isDelivery
+    ? (subtotalAfterDiscount >= FREE_DELIVERY_OVER ? 0 : DELIVERY_FEE)
+    : 0;
+  const smallOrderFee = isDelivery && cartTotal < MIN_ORDER_DELIVERY ? SMALL_ORDER_FEE : 0;
+  const deliveryFee = rawDeliveryFee;
+  const total = subtotalAfterDiscount + deliveryFee + smallOrderFee;
 
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -243,6 +260,18 @@ export default function CheckoutScreen() {
             />
           </View>
 
+          {/* Minimum order warning */}
+          {isDelivery && cartTotal < MIN_ORDER_DELIVERY && (
+            <View style={[styles.section, { paddingTop: 0 }]}>
+              <View style={styles.minOrderBanner}>
+                <Text style={styles.minOrderText}>
+                  ⚠️  Minimum order for delivery is £{MIN_ORDER_DELIVERY.toFixed(2)}.
+                  A small order fee of £{SMALL_ORDER_FEE.toFixed(2)} applies.
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Order summary */}
           <View style={styles.summaryCard}>
             <Text style={styles.sectionLabel}>Order Summary</Text>
@@ -262,10 +291,16 @@ export default function CheckoutScreen() {
                 <Text style={[styles.summaryVal, { color: '#059669' }]}>−£{discount.toFixed(2)}</Text>
               </View>
             )}
-            {deliveryFee > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryKey}>Delivery</Text>
+              <Text style={[styles.summaryVal, deliveryFee === 0 && isDelivery && { color: '#059669' }]}>
+                {!isDelivery ? '—' : deliveryFee === 0 ? 'Free 🎉' : `£${deliveryFee.toFixed(2)}`}
+              </Text>
+            </View>
+            {smallOrderFee > 0 && (
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryKey}>Delivery</Text>
-                <Text style={styles.summaryVal}>£{deliveryFee.toFixed(2)}</Text>
+                <Text style={styles.summaryKey}>Small order fee</Text>
+                <Text style={styles.summaryVal}>£{smallOrderFee.toFixed(2)}</Text>
               </View>
             )}
             <View style={styles.totalRow}>
@@ -292,7 +327,7 @@ export default function CheckoutScreen() {
             activeOpacity={0.9}
           >
             <Text style={styles.confirmText}>
-              {loading ? 'Placing order...' : `Confirm Order · £${total.toFixed(2)}`}
+              {loading ? 'Placing your order…' : `Confirm Order · £${total.toFixed(2)}`}
             </Text>
           </TouchableOpacity>
         </View>
@@ -343,6 +378,8 @@ const styles = StyleSheet.create({
   totalLabel: { fontFamily: FONTS.bodyBold, fontSize: 15, color: COLORS.brown },
   totalValue: { fontFamily: FONTS.bodyBold, fontSize: 18, color: COLORS.crimson },
 
+  minOrderBanner: { backgroundColor: 'rgba(234,179,8,0.12)', borderWidth: 1, borderColor: 'rgba(234,179,8,0.4)', borderRadius: RADIUS.md, padding: 12, marginTop: SPACING.xl },
+  minOrderText: { fontFamily: FONTS.body, fontSize: 12, color: '#92400E', lineHeight: 18 },
   paymentNote: { backgroundColor: COLORS.lightGrey, borderRadius: RADIUS.lg, padding: 14 },
   paymentNoteText: { fontFamily: FONTS.bodyMedium, fontSize: 13, color: COLORS.brown },
   paymentNoteSub: { fontFamily: FONTS.body, fontSize: 12, color: COLORS.grey, marginTop: 4 },
