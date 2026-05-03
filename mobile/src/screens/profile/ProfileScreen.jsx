@@ -33,7 +33,7 @@ export default function ProfileScreen() {
   const { user, isGuest, logout } = useAuth();
 
   // Always call hooks before any early return
-  const [loyaltyStatus, setLoyaltyStatus] = useState({ loyalty_order_count: 0, pending_reward: false, orders_until_next: 5 });
+  const [loyaltyStatus, setLoyaltyStatus] = useState({ order_count: 0, pending_reward: false, orders_until_next: 5 });
   const [unreadEnquiries, setUnreadEnquiries] = useState(0);
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function ProfileScreen() {
     );
   }
 
-  const cycleCount = loyaltyStatus.loyalty_order_count % 5 || (loyaltyStatus.pending_reward ? 5 : 0);
+  const cycleCount = loyaltyStatus.order_count % 5 || (loyaltyStatus.pending_reward ? 5 : 0);
   const pendingReward = loyaltyStatus.pending_reward || false;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
 

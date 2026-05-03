@@ -234,7 +234,7 @@ const CartDrawer = () => {
 
   const handleSelectFreeItem = async (item) => {
     try {
-      await api.post('/loyalty/redeem', { item_id: item.id });
+      await api.post('/loyalty/redeem', { free_item_id: item.id });
     } catch (e) {
       // If the backend rejects (no pending reward, item unavailable etc.), bail out
       if (e.response?.status === 400 || e.response?.status === 403) return;
