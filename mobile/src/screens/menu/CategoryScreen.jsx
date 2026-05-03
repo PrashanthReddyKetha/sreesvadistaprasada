@@ -6,7 +6,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { setStatusBarStyle } from 'expo-status-bar';
 import { useCart } from '../../context/CartContext';
 import api from '../../api';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../../constants/theme';
@@ -106,6 +107,23 @@ export default function CategoryScreen() {
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const tabsRef = useRef(null);
+  const tabOffsets = useRef({});
+
+  // Light status bar icons over the dark hero image
+  useFocusEffect(
+    useCallback(() => {
+      setStatusBarStyle('light');
+      return () => setStatusBarStyle('dark');
+    }, [])
+  );
+
+  const handleTabPress = (tab) => {
+    setActiveTab(tab);
+    const offset = tabOffsets.current[tab];
+    if (offset != null && tabsRef.current) {
+      tabsRef.current.scrollTo({ x: Math.max(0, offset - 24), animated: true });
+    }
+  };
 
   const fetchItems = useCallback(async () => {
     try {
@@ -248,8 +266,9 @@ export default function CategoryScreen() {
             <TouchableOpacity
               key={tab}
               style={[styles.tab, activeTab === tab && { backgroundColor: COLORS.crimson, borderColor: COLORS.crimson }]}
-              onPress={() => setActiveTab(tab)}
+              onPress={() => handleTabPress(tab)}
               activeOpacity={0.8}
+              onLayout={(e) => { tabOffsets.current[tab] = e.nativeEvent.layout.x; }}
             >
               <Text style={[styles.tabText, activeTab === tab && { color: COLORS.white }]}>{tab}</Text>
             </TouchableOpacity>
