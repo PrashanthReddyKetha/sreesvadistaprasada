@@ -21,10 +21,16 @@ export default function SplashScreen({ navigation }) {
       Animated.timing(dividerWidth, { toValue: 40, duration: 400, useNativeDriver: false }),
     ]).start();
 
-    const timer = setTimeout(async () => {
-      const seen = await AsyncStorage.getItem('ssp_onboarded');
-      navigation.replace(seen ? 'Login' : 'Onboarding');
-    }, 2600);
+    let timer;
+    AsyncStorage.getItem('ssp_onboarded').then(seen => {
+      // Show full animation for first-timers; skip quickly for returning users
+      const delay = seen ? 600 : 2600;
+      timer = setTimeout(() => {
+        navigation.replace(seen ? 'Login' : 'Onboarding');
+      }, delay);
+    }).catch(() => {
+      timer = setTimeout(() => navigation.replace('Onboarding'), 2600);
+    });
 
     return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

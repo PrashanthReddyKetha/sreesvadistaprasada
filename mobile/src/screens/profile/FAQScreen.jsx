@@ -32,7 +32,7 @@ const FAQ_DATA = [
     section: 'Delivery & Collection',
     items: [
       { q: 'Where do you deliver?', a: 'We currently deliver to Milton Keynes, Edinburgh, and Glasgow. Check the Delivery Areas screen for a full postcode list.' },
-      { q: 'Is delivery free?', a: 'Delivery is free on orders over £30. Below that, a £2.99 delivery fee applies.' },
+      { q: 'Is delivery free?', a: 'Delivery is free on orders over £30 for MK, Edinburgh, and Glasgow. A small delivery fee applies below that threshold, which may vary by area.' },
       { q: 'Can I collect instead?', a: 'Yes! Choose Collection at checkout for 10% off your order. We\'ll confirm the collection address when your order is ready.' },
       { q: 'How do I track my order?', a: 'Go to the Orders tab after placing your order to see a live status tracker.' },
     ],

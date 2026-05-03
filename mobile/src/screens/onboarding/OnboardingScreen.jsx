@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONTS } from '../../constants/theme';
 
 const { width, height } = Dimensions.get('window');
@@ -48,7 +49,10 @@ export default function OnboardingScreen({ navigation }) {
     }
   };
 
-  const skip = () => navigation.replace('Login');
+  const skip = () => {
+    AsyncStorage.setItem('ssp_onboarded', 'true').catch(() => {});
+    navigation.replace('Login');
+  };
 
   const onMomentumScrollEnd = (e) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / width);

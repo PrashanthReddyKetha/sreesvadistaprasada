@@ -29,18 +29,18 @@ export default function CheckoutScreen() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
 
-  // Delivery rules (mirrors backend ZONES)
+  // Delivery rules — populated from /delivery/check once postcode is known
   const MIN_ORDER_DELIVERY = 15.0;
-  const DELIVERY_FEE = 3.99;
-  const FREE_DELIVERY_OVER = 30.0;
   const SMALL_ORDER_FEE = 1.99; // charged when delivery order < MIN_ORDER but > 0
+  const [zoneDeliveryFee, setZoneDeliveryFee] = useState(3.99);
+  const [zoneFreeOver, setZoneFreeOver] = useState(30.0);
 
   const subtotalAfterDiscount = cartTotal - discount;
   const isDelivery = orderType === 'delivery';
 
-  // Compute delivery fee: free over £30, else £3.99; add small order fee if under £15
+  // Compute delivery fee using zone-specific values
   const rawDeliveryFee = isDelivery
-    ? (subtotalAfterDiscount >= FREE_DELIVERY_OVER ? 0 : DELIVERY_FEE)
+    ? (subtotalAfterDiscount >= zoneFreeOver ? 0 : zoneDeliveryFee)
     : 0;
   const smallOrderFee = isDelivery && cartTotal < MIN_ORDER_DELIVERY ? SMALL_ORDER_FEE : 0;
   const deliveryFee = rawDeliveryFee;
@@ -70,6 +70,10 @@ export default function CheckoutScreen() {
         const ok = res.data.service_type === 'full';
         setPostcodeStatus({ ok, city: res.data.city });
         if (ok && res.data.city && !city) setCity(res.data.city);
+        if (ok && res.data.delivery_fee != null) {
+          setZoneDeliveryFee(res.data.delivery_fee);
+          setZoneFreeOver(res.data.free_over ?? 30.0);
+        }
       } catch { setPostcodeStatus(null); }
     }, 600);
     return () => clearTimeout(timer);

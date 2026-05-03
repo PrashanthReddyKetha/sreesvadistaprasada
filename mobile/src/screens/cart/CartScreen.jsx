@@ -6,6 +6,7 @@ import {
 import { Swipeable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api';
@@ -63,16 +64,34 @@ export default function CartScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { cartItems, cartTotal, addToCart, removeFromCart, removeItemCompletely } = useCart();
-  const { isGuest } = useAuth();
+  const { isGuest, logout } = useAuth();
 
   const [orderType, setOrderType] = useState('delivery');
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const [upsell, setUpsell] = useState([]);
+  const [zoneData, setZoneData] = useState({ delivery_fee: 3.99, free_over: 30.0 });
 
   const discount = promoApplied ? cartTotal * 0.15 : orderType === 'collection' ? cartTotal * 0.1 : 0;
-  const deliveryFee = orderType === 'delivery' && cartTotal < 30 ? 2.99 : 0;
-  const total = cartTotal - discount + deliveryFee;
+  const subtotalAfterDiscount = cartTotal - discount;
+  const deliveryFee = orderType === 'delivery' && subtotalAfterDiscount < zoneData.free_over ? zoneData.delivery_fee : 0;
+  const total = subtotalAfterDiscount + deliveryFee;
+
+  useEffect(() => {
+    AsyncStorage.getItem('ssp_postcode').then(pc => {
+      if (!pc) return;
+      api.post('/delivery/check', { postcode: pc.trim().toUpperCase() })
+        .then(res => {
+          if (res.data?.delivery_fee != null) {
+            setZoneData({
+              delivery_fee: res.data.delivery_fee,
+              free_over: res.data.free_over ?? 30.0,
+            });
+          }
+        })
+        .catch(() => {});
+    });
+  }, []);
 
   useEffect(() => {
     api.get('/menu', { params: { featured: 'true', available: 'true' } })
@@ -148,13 +167,13 @@ export default function CartScreen() {
               <Text style={styles.savingsBadgeText}>✓ 10% off for collection</Text>
             </View>
           )}
-          {orderType === 'delivery' && cartTotal < 30 && (
+          {orderType === 'delivery' && subtotalAfterDiscount < zoneData.free_over && (
             <View style={styles.freeDeliveryBanner}>
               <Text style={styles.freeDeliveryText}>
-                Add £{(30 - cartTotal).toFixed(2)} more for free delivery
+                Add £{(zoneData.free_over - subtotalAfterDiscount).toFixed(2)} more for free delivery
               </Text>
               <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${Math.min((cartTotal / 30) * 100, 100)}%` }]} />
+                <View style={[styles.progressFill, { width: `${Math.min((subtotalAfterDiscount / zoneData.free_over) * 100, 100)}%` }]} />
               </View>
             </View>
           )}
@@ -245,7 +264,7 @@ export default function CartScreen() {
         <TouchableOpacity
           style={styles.placeOrderBtn}
           onPress={() => {
-            if (isGuest) { navigation.navigate('Login'); return; }
+            if (isGuest) { logout(); return; }
             navigation.navigate('Checkout', { orderType, total, discount, deliveryFee });
           }}
           activeOpacity={0.9}

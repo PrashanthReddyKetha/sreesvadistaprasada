@@ -180,7 +180,7 @@ export default function OrdersScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { addToCart } = useCart();
-  const { isGuest } = useAuth();
+  const { isGuest, logout } = useAuth();
   const [tab, setTab] = useState('active');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -231,7 +231,7 @@ export default function OrdersScreen() {
           emoji="📦"
           message="Sign in to track your orders and reorder your favourites."
           actionLabel="Sign In"
-          onAction={() => navigation.navigate('Login')}
+          onAction={logout}
         />
       </View>
     );

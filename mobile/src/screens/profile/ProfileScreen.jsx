@@ -53,10 +53,10 @@ export default function ProfileScreen() {
           <Text style={styles.guestEmoji}>👤</Text>
           <Text style={styles.guestHeading}>Sign in to your account</Text>
           <Text style={styles.guestSub}>Track orders, manage your Dabba, earn loyalty rewards.</Text>
-          <TouchableOpacity style={styles.guestBtn} onPress={() => navigation.navigate('Login')}>
+          <TouchableOpacity style={styles.guestBtn} onPress={logout}>
             <Text style={styles.guestBtnText}>Sign In</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.guestGhostBtn} onPress={() => navigation.navigate('Register')}>
+          <TouchableOpacity style={styles.guestGhostBtn} onPress={logout}>
             <Text style={styles.guestGhostText}>Create Account</Text>
           </TouchableOpacity>
         </View>

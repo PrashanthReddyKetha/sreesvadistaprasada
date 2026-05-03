@@ -50,7 +50,7 @@ export default function ItemDetailScreen() {
   const route = useRoute();
   const { itemId } = route.params;
   const { addToCart } = useCart();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const [item, setItem] = useState(null);
   const [pairs, setPairs] = useState([]);
@@ -306,7 +306,7 @@ export default function ItemDetailScreen() {
                 <Text style={styles.reviewSubmitText}>{submittingReview ? 'Posting...' : 'Post Review'}</Text>
               </TouchableOpacity>
               {!user && (
-                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                <TouchableOpacity onPress={logout}>
                   <Text style={styles.signInPrompt}>Sign in to post →</Text>
                 </TouchableOpacity>
               )}
