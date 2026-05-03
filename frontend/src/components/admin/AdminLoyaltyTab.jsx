@@ -68,7 +68,16 @@ function AdjustModal({ userId, userName, onClose, onDone }) {
     if (!reason.trim()) { setError('Reason is required.'); return; }
     setLoading(true); setError('');
     try {
-      await api.post('/admin/loyalty/adjust', { user_id: userId, type, amount: Number(amount), reason });
+      const ACTION_MAP = { add: 'add_order', remove: 'remove_reward', grant: 'grant_reward' };
+      const action = ACTION_MAP[type];
+      if (action === 'add_order' && amount > 1) {
+        // Backend adds 1 per call; loop for multiple
+        for (let i = 0; i < amount; i++) {
+          await api.post('/admin/loyalty/adjust', { user_id: userId, action, reason });
+        }
+      } else {
+        await api.post('/admin/loyalty/adjust', { user_id: userId, action, reason });
+      }
       onDone();
     } catch (e) {
       setError(e.response?.data?.detail || 'Failed to adjust.');
@@ -259,7 +268,7 @@ export default function AdminLoyaltyTab() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="Loyalty members" value={stats?.total_members ?? 0} />
+        <StatCard icon={Users} label="Participation rate" value={`${stats?.participation_rate ?? 0}%`} />
         <StatCard icon={Gift} label="Pending rewards" value={stats?.total_pending ?? 0} color="#B8860B" />
         <StatCard icon={TrendingUp} label="Rewards earned" value={stats?.total_rewards_earned ?? 0} color="#166534" />
         <StatCard icon={AlertCircle} label="Almost there (order 4)" value={stats?.total_upcoming ?? 0} color="#854D0E" />

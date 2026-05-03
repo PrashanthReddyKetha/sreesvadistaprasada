@@ -33,12 +33,12 @@ export default function ProfileScreen() {
   const { user, isGuest, logout } = useAuth();
 
   // Always call hooks before any early return
-  const [orderCount, setOrderCount] = useState(0);
+  const [loyaltyStatus, setLoyaltyStatus] = useState({ loyalty_order_count: 0, pending_reward: false, orders_until_next: 5 });
   const [unreadEnquiries, setUnreadEnquiries] = useState(0);
 
   useEffect(() => {
     if (isGuest) return;
-    api.get('/orders').then(r => setOrderCount(r.data?.length || 0)).catch(() => {});
+    api.get('/loyalty/status').then(r => setLoyaltyStatus(r.data || {})).catch(() => {});
     api.get('/enquiries').then(r => {
       const unread = (r.data || []).filter(e => e.has_unread_admin_reply).length;
       setUnreadEnquiries(unread);
@@ -64,7 +64,8 @@ export default function ProfileScreen() {
     );
   }
 
-  const loyaltyProgress = Math.min(orderCount, 5);
+  const cycleCount = loyaltyStatus.loyalty_order_count % 5 || (loyaltyStatus.pending_reward ? 5 : 0);
+  const pendingReward = loyaltyStatus.pending_reward || false;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
 
   const handleLogout = () => {
@@ -101,15 +102,15 @@ export default function ProfileScreen() {
         <View style={styles.loyaltyCard}>
           <View style={styles.loyaltyRow}>
             <Text style={styles.loyaltyTitle}>🎁 Loyalty</Text>
-            <Text style={styles.loyaltyCount}>{loyaltyProgress} / 5 orders</Text>
+            <Text style={styles.loyaltyCount}>{cycleCount} / 5 orders</Text>
           </View>
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${(loyaltyProgress / 5) * 100}%` }]} />
+            <View style={[styles.progressFill, { width: `${(cycleCount / 5) * 100}%` }]} />
           </View>
           <Text style={styles.loyaltySub}>
-            {loyaltyProgress >= 5
-              ? '🎉 You\'ve earned a free dish — contact us to claim!'
-              : `${5 - loyaltyProgress} more order${5 - loyaltyProgress === 1 ? '' : 's'} to earn a free dish from our entire menu.`}
+            {pendingReward
+              ? '🎉 Free dish ready! Add any item to cart — it will be free on your next order.'
+              : `${5 - cycleCount} more order${5 - cycleCount === 1 ? '' : 's'} to earn a free dish from our entire menu.`}
           </Text>
         </View>
 
