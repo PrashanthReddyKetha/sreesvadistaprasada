@@ -20,6 +20,9 @@ import EmptyState from '../../components/EmptyState';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
 const HERO_HEIGHT = 220;
+const SEARCH_BAR_HEIGHT = 70;  // hero bottom → search bar bottom (margin+height+margin)
+const TABS_BAR_HEIGHT = 48;    // height of the tabs row
+const HEADER_BAR_HEIGHT = 56;  // sticky white nav bar height (below status bar)
 
 const CATEGORY_CONFIG = {
   Svadista: {
@@ -109,6 +112,12 @@ export default function CategoryScreen() {
   const tabsRef = useRef(null);
   const tabOffsets = useRef({});
 
+  // Natural top = where tabs sit in the scroll content (hero + search)
+  // Sticky top  = just below the white nav bar
+  const TABS_NATURAL_TOP = HERO_HEIGHT + SEARCH_BAR_HEIGHT;
+  const TABS_STICKY_TOP = insets.top + HEADER_BAR_HEIGHT;
+  const TABS_MAX_SCROLL = TABS_NATURAL_TOP - TABS_STICKY_TOP;
+
   // Light status bar icons over the dark hero image
   useFocusEffect(
     useCallback(() => {
@@ -124,6 +133,31 @@ export default function CategoryScreen() {
       tabsRef.current.scrollTo({ x: Math.max(0, offset - 24), animated: true });
     }
   };
+
+  // ── Animated values (all native-driver compatible) ────────────────────────
+  // White header bar: fades in quickly on any scroll (not just after full hero scroll)
+  const headerBgOpacity = scrollY.interpolate({
+    inputRange: [40, 100],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+  const headerTitleOpacity = scrollY.interpolate({
+    inputRange: [60, 120],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+  // Floating tabs: translate up with scroll, clamp at sticky position
+  const tabsTranslateY = scrollY.interpolate({
+    inputRange: [0, Math.max(TABS_MAX_SCROLL, 1)],
+    outputRange: [0, -Math.max(TABS_MAX_SCROLL, 1)],
+    extrapolate: 'clamp',
+  });
+  // Tab bar background: transparent at natural position, white when sticky
+  const tabsBgOpacity = scrollY.interpolate({
+    inputRange: [Math.max(TABS_MAX_SCROLL - 20, 0), Math.max(TABS_MAX_SCROLL, 1)],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
   const fetchItems = useCallback(async () => {
     try {
@@ -163,19 +197,185 @@ export default function CategoryScreen() {
     return cartItems.find((i) => i.id === itemId)?.quantity || 0;
   };
 
-  // Header title opacity — fades in as hero scrolls away
-  const headerTitleOpacity = scrollY.interpolate({
-    inputRange: [HERO_HEIGHT - 80, HERO_HEIGHT - 20],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
-  const headerBgOpacity = scrollY.interpolate({
-    inputRange: [HERO_HEIGHT - 80, HERO_HEIGHT - 20],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
+  // Header title opacity — removed old interpolation (replaced by headerBgOpacity above)
 
   const renderItem = ({ item }) => {
+    const qty = getQty(item.id);
+    return (
+      <TouchableOpacity
+        style={[styles.card, { width: CARD_WIDTH }, SHADOW.card]}
+        onPress={() => navigation.navigate('ItemDetail', { itemId: item.id })}
+        activeOpacity={0.92}
+      >
+        <View style={styles.imageWrap}>
+          <Image source={{ uri: item.image }} style={styles.image} resizeMode="cover" />
+          <View style={styles.vegDot}><VegDot isVeg={item.is_veg} /></View>
+          {item.tag && (
+            <View style={[styles.tagBadge, { backgroundColor: item.tag === 'New' ? '#1D4ED8' : COLORS.gold }]}>
+              <Text style={[styles.tagText, { color: item.tag === 'New' ? COLORS.white : COLORS.brown }]}>{item.tag}</Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.cardBody}>
+          <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+          <SpiceFlames level={item.spice_level} />
+          <Text style={styles.desc} numberOfLines={2}>{item.description}</Text>
+          {item.allergens?.length > 0 && item.allergens[0] !== 'none' && (
+            <View style={styles.allergens}>
+              {item.allergens.slice(0, 2).map(a => <AllergenBadge key={a} label={a} />)}
+            </View>
+          )}
+          <View style={styles.footer}>
+            <Text style={styles.price}>£{item.price?.toFixed(2)}</Text>
+            {qty === 0 ? (
+              <TouchableOpacity style={styles.addBtn} onPress={() => addToCart(item)}>
+                <Text style={styles.addText}>Add</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.stepper}>
+                <TouchableOpacity style={styles.stepBtn} onPress={() => removeFromCart(item.id)}>
+                  <Text style={styles.stepIcon}>−</Text>
+                </TouchableOpacity>
+                <Text style={styles.stepQty}>{qty}</Text>
+                <TouchableOpacity style={styles.stepBtn} onPress={() => addToCart(item)}>
+                  <Text style={styles.stepIcon}>+</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const ListHeader = () => (
+    <>
+      {/* Hero */}
+      <View style={styles.hero}>
+        <Image source={{ uri: config.image }} style={styles.heroImage} resizeMode="cover" />
+        <LinearGradient colors={config.gradient} style={StyleSheet.absoluteFill} />
+        <View style={[styles.heroContent, { paddingTop: insets.top + 56 }]}>
+          <Text style={[styles.heroAccent, { color: config.accent }]}>{config.label}</Text>
+          <Text style={styles.heroCount}>{items.length} dishes</Text>
+        </View>
+      </View>
+
+      {/* Search bar */}
+      <View style={styles.searchWrap}>
+        <Text style={styles.searchIcon}>🔍</Text>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search in this menu..."
+          placeholderTextColor={COLORS.grey}
+          value={search}
+          onChangeText={setSearch}
+          returnKeyType="search"
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')}>
+            <Text style={styles.clearIcon}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Spacer that reserves height for the floating tabs overlay */}
+      {config.tabs.length > 1 && <View style={{ height: TABS_BAR_HEIGHT }} />}
+
+      {/* Result count */}
+      <Text style={styles.resultCount}>{filtered.length} items</Text>
+    </>
+  );
+
+  return (
+    <View style={styles.container}>
+      {/* Floating back button — always visible */}
+      <TouchableOpacity
+        style={[styles.backBtn, { top: insets.top + 12 }]}
+        onPress={() => navigation.goBack()}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.backText}>←</Text>
+      </TouchableOpacity>
+
+      {/* Sticky header (fades in after just ~60–100px of scroll) */}
+      <Animated.View style={[styles.stickyHeader, { paddingTop: insets.top, opacity: headerBgOpacity }]}>
+        <Animated.Text style={[styles.stickyTitle, { opacity: headerTitleOpacity }]}>
+          {config.label}
+        </Animated.Text>
+      </Animated.View>
+
+      {loading ? (
+        <EmptyState emoji="🍽" message="Loading the menu..." />
+      ) : (
+        <Animated.FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.grid}
+          columnWrapperStyle={styles.row}
+          showsVerticalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
+          scrollEventThrottle={16}
+          ListHeaderComponent={ListHeader}
+          ListEmptyComponent={
+            <EmptyState emoji="🔍" message="Nothing found. Try a different search or tab." />
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => { setRefreshing(true); fetchItems(); }}
+              tintColor={COLORS.crimson}
+            />
+          }
+          renderItem={renderItem}
+        />
+      )}
+
+      {/* ── Floating tabs — lives OUTSIDE FlatList so scroll never resets it ── */}
+      {config.tabs.length > 1 && (
+        <Animated.View
+          style={[
+            styles.floatingTabs,
+            { top: TABS_NATURAL_TOP, transform: [{ translateY: tabsTranslateY }] },
+          ]}
+        >
+          {/* Background fades in when tabs become sticky */}
+          <Animated.View
+            style={[StyleSheet.absoluteFill, styles.floatingTabsBg, { opacity: tabsBgOpacity }]}
+          />
+          <ScrollView
+            ref={tabsRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabList}
+          >
+            {config.tabs.map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={[
+                  styles.tab,
+                  activeTab === tab && { backgroundColor: COLORS.crimson, borderColor: COLORS.crimson },
+                ]}
+                onPress={() => handleTabPress(tab)}
+                activeOpacity={0.8}
+                onLayout={(e) => { tabOffsets.current[tab] = e.nativeEvent.layout.x; }}
+              >
+                <Text style={[styles.tabText, activeTab === tab && { color: COLORS.white }]}>
+                  {tab}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Animated.View>
+      )}
+
+      <CartBar onPress={() => navigation.navigate('Cart')} />
+    </View>
+  );
+}
     const qty = getQty(item.id);
     return (
       <TouchableOpacity
@@ -393,7 +593,7 @@ const styles = StyleSheet.create({
   clearIcon: { fontSize: 12, color: COLORS.grey, padding: 4 },
 
   // Tabs
-  tabList: { paddingHorizontal: 16, gap: 8, paddingBottom: 10 },
+  tabList: { paddingHorizontal: 16, gap: 8, paddingBottom: 10, paddingTop: 6 },
   tab: {
     borderRadius: RADIUS.full,
     borderWidth: 1.5,
@@ -403,6 +603,21 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   tabText: { fontFamily: FONTS.bodyMedium, fontSize: 12, color: COLORS.grey },
+
+  // Floating tabs bar (positioned absolutely outside FlatList)
+  floatingTabs: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: TABS_BAR_HEIGHT,
+    zIndex: 8,
+    overflow: 'hidden',
+  },
+  floatingTabsBg: {
+    backgroundColor: COLORS.warmWhite,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGrey,
+  },
 
   // Result count
   resultCount: {

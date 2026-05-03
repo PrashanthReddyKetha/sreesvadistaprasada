@@ -149,7 +149,7 @@ export default function MenuScreen() {
         {/* Dabba Wala CTA */}
         <TouchableOpacity
           style={styles.dabbaCta}
-          onPress={() => navigation.navigate('YouTab', { screen: 'DabbaWala' })}
+          onPress={() => navigation.navigate('DabbaWala')}
           activeOpacity={0.9}
         >
           <LinearGradient

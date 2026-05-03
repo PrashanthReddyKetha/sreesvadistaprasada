@@ -53,6 +53,7 @@ function HomeStackNav() {
       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
       <HomeStack.Screen name="Category" component={CategoryScreen} />
       <HomeStack.Screen name="ItemDetail" component={ItemDetailScreen} />
+      <HomeStack.Screen name="DabbaWala" component={DabbaWalaScreen} />
     </HomeStack.Navigator>
   );
 }
@@ -63,6 +64,7 @@ function MenuStackNav() {
       <MenuStack.Screen name="MenuMain" component={MenuScreen} />
       <MenuStack.Screen name="Category" component={CategoryScreen} />
       <MenuStack.Screen name="ItemDetail" component={ItemDetailScreen} />
+      <MenuStack.Screen name="DabbaWala" component={DabbaWalaScreen} />
     </MenuStack.Navigator>
   );
 }
