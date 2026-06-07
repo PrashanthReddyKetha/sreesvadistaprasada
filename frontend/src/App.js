@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import api from "./api";
 import "./App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
@@ -13,27 +13,27 @@ import WhatsAppButton from "./components/layout/WhatsAppButton";
 import CartToast from "./components/CartToast";
 import CartDrawer from "./components/CartDrawer";
 import AuthModal from "./components/AuthModal";
-import Home from "./pages/Home";
-import OurStory from "./pages/OurStory";
-import Svadista from "./pages/menu/Svadista";
-import Prasada from "./pages/menu/Prasada";
-import Menu from "./pages/menu/Menu";
-import Subscriptions from "./pages/Subscriptions";
-import Catering from "./pages/Catering";
-import Contact from "./pages/Contact";
-import Breakfast from "./pages/menu/Breakfast";
-import Snacks from "./pages/menu/Snacks";
-import FAQ from "./pages/FAQ";
-import Gallery from "./pages/Gallery";
-import Admin from "./pages/Admin";
-import Dashboard from "./pages/Dashboard";
-import ItemDetail from "./pages/ItemDetail";
-import Checkout from "./pages/Checkout";
-import StreetFood from "./pages/menu/StreetFood";
-import RagiSpecials from "./pages/menu/RagiSpecials";
-import Drinks from "./pages/menu/Drinks";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsAndServices from "./pages/TermsAndServices";
+const Home = React.lazy(() => import('./pages/Home'));
+const OurStory = React.lazy(() => import('./pages/OurStory'));
+const Svadista = React.lazy(() => import('./pages/menu/Svadista'));
+const Prasada = React.lazy(() => import('./pages/menu/Prasada'));
+const Menu = React.lazy(() => import('./pages/menu/Menu'));
+const Subscriptions = React.lazy(() => import('./pages/Subscriptions'));
+const Catering = React.lazy(() => import('./pages/Catering'));
+const Contact = React.lazy(() => import('./pages/Contact'));
+const Breakfast = React.lazy(() => import('./pages/menu/Breakfast'));
+const Snacks = React.lazy(() => import('./pages/menu/Snacks'));
+const FAQ = React.lazy(() => import('./pages/FAQ'));
+const Gallery = React.lazy(() => import('./pages/Gallery'));
+const Admin = React.lazy(() => import('./pages/Admin'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const ItemDetail = React.lazy(() => import('./pages/ItemDetail'));
+const Checkout = React.lazy(() => import('./pages/Checkout'));
+const StreetFood = React.lazy(() => import('./pages/menu/StreetFood'));
+const RagiSpecials = React.lazy(() => import('./pages/menu/RagiSpecials'));
+const Drinks = React.lazy(() => import('./pages/menu/Drinks'));
+const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy'));
+const TermsAndServices = React.lazy(() => import('./pages/TermsAndServices'));
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "placeholder";
 
@@ -96,6 +96,7 @@ function App() {
           <CartDrawer />
           <AuthModal />
           <TakeawayNudge />
+          <Suspense fallback={<div className="min-h-screen" />}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/story" element={<OurStory />} />
@@ -119,6 +120,7 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndServices />} />
           </Routes>
+          </Suspense>
           <Footer />
           <WhatsAppButton />
           <CartToast />

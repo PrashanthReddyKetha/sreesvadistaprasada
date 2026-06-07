@@ -84,7 +84,7 @@ const Prasada = () => {
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ height: 'min(58vh, 460px)' }}>
         <img
-          src="https://images.unsplash.com/photo-1512058564366-18510be2db19?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          src="https://images.unsplash.com/photo-1512058564366-18510be2db19?crop=entropy&cs=srgb&fm=jpg&q=85&w=1280"
           alt="Prasada Veg"
           className="absolute inset-0 w-full h-full object-cover"
         />
