@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
+import { Flame, Search, X, ArrowRight, MessageCircle, Package, Star } from 'lucide-react';
 import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
 import useTabHistory from '../../hooks/useTabHistory';
@@ -141,7 +143,14 @@ const Snacks = () => {
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2 flex-1">{item.description}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed mb-2 line-clamp-2 flex-1">{item.description}</p>
+                    {item.avg_rating > 0 && (
+                      <div className="flex items-center gap-1 mb-2">
+                        <Star size={11} className="fill-[#F4C430] text-[#F4C430]" />
+                        <span className="text-xs font-semibold" style={{ color: '#2D2422' }}>{item.avg_rating.toFixed(1)}</span>
+                        {item.review_count > 0 && <span className="text-[10px] text-gray-400">({item.review_count})</span>}
+                      </div>
+                    )}
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold" style={{ color: '#800020' }}>£{item.price.toFixed(2)}</span>
                       <a href={`https://wa.me/447307119962?text=${encodeURIComponent(`Hi, I'd like to order ${item.name} (£${item.price.toFixed(2)}).`)}`} target="_blank" rel="noopener noreferrer" onClick={e => { e.preventDefault(); e.stopPropagation(); window.open(e.currentTarget.href, '_blank'); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md" style={{ backgroundColor: '#25D366' }} data-testid={`snack-wa-${item.id}`}>

@@ -1,12 +1,26 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
-import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin } from 'lucide-react';
+import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin, Plus, Copy, Check } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '../data/mockData';
 import HeroSlider from '../components/HeroSlider';
 import api from '../api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+
+function CopyCodeButton({ code }) {
+  const [copied, setCopied] = React.useState(false);
+  return (
+    <button
+      onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+      className="inline-flex items-center gap-2 px-5 py-2 mb-6 rounded-sm border-2 font-bold text-sm transition-all hover:bg-[#800020] hover:text-white hover:border-[#800020]"
+      style={{ borderColor: '#800020', color: copied ? '#2D7D32' : '#800020', borderColor: copied ? '#2D7D32' : '#800020' }}
+    >
+      {copied ? <Check size={14} /> : <Copy size={14} />}
+      {code}{copied ? ' — copied!' : ' · tap to copy'}
+    </button>
+  );
+}
 
 const Home = () => {
   const trendingRef = useRef(null);
@@ -241,10 +255,22 @@ const Home = () => {
                         {s.title}
                       </h3>
                       {s.subtitle && (
-                        <p className="text-[11px] text-gray-500 leading-snug mb-2 line-clamp-2">{s.subtitle}</p>
+                        <p className="text-[11px] text-gray-500 leading-snug mb-1 line-clamp-2">{s.subtitle}</p>
                       )}
                       {typeof s.price === 'number' && (
-                        <p className="text-sm font-bold" style={{ color: '#800020' }}>£{s.price.toFixed(2)}</p>
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-sm font-bold" style={{ color: '#800020' }}>£{s.price.toFixed(2)}</p>
+                          {s.menu_item_id && (
+                            <button
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart({ id: s.menu_item_id, name: s.title, price: s.price, image: s.image }); }}
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-white transition-transform active:scale-90"
+                              style={{ backgroundColor: '#800020' }}
+                              aria-label={`Add ${s.title} to cart`}
+                            >
+                              <Plus size={11} />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -712,7 +738,8 @@ const Home = () => {
             <p className="text-lg mb-1" style={{ color: '#800020' }}>
               Your first month of daily dabbas
             </p>
-            <p className="text-sm text-gray-600 mb-6">Use code: <span className="font-bold" style={{ color: '#800020' }}>HOME15</span></p>
+            <p className="text-sm text-gray-600 mb-3">Use code at checkout:</p>
+            <CopyCodeButton code="HOME15" />
             <Link to="/subscriptions">
               <button
                 className="px-8 py-3 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg"
@@ -727,7 +754,29 @@ const Home = () => {
       </section>
 
       {/* ============================================ */}
-      {/* SNACKS & PICKLES (UK-WIDE) */}
+      {/* CATERING CTA */}
+      {/* ============================================ */}
+      <section className="py-10 px-4 md:px-8" style={{ backgroundColor: '#FDF5E6', borderTop: '1px solid rgba(244,196,48,0.3)' }}>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5 text-center md:text-left">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] mb-1" style={{ color: '#B8860B' }}>Feeding a crowd?</p>
+            <h2 className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+              South Indian Catering for Weddings, Poojas &amp; Corporate Events
+            </h2>
+            <p className="text-sm mt-1" style={{ color: '#5C4B47' }}>Tailored menus · veg &amp; non-veg · Milton Keynes, Edinburgh, Glasgow</p>
+          </div>
+          <Link
+            to="/catering"
+            className="flex-shrink-0 inline-flex items-center gap-2 px-8 py-3 text-sm font-semibold text-white rounded-sm hover:shadow-lg transition-all"
+            style={{ backgroundColor: '#800020' }}
+          >
+            Get a Quote <ArrowRight size={16} />
+          </Link>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* SNACKS & PICKLES (UK-WIDE) */
       {/* ============================================ */}
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }} data-testid="snacks-pickles-section">
         <div className="max-w-7xl mx-auto">

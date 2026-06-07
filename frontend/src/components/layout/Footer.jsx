@@ -61,10 +61,10 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <h3 className="text-xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
-                A letter from the kitchen
+                Get 10% off your first order
               </h3>
               <p className="text-sm" style={{ color: '#A09890' }}>
-                This week's menu, festival specials, and what's simmering on the stove — once a week, never noise.
+                Join our kitchen table. Weekly menu drops, festival specials — and your discount code arrives immediately.
               </p>
             </div>
             <form onSubmit={handleNewsletterSubmit} className="flex gap-2 w-full md:w-auto" data-testid="newsletter-form">

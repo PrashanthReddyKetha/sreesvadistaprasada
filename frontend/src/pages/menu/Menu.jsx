@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
+import { Flame, Search, ShoppingCart, ArrowRight, Star } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -144,7 +146,14 @@ const Menu = () => {
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 line-clamp-1 mb-2 flex-1">{dish.description}</p>
+                      <p className="text-xs text-gray-500 line-clamp-1 mb-1 flex-1">{dish.description}</p>
+                      {dish.avg_rating > 0 && (
+                        <div className="flex items-center gap-1 mb-1">
+                          <Star size={10} className="fill-[#F4C430] text-[#F4C430]" />
+                          <span className="text-xs font-semibold" style={{ color: '#2D2422' }}>{dish.avg_rating.toFixed(1)}</span>
+                          {dish.review_count > 0 && <span className="text-[10px] text-gray-400">({dish.review_count})</span>}
+                        </div>
+                      )}
                       <div className="flex justify-between items-center">
                         <span className="text-base font-bold" style={{ color: '#800020' }}>£{dish.price.toFixed(2)}</span>
                         <button onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` }); }} className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>

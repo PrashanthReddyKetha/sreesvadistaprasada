@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
+import { Search, X, ShoppingCart, Star } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -102,7 +104,14 @@ const StreetFood = () => {
                         <span className="text-sm font-bold flex-shrink-0" style={{ color: '#1D4ED8' }}>{fmt(dish.price)}</span>
                       </div>
                       {dish.description && (
-                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3 flex-1">{dish.description}</p>
+                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-2 flex-1">{dish.description}</p>
+                      )}
+                      {dish.avg_rating > 0 && (
+                        <div className="flex items-center gap-1 mb-2">
+                          <Star size={11} className="fill-[#F4C430] text-[#F4C430]" />
+                          <span className="text-xs font-semibold" style={{ color: '#2D2422' }}>{dish.avg_rating.toFixed(1)}</span>
+                          {dish.review_count > 0 && <span className="text-[10px] text-gray-400">({dish.review_count})</span>}
+                        </div>
                       )}
                       <button
                         onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: dish.id, name: dish.name, price: dish.price, image: dish.image, category: dish.category }); }}
