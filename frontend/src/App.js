@@ -3,6 +3,7 @@ import api from "./api";
 import "./App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import { useCart } from "./context/CartContext";
@@ -83,6 +84,7 @@ function BackendWarmup() {
 
 function App() {
   return (
+    <HelmetProvider>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
     <AuthProvider>
     <CartProvider>
@@ -125,6 +127,7 @@ function App() {
     </CartProvider>
     </AuthProvider>
     </GoogleOAuthProvider>
+    </HelmetProvider>
   );
 }
 

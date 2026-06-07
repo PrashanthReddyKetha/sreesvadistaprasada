@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Users, Briefcase, Heart, Calendar, ArrowRight, Phone, Star, Sparkles } from 'lucide-react';
 import api from '../api';
 
@@ -31,11 +32,21 @@ const Catering = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Catering Services"
+      <Helmet>
+        <title>South Indian Catering Services | Milton Keynes | Sree Svadista Prasada</title>
+        <meta name="description" content="Professional South Indian catering in Milton Keynes. Tailored veg and non-veg menus for weddings, corporate events, and family parties." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/catering" />
+        <meta property="og:title" content="South Indian Catering Services | Milton Keynes | Sree Svadista Prasada" />
+        <meta property="og:description" content="Professional South Indian catering in Milton Keynes. Tailored veg and non-veg menus for weddings, corporate events, and family parties." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/catering" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="South Indian Catering Services | Milton Keynes | Sree Svadista Prasada" />
+        <meta name="twitter:description" content="Professional South Indian catering in Milton Keynes. Tailored veg and non-veg menus for weddings, corporate events, and family parties." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+      </Helmet>
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)' }} />
@@ -43,7 +54,7 @@ const Catering = () => {
           <div className="max-w-xl">
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Catering & Events
+              Professional South Indian &amp; Andhra Catering in Milton Keynes
             </h1>
             <p className="text-lg text-gray-200 leading-relaxed" data-testid="catering-hero-subtitle">
               Poojas, Weddings, Corporate Events & More. Authentic South Indian food for your special occasions.
@@ -80,7 +91,7 @@ const Catering = () => {
                   </li>
                 ))}
               </ul>
-              <p className="text-xs text-gray-500 leading-relaxed">Available in Milton Keynes, Edinburgh & Glasgow. Both pure veg and mixed menus.</p>
+              <p className="text-xs text-gray-500 leading-relaxed">Available in Milton Keynes. Both pure veg and mixed menus.</p>
             </div>
 
             {/* Corporate Dabba */}

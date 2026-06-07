@@ -6,13 +6,14 @@ import {
 import { Swipeable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { usePostcode } from '../../context/PostcodeContext';
 import api from '../../api';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../../constants/theme';
 import ScreenHeader from '../../components/ScreenHeader';
 import EmptyState from '../../components/EmptyState';
+import LocationBar from '../../components/LocationBar';
 
 function DeleteAction({ dragX, onDelete }) {
   const scale = dragX.interpolate({ inputRange: [-80, 0], outputRange: [1, 0.8], extrapolate: 'clamp' });
@@ -65,33 +66,19 @@ export default function CartScreen() {
   const navigation = useNavigation();
   const { cartItems, cartTotal, addToCart, removeFromCart, removeItemCompletely } = useCart();
   const { isGuest, logout } = useAuth();
+  const { zoneData } = usePostcode();
 
   const [orderType, setOrderType] = useState('delivery');
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const [upsell, setUpsell] = useState([]);
-  const [zoneData, setZoneData] = useState({ delivery_fee: 3.99, free_over: 30.0 });
 
   const discount = promoApplied ? cartTotal * 0.15 : orderType === 'collection' ? cartTotal * 0.1 : 0;
   const subtotalAfterDiscount = cartTotal - discount;
-  const deliveryFee = orderType === 'delivery' && subtotalAfterDiscount < zoneData.free_over ? zoneData.delivery_fee : 0;
-  const total = subtotalAfterDiscount + deliveryFee;
-
-  useEffect(() => {
-    AsyncStorage.getItem('ssp_postcode').then(pc => {
-      if (!pc) return;
-      api.post('/delivery/check', { postcode: pc.trim().toUpperCase() })
-        .then(res => {
-          if (res.data?.delivery_fee != null) {
-            setZoneData({
-              delivery_fee: res.data.delivery_fee,
-              free_over: res.data.free_over ?? 30.0,
-            });
-          }
-        })
-        .catch(() => {});
-    });
-  }, []);
+  const deliveryFee = orderType === 'delivery' && subtotalAfterDiscount < (zoneData.free_over ?? 30) ? (zoneData.delivery_fee ?? 3.99) : 0;
+  const minOrder = zoneData.min_order ?? 15;
+  const smallOrderFee = orderType === 'delivery' && cartTotal > 0 && cartTotal < minOrder ? 1.99 : 0;
+  const total = subtotalAfterDiscount + deliveryFee + smallOrderFee;
 
   useEffect(() => {
     api.get('/menu', { params: { featured: 'true', available: 'true' } })
@@ -167,6 +154,9 @@ export default function CartScreen() {
               <Text style={styles.savingsBadgeText}>✓ 10% off for collection</Text>
             </View>
           )}
+          {orderType === 'delivery' && (
+            <LocationBar style={styles.locationBar} />
+          )}
           {orderType === 'delivery' && subtotalAfterDiscount < zoneData.free_over && (
             <View style={styles.freeDeliveryBanner}>
               <Text style={styles.freeDeliveryText}>
@@ -217,6 +207,12 @@ export default function CartScreen() {
               {deliveryFee > 0 ? `£${deliveryFee.toFixed(2)}` : orderType === 'delivery' ? 'Free' : '—'}
             </Text>
           </View>
+          {smallOrderFee > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryKey, { color: '#D97706' }]}>Small order fee</Text>
+              <Text style={[styles.summaryVal, { color: '#D97706' }]}>£{smallOrderFee.toFixed(2)}</Text>
+            </View>
+          )}
           {discount > 0 && (
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryKey, { color: '#059669' }]}>Discount</Text>
@@ -311,7 +307,7 @@ const styles = StyleSheet.create({
 
   savingsBadge: { marginTop: 8, backgroundColor: 'rgba(5,150,105,0.1)', borderRadius: RADIUS.full, paddingHorizontal: 12, paddingVertical: 5, alignSelf: 'flex-start' },
   savingsBadgeText: { fontFamily: FONTS.bodySemiBold, fontSize: 11, color: '#059669' },
-
+  locationBar: { marginTop: 8, marginHorizontal: 0 },
   freeDeliveryBanner: { marginTop: 10 },
   freeDeliveryText: { fontFamily: FONTS.body, fontSize: 12, color: COLORS.grey, marginBottom: 6 },
   progressTrack: { height: 4, backgroundColor: COLORS.lightGrey, borderRadius: 2 },

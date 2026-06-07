@@ -19,7 +19,7 @@ PLAN_PRICES = {
 
 PLAN_DAYS = {
     "weekly":  4,   # Mon + 4 = Fri
-    "monthly": 27,  # Mon + 27 = 4th Friday
+    "monthly": 30,  # Mon + 30 = approx 1 calendar month
 }
 
 

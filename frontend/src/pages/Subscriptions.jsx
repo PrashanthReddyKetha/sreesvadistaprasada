@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star, CreditCard, Lock } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -100,15 +101,9 @@ const BOXES = [
   { id: 'svadista', name: 'Svadista box', icon: Flame, iconBg: '#FAECE7',   iconColor: C.primary, border: C.primary, desc: 'Non-vegetarian. Bold village flavours. Hearty and real.',    mostChosen: true  },
 ];
 
-// Review counts: start small, auto-grow by a fixed amount each week from launch date
-const REVIEW_COUNT_START_DATE = new Date('2026-04-14T00:00:00');
-function getLiveReviewCount(base, weeklyGrowth) {
-  const weeksLive = Math.max(0, Math.floor((Date.now() - REVIEW_COUNT_START_DATE) / (7 * 24 * 60 * 60 * 1000)));
-  return base + weeksLive * weeklyGrowth;
-}
 const BOX_SOCIAL = {
-  prasada:  { count: '30+', window: 'last 2 weeks', rating: 5, get reviewCount() { return getLiveReviewCount(8, 3); } },
-  svadista: { count: '75+', window: 'last 3 weeks', rating: 5, get reviewCount() { return getLiveReviewCount(14, 5); } },
+  prasada:  { count: '30+', window: 'last 2 weeks', rating: 5, reviewCount: 29 },
+  svadista: { count: '75+', window: 'last 3 weeks', rating: 5, reviewCount: 47 },
 };
 
 const PREFS = [
@@ -486,7 +481,7 @@ const SubscriptionsInner = () => {
         city: res.data.city,
         msg: ok
           ? `Postcode verified — we deliver to ${res.data.city}. Your meals will be on their way from ${fmtShort(nextMon)}.`
-          : 'We do not currently deliver to this postcode. We serve Milton Keynes, Edinburgh, and Glasgow.',
+          : 'We do not currently deliver to this postcode. We currently serve Milton Keynes only.'},
       });
     } catch { setPostcodeStatus({ ok: false, msg: 'Could not verify postcode.' }); }
   }, [weekCfg]);
@@ -753,6 +748,21 @@ const SubscriptionsInner = () => {
   /* ══ WIZARD ══════════════════════════════════════════ */
   return (
     <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
+      <Helmet>
+        <title>Indian Tiffin Service &amp; Meal Subscriptions | Milton Keynes</title>
+        <meta name="description" content="Subscribe to the best Indian tiffin service in Milton Keynes. Fresh, home-cooked daily meal subscriptions delivered hot to your door or office." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/subscriptions" />
+        <meta property="og:title" content="Indian Tiffin Service &amp; Meal Subscriptions | Milton Keynes" />
+        <meta property="og:description" content="Subscribe to the best Indian tiffin service in Milton Keynes. Fresh, home-cooked daily meal subscriptions delivered hot to your door or office." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/subscriptions" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1657205937707-940bf77b2602?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Indian Tiffin Service &amp; Meal Subscriptions | Milton Keynes" />
+        <meta name="twitter:description" content="Subscribe to the best Indian tiffin service in Milton Keynes. Fresh, home-cooked daily meal subscriptions delivered hot to your door or office." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1657205937707-940bf77b2602?w=1200&q=80" />
+      </Helmet>
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ height: 'min(42vh, 340px)' }}>
         <img src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
@@ -761,7 +771,7 @@ const SubscriptionsInner = () => {
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-end md:items-center pb-8 md:pb-0" style={{ paddingTop: 'calc(32px + 68px)' }}>
           <div className="max-w-xl">
             <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service</p>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Your Daily Dose of Home</h1>
+            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Home-Cooked Indian Tiffin Service &amp; Meal Subscriptions in Milton Keynes</h1>
             <p className="text-sm text-gray-200">Fresh South Indian meals delivered Mon–Fri. No cooking required.</p>
           </div>
         </div>

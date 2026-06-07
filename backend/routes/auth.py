@@ -1,17 +1,35 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 import os
 import json
 import logging
+import time
+from collections import defaultdict
 from database import db
 from models import (
     UserCreate, UserLogin, UserUpdate, User, UserInDB, TokenResponse,
     GoogleAuthRequest, GoogleCompleteRequest,
+    PushTokenUpdate, SavedAddress, SavedAddressCreate,
 )
 from auth import hash_password, verify_password, create_access_token, get_current_user, require_admin
 from notifications import send_email, email_welcome, create_notification
 
 logger = logging.getLogger(__name__)
+
+# ── Simple in-memory rate limiter ─────────────────────────────────────────────
+# Tracks failed attempts per IP. Resets after RATE_WINDOW seconds.
+RATE_WINDOW   = 60   # 1 minute
+RATE_MAX      = 10   # max attempts per window
+_rate_store: dict = defaultdict(list)  # ip -> [timestamp, ...]
+
+def _check_rate_limit(request: Request):
+    ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    window_start = now - RATE_WINDOW
+    _rate_store[ip] = [t for t in _rate_store[ip] if t > window_start]
+    if len(_rate_store[ip]) >= RATE_MAX:
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a minute and try again.")
+    _rate_store[ip].append(now)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # ── Firebase Admin ─────────────────────────────────────────────────────────────
@@ -66,7 +84,8 @@ def verify_firebase_phone_token(token: str) -> str | None:
 # ── Register ───────────────────────────────────────────────────────────────────
 
 @router.post("/register", response_model=TokenResponse)
-async def register(payload: UserCreate):
+async def register(request: Request, payload: UserCreate):
+    _check_rate_limit(request)
     existing = await db.users.find_one({"email": payload.email}, {"_id": 0})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -117,7 +136,8 @@ async def register(payload: UserCreate):
 # ── Login ──────────────────────────────────────────────────────────────────────
 
 @router.post("/login", response_model=TokenResponse)
-async def login(payload: UserLogin):
+async def login(request: Request, payload: UserLogin):
+    _check_rate_limit(request)
     doc = await db.users.find_one({"email": payload.email}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -135,8 +155,11 @@ async def login(payload: UserLogin):
 # ── Register (mobile — no phone/Firebase required) ────────────────────────────
 
 @router.post("/register/simple", response_model=TokenResponse)
-async def register_simple(payload: UserCreate):
+async def register_simple(request: Request, payload: UserCreate):
     """Mobile-only registration without phone/Firebase verification."""
+    mobile_key = os.environ.get("MOBILE_API_KEY", "")
+    if mobile_key and request.headers.get("X-Mobile-Key") != mobile_key:
+        raise HTTPException(status_code=403, detail="Not authorised")
     existing = await db.users.find_one({"email": payload.email}, {"_id": 0})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -192,31 +215,61 @@ async def _verify_google_token(credential: str) -> dict:
         raise HTTPException(status_code=401, detail="Invalid Google credentials.")
 
 
-@router.post("/google")
+@router.post("/google", response_model=TokenResponse)
 async def google_auth(payload: GoogleAuthRequest):
     """
-    Verify Google credential.
+    Verify Google access token and sign in or create account.
     - Existing user → return JWT.
-    - New user → return needs_phone=True so frontend collects phone + Firebase OTP.
+    - New user → create account immediately (no phone gate; user adds phone at checkout).
     """
     google_payload = await _verify_google_token(payload.credential)
 
     google_id = google_payload["sub"]
     email     = google_payload["email"]
     name      = google_payload.get("name", email.split("@")[0])
+    photo_url = google_payload.get("picture")
 
     doc = await db.users.find_one(
         {"$or": [{"google_id": google_id}, {"email": email}]}, {"_id": 0}
     )
     if doc:
+        updates = {}
         if not doc.get("google_id"):
-            await db.users.update_one({"email": email}, {"$set": {"google_id": google_id}})
-            doc["google_id"] = google_id
+            updates["google_id"] = google_id
+        if not doc.get("photo_url") and photo_url:
+            updates["photo_url"] = photo_url
+        if updates:
+            await db.users.update_one({"email": email}, {"$set": updates})
+            doc.update(updates)
         user = User(**doc)
         token = create_access_token(user.id, user.role.value)
         return TokenResponse(access_token=token, user=user)
 
-    return {"needs_phone": True, "google_name": name, "google_email": email}
+    # New user — create without requiring phone upfront
+    user = UserInDB(
+        name=name,
+        email=email,
+        google_id=google_id,
+        photo_url=photo_url,
+        password_hash=None,
+    )
+    await db.users.insert_one(user.model_dump())
+    subj, html = email_welcome(user.name)
+    send_email(user.email, subj, html)
+    await create_notification(
+        user_id=user.id,
+        title="Welcome to Sree Svadista Prasada",
+        body=(
+            "Your account is ready. "
+            "Every 5 orders earns you a free dish — "
+            "any item, no minimum order, only the delivery fee. "
+            "Your journey starts with your very first order."
+        ),
+        notif_type="welcome",
+        action_url="/dashboard?tab=loyalty",
+    )
+    token = create_access_token(user.id, user.role.value)
+    return TokenResponse(access_token=token, user=User(**user.model_dump()))
 
 
 @router.post("/google/complete", response_model=TokenResponse)
@@ -366,3 +419,47 @@ async def update_me(payload: UserUpdate, current_user: dict = Depends(get_curren
     await db.users.update_one({"id": current_user["sub"]}, {"$set": updates})
     doc = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0})
     return User(**doc)
+
+
+# ── Push notifications ────────────────────────────────────────────────────────
+
+@router.post("/push-token")
+async def save_push_token(payload: PushTokenUpdate, current_user: dict = Depends(get_current_user)):
+    await db.users.update_one(
+        {"id": current_user["sub"]},
+        {"$set": {"push_token": payload.push_token}},
+    )
+    return {"ok": True}
+
+
+# ── Saved addresses ───────────────────────────────────────────────────────────
+
+@router.get("/addresses", response_model=List[SavedAddress])
+async def get_saved_addresses(current_user: dict = Depends(get_current_user)):
+    doc = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0, "saved_addresses": 1})
+    return doc.get("saved_addresses", []) if doc else []
+
+
+@router.post("/addresses", response_model=SavedAddress)
+async def add_saved_address(payload: SavedAddressCreate, current_user: dict = Depends(get_current_user)):
+    doc = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0, "saved_addresses": 1})
+    existing = doc.get("saved_addresses", []) if doc else []
+    if len(existing) >= 5:
+        raise HTTPException(status_code=400, detail="Maximum 5 saved addresses")
+    addr = SavedAddress(**payload.model_dump())
+    await db.users.update_one(
+        {"id": current_user["sub"]},
+        {"$push": {"saved_addresses": addr.model_dump()}},
+    )
+    return addr
+
+
+@router.delete("/addresses/{address_id}")
+async def delete_saved_address(address_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.users.update_one(
+        {"id": current_user["sub"]},
+        {"$pull": {"saved_addresses": {"id": address_id}}},
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Address not found")
+    return {"ok": True}

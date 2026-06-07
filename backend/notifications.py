@@ -99,7 +99,7 @@ def _wrap(title: str, body_html: str, cta_text: str = "", cta_url: str = "") -> 
       {cta}
     </div>
     <p style="text-align:center;font-size:12px;color:#9C7B6B;margin:16px 0 0">
-      Milton Keynes · Edinburgh · Glasgow — <a href="{SITE_URL}" style="color:#9C7B6B">sreesvadistaprasada.com</a>
+      Milton Keynes, UK — <a href="{SITE_URL}" style="color:#9C7B6B">sreesvadistaprasada.com</a>
     </p>
   </div>
 </body></html>"""
@@ -183,6 +183,27 @@ def notify_admin(subject: str, html: str) -> None:
     send_email(ADMIN_ALERT_EMAIL, subject, html)
 
 
+async def send_push_notification(token: str, title: str, body: str, data: Optional[dict] = None) -> None:
+    """Send an Expo push notification. Fire-and-forget — never raises."""
+    if not token or not token.startswith("ExponentPushToken"):
+        return
+    try:
+        async with httpx.AsyncClient(timeout=6) as client:
+            await client.post(
+                "https://exp.host/--/api/v2/push/send",
+                json={
+                    "to": token,
+                    "title": title,
+                    "body": body,
+                    "data": data or {},
+                    "sound": "default",
+                    "channelId": "orders",
+                },
+            )
+    except Exception as e:
+        logger.warning("Push notification failed: %s", e)
+
+
 # ── Templated helpers (keep route files tidy) ────────────────────────────────
 
 def email_welcome(name: str) -> tuple[str, str]:
@@ -190,7 +211,7 @@ def email_welcome(name: str) -> tuple[str, str]:
         f"Welcome, {name}!",
         "<p>Thank you for joining <b>Sree Svadista Prasada</b>. Your account is ready — "
         "browse today's menu, subscribe to our Dabba Wala weekly plan, or order a takeaway whenever you crave home-style South Indian cooking.</p>"
-        "<p>We serve <b>Milton Keynes, Edinburgh, and Glasgow</b>.</p>",
+        "<p>We serve <b>Milton Keynes</b> and ship snacks UK-wide.</p>",
         "Open My Dashboard", f"{SITE_URL}/dashboard",
     )
     return "Welcome to Sree Svadista Prasada", html

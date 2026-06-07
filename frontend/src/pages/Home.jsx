@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '../data/mockData';
@@ -71,10 +72,35 @@ const Home = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
+      <Helmet>
+        <title>Sree Svadista Prasada | Indian Takeaway &amp; Food Delivery in Milton Keynes</title>
+        <meta name="description" content="Craving real South Indian flavors? Order Sree Svadista Prasada in Milton Keynes. Hot delivery of home-cooked veg and non-veg Andhra meals." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/" />
+        <meta property="og:title" content="Sree Svadista Prasada | Indian Takeaway &amp; Food Delivery in Milton Keynes" />
+        <meta property="og:description" content="Craving real South Indian flavors? Order Sree Svadista Prasada in Milton Keynes. Hot delivery of home-cooked veg and non-veg Andhra meals." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Sree Svadista Prasada | Indian Takeaway &amp; Food Delivery in Milton Keynes" />
+        <meta name="twitter:description" content="Craving real South Indian flavors? Order Sree Svadista Prasada in Milton Keynes. Hot delivery of home-cooked veg and non-veg Andhra meals." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+      </Helmet>
 
       {/* Hero Slider */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]">
         <HeroSlider />
+      </section>
+
+      {/* SEO intro — primary keyword H1 */}
+      <section className="py-8 px-4 md:px-8 text-center" style={{ backgroundColor: '#FDFBF7' }}>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+          Authentic South Indian Takeaway &amp; Food Delivery in Milton Keynes
+        </h1>
+        <p className="text-base text-gray-600 max-w-2xl mx-auto">
+          Taste the best of South India delivered hot across all MK postcodes. Sree Prasada (Pure Veg) &amp; Sree Svadista (Andhra Non-Veg) — two kitchens, one soul.
+        </p>
       </section>
 
       {/* ============================================ */}
@@ -560,7 +586,7 @@ const Home = () => {
                 Where Shall We Bring the Warmth?
               </h2>
               <p className="text-sm text-gray-600 leading-relaxed mb-6">
-                Drop your postcode and we'll tell you what's on the way. Hot meals and daily dabbas in Milton Keynes, Edinburgh &amp; Glasgow. Pickles and podis — we post those anywhere you call home.
+                Drop your postcode and we'll tell you what's on the way. Hot meals and daily dabbas in Milton Keynes. Pickles and podis — we post those anywhere you call home.
               </p>
               <form onSubmit={checkPostcode} className="flex gap-2 mb-4" data-testid="postcode-form">
                 <div className="relative flex-1">
@@ -597,9 +623,7 @@ const Home = () => {
               <h3 className="text-lg font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Delivery Areas</h3>
               <div className="space-y-3">
                 {[
-                  { city: 'Milton Keynes', postcodes: 'MK1–MK19', deliveryFee: 'Free over £30', timing: '45–60 min' },
-                  { city: 'Edinburgh', postcodes: 'EH1–EH17', deliveryFee: 'Free over £30', timing: '45–60 min' },
-                  { city: 'Glasgow', postcodes: 'G1–G46', deliveryFee: 'Free over £30', timing: '45–60 min' },
+                  { city: 'Milton Keynes', postcodes: 'MK1–MK19', deliveryFee: 'Free over £30', timing: '30–60 min' },
                   { city: 'Rest of UK', postcodes: 'Snacks & Pickles only', deliveryFee: 'Free over £25', timing: '2–3 days' },
                 ].map((area) => (
                   <div key={area.city} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: area.city === 'Milton Keynes' ? 'rgba(128,0,32,0.04)' : '#fafafa' }} data-testid={`delivery-area-${area.city.toLowerCase().replace(/\s/g, '-')}`}>
@@ -802,9 +826,9 @@ const Home = () => {
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { name: 'Priya S.', location: 'Edinburgh', text: 'The pulihora reminded me of my grandmother\'s cooking. I cried happy tears. Finally, authentic Andhra food in the UK!' },
+              { name: 'Priya S.', location: 'Milton Keynes', text: 'The pulihora reminded me of my grandmother\'s cooking. I cried happy tears. Finally, authentic Andhra food in the UK!' },
               { name: 'Rajesh K.', location: 'Milton Keynes', text: 'The prasada is so pure and divine. Perfect for our weekly poojas. My mother-in-law gave it her stamp of approval!' },
-              { name: 'Anitha R.', location: 'Glasgow', text: 'As a student, the weekly dabba is a lifesaver. Tastes exactly like home food. Amma would be proud.' },
+              { name: 'Anitha R.', location: 'Milton Keynes', text: 'As a student, the weekly dabba is a lifesaver. Tastes exactly like home food. Amma would be proud.' },
             ].map((t, i) => (
               <div key={i} className="p-6 md:p-8 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} data-testid={`testimonial-${i}`}>
                 <div className="flex gap-1 mb-4 justify-center">

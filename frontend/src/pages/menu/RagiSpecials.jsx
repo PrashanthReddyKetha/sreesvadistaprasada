@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Leaf, ShoppingCart, Search, X } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -26,11 +25,21 @@ const RagiSpecials = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Ragi Specials"
+      <Helmet>
+        <title>Ragi Specials — Healthy South Indian | Milton Keynes | Sree Svadista Prasada</title>
+        <meta name="description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/ragi-specials" />
+        <meta property="og:title" content="Ragi Specials — Healthy South Indian | Milton Keynes" />
+        <meta property="og:description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/ragi-specials" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Ragi Specials — Healthy South Indian | Milton Keynes" />
+        <meta name="twitter:description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+      </Helmet>
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(92,36,6,0.92) 0%, rgba(120,53,15,0.8) 50%, rgba(92,36,6,0.6) 100%)' }} />

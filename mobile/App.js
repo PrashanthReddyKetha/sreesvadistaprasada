@@ -8,6 +8,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } f
 
 import { AuthProvider } from './src/context/AuthContext';
 import { CartProvider } from './src/context/CartContext';
+import { PostcodeProvider } from './src/context/PostcodeContext';
 import RootNavigator from './src/navigation/RootNavigator';
 
 export default function App() {
@@ -28,10 +29,12 @@ export default function App() {
       <SafeAreaProvider>
         <AuthProvider>
           <CartProvider>
-            <NavigationContainer>
-              <StatusBar style="dark" />
-              <RootNavigator />
-            </NavigationContainer>
+            <PostcodeProvider>
+              <NavigationContainer>
+                <StatusBar style="dark" />
+                <RootNavigator />
+              </NavigationContainer>
+            </PostcodeProvider>
           </CartProvider>
         </AuthProvider>
       </SafeAreaProvider>

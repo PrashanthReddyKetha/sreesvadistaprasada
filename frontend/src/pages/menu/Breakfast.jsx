@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, Sun, Search, X } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -49,11 +48,21 @@ const Breakfast = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1630383249896-424e482df921?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Breakfast"
+      <Helmet>
+        <title>South Indian Breakfast &amp; Tiffins | Milton Keynes</title>
+        <meta name="description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/breakfast" />
+        <meta property="og:title" content="South Indian Breakfast &amp; Tiffins | Milton Keynes" />
+        <meta property="og:description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/breakfast" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="South Indian Breakfast &amp; Tiffins | Milton Keynes" />
+        <meta name="twitter:description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=1200&q=80" />
+      </Helmet>
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(180,101,11,0.92) 0%, rgba(146,64,14,0.8) 50%, rgba(180,101,11,0.6) 100%)' }} />
@@ -64,7 +73,7 @@ const Breakfast = () => {
               <span className="text-xs uppercase tracking-[0.25em] text-yellow-200 font-medium">Morning Specials</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Breakfast
+              Fresh South Indian Breakfast &amp; Morning Tiffins in Milton Keynes
             </h1>
             <p className="text-lg text-yellow-100 leading-relaxed mb-1">Idlis, dosas, vadas and more.</p>
             <p className="text-sm text-yellow-200 leading-relaxed max-w-md">

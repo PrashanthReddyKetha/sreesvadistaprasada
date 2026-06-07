@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 
 const Section = ({ title, children }) => (
@@ -14,6 +15,10 @@ const Section = ({ title, children }) => (
 
 const TermsAndServices = () => (
   <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
+    <Helmet>
+      <title>Terms & Conditions | Sree Svadista Prasada Milton Keynes</title>
+      <meta name="description" content="Terms and conditions for ordering, delivery, subscriptions and use of Sree Svadista Prasada services in Milton Keynes, UK." />
+    </Helmet>
     {/* Hero */}
     <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: '#800020' }}>
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-14">
@@ -36,7 +41,7 @@ const TermsAndServices = () => (
       <Section title="1. About Us">
         <p>
           Sree Svadista Prasada ("<strong>we</strong>", "<strong>us</strong>", "<strong>our</strong>") is a South Indian
-          food ordering and meal-subscription service operating in Milton Keynes, Edinburgh, and Glasgow, UK.
+          food ordering and meal-subscription service operating in Milton Keynes, UK.
           Contact: <a href="mailto:info@sreesvadistaprasada.com" className="underline" style={{ color: '#800020' }}>info@sreesvadistaprasada.com</a> | +44 73 0711 9962.
         </p>
       </Section>
@@ -80,7 +85,7 @@ const TermsAndServices = () => (
 
       <Section title="5. Delivery">
         <ul className="list-disc ml-5 space-y-1">
-          <li>We deliver to selected postcodes in Milton Keynes, Edinburgh, and Glasgow. You can check delivery availability at checkout using our postcode checker.</li>
+          <li>We deliver to selected postcodes in Milton Keynes. You can check delivery availability at checkout using our postcode checker.</li>
           <li>Delivery time estimates are provided in good faith but are not guaranteed. Delays may occur due to traffic, weather, or high demand.</li>
           <li>You must ensure someone is available to receive the delivery. If the delivery cannot be completed, we will attempt to contact you. We are not responsible for spoilage of food left unattended.</li>
           <li>Risk of damage or loss passes to you on delivery.</li>

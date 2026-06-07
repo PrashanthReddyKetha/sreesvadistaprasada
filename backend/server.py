@@ -5,8 +5,9 @@ import os
 import logging
 
 from database import client
-from seed import seed_menu, create_indexes, create_admin_user, seed_daily_specials
+from seed import seed_menu, create_indexes, create_admin_user, seed_daily_specials, seed_content
 from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews, daily_specials, loyalty, admin_loyalty
+from routes import content as content_routes
 from routes.menu import migrate_slugs
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI):
     await create_indexes()
     await seed_menu()
     await seed_daily_specials()
+    await seed_content()
     await create_admin_user()
     await migrate_slugs()
     yield
@@ -59,6 +61,7 @@ app.include_router(reviews.router, prefix="/api")
 app.include_router(daily_specials.router, prefix="/api")
 app.include_router(loyalty.router, prefix="/api")
 app.include_router(admin_loyalty.router, prefix="/api")
+app.include_router(content_routes.router, prefix="/api")
 
 
 @app.get("/api")

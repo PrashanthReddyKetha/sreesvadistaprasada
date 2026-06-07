@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 
 const Section = ({ title, children }) => (
@@ -14,6 +15,10 @@ const Section = ({ title, children }) => (
 
 const PrivacyPolicy = () => (
   <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
+    <Helmet>
+      <title>Privacy Policy | Sree Svadista Prasada Milton Keynes</title>
+      <meta name="description" content="Privacy policy for Sree Svadista Prasada — how we collect, use and protect your personal data in accordance with UK GDPR." />
+    </Helmet>
     {/* Hero */}
     <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: '#800020' }}>
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-14">
@@ -30,7 +35,7 @@ const PrivacyPolicy = () => (
       <Section title="1. Who We Are">
         <p>
           Sree Svadista Prasada ("<strong>we</strong>", "<strong>us</strong>", "<strong>our</strong>") is a South Indian food ordering
-          and meal-subscription service operating in Milton Keynes, Edinburgh, and Glasgow, United Kingdom.
+          and meal-subscription service operating in Milton Keynes, United Kingdom.
         </p>
         <p>
           For the purposes of UK data-protection law, we are the <strong>Data Controller</strong>.

@@ -13,24 +13,6 @@ ZONES = [
         "estimated_time": "30–60 mins",
         "service_type": "full",
     },
-    {
-        "city": "Edinburgh",
-        "prefixes": ["EH"],
-        "delivery_fee": 3.99,
-        "free_over": 30.0,
-        "min_order": 15.0,
-        "estimated_time": "45–75 mins",
-        "service_type": "full",
-    },
-    {
-        "city": "Glasgow",
-        "prefixes": ["G"],   # G followed by digit (not GU, GL, etc.)
-        "delivery_fee": 3.99,
-        "free_over": 30.0,
-        "min_order": 15.0,
-        "estimated_time": "45–75 mins",
-        "service_type": "full",
-    },
 ]
 
 REST_OF_UK = {
@@ -65,6 +47,7 @@ async def check_postcode(payload: PostcodeCheckRequest):
             serviceable=True,
             city=zone["city"],
             delivery_fee=zone["delivery_fee"],
+            free_over=zone["free_over"],
             min_order=zone["min_order"],
             estimated_time=zone["estimated_time"],
             service_type=zone["service_type"],
@@ -75,6 +58,7 @@ async def check_postcode(payload: PostcodeCheckRequest):
         serviceable=True,
         city=REST_OF_UK["city"],
         delivery_fee=REST_OF_UK["delivery_fee"],
+        free_over=REST_OF_UK["free_over"],
         min_order=REST_OF_UK["min_order"],
         estimated_time=REST_OF_UK["estimated_time"],
         service_type=REST_OF_UK["service_type"],

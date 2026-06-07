@@ -852,7 +852,7 @@ const Admin = () => {
     finally { setLoading(false); setRefreshing(false); }
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { if (user?.role === 'admin') fetchAll(); }, [fetchAll, user]);
 
   const handleStatusUpdate = async (type, id, status) => {
     try {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, Flame, Search, X } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -49,11 +48,21 @@ const Svadista = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="relative overflow-hidden" style={{ height: 'min(58vh, 460px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Sree Svadista"
+      <Helmet>
+        <title>Non-Veg South Indian Menu | Sree Svadista | Milton Keynes</title>
+        <meta name="description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/svadista" />
+        <meta property="og:title" content="Non-Veg South Indian Menu | Sree Svadista | Milton Keynes" />
+        <meta property="og:description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/svadista" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Non-Veg South Indian Menu | Sree Svadista | Milton Keynes" />
+        <meta name="twitter:description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+      </Helmet>
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(92,0,24,0.8) 50%, rgba(128,0,32,0.6) 100%)' }} />
@@ -65,7 +74,7 @@ const Svadista = () => {
               <span className="text-xs uppercase tracking-[0.25em] text-red-200 font-medium">Non-Vegetarian</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Sree Svadista
+              Authentic Non-Veg South Indian &amp; Andhra Food in Milton Keynes
             </h1>
             <p className="text-lg text-red-100 leading-relaxed mb-1">Bold, rustic, village-style.</p>
             <p className="text-sm text-red-200 leading-relaxed max-w-md">

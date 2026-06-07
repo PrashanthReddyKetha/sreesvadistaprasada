@@ -13,7 +13,7 @@ from auth import get_current_user, get_optional_user, require_admin
 from notifications import (
     send_email, send_sms, notify_admin,
     email_order_confirmation, email_order_status,
-    create_notification,
+    create_notification, send_push_notification,
 )
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -286,8 +286,13 @@ async def create_order(
             if not item:
                 raise HTTPException(404, "Free item not available")
 
-    # Server-side pricing — never trust the client total
-    items_data = [{"price": i.price, "quantity": i.quantity} for i in payload.items]
+    # Server-side pricing — look up each item price from the DB, never trust the client
+    items_data = []
+    for i in payload.items:
+        doc = await db.menu.find_one({"id": i.menu_item_id, "available": True}, {"price": 1, "_id": 0})
+        if not doc:
+            raise HTTPException(404, detail=f"Item '{i.menu_item_id}' is not available")
+        items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
     try:
         totals = calculate_order_total(
             items=items_data,
@@ -424,6 +429,34 @@ async def update_order_status(
             user_id = doc.get("user_id")
             if user_id:
                 await _update_loyalty_on_completion(user_id=user_id, order_id=order_id)
+
+        # Push notification
+        user_id = doc.get("user_id")
+        if user_id:
+            user_doc = await db.users.find_one({"id": user_id}, {"_id": 0, "push_token": 1})
+            push_token = user_doc.get("push_token") if user_doc else None
+            if push_token:
+                push_titles = {
+                    "confirmed": "Order confirmed 🎉",
+                    "preparing": "Chefs are cooking 🍳",
+                    "out_for_delivery": "On the way! 🛵",
+                    "delivered": "Delivered! 🏠",
+                    "cancelled": "Order cancelled",
+                }
+                push_bodies = {
+                    "confirmed": f"Order #{order_id[:6].upper()} confirmed. We'll start prepping shortly.",
+                    "preparing": f"Your order #{order_id[:6].upper()} is being prepared right now.",
+                    "out_for_delivery": "Your order is heading to you. Should arrive in 10–15 mins.",
+                    "delivered": "Your order has arrived. Enjoy your meal!",
+                    "cancelled": f"Order #{order_id[:6].upper()} has been cancelled.",
+                }
+                if payload.status.value in push_titles:
+                    await send_push_notification(
+                        push_token,
+                        push_titles[payload.status.value],
+                        push_bodies[payload.status.value],
+                        data={"orderId": order_id, "status": payload.status.value},
+                    )
 
     return doc
 

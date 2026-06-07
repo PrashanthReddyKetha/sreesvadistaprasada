@@ -5,7 +5,15 @@ from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 
-SECRET_KEY = os.environ.get("JWT_SECRET", "svadista-secret-key-change-in-production")
+SECRET_KEY = os.environ.get("JWT_SECRET")
+if not SECRET_KEY:
+    import sys
+    # In production, refuse to start without a secret.
+    # In local dev (no env var set), use a warning fallback so dev still works.
+    if os.environ.get("ENVIRONMENT") == "production":
+        print("FATAL: JWT_SECRET environment variable is required in production.", file=sys.stderr)
+        sys.exit(1)
+    SECRET_KEY = "svadista-dev-only-secret-DO-NOT-USE-IN-PRODUCTION"
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 24 * 7  # 7 days
 

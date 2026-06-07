@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
@@ -49,17 +49,38 @@ export default function ProfileScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}><Text style={styles.title}>You</Text></View>
-        <View style={styles.guestBody}>
-          <Text style={styles.guestEmoji}>👤</Text>
-          <Text style={styles.guestHeading}>Sign in to your account</Text>
-          <Text style={styles.guestSub}>Track orders, manage your Dabba, earn loyalty rewards.</Text>
-          <TouchableOpacity style={styles.guestBtn} onPress={logout}>
-            <Text style={styles.guestBtnText}>Sign In</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.guestGhostBtn} onPress={logout}>
-            <Text style={styles.guestGhostText}>Create Account</Text>
-          </TouchableOpacity>
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
+
+          {/* Sign-in card */}
+          <View style={styles.guestCard}>
+            <Text style={styles.guestEmoji}>👤</Text>
+            <Text style={styles.guestHeading}>Sign in to your account</Text>
+            <Text style={styles.guestSub}>Track orders, manage your Dabba,{"\n"}earn loyalty rewards.</Text>
+            <TouchableOpacity style={styles.guestBtn} onPress={logout}>
+              <Text style={styles.guestBtnText}>Sign In</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.guestGhostBtn} onPress={logout}>
+              <Text style={styles.guestGhostText}>Create Account</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Public sections — no account needed */}
+          <SectionTitle title="Explore" />
+          <View style={styles.menuSection}>
+            <MenuRow icon="📍" label="Delivery Areas" onPress={() => navigation.navigate('DeliveryAreas')} />
+            <MenuRow icon="🖼" label="Gallery" onPress={() => navigation.navigate('Gallery')} />
+            <MenuRow icon="🌿" label="Our Story" onPress={() => navigation.navigate('About')} />
+          </View>
+
+          <SectionTitle title="Help & Support" />
+          <View style={styles.menuSection}>
+            <MenuRow icon="📞" label="Contact Us" sub="Get in touch" onPress={() => navigation.navigate('Contact')} />
+            <MenuRow icon="🍽" label="Catering" sub="Events & bulk orders" onPress={() => navigation.navigate('Catering')} />
+            <MenuRow icon="❓" label="FAQ" sub="Common questions" onPress={() => navigation.navigate('FAQ')} />
+          </View>
+
+          <Text style={styles.version}>Sree Svadista Prasada · v1.0.0</Text>
+        </ScrollView>
       </View>
     );
   }
@@ -88,9 +109,13 @@ export default function ProfileScreen() {
 
         {/* Profile card */}
         <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
+          {user?.photo_url ? (
+            <Image source={{ uri: user.photo_url }} style={styles.avatarPhoto} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
+          )}
           <Text style={styles.name}>{user?.name}</Text>
           <Text style={styles.email}>{user?.email}</Text>
           <TouchableOpacity style={styles.editBtn} onPress={() => navigation.navigate('EditProfile')}>
@@ -165,6 +190,7 @@ const styles = StyleSheet.create({
   title: { fontFamily: FONTS.heading, fontSize: 22, color: COLORS.crimson },
 
   // Guest
+  guestCard: { margin: 16, backgroundColor: COLORS.white, borderRadius: RADIUS.xl, padding: 28, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
   guestBody: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
   guestEmoji: { fontSize: 48, marginBottom: 20 },
   guestHeading: { fontFamily: FONTS.heading, fontSize: 22, color: COLORS.brown, textAlign: 'center', marginBottom: 8 },
@@ -177,6 +203,7 @@ const styles = StyleSheet.create({
   // Profile card
   profileCard: { backgroundColor: COLORS.white, padding: SPACING.xxl, alignItems: 'center', marginBottom: 8 },
   avatar: { width: 70, height: 70, borderRadius: 35, backgroundColor: COLORS.crimson, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  avatarPhoto: { width: 70, height: 70, borderRadius: 35, marginBottom: 12, borderWidth: 2, borderColor: COLORS.deepGold },
   avatarText: { fontFamily: FONTS.heading, fontSize: 26, color: COLORS.white },
   name: { fontFamily: FONTS.heading, fontSize: 20, color: COLORS.brown, marginBottom: 3 },
   email: { fontFamily: FONTS.body, fontSize: 13, color: COLORS.grey, marginBottom: 12 },

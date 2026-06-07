@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Heart, ShoppingCart, Star, ChevronDown, ChevronUp,
@@ -10,7 +11,7 @@ import { useCart } from '../context/CartContext';
 import api from '../api';
 
 // ── constants ──────────────────────────────────────────────────────────────
-const CAT_LABELS = { nonVeg:'Non-Veg', veg:'Veg', prasada:'Prasada', breakfast:'Breakfast', pickles:'Pickles', podis:'Podis' };
+const CAT_LABELS = { nonVeg:'Non-Veg', veg:'Veg', prasada:'Prasada', breakfast:'Breakfast', streetFood:'Street Food', drinks:'Drinks', pickles:'Pickles', podis:'Podis', ragiSpecials:'Ragi Specials' };
 
 const COMPLEMENTS = {
   nonVeg:    ['pickles','podis'],
@@ -57,7 +58,7 @@ const CATEGORY_FAQS = {
 };
 
 const GENERAL_FAQS = [
-  { q:'How long does delivery take?', a:'45–60 mins for Milton Keynes, 60–90 mins for Edinburgh and Glasgow.' },
+  { q:'How long does delivery take?', a:'30–60 mins for Milton Keynes. Snacks and pickles ship UK-wide in 2–3 business days.' },
   { q:'What is the minimum for free delivery?', a:'Orders over £30 qualify for free delivery across all our delivery areas.' },
   { q:'Can I customise my order?', a:'Yes — use the Special Instructions field at checkout for any requests.' },
   { q:'Do you cater for large groups?', a:'Yes! Visit our Catering page to request a quote for events and celebrations.' },
@@ -239,13 +240,28 @@ export default function ItemDetail() {
 
   return (
     <div className="min-h-screen pt-20 md:pt-24 pb-16" style={{ backgroundColor:'#FAF8F4' }}>
+      <Helmet>
+        <title>{item.name} | Sree Svadista Prasada — South Indian Food Milton Keynes</title>
+        <meta name="description" content={item.seo_meta_description || (item.description ? item.description.slice(0, 155) + '...' : 'Authentic South Indian dish at Sree Svadista Prasada, Milton Keynes. Order online for delivery.')} />
+        <link rel="canonical" href={`https://sreesvadistaprasada.vercel.app/item/${item.id}`} />
+        <meta property="og:title" content={`${item.name} | Sree Svadista Prasada`} />
+        <meta property="og:description" content={item.seo_meta_description || (item.description ? item.description.slice(0, 155) : 'Authentic South Indian dish at Sree Svadista Prasada, Milton Keynes.')} />
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={`https://sreesvadistaprasada.vercel.app/item/${item.id}`} />
+        <meta property="og:image" content={item.image || 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'} />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${item.name} | Sree Svadista Prasada`} />
+        <meta name="twitter:description" content={item.seo_meta_description || (item.description ? item.description.slice(0, 155) : 'Authentic South Indian dish at Sree Svadista Prasada, Milton Keynes.')} />
+        <meta name="twitter:image" content={item.image || 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'} />
+      </Helmet>
       <div className="max-w-6xl mx-auto px-4 md:px-8">
 
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs mb-6 flex-wrap" style={{ color:'#9C7B6B' }}>
           <Link to="/" className="hover:underline">Home</Link>
           <span>/</span>
-          <Link to="/menus" className="hover:underline">Menus</Link>
+          <Link to="/menu" className="hover:underline">Menus</Link>
           <span>/</span>
           <span className="capitalize">{CAT_LABELS[item.category]}</span>
           <span>/</span>

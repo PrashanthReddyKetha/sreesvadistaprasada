@@ -61,9 +61,10 @@ async def get_menu(
     if featured is not None:
         query["featured"] = featured
     if search:
+        safe_search = re.escape(search)
         search_clause = [
-            {"name": {"$regex": search, "$options": "i"}},
-            {"description": {"$regex": search, "$options": "i"}},
+            {"name": {"$regex": safe_search, "$options": "i"}},
+            {"description": {"$regex": safe_search, "$options": "i"}},
         ]
         if "$or" in query:
             query = {"$and": [{"$or": query["$or"]}, {"$or": search_clause}]}

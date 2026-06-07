@@ -49,7 +49,7 @@ export default function ItemDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { itemId } = route.params;
-  const { addToCart } = useCart();
+  const { addToCart, cartItems, cartTotal } = useCart();
   const { user, logout } = useAuth();
 
   const [item, setItem] = useState(null);
@@ -58,6 +58,9 @@ export default function ItemDetailScreen() {
   const [social, setSocial] = useState({ likes: 0, order_count: 0, liked: false });
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+
+  // How many of this item are already in the cart
+  const cartQty = cartItems?.find(c => c.id === item?.id)?.quantity || 0;
 
   // FAQs
   const [expandedFaq, setExpandedFaq] = useState(null);
@@ -361,23 +364,35 @@ export default function ItemDetailScreen() {
           )}
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: cartQty > 0 ? 120 : 90 }} />
       </ScrollView>
 
       {/* Sticky Add to Cart bar */}
       <View style={[styles.stickyBar, { paddingBottom: insets.bottom + 8 }]}>
-        <View style={styles.quantityRow}>
-          <TouchableOpacity style={styles.qBtn} onPress={() => setQuantity(q => Math.max(1, q - 1))}>
-            <Text style={styles.qBtnText}>−</Text>
-          </TouchableOpacity>
-          <Text style={styles.qCount}>{quantity}</Text>
-          <TouchableOpacity style={styles.qBtn} onPress={() => setQuantity(q => q + 1)}>
-            <Text style={styles.qBtnText}>+</Text>
+        <View style={styles.addRow}>
+          <View style={styles.quantityRow}>
+            <TouchableOpacity style={styles.qBtn} onPress={() => setQuantity(q => Math.max(1, q - 1))}>
+              <Text style={styles.qBtnText}>−</Text>
+            </TouchableOpacity>
+            <Text style={styles.qCount}>{quantity}</Text>
+            <TouchableOpacity style={styles.qBtn} onPress={() => setQuantity(q => q + 1)}>
+              <Text style={styles.qBtnText}>+</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.addBtn} onPress={handleAddToCart}>
+            <Text style={styles.addBtnText}>
+              {cartQty > 0
+                ? `Add ${quantity > 1 ? quantity + ' more' : 'more'} · £${(item.price * quantity).toFixed(2)}`
+                : `Add to Cart · £${(item.price * quantity).toFixed(2)}`}
+            </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={handleAddToCart}>
-          <Text style={styles.addBtnText}>Add to Cart · £{(item.price * quantity).toFixed(2)}</Text>
-        </TouchableOpacity>
+        {cartQty > 0 && (
+          <TouchableOpacity style={styles.viewCartRow} onPress={() => navigation.navigate('Cart')}>
+            <Text style={styles.viewCartText}>🛒  {cartQty} in basket · £{cartTotal.toFixed(2)}</Text>
+            <Text style={styles.viewCartArrow}>View Cart →</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -489,11 +504,15 @@ const styles = StyleSheet.create({
   faqA: { fontFamily: FONTS.body, fontSize: 13, color: COLORS.grey, marginTop: 8, lineHeight: 20 },
 
   // Sticky bar
-  stickyBar: { backgroundColor: COLORS.white, borderTopWidth: 1, borderTopColor: COLORS.lightGrey, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: SPACING.xl, paddingTop: 12 },
+  stickyBar: { backgroundColor: COLORS.white, borderTopWidth: 1, borderTopColor: COLORS.lightGrey, flexDirection: 'column', gap: 8, paddingHorizontal: SPACING.xl, paddingTop: 12 },
+  addRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   quantityRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   qBtn: { width: 34, height: 34, borderRadius: RADIUS.sm, borderWidth: 1.5, borderColor: COLORS.crimson, alignItems: 'center', justifyContent: 'center' },
   qBtnText: { fontFamily: FONTS.bodyBold, fontSize: 18, color: COLORS.crimson, lineHeight: 22 },
   qCount: { fontFamily: FONTS.bodyBold, fontSize: 16, color: COLORS.brown, minWidth: 20, textAlign: 'center' },
   addBtn: { flex: 1, backgroundColor: COLORS.crimson, borderRadius: RADIUS.sm, height: 46, alignItems: 'center', justifyContent: 'center' },
   addBtnText: { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.white },
+  viewCartRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ECFDF5', borderRadius: RADIUS.sm, paddingHorizontal: 14, height: 38 },
+  viewCartText: { fontFamily: FONTS.bodyMedium, fontSize: 13, color: '#065F46' },
+  viewCartArrow: { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#059669' },
 });

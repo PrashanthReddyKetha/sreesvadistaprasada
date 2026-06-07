@@ -3,7 +3,7 @@ import { Plus, X, Save, RefreshCw, Utensils, Leaf, Flame, Edit2, Trash2 } from '
 import api from '../../api';
 
 const CATEGORIES = ['nonVeg','veg','prasada','breakfast','pickles','podis'];
-const CAT_LABELS  = { nonVeg:'Non-Veg', veg:'Veg', prasada:'Prasada', breakfast:'Breakfast', pickles:'Pickles', podis:'Podis' };
+const CAT_LABELS  = { nonVeg:'Non-Veg', veg:'Veg', prasada:'Prasada', breakfast:'Breakfast', streetFood:'Street Food', drinks:'Drinks', pickles:'Pickles', podis:'Podis', ragiSpecials:'Ragi Specials' };
 const BLANK_ITEM  = { name:'', description:'', price:'', category:'nonVeg', subcategory:'', spice_level:0, is_veg:false, available:true, featured:false, image:'', tag:'', allergens:[], faqs:[], pairs_with:[] };
 const ALLERGEN_LIST = ['gluten','dairy','eggs','nuts','sesame','mustard','soy','celery'];
 

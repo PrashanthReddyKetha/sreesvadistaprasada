@@ -5,7 +5,7 @@ import VegDot from './VegDot';
 import SpiceFlames from './SpiceFlames';
 import AllergenBadge from './AllergenBadge';
 
-export default function DishCard({ item, onPress, onAddToCart, width = 220 }) {
+export default function DishCard({ item, onPress, onAddToCart, onRemoveFromCart, qty = 0, width = 220 }) {
   return (
     <TouchableOpacity
       style={[styles.card, { width }, SHADOW.card]}
@@ -38,9 +38,21 @@ export default function DishCard({ item, onPress, onAddToCart, width = 220 }) {
         )}
         <View style={styles.footer}>
           <Text style={styles.price}>£{item.price?.toFixed(2)}</Text>
-          <TouchableOpacity style={styles.addBtn} onPress={(e) => { onAddToCart?.(item); }}>
-            <Text style={styles.addText}>Add</Text>
-          </TouchableOpacity>
+          {qty > 0 ? (
+            <View style={styles.stepper}>
+              <TouchableOpacity style={styles.stepBtn} onPress={() => onRemoveFromCart?.(item.id)} activeOpacity={0.8}>
+                <Text style={styles.stepIcon}>−</Text>
+              </TouchableOpacity>
+              <Text style={styles.stepQty}>{qty}</Text>
+              <TouchableOpacity style={styles.stepBtn} onPress={() => onAddToCart?.(item)} activeOpacity={0.8}>
+                <Text style={styles.stepIcon}>+</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.addBtn} onPress={() => onAddToCart?.(item)} activeOpacity={0.8}>
+              <Text style={styles.addText}>Add</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -127,5 +139,34 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodySemiBold,
     fontSize: 11,
     color: COLORS.white,
+  },
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 0,
+    borderWidth: 1.5,
+    borderColor: COLORS.crimson,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  stepBtn: {
+    width: 28,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.crimson,
+  },
+  stepIcon: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 14,
+    color: COLORS.white,
+    lineHeight: 16,
+  },
+  stepQty: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 12,
+    color: COLORS.crimson,
+    minWidth: 22,
+    textAlign: 'center',
   },
 });

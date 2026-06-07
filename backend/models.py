@@ -54,6 +54,15 @@ class Address(BaseModel):
     postcode: str
 
 
+class SavedAddress(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    label: str = "Home"  # Home, Work, Other
+    line1: str
+    line2: Optional[str] = None
+    city: str
+    postcode: str
+
+
 # --- User ---
 
 class UserCreate(BaseModel):
@@ -73,6 +82,19 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[Address] = None
+    photo_url: Optional[str] = None
+
+
+class PushTokenUpdate(BaseModel):
+    push_token: str
+
+
+class SavedAddressCreate(BaseModel):
+    label: str = "Home"
+    line1: str
+    line2: Optional[str] = None
+    city: str
+    postcode: str
 
 
 class User(BaseModel):
@@ -82,6 +104,9 @@ class User(BaseModel):
     phone: Optional[str] = None
     phone_verified: bool = False
     address: Optional[Address] = None
+    photo_url: Optional[str] = None
+    push_token: Optional[str] = None
+    saved_addresses: List[SavedAddress] = []
     role: UserRole = UserRole.customer
     google_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -135,6 +160,7 @@ class MenuItemCreate(BaseModel):
     tag: Optional[str] = None
     faqs: List[dict] = []
     pairs_with: List[str] = []
+    seo_meta_description: Optional[str] = None
 
 
 class MenuItemUpdate(BaseModel):
@@ -154,6 +180,7 @@ class MenuItemUpdate(BaseModel):
     tag: Optional[str] = None
     faqs: Optional[List[dict]] = None
     pairs_with: Optional[List[str]] = None
+    seo_meta_description: Optional[str] = None
 
 
 class MenuItem(MenuItemCreate):
@@ -411,6 +438,7 @@ class DeliveryZoneResponse(BaseModel):
     serviceable: bool
     city: Optional[str] = None
     delivery_fee: Optional[float] = None
+    free_over: Optional[float] = None
     min_order: Optional[float] = None
     estimated_time: Optional[str] = None
     service_type: Optional[str] = None   # "full" | "snacks_only"

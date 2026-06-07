@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Flame, ArrowRight, Package, Truck, MessageCircle, Search, X } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
 import useTabHistory from '../../hooks/useTabHistory';
@@ -41,11 +40,21 @@ const Snacks = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Traditional pickles and snacks"
+      <Helmet>
+        <title>Buy South Indian Snacks &amp; Andhra Pickles Online | UK Delivery</title>
+        <meta name="description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/snacks" />
+        <meta property="og:title" content="Buy South Indian Snacks &amp; Andhra Pickles Online | UK Delivery" />
+        <meta property="og:description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/snacks" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Buy South Indian Snacks &amp; Andhra Pickles Online | UK Delivery" />
+        <meta name="twitter:description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+      </Helmet>
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45,36,34,0.9) 0%, rgba(45,36,34,0.7) 50%, rgba(45,36,34,0.4) 100%)' }} />
@@ -56,7 +65,7 @@ const Snacks = () => {
               <span className="text-xs uppercase tracking-[0.25em] text-yellow-200 font-medium">Ships UK-Wide</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Snacks, Pickles & Podis
+              Buy South Indian Snacks Online &amp; Authentic Andhra Pickles
             </h1>
             <p className="text-lg text-gray-200 leading-relaxed mb-1">Sending a piece of home across the UK.</p>
             <p className="text-sm text-gray-300 leading-relaxed max-w-md">

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api';
+import { savePushToken } from '../utils/notifications';
 
 const AuthContext = createContext(null);
 
@@ -55,6 +56,7 @@ export const AuthProvider = ({ children }) => {
     await AsyncStorage.removeItem('ssp_guest');
     setIsGuest(false);
     setUser(userData);
+    savePushToken(); // fire-and-forget
     return userData;
   };
 
@@ -65,12 +67,24 @@ export const AuthProvider = ({ children }) => {
     await AsyncStorage.removeItem('ssp_guest');
     setIsGuest(false);
     setUser(userData);
+    savePushToken(); // fire-and-forget
     return userData;
   };
 
   const continueAsGuest = async () => {
     await AsyncStorage.setItem('ssp_guest', 'true');
     setIsGuest(true);
+  };
+
+  const loginWithGoogle = async (accessToken) => {
+    const res = await api.post('/auth/google', { credential: accessToken });
+    const { access_token, user: userData } = res.data;
+    await SecureStore.setItemAsync('ssp_token', access_token);
+    await AsyncStorage.removeItem('ssp_guest');
+    setIsGuest(false);
+    setUser(userData);
+    savePushToken(); // fire-and-forget
+    return userData;
   };
 
   const logout = async () => {
@@ -86,7 +100,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user, isGuest, loading,
-      login, register, logout, continueAsGuest, updateUser, loadUser,
+      login, register, logout, continueAsGuest, updateUser, loadUser, loginWithGoogle,
     }}>
       {children}
     </AuthContext.Provider>

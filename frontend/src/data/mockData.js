@@ -376,14 +376,14 @@ export const testimonials = [
   {
     id: 1,
     name: "Priya Sharma",
-    location: "Edinburgh",
+    location: "Milton Keynes",
     text: "Finally found authentic Andhra food in the UK! The pulihora reminds me of my grandmother's cooking. I cried happy tears.",
     rating: 5
   },
   {
     id: 2,
     name: "Rajesh Kumar",
-    location: "Glasgow",
+    location: "Milton Keynes",
     text: "The prasada is so pure and divine. Perfect for our weekly poojas. My mother-in-law gave it her stamp of approval!",
     rating: 5
   },
@@ -417,8 +417,6 @@ export const images = {
 
 export const deliveryAreas = [
   { city: 'Milton Keynes', postcodes: 'MK1–MK19', status: 'Full Menu + Subscriptions', deliveryFee: 'Free over £30', minOrder: '£15', timing: '30-60 mins' },
-  { city: 'Edinburgh', postcodes: 'EH1–EH17', status: 'Full Menu + Subscriptions', deliveryFee: 'Free over £30', minOrder: '£15', timing: '45-75 mins' },
-  { city: 'Glasgow', postcodes: 'G1–G15', status: 'Full Menu + Subscriptions', deliveryFee: 'Free over £30', minOrder: '£15', timing: '45-75 mins' },
   { city: 'Rest of UK', postcodes: 'All postcodes', status: 'Snacks, Pickles & Podis Only', deliveryFee: 'Free over £25', minOrder: '£10', timing: '2-3 business days' },
 ];
 
@@ -426,10 +424,10 @@ export const faqData = [
   {
     category: 'Ordering & Delivery',
     items: [
-      { q: 'Where do you deliver?', a: 'We deliver full meals and subscriptions in Milton Keynes, Edinburgh, and Glasgow. Snacks, pickles, and podis ship UK-wide.' },
-      { q: 'What are the delivery charges?', a: 'Delivery is free for orders over £30 in MK, Edinburgh & Glasgow. Below £30, a flat £3.99 delivery fee applies. UK-wide snack shipping is free over £25.' },
-      { q: 'What is the minimum order?', a: '£15 for meal delivery in MK/Edinburgh/Glasgow. £10 for UK-wide snack orders.' },
-      { q: 'How long does delivery take?', a: '30-60 minutes in Milton Keynes, 45-75 minutes in Edinburgh/Glasgow. UK-wide snack orders arrive in 2-3 business days.' },
+      { q: 'Where do you deliver?', a: 'We deliver full meals and subscriptions in Milton Keynes. Snacks, pickles, and podis ship UK-wide.' },
+      { q: 'What are the delivery charges?', a: 'Delivery is free for orders over £30 in Milton Keynes. Below £30, a delivery fee applies based on your zone. UK-wide snack shipping is free over £25.' },
+      { q: 'What is the minimum order?', a: '£15 for meal delivery in Milton Keynes. £10 for UK-wide snack orders.' },
+      { q: 'How long does delivery take?', a: '30–60 minutes in Milton Keynes. UK-wide snack orders arrive in 2–3 business days.' },
       { q: 'What are your delivery hours?', a: 'Mon-Fri: 11am-10pm, Sat-Sun: 10am-11pm. Breakfast delivery available from 8am on weekends.' },
     ]
   },

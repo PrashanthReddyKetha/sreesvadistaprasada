@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Block admin, checkout and user dashboard from indexing
+Disallow: /admin
+Disallow: /checkout
+Disallow: /dashboard
+
+Sitemap: https://sreesvadistaprasada.vercel.app/sitemap.xml

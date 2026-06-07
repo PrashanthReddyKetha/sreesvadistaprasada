@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS, FONTS, SPACING, RADIUS } from '../../constants/theme';
+import GoogleSignInButton from '../../components/GoogleSignInButton';
 
 export default function RegisterScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -29,10 +30,6 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  const handleGoogle = () => {
-    Alert.alert('Coming soon', 'Google Sign-In will be enabled in the next update.', [{ text: 'OK' }]);
-  };
-
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
@@ -46,10 +43,7 @@ export default function RegisterScreen({ navigation }) {
         <Text style={styles.heading}>Join the family</Text>
         <Text style={styles.sub}>Create your account</Text>
 
-        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogle} activeOpacity={0.85}>
-          <Text style={styles.googleIcon}>G</Text>
-          <Text style={styles.googleText}>Continue with Google</Text>
-        </TouchableOpacity>
+        <GoogleSignInButton style={styles.googleBtn} />
 
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
@@ -118,9 +112,7 @@ const styles = StyleSheet.create({
   logoDivider: { width: 32, height: 2, backgroundColor: COLORS.gold, alignSelf: 'center', marginTop: 10, marginBottom: 32 },
   heading: { fontFamily: FONTS.heading, fontSize: 28, color: COLORS.brown, marginBottom: 4 },
   sub: { fontFamily: FONTS.body, fontSize: 13, color: COLORS.grey, marginBottom: SPACING.xl },
-  googleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, height: 50, borderRadius: RADIUS.sm, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.white, marginBottom: SPACING.xl },
-  googleIcon: { fontFamily: FONTS.bodyBold, fontSize: 17, color: '#4285F4' },
-  googleText: { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.brown },
+  googleBtn: { marginBottom: SPACING.xl },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: SPACING.xl },
   dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
   dividerText: { fontFamily: FONTS.body, fontSize: 11, color: COLORS.grey },

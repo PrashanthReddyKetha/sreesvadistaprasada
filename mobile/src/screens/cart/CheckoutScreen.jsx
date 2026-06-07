@@ -5,9 +5,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { usePostcode } from '../../context/PostcodeContext';
 import api from '../../api';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../../constants/theme';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -28,40 +28,42 @@ export default function CheckoutScreen() {
   const { orderType, discount } = route.params;
   const { cartItems, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
-
-  // Delivery rules — populated from /delivery/check once postcode is known
-  const MIN_ORDER_DELIVERY = 15.0;
-  const SMALL_ORDER_FEE = 1.99; // charged when delivery order < MIN_ORDER but > 0
-  const [zoneDeliveryFee, setZoneDeliveryFee] = useState(3.99);
-  const [zoneFreeOver, setZoneFreeOver] = useState(30.0);
+  const { postcode: ctxPostcode, city: ctxCity, zoneData } = usePostcode();
 
   const subtotalAfterDiscount = cartTotal - discount;
   const isDelivery = orderType === 'delivery';
-
-  // Compute delivery fee using zone-specific values
-  const rawDeliveryFee = isDelivery
-    ? (subtotalAfterDiscount >= zoneFreeOver ? 0 : zoneDeliveryFee)
-    : 0;
-  const smallOrderFee = isDelivery && cartTotal < MIN_ORDER_DELIVERY ? SMALL_ORDER_FEE : 0;
-  const deliveryFee = rawDeliveryFee;
+  const minOrder = zoneData.min_order ?? 15;
+  const deliveryFee = isDelivery && subtotalAfterDiscount < (zoneData.free_over ?? 30) ? (zoneData.delivery_fee ?? 3.99) : 0;
+  const smallOrderFee = isDelivery && cartTotal > 0 && cartTotal < minOrder ? 1.99 : 0;
   const total = subtotalAfterDiscount + deliveryFee + smallOrderFee;
 
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [postcode, setPostcode] = useState('');
   const [phone, setPhone] = useState(user?.phone || '');
+
+  // Pre-fill from context on mount
+  useEffect(() => {
+    if (ctxPostcode) setPostcode(ctxPostcode);
+    if (ctxCity) setCity(ctxCity);
+  }, [ctxPostcode, ctxCity]);
+
   const [slot, setSlot] = useState(DELIVERY_SLOTS[0]);
   const [doorInstruction, setDoorInstruction] = useState('ring');
   const [safePlace, setSafePlace] = useState('');
   const [instructions, setInstructions] = useState('');
   const [loading, setLoading] = useState(false);
   const [postcodeStatus, setPostcodeStatus] = useState(null);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [saveAddress, setSaveAddress] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem('ssp_postcode').then(pc => { if (pc) setPostcode(pc); });
+    if (user) {
+      api.get('/auth/addresses').then(r => setSavedAddresses(r.data || [])).catch(() => {});
+    }
   }, []);
 
-  // Check postcode when it changes
+  // Check postcode when it changes — only for UI validation feedback
   useEffect(() => {
     if (postcode.trim().length < 5) { setPostcodeStatus(null); return; }
     const timer = setTimeout(async () => {
@@ -70,10 +72,6 @@ export default function CheckoutScreen() {
         const ok = res.data.service_type === 'full';
         setPostcodeStatus({ ok, city: res.data.city });
         if (ok && res.data.city && !city) setCity(res.data.city);
-        if (ok && res.data.delivery_fee != null) {
-          setZoneDeliveryFee(res.data.delivery_fee);
-          setZoneFreeOver(res.data.free_over ?? 30.0);
-        }
       } catch { setPostcodeStatus(null); }
     }, 600);
     return () => clearTimeout(timer);
@@ -115,6 +113,14 @@ export default function CheckoutScreen() {
         user_id: user?.id || undefined,
       };
       const res = await api.post('/orders', orderData);
+      if (saveAddress && address.trim() && postcode.trim()) {
+        api.post('/auth/addresses', {
+          label: 'Home',
+          line1: address.trim(),
+          city: city || 'Milton Keynes',
+          postcode: postcode.trim().toUpperCase(),
+        }).catch(() => {});
+      }
       clearCart();
       navigation.replace('OrderConfirmed', { order: res.data });
     } catch (err) {
@@ -149,6 +155,23 @@ export default function CheckoutScreen() {
           {orderType === 'delivery' && (
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Delivery Address</Text>
+
+              {/* Saved address chips */}
+              {savedAddresses.length > 0 && (
+                <View style={styles.savedAddrRow}>
+                  {savedAddresses.map(a => (
+                    <TouchableOpacity
+                      key={a.id}
+                      style={styles.savedAddrChip}
+                      onPress={() => { setAddress(a.line1); setCity(a.city); setPostcode(a.postcode); }}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.savedAddrLabel}>{a.label}</Text>
+                      <Text style={styles.savedAddrSub} numberOfLines={1}>{a.line1}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Street address</Text>
                 <TextInput
@@ -185,6 +208,16 @@ export default function CheckoutScreen() {
                   </Text>
                 )}
               </View>
+
+              {/* Save address toggle */}
+              {user && (
+                <TouchableOpacity style={styles.saveAddrToggle} onPress={() => setSaveAddress(v => !v)} activeOpacity={0.7}>
+                  <View style={[styles.saveAddrCheck, saveAddress && { backgroundColor: COLORS.crimson, borderColor: COLORS.crimson }]}>
+                    {saveAddress && <Text style={styles.saveAddrTick}>✓</Text>}
+                  </View>
+                  <Text style={styles.saveAddrToggleLabel}>Save this address for next time</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
@@ -265,12 +298,12 @@ export default function CheckoutScreen() {
           </View>
 
           {/* Minimum order warning */}
-          {isDelivery && cartTotal < MIN_ORDER_DELIVERY && (
+          {isDelivery && smallOrderFee > 0 && (
             <View style={[styles.section, { paddingTop: 0 }]}>
               <View style={styles.minOrderBanner}>
                 <Text style={styles.minOrderText}>
-                  ⚠️  Minimum order for delivery is £{MIN_ORDER_DELIVERY.toFixed(2)}.
-                  A small order fee of £{SMALL_ORDER_FEE.toFixed(2)} applies.
+                  ⚠️  Minimum order for delivery is £{minOrder.toFixed(2)}.
+                  A small order fee of £{smallOrderFee.toFixed(2)} applies.
                 </Text>
               </View>
             </View>
@@ -391,4 +424,16 @@ const styles = StyleSheet.create({
   footer: { backgroundColor: COLORS.white, borderTopWidth: 1, borderTopColor: COLORS.lightGrey, paddingHorizontal: SPACING.xl, paddingTop: 12 },
   confirmBtn: { backgroundColor: COLORS.crimson, borderRadius: RADIUS.sm, height: 52, alignItems: 'center', justifyContent: 'center' },
   confirmText: { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: COLORS.white },
+
+  // Saved address chips
+  savedAddrRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: SPACING.md },
+  savedAddrChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: COLORS.deepGold, backgroundColor: `${COLORS.deepGold}12` },
+  savedAddrLabel: { fontFamily: FONTS.bodySemiBold, fontSize: 12, color: COLORS.brown },
+  savedAddrSub: { fontFamily: FONTS.body, fontSize: 10, color: COLORS.grey, marginTop: 2, maxWidth: 120 },
+
+  // Save address toggle
+  saveAddrToggle: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
+  saveAddrCheck: { width: 18, height: 18, borderRadius: 4, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.white, alignItems: 'center', justifyContent: 'center' },
+  saveAddrTick: { fontSize: 10, color: COLORS.white, fontFamily: FONTS.bodyBold },
+  saveAddrToggleLabel: { fontFamily: FONTS.body, fontSize: 13, color: COLORS.grey },
 });

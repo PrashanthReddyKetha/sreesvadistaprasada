@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingBag, ShoppingCart, Search, X } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -26,11 +25,21 @@ const StreetFood = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Street Food"
+      <Helmet>
+        <title>Indian Street Food &amp; Chaat | Milton Keynes | Sree Svadista Prasada</title>
+        <meta name="description" content="Taste the best Indian street food in Milton Keynes. Order fresh pani puri, crispy chaat, spicy Gobi Manchurian, and hot street snacks." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/street-food" />
+        <meta property="og:title" content="Indian Street Food &amp; Chaat | Milton Keynes | Sree Svadista Prasada" />
+        <meta property="og:description" content="Taste the best Indian street food in Milton Keynes. Order fresh pani puri, crispy chaat, spicy Gobi Manchurian, and hot street snacks." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/street-food" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Indian Street Food &amp; Chaat | Milton Keynes | Sree Svadista Prasada" />
+        <meta name="twitter:description" content="Taste the best Indian street food in Milton Keynes. Order fresh pani puri, crispy chaat, spicy Gobi Manchurian, and hot street snacks." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+      </Helmet>
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(30,58,138,0.92) 0%, rgba(29,78,216,0.8) 50%, rgba(30,58,138,0.6) 100%)' }} />
@@ -41,7 +50,7 @@ const StreetFood = () => {
               <span className="text-xs uppercase tracking-[0.25em] text-blue-200 font-medium">Fast Food</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Evening Delights
+              Authentic Indian Street Food &amp; Chaat in Milton Keynes
             </h1>
             <p className="text-lg text-blue-100 leading-relaxed mb-1">Quick bites, snacks and evening treats.</p>
             <p className="text-sm text-blue-200 leading-relaxed max-w-md">

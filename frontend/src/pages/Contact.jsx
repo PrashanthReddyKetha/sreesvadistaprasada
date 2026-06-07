@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { MapPin, Phone, Mail, Clock, Instagram, ArrowRight } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -22,11 +23,10 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(40vh, 320px)' }}>
-        <div className="absolute inset-0" style={{ backgroundColor: '#800020' }} />
-        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
-          <div className="max-w-xl">
+      <Helmet>
+        <title>Contact Us | Sree Svadista Prasada Milton Keynes</title>
+        <meta name="description" content="Get in touch with Sree Svadista Prasada in Milton Keynes. Call, WhatsApp or send us a message for orders, enquiries and feedback." />
+      </Helmet>
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Get in Touch
@@ -59,9 +59,7 @@ const Contact = () => {
                     <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Our Locations</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
                       <strong style={{ color: '#800020' }}>Milton Keynes</strong> (Main Kitchen)<br />
-                      Central Milton Keynes, MK9<br /><br />
-                      Edinburgh, EH1<br />
-                      Glasgow, G1
+                      Central Milton Keynes, MK9
                     </p>
                   </div>
                 </div>

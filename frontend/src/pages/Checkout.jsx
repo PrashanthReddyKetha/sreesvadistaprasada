@@ -15,8 +15,6 @@ import api from '../api';
 const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
-const FREE_DELIVERY_THRESHOLD = 30;
-const DELIVERY_FEE = 3.99;
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
 const fmt   = (n)   => `£${Number(n).toFixed(2)}`;
 
@@ -52,10 +50,10 @@ function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange,
 }
 
 /* ── Delivery bar ────────────────────────────────────────────────────────── */
-function DeliveryBar({ total, onAddMore }) {
-  const remaining = FREE_DELIVERY_THRESHOLD - total;
-  const pct = Math.min((total / FREE_DELIVERY_THRESHOLD) * 100, 100);
-  const isFree = total >= FREE_DELIVERY_THRESHOLD;
+function DeliveryBar({ total, onAddMore, freeOver = 30 }) {
+  const remaining = freeOver - total;
+  const pct = Math.min((total / freeOver) * 100, 100);
+  const isFree = total >= freeOver;
   return (
     <div className="p-4 rounded-xl" style={{ backgroundColor: isFree ? '#F0FFF4' : '#FFFBEB' }}>
       <div className="flex items-center justify-between mb-2">
@@ -294,7 +292,8 @@ function GuestPrompt({ onSignedIn, onGuest, onRegister, login }) {
 /* ── Browse more items modal ─────────────────────────────────────────────── */
 const CATEGORY_LABELS = {
   nonVeg: 'Non-Veg', veg: 'Veg', prasada: 'Prasada',
-  breakfast: 'Breakfast', snacks: 'Snacks', pickles: 'Pickles', podis: 'Podis',
+  breakfast: 'Breakfast', streetFood: 'Street Food', drinks: 'Drinks',
+  snacks: 'Snacks', pickles: 'Pickles', podis: 'Podis', ragiSpecials: 'Ragi Specials',
 };
 
 function BrowseModal({ cartItems, onAdd, onClose, cartTotal }) {
@@ -434,6 +433,22 @@ const CheckoutInner = () => {
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
+  // Zone-based delivery fee — fetched from server when postcode is entered
+  const [zoneInfo, setZoneInfo] = useState(null); // { delivery_fee, free_over, min_order }
+
+  // Fetch zone info whenever postcode changes (delivery mode only)
+  useEffect(() => {
+    if (deliveryType !== 'delivery') { setZoneInfo(null); return; }
+    const pc = form.postcode?.trim();
+    if (!pc || pc.length < 5) { setZoneInfo(null); return; }
+    const t = setTimeout(() => {
+      api.post('/delivery/check', { postcode: pc })
+        .then(r => { if (r.data?.serviceable && r.data?.service_type === 'full') setZoneInfo(r.data); else setZoneInfo(null); })
+        .catch(() => setZoneInfo(null));
+    }, 400);
+    return () => clearTimeout(t);
+  }, [form.postcode, deliveryType]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Pricing calculations — cartTotal = regular items only (freeItem is NOT in CartContext)
   const freeItemDiscount = freeItem ? price(freeItem.original_price) : 0;
   // effectiveSubtotal = what you'd pay if no discounts (all items at full price)
@@ -441,8 +456,10 @@ const CheckoutInner = () => {
   // Takeaway discount applies to the paying portion (regular items only)
   const takeawayDiscount = deliveryType === 'takeaway' && cartTotal >= 15
     ? Math.round(cartTotal * 0.10 * 100) / 100 : 0;
-  // Delivery threshold counts effectiveSubtotal (all food, including free dish needs delivery)
-  const deliveryFee = deliveryType === 'takeaway' ? 0 : (effectiveSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE);
+  // Use zone delivery fee when available, otherwise use sensible default
+  const zoneDeliveryFee  = zoneInfo?.delivery_fee  ?? 3.99;
+  const zoneFreeOver     = zoneInfo?.free_over     ?? 30;
+  const deliveryFee = deliveryType === 'takeaway' ? 0 : (effectiveSubtotal >= zoneFreeOver ? 0 : zoneDeliveryFee);
   const grandTotal = cartTotal - takeawayDiscount + deliveryFee;
 
   // Fallback: postcodes.io for city auto-fill
@@ -495,6 +512,7 @@ const CheckoutInner = () => {
 
   const handleOrder = async () => {
     setError('');
+    if (effectiveSubtotal < 15) { setError('Minimum order is £15.00. Please add more items to continue.'); return; }
     const required = deliveryType === 'takeaway'
       ? ['name', 'email', 'phone']
       : ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
@@ -504,8 +522,17 @@ const CheckoutInner = () => {
     if (!cardNumberElement) { setError('Card details are missing.'); return; }
     setSubmitting(true);
     try {
-      // 1. Create payment intent
-      const intentRes = await api.post('/payments/create-intent', { amount: grandTotal });
+      // 1. Get authoritative server total (never trust client calculation for payment)
+      const calcRes = await api.post('/orders/calculate', {
+        items: cartItems.map(i => ({ price: price(i.price), quantity: i.quantity })),
+        order_type: deliveryType,
+        postcode: form.postcode || '',
+        free_item_price: freeItemDiscount,
+      });
+      const serverGrandTotal = calcRes.data.grand_total;
+
+      // 2. Create payment intent using server-verified total
+      const intentRes = await api.post('/payments/create-intent', { amount: serverGrandTotal });
       const { client_secret, payment_intent_id } = intentRes.data;
 
       // 2. Confirm card payment
@@ -518,7 +545,7 @@ const CheckoutInner = () => {
       if (stripeError) { setError(stripeError.message || 'Payment failed. Please try again.'); return; }
       if (paymentIntent.status !== 'succeeded') { setError('Payment was not completed. Please try again.'); return; }
 
-      // 3. Create order
+      // 3. Create order (backend will re-verify the PI amount against its own calculation)
       const res = await api.post('/orders', {
         customer_name:  form.name,
         customer_email: form.email,
@@ -870,7 +897,7 @@ const CheckoutInner = () => {
                   </div>
                 )
               ) : (
-                <DeliveryBar total={cartTotal} onAddMore={() => setShowBrowse(true)} />
+                <DeliveryBar total={cartTotal} onAddMore={() => setShowBrowse(true)} freeOver={zoneFreeOver} />
               )}
 
               {/* Order summary */}

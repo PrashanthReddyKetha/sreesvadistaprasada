@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Leaf, Flame, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { images } from '../data/mockData';
@@ -6,10 +7,21 @@ import { images } from '../data/mockData';
 const OurStory = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
-        <img
-          src={images.storyTeaser}
+      <Helmet>
+        <title>Our Story | Authentic South Indian Restaurant | Milton Keynes</title>
+        <meta name="description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/story" />
+        <meta property="og:title" content="Our Story | Authentic South Indian Restaurant | Milton Keynes" />
+        <meta property="og:description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/story" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Our Story | Authentic South Indian Restaurant | Milton Keynes" />
+        <meta name="twitter:description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+      </Helmet>
           alt="Our Story"
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -18,7 +30,7 @@ const OurStory = () => {
           <div className="max-w-xl">
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Our Story
+              Our Story: Bringing Authentic South Indian Food to Milton Keynes
             </h1>
             <p className="text-lg text-gray-200 leading-relaxed" data-testid="story-hero-subtitle">
               From Amma's Kitchen to the UK — A Journey of Love, Tradition, and Homely Food
@@ -182,7 +194,7 @@ const OurStory = () => {
             looking for pure prasada for your pooja, we're here for you.
           </p>
           <p className="text-base text-gray-600 leading-relaxed mb-8">
-            Now serving <strong className="font-bold" style={{ color: '#800020' }}>Milton Keynes</strong>, Edinburgh, and Glasgow with dine-in, delivery,
+            Now serving <strong className="font-bold" style={{ color: '#800020' }}>Milton Keynes</strong> with dine-in, delivery,
             weekly & monthly meal subscriptions (Dabba Wala service), and full catering for functions, poojas, and corporate events.
           </p>
 

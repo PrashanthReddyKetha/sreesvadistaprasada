@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  RefreshControl, Animated,
+  RefreshControl, Animated, Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -150,6 +150,15 @@ function OrderCard({ order, onReorder }) {
               <Text style={styles.etaBannerText}>⏱  Estimated 45–60 minutes</Text>
             </View>
           )}
+          {['confirmed', 'preparing'].includes(order.status) && (
+            <TouchableOpacity
+              style={styles.callCancelBtn}
+              onPress={() => Linking.openURL('tel:+441908000000')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.callCancelText}>📞 Need to cancel? Call us</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 
@@ -227,12 +236,19 @@ export default function OrdersScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}><Text style={styles.title}>Orders</Text></View>
-        <EmptyState
-          emoji="📦"
-          message="Sign in to track your orders and reorder your favourites."
-          actionLabel="Sign In"
-          onAction={logout}
-        />
+        <View style={styles.guestWrap}>
+          <Text style={styles.guestEmoji}>📦</Text>
+          <Text style={styles.guestHeading}>Your orders live here</Text>
+          <Text style={styles.guestSub}>
+            Sign in to track deliveries, reorder{"\n"}your favourites, and manage your Dabba.
+          </Text>
+          <TouchableOpacity style={styles.guestBtn} onPress={logout} activeOpacity={0.88}>
+            <Text style={styles.guestBtnText}>Sign In</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.guestGhostBtn} onPress={logout} activeOpacity={0.85}>
+            <Text style={styles.guestGhostText}>Create Account</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -295,6 +311,17 @@ export default function OrdersScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.warmWhite },
+
+  // guest state
+  guestWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
+  guestEmoji: { fontSize: 52, marginBottom: 16 },
+  guestHeading: { fontFamily: FONTS.heading, fontSize: 22, color: COLORS.brown, textAlign: 'center', marginBottom: 8 },
+  guestSub: { fontFamily: FONTS.body, fontSize: 13, color: COLORS.grey, textAlign: 'center', lineHeight: 21, marginBottom: 28 },
+  guestBtn: { width: '100%', backgroundColor: COLORS.crimson, borderRadius: RADIUS.sm, height: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  guestBtnText: { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.white },
+  guestGhostBtn: { width: '100%', borderWidth: 1.5, borderColor: COLORS.crimson, borderRadius: RADIUS.sm, height: 46, alignItems: 'center', justifyContent: 'center' },
+  guestGhostText: { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.crimson },
+
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: SPACING.xl, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: COLORS.lightGrey },
   title: { fontFamily: FONTS.heading, fontSize: 22, color: COLORS.crimson, flex: 1 },
   activeBadge: { backgroundColor: `${COLORS.crimson}15`, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 4 },
@@ -345,6 +372,8 @@ const styles = StyleSheet.create({
 
   etaBanner: { marginTop: 10, backgroundColor: 'rgba(244,196,48,0.12)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 7, alignSelf: 'flex-start' },
   etaBannerText: { fontFamily: FONTS.bodySemiBold, fontSize: 12, color: COLORS.deepGold },
+  callCancelBtn: { marginTop: 8, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border },
+  callCancelText: { fontFamily: FONTS.bodySemiBold, fontSize: 12, color: COLORS.brown },
 
   // Expanded
   expandedWrap: { paddingLeft: 8 },

@@ -6,17 +6,15 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api';
 import LoyaltyProgressBar from './LoyaltyProgressBar';
 
-const FREE_DELIVERY_THRESHOLD = 30;
-const DELIVERY_FEE = 3.99;
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
 const fmt   = (n)   => `£${n.toFixed(2)}`;
 
 /* ── Free delivery bar ────────────────────────────────────────────────────── */
-function DeliveryBar({ total, deliveryType }) {
+function DeliveryBar({ total, deliveryType, freeOver = 30, deliveryFeeDisplay = 3.99 }) {
   if (deliveryType === 'takeaway') return null;
-  const remaining = FREE_DELIVERY_THRESHOLD - total;
-  const pct = Math.min((total / FREE_DELIVERY_THRESHOLD) * 100, 100);
-  const isFree = total >= FREE_DELIVERY_THRESHOLD;
+  const remaining = freeOver - total;
+  const pct = Math.min((total / freeOver) * 100, 100);
+  const isFree = total >= freeOver;
   return (
     <div className="px-6 py-3 border-b" style={{ backgroundColor: isFree ? '#F0FFF4' : '#FFFBEB', borderColor: 'rgba(128,0,32,0.08)' }}>
       <div className="flex items-center justify-between mb-1.5">
@@ -193,10 +191,18 @@ const CartDrawer = () => {
   const [loyalty, setLoyalty]           = useState(null);
   const [freeItem, setFreeItem]         = useState(null);   // selected free item
   const [showPicker, setShowPicker]     = useState(false);
+  const [zoneInfo, setZoneInfo]         = useState(null);  // { delivery_fee, free_over }
 
   useEffect(() => {
     if (user && cartOpen) {
       api.get('/loyalty/status').then(r => setLoyalty(r.data)).catch(() => {});
+      // Fetch zone info from stored postcode if available
+      const savedPostcode = user.address?.postcode || '';
+      if (savedPostcode) {
+        api.post('/delivery/check', { postcode: savedPostcode })
+          .then(r => { if (r.data?.service_type === 'full') setZoneInfo(r.data); })
+          .catch(() => {});
+      }
     }
     if (!cartOpen) { setShowPicker(false); }
   }, [user, cartOpen]);
@@ -208,12 +214,15 @@ const CartDrawer = () => {
 
   const baseSubtotal     = cartTotal;
   const freeItemPrice    = freeItem ? price(freeItem.price) : 0;
+  // Zone-aware delivery fee — use saved zone if available, else sensible default
+  const zoneDeliveryFee  = zoneInfo?.delivery_fee ?? 3.99;
+  const zoneFreeOver     = zoneInfo?.free_over    ?? 30;
   // Takeaway discount applies to the paying subtotal (regular items only, not the free one)
   const takeawayDiscount = deliveryType === 'takeaway' && baseSubtotal >= 15
     ? Math.round(baseSubtotal * 0.10 * 100) / 100 : 0;
   // Free delivery threshold counts all items (including free dish, since it still needs delivery)
   const deliveryFee      = deliveryType === 'takeaway' ? 0
-    : ((baseSubtotal + freeItemPrice) >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE);
+    : ((baseSubtotal + freeItemPrice) >= zoneFreeOver ? 0 : zoneDeliveryFee);
   const grandTotal       = baseSubtotal - takeawayDiscount + deliveryFee;
 
   const handleClose = () => setCartOpen(false);
@@ -278,7 +287,7 @@ const CartDrawer = () => {
           </div>
         ) : (
           <>
-            <DeliveryBar total={cartTotal} deliveryType={deliveryType} />
+            <DeliveryBar total={cartTotal} deliveryType={deliveryType} freeOver={zoneFreeOver} deliveryFeeDisplay={zoneDeliveryFee} />
 
             {/* Items */}
             <div className="flex-1 overflow-y-auto">
@@ -368,14 +377,14 @@ const CartDrawer = () => {
                     <div>
                       <div className="font-medium text-[#2D2422] text-xs">Home delivery</div>
                       <div className="text-[11px] text-[#9CA3AF]">
-                        {cartTotal >= FREE_DELIVERY_THRESHOLD ? 'Free delivery' : 'Delivery fee applies'}
+                        {cartTotal >= zoneFreeOver ? 'Free delivery' : 'Delivery fee applies'}
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] text-[#5C4B47]">Delivery fee</div>
                     <div className="font-bold text-[#2D2422] text-xs">
-                      {cartTotal >= FREE_DELIVERY_THRESHOLD ? '£0.00' : fmt(DELIVERY_FEE)}
+                      {cartTotal >= zoneFreeOver ? '£0.00' : fmt(zoneDeliveryFee)}
                     </div>
                   </div>
                 </label>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, Droplets, Search, X } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -26,11 +25,21 @@ const Drinks = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1553909489-cd47e0907980?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Drinks"
+      <Helmet>
+        <title>Traditional Indian Drinks &amp; Mango Lassi | Milton Keynes</title>
+        <meta name="description" content="Cool down with our refreshing Mango Lassi and traditional Masala Buttermilk in Milton Keynes. Fresh fruit juices and authentic hot drinks." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/drinks" />
+        <meta property="og:title" content="Traditional Indian Drinks &amp; Mango Lassi | Milton Keynes" />
+        <meta property="og:description" content="Cool down with our refreshing Mango Lassi and traditional Masala Buttermilk in Milton Keynes. Fresh fruit juices and authentic hot drinks." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/drinks" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Traditional Indian Drinks &amp; Mango Lassi | Milton Keynes" />
+        <meta name="twitter:description" content="Cool down with our refreshing Mango Lassi and traditional Masala Buttermilk in Milton Keynes. Fresh fruit juices and authentic hot drinks." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+      </Helmet>
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(126,34,206,0.92) 0%, rgba(109,40,217,0.8) 50%, rgba(126,34,206,0.6) 100%)' }} />
@@ -41,7 +50,7 @@ const Drinks = () => {
               <span className="text-xs uppercase tracking-[0.25em] text-purple-200 font-medium">Refreshments</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Juices & Soft Drinks
+              Traditional Indian Drinks &amp; Mango Lassi in Milton Keynes
             </h1>
             <p className="text-lg text-purple-100 leading-relaxed mb-1">Fresh juices, lassis & refreshing beverages.</p>
             <p className="text-sm text-purple-200 leading-relaxed max-w-md">

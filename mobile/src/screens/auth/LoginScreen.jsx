@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS, FONTS, SPACING, RADIUS } from '../../constants/theme';
+import GoogleSignInButton from '../../components/GoogleSignInButton';
 
 export default function LoginScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -141,6 +142,14 @@ export default function LoginScreen({ navigation }) {
           <View style={styles.dividerLine} />
         </View>
 
+        <GoogleSignInButton style={styles.googleBtn} />
+
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>don’t have an account?</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
         <TouchableOpacity
           style={styles.registerBtn}
           onPress={() => navigation.navigate('Register')}
@@ -179,6 +188,7 @@ const styles = StyleSheet.create({
   wakeNote: { fontFamily: FONTS.body, fontSize: 11, color: COLORS.grey, textAlign: 'center', marginBottom: 12, lineHeight: 16 },
   forgotBtn: { alignItems: 'center', marginBottom: SPACING.xl },
   forgotText: { fontFamily: FONTS.body, fontSize: 12, color: COLORS.grey },
+  googleBtn: { marginBottom: SPACING.lg },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: SPACING.lg },
   dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
   dividerText: { fontFamily: FONTS.body, fontSize: 11, color: COLORS.grey },

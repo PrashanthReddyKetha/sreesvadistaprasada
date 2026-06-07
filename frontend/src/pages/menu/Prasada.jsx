@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Leaf, ShoppingCart, Star, Flame, Search, X } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -65,11 +64,21 @@ const Prasada = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="relative overflow-hidden" style={{ height: 'min(58vh, 460px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1512058564366-18510be2db19?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Prasada Veg"
+      <Helmet>
+        <title>Pure Vegetarian Indian Food | Sree Prasada | Milton Keynes</title>
+        <meta name="description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/prasada" />
+        <meta property="og:title" content="Pure Vegetarian Indian Food | Sree Prasada | Milton Keynes" />
+        <meta property="og:description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/prasada" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Pure Vegetarian Indian Food | Sree Prasada | Milton Keynes" />
+        <meta name="twitter:description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+      </Helmet>
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(22,101,52,0.92) 0%, rgba(15,118,110,0.8) 50%, rgba(22,101,52,0.6) 100%)' }} />
@@ -81,7 +90,7 @@ const Prasada = () => {
               <span className="text-xs uppercase tracking-[0.25em] text-green-200 font-medium">Pure Vegetarian</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Prasada
+              100% Pure Vegetarian Indian Food in Milton Keynes
             </h1>
             <p className="text-lg text-green-100 leading-relaxed mb-1">From starters to biryanis — all pure veg.</p>
             <p className="text-sm text-green-200 leading-relaxed max-w-md">

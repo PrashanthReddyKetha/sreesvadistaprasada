@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { ChevronDown, Search } from 'lucide-react';
-import { faqData } from '../data/mockData';
+import { faqData as faqFallback } from '../data/mockData';
+import api from '../api';
 
 const FAQ = () => {
   const [openItems, setOpenItems] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [faqData, setFaqData] = useState(faqFallback);
+
+  useEffect(() => {
+    api.get('/content/faq')
+      .then(res => { if (res.data?.length) setFaqData(res.data); })
+      .catch(() => { /* keep fallback */ });
+  }, []);
 
   const toggleItem = (catIdx, itemIdx) => {
     const key = `${catIdx}-${itemIdx}`;
@@ -22,14 +31,24 @@ const FAQ = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(35vh, 280px)' }}>
-        <div className="absolute inset-0" style={{ backgroundColor: '#800020' }} />
-        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
-          <div className="max-w-xl">
+      <Helmet>
+        <title>FAQs | Indian Takeaway &amp; Tiffin Delivery | Milton Keynes</title>
+        <meta name="description" content="Got questions? Find out about our separate vegetarian kitchen, halal food sourcing, and tiffin subscription delivery zones across Milton Keynes." />
+        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/faq" />
+        <meta property="og:title" content="FAQs | Indian Takeaway &amp; Tiffin Delivery | Milton Keynes" />
+        <meta property="og:description" content="Got questions? Find out about our separate vegetarian kitchen, halal food sourcing, and tiffin subscription delivery zones across Milton Keynes." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/faq" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="FAQs | Indian Takeaway &amp; Tiffin Delivery | Milton Keynes" />
+        <meta name="twitter:description" content="Got questions? Find out about our separate vegetarian kitchen, halal food sourcing, and tiffin subscription delivery zones across Milton Keynes." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+      </Helmet>
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Frequently Asked Questions
+              Indian Takeaway &amp; Delivery FAQs — Milton Keynes
             </h1>
             <p className="text-base text-gray-200 leading-relaxed">Everything you need to know about ordering, subscriptions, and more.</p>
           </div>

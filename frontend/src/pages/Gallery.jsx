@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
-import { galleryImages } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { galleryImages as galleryFallback } from '../data/mockData';
+import api from '../api';
 
 const categories = ['All', 'Kitchen', 'Svadista', 'Prasada', 'Breakfast', 'Snacks'];
 
 const Gallery = () => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [lightboxIdx, setLightboxIdx] = useState(null);
+  const [galleryImages, setGalleryImages] = useState(galleryFallback);
+
+  useEffect(() => {
+    api.get('/content/gallery')
+      .then(res => { if (res.data?.length) setGalleryImages(res.data); })
+      .catch(() => { /* keep fallback */ });
+  }, []);
 
   const filtered = activeFilter === 'All'
     ? galleryImages
@@ -13,10 +22,10 @@ const Gallery = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
-      {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(35vh, 280px)' }}>
-        <div className="absolute inset-0" style={{ backgroundColor: '#800020' }} />
-        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
+      <Helmet>
+        <title>Food Gallery | Sree Svadista Prasada — Authentic South Indian Milton Keynes</title>
+        <meta name="description" content="Browse our gallery of authentic South Indian dishes, kitchen moments and food photography from Sree Svadista Prasada, Milton Keynes." />
+      </Helmet>
           <div className="max-w-xl">
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>

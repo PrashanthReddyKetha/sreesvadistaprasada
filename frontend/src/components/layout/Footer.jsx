@@ -13,16 +13,27 @@ import api from '../../api';
 const Footer = () => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [subError, setSubError] = useState('');
 
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
     if (!email) return;
+    setSubError('');
     try {
       await api.post('/enquiries/newsletter', { email });
-    } catch { /* already subscribed or error — still show success */ }
-    setSubscribed(true);
-    setEmail('');
-    setTimeout(() => setSubscribed(false), 4000);
+      setSubscribed(true);
+      setEmail('');
+      setTimeout(() => setSubscribed(false), 4000);
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      if (err?.response?.status === 409 || (typeof detail === 'string' && detail.toLowerCase().includes('already'))) {
+        setSubscribed(true);
+        setEmail('');
+        setTimeout(() => setSubscribed(false), 4000);
+      } else {
+        setSubError('Something went wrong. Please try again.');
+      }
+    }
   };
 
   return (
@@ -76,6 +87,7 @@ const Footer = () => {
                 {subscribed ? 'Subscribed!' : 'Subscribe'}
               </button>
             </form>
+            {subError && <p className="text-xs mt-2" style={{ color: '#FF6B6B' }}>{subError}</p>}
           </div>
         </div>
       </div>

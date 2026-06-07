@@ -13,6 +13,7 @@ import api from '../../api';
 import { COLORS, FONTS, SPACING, SHADOW, RADIUS } from '../../constants/theme';
 import DishCard from '../../components/DishCard';
 import CartBar from '../../components/CartBar';
+import LocationBar from '../../components/LocationBar';
 
 const { width } = Dimensions.get('window');
 const BANNER_W = width - SPACING.xl * 2;
@@ -70,26 +71,28 @@ const CATEGORIES = [
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const { user } = useAuth();
-  const { addToCart, cartCount } = useCart();
-
-  const [postcode, setPostcode] = useState('');
+  const { user, isGuest, logout } = useAuth();
+  const { addToCart, removeFromCart, cartCount, cartItems } = useCart();
   const [specials, setSpecials] = useState([]);
   const [trending, setTrending] = useState([]);
   const [recentItems, setRecentItems] = useState([]);
   const [subscription, setSubscription] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [signupNudgeDismissed, setSignupNudgeDismissed] = useState(false);
 
   // banner auto-scroll
   const bannerRef = useRef(null);
-  const bannerIdx = useRef(0);
+  const [bannerIdx, setBannerIdx] = useState(0);
   const bannerTimer = useRef(null);
 
   const startBannerTimer = () => {
     clearInterval(bannerTimer.current);
     bannerTimer.current = setInterval(() => {
-      bannerIdx.current = (bannerIdx.current + 1) % BANNERS.length;
-      bannerRef.current?.scrollToIndex({ index: bannerIdx.current, animated: true });
+      setBannerIdx(prev => {
+        const next = (prev + 1) % BANNERS.length;
+        bannerRef.current?.scrollToIndex({ index: next, animated: true });
+        return next;
+      });
     }, 3800);
   };
 
@@ -99,8 +102,8 @@ export default function HomeScreen() {
   }, []);
 
   const loadData = useCallback(async () => {
-    const pc = await AsyncStorage.getItem('ssp_postcode');
-    if (pc) setPostcode(pc);
+    const dismissed = await AsyncStorage.getItem('ssp_signup_dismissed');
+    if (dismissed) setSignupNudgeDismissed(true);
 
     try {
       const [specialsRes, trendingRes] = await Promise.all([
@@ -138,6 +141,11 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
+  const dismissSignupNudge = async () => {
+    await AsyncStorage.setItem('ssp_signup_dismissed', 'true').catch(() => {});
+    setSignupNudgeDismissed(true);
+  };
+
   const navigate = (screen, params) => navigation.navigate(screen, params);
   const firstName = user?.name?.split(' ')[0] || 'there';
 
@@ -149,14 +157,7 @@ export default function HomeScreen() {
       >
         {/* ── Header ─────────────────────────────────── */}
         <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.greeting}>{getGreeting()}, {firstName}</Text>
-            {postcode ? (
-              <TouchableOpacity style={styles.locationChip}>
-                <Text style={styles.locationText}>📍 {postcode}</Text>
-              </TouchableOpacity>
-            ) : null}
-          </View>
+          <Text style={styles.greeting}>{getGreeting()}, {firstName}</Text>
           <TouchableOpacity style={styles.cartBtn} onPress={() => navigation.navigate('Cart')}>
             <Text style={styles.cartIcon}>🛒</Text>
             {cartCount > 0 && (
@@ -166,6 +167,7 @@ export default function HomeScreen() {
             )}
           </TouchableOpacity>
         </View>
+        <LocationBar />
 
         {/* ── Search bar ─────────────────────────────── */}
         <TouchableOpacity
@@ -206,7 +208,7 @@ export default function HomeScreen() {
             keyExtractor={(item) => item.id}
             onScrollBeginDrag={() => clearInterval(bannerTimer.current)}
             onMomentumScrollEnd={(e) => {
-              bannerIdx.current = Math.round(e.nativeEvent.contentOffset.x / (BANNER_W + 12));
+              setBannerIdx(Math.round(e.nativeEvent.contentOffset.x / (BANNER_W + 12)));
               startBannerTimer();
             }}
             contentContainerStyle={{ gap: 12, paddingHorizontal: SPACING.xl }}
@@ -239,7 +241,7 @@ export default function HomeScreen() {
           {/* Dot indicators */}
           <View style={styles.bannerDots}>
             {BANNERS.map((_, i) => (
-              <View key={i} style={[styles.bannerDot, bannerIdx.current === i && styles.bannerDotActive]} />
+              <View key={i} style={[styles.bannerDot, bannerIdx === i && styles.bannerDotActive]} />
             ))}
           </View>
         </View>
@@ -371,6 +373,8 @@ export default function HomeScreen() {
                   item={item}
                   onPress={() => navigation.navigate('ItemDetail', { itemId: item.id })}
                   onAddToCart={addToCart}
+                  onRemoveFromCart={removeFromCart}
+                  qty={cartItems.find(c => c.id === item.id)?.quantity || 0}
                 />
               )}
             />
@@ -427,9 +431,7 @@ export default function HomeScreen() {
             data={[
               { label: '🌅 Breakfast', screen: 'Category', params: { category: 'Breakfast' } },
               { label: '🫙 Snacks & Pickles', screen: 'Category', params: { category: 'Snacks' } },
-              { label: '🌶 Street Food', screen: 'Category', params: { category: 'StreetFood' } },
-              { label: '🌾 Ragi Specials', screen: 'Category', params: { category: 'RagiSpecials' } },
-              { label: '🥤 Drinks', screen: 'Category', params: { category: 'Drinks' } },
+              { label: '📦 Dabba Wala', screen: 'DabbaWala', params: {} },
             ]}
             keyExtractor={(item) => item.label}
             renderItem={({ item }) => (
@@ -443,6 +445,26 @@ export default function HomeScreen() {
             )}
           />
         </View>
+
+        {/* ── Sign-up nudge (guests only) ─────────────── */}
+        {isGuest && !signupNudgeDismissed && (
+          <View style={styles.signupNudge}>
+            <TouchableOpacity style={styles.signupNudgeDismiss} onPress={dismissSignupNudge} activeOpacity={0.7}>
+              <Text style={styles.signupNudgeDismissText}>✕</Text>
+            </TouchableOpacity>
+            <Text style={styles.signupNudgeEmoji}>🎁</Text>
+            <Text style={styles.signupNudgeTitle}>Save favourites & earn loyalty points</Text>
+            <Text style={styles.signupNudgeSub}>Every 5 orders earns you a free dish from our entire menu.</Text>
+            <View style={styles.signupNudgeBtns}>
+              <TouchableOpacity style={styles.signupNudgeBtn} onPress={logout} activeOpacity={0.85}>
+                <Text style={styles.signupNudgeBtnText}>Create Account →</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.signupNudgeGhost} onPress={logout} activeOpacity={0.85}>
+                <Text style={styles.signupNudgeGhostText}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -540,4 +562,27 @@ const styles = StyleSheet.create({
   // explore
   exploreChip: { borderRadius: RADIUS.full, borderWidth: 1.5, borderColor: COLORS.border, paddingHorizontal: 16, paddingVertical: 9, backgroundColor: COLORS.white },
   exploreChipText: { fontFamily: FONTS.bodyMedium, fontSize: 12, color: COLORS.brown },
+
+  // postcode nudge
+  postcodeNudge: { marginHorizontal: SPACING.xl, marginBottom: 6, backgroundColor: COLORS.cream, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: `${COLORS.gold}40`, padding: 12 },
+  postcodeNudgeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  postcodeNudgeText: { fontFamily: FONTS.bodyMedium, fontSize: 12, color: COLORS.brown, flex: 1, marginRight: 8 },
+  postcodeNudgeAction: { fontFamily: FONTS.bodySemiBold, fontSize: 12, color: COLORS.crimson },
+  postcodeNudgeInputRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10, gap: 8 },
+  postcodeNudgeField: { flex: 1, height: 40, backgroundColor: COLORS.white, borderRadius: RADIUS.sm, borderWidth: 1.5, borderColor: COLORS.border, paddingHorizontal: 12, fontFamily: FONTS.bodySemiBold, fontSize: 13, color: COLORS.brown, letterSpacing: 1 },
+  postcodeNudgeSaveBtn: { height: 40, paddingHorizontal: 16, backgroundColor: COLORS.crimson, borderRadius: RADIUS.sm, alignItems: 'center', justifyContent: 'center' },
+  postcodeNudgeSaveBtnText: { fontFamily: FONTS.bodySemiBold, fontSize: 12, color: COLORS.white },
+
+  // sign-up nudge
+  signupNudge: { marginHorizontal: SPACING.xl, marginBottom: 16, backgroundColor: COLORS.white, borderRadius: RADIUS.xl, padding: 20, borderWidth: 1.5, borderColor: `${COLORS.crimson}25`, alignItems: 'center', ...SHADOW.light },
+  signupNudgeDismiss: { position: 'absolute', top: 12, right: 14 },
+  signupNudgeDismissText: { fontFamily: FONTS.body, fontSize: 14, color: COLORS.grey },
+  signupNudgeEmoji: { fontSize: 30, marginBottom: 10 },
+  signupNudgeTitle: { fontFamily: FONTS.heading, fontSize: 16, color: COLORS.brown, textAlign: 'center', marginBottom: 6 },
+  signupNudgeSub: { fontFamily: FONTS.body, fontSize: 12, color: COLORS.grey, textAlign: 'center', lineHeight: 18, marginBottom: 16 },
+  signupNudgeBtns: { flexDirection: 'row', gap: 10, width: '100%' },
+  signupNudgeBtn: { flex: 1, backgroundColor: COLORS.crimson, borderRadius: RADIUS.sm, height: 44, alignItems: 'center', justifyContent: 'center' },
+  signupNudgeBtnText: { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: COLORS.white },
+  signupNudgeGhost: { flex: 1, borderWidth: 1.5, borderColor: COLORS.crimson, borderRadius: RADIUS.sm, height: 44, alignItems: 'center', justifyContent: 'center' },
+  signupNudgeGhostText: { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: COLORS.crimson },
 });
