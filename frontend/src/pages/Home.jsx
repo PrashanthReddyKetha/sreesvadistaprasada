@@ -776,7 +776,7 @@ const Home = () => {
       </section>
 
       {/* ============================================ */}
-      {/* SNACKS & PICKLES (UK-WIDE) */
+      {/* SNACKS & PICKLES (UK-WIDE) */}
       {/* ============================================ */}
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }} data-testid="snacks-pickles-section">
         <div className="max-w-7xl mx-auto">
