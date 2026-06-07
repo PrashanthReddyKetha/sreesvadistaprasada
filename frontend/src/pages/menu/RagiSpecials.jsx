@@ -40,6 +40,11 @@ const RagiSpecials = () => {
         <meta name="twitter:description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
       </Helmet>
+      {/* Hero */}
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
+        <img
+          src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Ragi Specials"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(92,36,6,0.92) 0%, rgba(120,53,15,0.8) 50%, rgba(92,36,6,0.6) 100%)' }} />

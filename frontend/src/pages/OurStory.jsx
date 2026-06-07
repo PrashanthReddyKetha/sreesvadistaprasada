@@ -22,6 +22,10 @@ const OurStory = () => {
         <meta name="twitter:description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
       </Helmet>
+      {/* Hero */}
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
+        <img
+          src={images.storyTeaser}
           alt="Our Story"
           className="absolute inset-0 w-full h-full object-cover"
         />

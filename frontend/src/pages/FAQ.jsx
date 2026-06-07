@@ -46,6 +46,11 @@ const FAQ = () => {
         <meta name="twitter:description" content="Got questions? Find out about our separate vegetarian kitchen, halal food sourcing, and tiffin subscription delivery zones across Milton Keynes." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
       </Helmet>
+      {/* Hero */}
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(35vh, 280px)' }}>
+        <div className="absolute inset-0" style={{ backgroundColor: '#800020' }} />
+        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
+          <div className="max-w-xl">
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Indian Takeaway &amp; Delivery FAQs — Milton Keynes

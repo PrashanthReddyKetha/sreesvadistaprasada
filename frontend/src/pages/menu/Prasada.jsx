@@ -81,6 +81,11 @@ const Prasada = () => {
         <meta name="twitter:description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
       </Helmet>
+      {/* Hero */}
+      <section className="relative overflow-hidden" style={{ height: 'min(58vh, 460px)' }}>
+        <img
+          src="https://images.unsplash.com/photo-1512058564366-18510be2db19?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Prasada Veg"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(22,101,52,0.92) 0%, rgba(15,118,110,0.8) 50%, rgba(22,101,52,0.6) 100%)' }} />

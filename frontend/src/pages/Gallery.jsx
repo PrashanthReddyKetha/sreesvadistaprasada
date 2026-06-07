@@ -26,6 +26,10 @@ const Gallery = () => {
         <title>Food Gallery | Sree Svadista Prasada — Authentic South Indian Milton Keynes</title>
         <meta name="description" content="Browse our gallery of authentic South Indian dishes, kitchen moments and food photography from Sree Svadista Prasada, Milton Keynes." />
       </Helmet>
+      {/* Hero */}
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(35vh, 280px)' }}>
+        <div className="absolute inset-0" style={{ backgroundColor: '#800020' }} />
+        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
           <div className="max-w-xl">
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>

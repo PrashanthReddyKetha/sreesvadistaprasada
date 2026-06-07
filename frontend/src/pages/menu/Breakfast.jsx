@@ -65,6 +65,11 @@ const Breakfast = () => {
         <meta name="twitter:description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=1200&q=80" />
       </Helmet>
+      {/* Hero */}
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
+        <img
+          src="https://images.unsplash.com/photo-1630383249896-424e482df921?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Breakfast"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(180,101,11,0.92) 0%, rgba(146,64,14,0.8) 50%, rgba(180,101,11,0.6) 100%)' }} />

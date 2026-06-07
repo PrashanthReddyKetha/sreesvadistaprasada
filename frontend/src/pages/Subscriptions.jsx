@@ -481,7 +481,7 @@ const SubscriptionsInner = () => {
         city: res.data.city,
         msg: ok
           ? `Postcode verified — we deliver to ${res.data.city}. Your meals will be on their way from ${fmtShort(nextMon)}.`
-          : 'We do not currently deliver to this postcode. We currently serve Milton Keynes only.'},
+          : 'We do not currently deliver to this postcode. We currently serve Milton Keynes only.',
       });
     } catch { setPostcodeStatus({ ok: false, msg: 'Could not verify postcode.' }); }
   }, [weekCfg]);

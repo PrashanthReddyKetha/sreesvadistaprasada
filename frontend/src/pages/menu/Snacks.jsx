@@ -57,6 +57,11 @@ const Snacks = () => {
         <meta name="twitter:description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
       </Helmet>
+      {/* Hero */}
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
+        <img
+          src="https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Traditional pickles and snacks"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45,36,34,0.9) 0%, rgba(45,36,34,0.7) 50%, rgba(45,36,34,0.4) 100%)' }} />

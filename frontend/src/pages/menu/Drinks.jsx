@@ -40,6 +40,11 @@ const Drinks = () => {
         <meta name="twitter:description" content="Cool down with our refreshing Mango Lassi and traditional Masala Buttermilk in Milton Keynes. Fresh fruit juices and authentic hot drinks." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
       </Helmet>
+      {/* Hero */}
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
+        <img
+          src="https://images.unsplash.com/photo-1553909489-cd47e0907980?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Drinks"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(126,34,206,0.92) 0%, rgba(109,40,217,0.8) 50%, rgba(126,34,206,0.6) 100%)' }} />

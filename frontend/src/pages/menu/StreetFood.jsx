@@ -42,6 +42,11 @@ const StreetFood = () => {
         <meta name="twitter:description" content="Taste the best Indian street food in Milton Keynes. Order fresh pani puri, crispy chaat, spicy Gobi Manchurian, and hot street snacks." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
       </Helmet>
+      {/* Hero */}
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
+        <img
+          src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Street Food"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(30,58,138,0.92) 0%, rgba(29,78,216,0.8) 50%, rgba(30,58,138,0.6) 100%)' }} />

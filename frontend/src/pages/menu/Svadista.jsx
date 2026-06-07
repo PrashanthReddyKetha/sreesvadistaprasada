@@ -65,6 +65,11 @@ const Svadista = () => {
         <meta name="twitter:description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
       </Helmet>
+      {/* Hero */}
+      <section className="relative overflow-hidden" style={{ height: 'min(58vh, 460px)' }}>
+        <img
+          src="https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Sree Svadista"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(92,0,24,0.8) 50%, rgba(128,0,32,0.6) 100%)' }} />

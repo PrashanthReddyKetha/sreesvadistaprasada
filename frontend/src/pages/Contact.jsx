@@ -27,6 +27,11 @@ const Contact = () => {
         <title>Contact Us | Sree Svadista Prasada Milton Keynes</title>
         <meta name="description" content="Get in touch with Sree Svadista Prasada in Milton Keynes. Call, WhatsApp or send us a message for orders, enquiries and feedback." />
       </Helmet>
+      {/* Hero */}
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(40vh, 320px)' }}>
+        <div className="absolute inset-0" style={{ backgroundColor: '#800020' }} />
+        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
+          <div className="max-w-xl">
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Get in Touch

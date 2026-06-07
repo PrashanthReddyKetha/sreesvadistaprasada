@@ -55,6 +55,11 @@ const Menu = () => {
         <title>Full South Indian Menu — Milton Keynes Delivery | Sree Svadista Prasada</title>
         <meta name="description" content="Browse the full South Indian menu at Sree Svadista Prasada, Milton Keynes. Search across all categories — veg, non-veg, breakfast, snacks and more." />
       </Helmet>
+      {/* Hero */}
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(45vh, 360px)' }}>
+        <img
+          src="https://images.unsplash.com/photo-1742281258189-3b933879867a?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Our Full Menu"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)' }} />
