@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
+import { Droplets, Search, X, ShoppingCart } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -52,12 +54,12 @@ const Drinks = () => {
           <div className="max-w-xl">
             <div className="flex items-center gap-2 mb-3">
               <Droplets size={18} className="text-purple-300" />
-              <span className="text-xs uppercase tracking-[0.25em] text-purple-200 font-medium">Refreshments</span>
+              <span className="text-xs uppercase tracking-[0.25em] text-purple-200 font-medium">House Drinks</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Traditional Indian Drinks &amp; Mango Lassi in Milton Keynes
             </h1>
-            <p className="text-lg text-purple-100 leading-relaxed mb-1">Fresh juices, lassis & refreshing beverages.</p>
+            <p className="text-lg text-purple-100 leading-relaxed mb-1">Mango lassi. Masala chhaas. Things that actually quench.</p>
             <p className="text-sm text-purple-200 leading-relaxed max-w-md">
               Cool down with freshly pressed juices, creamy lassis, soft drinks and our signature masala buttermilk.
             </p>
@@ -82,7 +84,18 @@ const Drinks = () => {
       {/* Grid */}
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
-          {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} beverages</p>}
+          {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} drinks</p>}
+          {!loading && !search && (
+            <div className="mb-8 -mt-2 text-center">
+              <div className="inline-flex items-center gap-3 max-w-2xl">
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to right, transparent, #7e22ce)' }} />
+                <p className="text-sm italic" style={{ color: '#6b21a8', fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', lineHeight: '1.6' }}>
+                  🥭&ensp;Mango lassi thick enough to stand a spoon in. Masala chhaas that cools even a vindaloo. Every sip made to order.
+                </p>
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to left, transparent, #7e22ce)' }} />
+              </div>
+            </div>
+          )}
           {loading ? (
             <MenuLoader color="#7E22CE" />
           ) : (

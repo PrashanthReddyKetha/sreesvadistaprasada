@@ -10,13 +10,22 @@ import useTabHistory from '../../hooks/useTabHistory';
 
 const TABS = ['Starters', 'Indo - Chinese', 'Egg Specials', 'Curries', 'Biriyani', 'Rice Bowls', 'All'];
 
+const SECTION_MESSAGES = {
+  'Starters':      { icon: '🔥', text: 'The first bite that sets the whole story — charred edges, whole spices, nothing held back.' },
+  'Indo - Chinese':{ icon: '🥢', text: 'The streets of Hyderabad meet the wok — fiery, tangy, and dangerously addictive.' },
+  'Egg Specials':  { icon: '🥚', text: 'Eggs done the Andhra way — rich, deep-spiced, and always worth the extra roti.' },
+  'Curries':       { icon: '🍲', text: 'Slow-simmered in handmade masalas. The kind of gravy that demands a second helping of rice.' },
+  'Biriyani':      { icon: '🌾', text: 'Country chicken, aged basmati, village spice — sealed slow. Worth every minute of the wait.' },
+  'Rice Bowls':    { icon: '🍱', text: 'A full South Indian plate in one — rice, gravy, rasam, papad. Exactly as it should be.' },
+};
+
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
 function SpiceBar({ level }) {
   return (
     <div className="flex gap-0.5 items-center">
       {Array(level).fill(0).map((_, i) => (
-        <span key={i} style={{ fontSize: '12px' }}>🌶️</span>
+        <svg key={i} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
       ))}
     </div>
   );
@@ -83,7 +92,7 @@ const Svadista = () => {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Authentic Non-Veg South Indian &amp; Andhra Food in Milton Keynes
             </h1>
-            <p className="text-lg text-red-100 leading-relaxed mb-1">Bold, rustic, village-style.</p>
+            <p className="text-lg text-red-100 leading-relaxed mb-1">Bold. Rustic. Uncompromising.</p>
             <p className="text-sm text-red-200 leading-relaxed max-w-md">
               Starters, biryanis, rich curries and egg specials. Slow-cooked with Andhra soul.
             </p>
@@ -123,6 +132,17 @@ const Svadista = () => {
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} dishes</p>}
+          {!loading && SECTION_MESSAGES[activeTab] && !search && (
+            <div className="mb-8 -mt-2 text-center">
+              <div className="inline-flex items-center gap-3 max-w-full">
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to right, transparent, #800020)' }} />
+                <p className="text-sm italic" style={{ color: '#800020', fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', lineHeight: '1.6' }}>
+                  {SECTION_MESSAGES[activeTab].icon}&ensp;{SECTION_MESSAGES[activeTab].text}
+                </p>
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to left, transparent, #800020)' }} />
+              </div>
+            </div>
+          )}
           {loading ? (
             <MenuLoader color="#800020" />
           ) : (

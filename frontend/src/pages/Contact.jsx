@@ -37,7 +37,7 @@ const Contact = () => {
               Get in Touch
             </h1>
             <p className="text-lg text-gray-200 leading-relaxed" data-testid="contact-hero-subtitle">
-              Questions, feedback, or just want to say hello? We'd love to hear from you.
+              A real person reads every message. We reply — usually within a few hours.
             </p>
           </div>
         </div>

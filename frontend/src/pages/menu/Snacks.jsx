@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { Flame, Search, X, ArrowRight, MessageCircle, Package, Star } from 'lucide-react';
+import { Flame, Search, X, ArrowRight, MessageCircle, Package, Star, Truck } from 'lucide-react';
 import api from '../../api';
 import { getCached, setCached } from '../../api/menuCache';
 import useTabHistory from '../../hooks/useTabHistory';
@@ -86,7 +86,7 @@ const Snacks = () => {
       <div className="py-3 px-4 md:px-8 text-center" style={{ backgroundColor: '#4A7C59', color: 'white' }}>
         <div className="flex items-center justify-center gap-2 text-sm font-medium">
           <Truck size={16} />
-          <span>Free UK-wide delivery on orders over £25 | Now serving Milton Keynes, Edinburgh & Glasgow</span>
+          <span>Free UK-wide delivery on orders over £25 · Dispatched from Milton Keynes to Edinburgh, Glasgow and everywhere in between</span>
         </div>
       </div>
 

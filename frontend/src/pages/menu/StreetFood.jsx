@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { Search, X, ShoppingCart, Star } from 'lucide-react';
+import { Search, X, ShoppingCart, Star, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -54,12 +54,12 @@ const StreetFood = () => {
           <div className="max-w-xl">
             <div className="flex items-center gap-2 mb-3">
               <ShoppingBag size={18} className="text-blue-300" />
-              <span className="text-xs uppercase tracking-[0.25em] text-blue-200 font-medium">Fast Food</span>
+              <span className="text-xs uppercase tracking-[0.25em] text-blue-200 font-medium">Street Bites</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Authentic Indian Street Food &amp; Chaat in Milton Keynes
             </h1>
-            <p className="text-lg text-blue-100 leading-relaxed mb-1">Quick bites, snacks and evening treats.</p>
+            <p className="text-lg text-blue-100 leading-relaxed mb-1">The chaos and crunch of the Indian street — without the footpath.</p>
             <p className="text-sm text-blue-200 leading-relaxed max-w-md">
               Light snacks, crispy starters and quick bites — the perfect evening indulgence.
             </p>
@@ -85,6 +85,17 @@ const StreetFood = () => {
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} items</p>}
+          {!loading && !search && (
+            <div className="mb-8 -mt-2 text-center">
+              <div className="inline-flex items-center gap-3 max-w-2xl">
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to right, transparent, #1d4ed8)' }} />
+                <p className="text-sm italic" style={{ color: '#1e3a8a', fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', lineHeight: '1.6' }}>
+                  🌶️&ensp;Pani puri that pops. Chaat that layers. Manchurian that bites back. The Indian street — at your door.
+                </p>
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to left, transparent, #1d4ed8)' }} />
+              </div>
+            </div>
+          )}
           {loading ? (
             <MenuLoader color="#1D4ED8" />
           ) : (

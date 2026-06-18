@@ -17,6 +17,8 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
+  const isHome = location.pathname === '/';
+  const isTransparent = isHome && !isScrolled;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 40);
@@ -64,7 +66,7 @@ const Header = () => {
         { name: 'Full Menu', path: '/menu' },
       ]
     },
-    { name: 'Hot, Sweet & Pickles', path: '/snacks' },
+    { name: 'Snacks & Pickles', path: '/snacks' },
     { name: 'Dabba Wala', path: '/subscriptions' },
     { name: 'Our Story', path: '/story' },
     { name: 'Catering', path: '/catering' },
@@ -114,8 +116,8 @@ const Header = () => {
         }`}
         style={{
           top: '32px',
-          backgroundColor: isScrolled ? 'rgba(253, 251, 247, 0.95)' : '#FDFBF7',
-          borderBottom: '1px solid rgba(244, 196, 48, 0.2)'
+          backgroundColor: isTransparent ? 'transparent' : (isScrolled ? 'rgba(253, 251, 247, 0.95)' : '#FDFBF7'),
+          borderBottom: isTransparent ? 'none' : '1px solid rgba(244, 196, 48, 0.2)'
         }}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -126,11 +128,11 @@ const Header = () => {
               <div className="flex flex-col justify-center gap-[3px]">
                 <h1
                   className="text-[17px] md:text-2xl font-bold tracking-tight leading-none"
-                  style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
+                  style={{ fontFamily: "'Playfair Display', serif", color: isTransparent ? 'white' : '#800020' }}
                 >
                   Sree Svadista Prasada
                 </h1>
-                <span className="text-[9px] md:text-xs italic leading-none" style={{ fontFamily: "'Playfair Display', serif", color: '#B8860B' }}>
+                <span className="text-[9px] md:text-xs italic leading-none" style={{ fontFamily: "'Playfair Display', serif", color: isTransparent ? 'rgba(244,196,48,0.85)' : '#B8860B' }}>
                   Taste for your heart · memories on a plate
                 </span>
               </div>
@@ -148,7 +150,7 @@ const Header = () => {
                   >
                     <button
                       className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200"
-                      style={{ color: openDropdown === item.name ? '#800020' : '#5C4B47' }}
+                      style={{ color: isTransparent ? 'rgba(255,255,255,0.88)' : (openDropdown === item.name ? '#800020' : '#5C4B47') }}
                       data-testid={`nav-${item.name.toLowerCase().replace(/\s/g, '-')}`}
                     >
                       {item.name}
@@ -182,8 +184,8 @@ const Header = () => {
                     to={item.path}
                     className="px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200"
                     style={{
-                      color: isActive(item.path) ? '#800020' : '#5C4B47',
-                      backgroundColor: isActive(item.path) ? 'rgba(128, 0, 32, 0.05)' : 'transparent'
+                      color: isTransparent ? 'rgba(255,255,255,0.88)' : (isActive(item.path) ? '#800020' : '#5C4B47'),
+                      backgroundColor: (!isTransparent && isActive(item.path)) ? 'rgba(128, 0, 32, 0.05)' : 'transparent'
                     }}
                     data-testid={`nav-${item.name.toLowerCase().replace(/\s/g, '-')}`}
                   >
@@ -197,14 +199,14 @@ const Header = () => {
                 <button
                   className="relative p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5"
                   data-testid="cart-button"
-                  style={{ color: '#800020' }}
+                  style={{ color: isTransparent ? 'white' : '#800020' }}
                   onClick={() => setCartOpen(true)}
                 >
                   <ShoppingCart size={20} />
                   {cartCount > 0 && (
                     <span
                       className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-                      style={{ backgroundColor: '#F4C430' }}
+                      style={{ backgroundColor: '#800020' }}
                     >
                       {cartCount}
                     </span>
@@ -213,18 +215,18 @@ const Header = () => {
                 {user ? (
                   <div className="flex items-center gap-2">
                     {user.role === 'admin' ? (
-                      <Link to="/admin" className="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-[#800020]/10" style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.3)' }}>
+                      <Link to="/admin" className="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-[#800020]/10" style={{ color: isTransparent ? 'white' : '#800020', border: isTransparent ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(128,0,32,0.3)' }}>
                         Admin Panel
                       </Link>
                     ) : (
-                      <Link to="/dashboard" className="text-xs font-semibold hidden xl:block max-w-[100px] truncate hover:underline" style={{ color: '#800020' }}>{user.name}</Link>
+                      <Link to="/dashboard" className="text-xs font-semibold hidden xl:block max-w-[100px] truncate hover:underline" style={{ color: isTransparent ? 'white' : '#800020' }}>{user.name}</Link>
                     )}
-                    <Link to="/dashboard" className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" style={{ color: '#800020' }} data-testid="dashboard-button" title="My Account">
+                    <Link to="/dashboard" className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" style={{ color: isTransparent ? 'white' : '#800020' }} data-testid="dashboard-button" title="My Account">
                       <User size={20} />
                     </Link>
                   </div>
                 ) : (
-                  <button onClick={() => setAuthOpen(true)} className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" data-testid="account-button" style={{ color: '#800020' }} title="Sign in">
+                  <button onClick={() => setAuthOpen(true)} className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" data-testid="account-button" style={{ color: isTransparent ? 'white' : '#800020' }} title="Sign in">
                     <User size={20} />
                   </button>
                 )}

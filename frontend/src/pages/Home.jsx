@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin, Plus, Copy, Check } from 'lucide-react';
@@ -23,6 +24,7 @@ function CopyCodeButton({ code }) {
 }
 
 const Home = () => {
+  useScrollReveal();
   const trendingRef = useRef(null);
   const specialsRef = useRef(null);
   const navigate = useNavigate();
@@ -113,7 +115,7 @@ const Home = () => {
           Authentic South Indian Takeaway &amp; Food Delivery in Milton Keynes
         </h1>
         <p className="text-base text-gray-600 max-w-2xl mx-auto">
-          Taste the best of South India delivered hot across all MK postcodes. Sree Prasada (Pure Veg) &amp; Sree Svadista (Andhra Non-Veg) — two kitchens, one soul.
+          Two kitchens. One soul. The slow-cooked, grandmother-approved South Indian food that Milton Keynes has been waiting for — Sree Prasada (pure veg) and Sree Svadista (Andhra non-veg).
         </p>
       </section>
 
@@ -205,7 +207,7 @@ const Home = () => {
                 <p className="text-xs uppercase tracking-[0.25em] mb-1" style={{ color: '#B8860B' }}>
                   Straight off this morning's stove
                 </p>
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight reveal" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                   Today's Specials
                 </h2>
               </div>
@@ -305,7 +307,7 @@ const Home = () => {
       <div className="bg-[#800020] text-white text-center py-4 px-4">
         <p className="text-sm max-w-2xl mx-auto">
           <span className="font-semibold">🎁 Loyalty rewards —</span>{' '}
-          order 5 times and earn a free dish from our entire menu. No minimum order. Only delivery fee.{' '}
+          Order 5 times → earn a full dish free. Any item on our menu. No catch.{' '}
           {user ? (
             <a href="/dashboard?tab=loyalty" className="underline font-semibold">Check your progress →</a>
           ) : (
@@ -327,7 +329,7 @@ const Home = () => {
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>
                 The plates our families keep asking for
               </p>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight reveal" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                 Loved &amp; Reordered
               </h2>
             </div>

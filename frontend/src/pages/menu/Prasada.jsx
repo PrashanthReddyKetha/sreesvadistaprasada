@@ -99,9 +99,9 @@ const Prasada = () => {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               100% Pure Vegetarian Indian Food in Milton Keynes
             </h1>
-            <p className="text-lg text-green-100 leading-relaxed mb-1">From starters to biryanis — all pure veg.</p>
+            <p className="text-lg text-green-100 leading-relaxed mb-1">No meat. No compromise. Temple-grade devotion on every plate.</p>
             <p className="text-sm text-green-200 leading-relaxed max-w-md">
-              Crispy starters, hearty curries, fragrant rice specials and more. Every dish made fresh with love.
+              Crispy starters, slow-simmered gravies, fragrant rice specials — each dish prepared in a kitchen untouched by meat.
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { Search, X, ShoppingCart, Star } from 'lucide-react';
+import { Search, X, ShoppingCart, Star, Sun } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -9,6 +9,12 @@ import { getCached, setCached } from '../../api/menuCache';
 import useTabHistory from '../../hooks/useTabHistory';
 
 const TABS = ['Idli & Vada', 'Dosas', 'Poori & Others', 'All'];
+
+const SECTION_MESSAGES = {
+  'Idli & Vada':    { icon: '🌅', text: 'Steamed soft and golden-fried — the South Indian morning in two bites. Served with sambar and three chutneys.' },
+  'Dosas':          { icon: '🥞', text: 'Crispy-edged, fermented-batter golden discs. Paper-thin or stuffed to bursting — the dosa is never just a crepe.' },
+  'Poori & Others': { icon: '☀️', text: 'Pillowy pooris that puff on the tawa, and tiffin classics that complete the South Indian morning table.' },
+};
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
@@ -82,9 +88,9 @@ const Breakfast = () => {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Fresh South Indian Breakfast &amp; Morning Tiffins in Milton Keynes
             </h1>
-            <p className="text-lg text-yellow-100 leading-relaxed mb-1">Idlis, dosas, vadas and more.</p>
+            <p className="text-lg text-yellow-100 leading-relaxed mb-1">The South Indian morning — unhurried, warming, and just right.</p>
             <p className="text-sm text-yellow-200 leading-relaxed max-w-md">
-              Authentic South Indian tiffins made fresh every morning. Start your day the right way.
+              Fermented batters, stone-ground spice pastes, chutneys that wake you up. This is what Sunday morning should feel like every morning.
             </p>
           </div>
         </div>
@@ -122,6 +128,17 @@ const Breakfast = () => {
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} dishes</p>}
+          {!loading && SECTION_MESSAGES[activeTab] && !search && (
+            <div className="mb-8 -mt-2 text-center">
+              <div className="inline-flex items-center gap-3 max-w-full">
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to right, transparent, #b45309)' }} />
+                <p className="text-sm italic" style={{ color: '#854d0e', fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', lineHeight: '1.6' }}>
+                  {SECTION_MESSAGES[activeTab].icon}&ensp;{SECTION_MESSAGES[activeTab].text}
+                </p>
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to left, transparent, #b45309)' }} />
+              </div>
+            </div>
+          )}
           {loading ? (
             <MenuLoader color="#B45309" />
           ) : (

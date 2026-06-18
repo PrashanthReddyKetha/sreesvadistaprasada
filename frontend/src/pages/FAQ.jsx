@@ -55,7 +55,7 @@ const FAQ = () => {
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Indian Takeaway &amp; Delivery FAQs — Milton Keynes
             </h1>
-            <p className="text-base text-gray-200 leading-relaxed">Everything you need to know about ordering, subscriptions, and more.</p>
+            <p className="text-base text-gray-200 leading-relaxed">Real answers. No runaround.</p>
           </div>
         </div>
       </section>
@@ -91,7 +91,11 @@ const FAQ = () => {
                   const key = `${catIdx}-${itemIdx}`;
                   const isOpen = openItems[key];
                   return (
-                    <div key={itemIdx} className="rounded-lg bg-white overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                    <div key={itemIdx} className="rounded-lg bg-white overflow-hidden transition-all"
+                      style={{
+                        boxShadow: isOpen ? '0 2px 12px rgba(128,0,32,0.08)' : '0 1px 4px rgba(0,0,0,0.04)',
+                        border: isOpen ? '1px solid rgba(128,0,32,0.15)' : '1px solid transparent',
+                      }}>
                       <button
                         onClick={() => toggleItem(catIdx, itemIdx)}
                         className="w-full flex items-center justify-between p-4 md:p-5 text-left transition-colors duration-200 hover:bg-gray-50"
@@ -124,7 +128,7 @@ const FAQ = () => {
           <h2 className="text-2xl font-bold mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
             Still Have Questions?
           </h2>
-          <p className="text-sm text-gray-600 mb-6">We're always happy to help. Reach out to us anytime.</p>
+          <p className="text-sm text-gray-600 mb-6">We actually pick up the phone.</p>
           <div className="flex flex-wrap gap-4 justify-center">
             <a href="https://wa.me/447307119962" target="_blank" rel="noopener noreferrer">
               <button className="px-6 py-3 text-sm font-semibold text-white rounded-sm transition-all duration-300 hover:shadow-lg" style={{ backgroundColor: '#25D366' }} data-testid="faq-whatsapp-btn">

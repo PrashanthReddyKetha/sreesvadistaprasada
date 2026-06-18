@@ -92,7 +92,7 @@ const STORAGE_KEY = 'ssp_dabba_v4';
 const STORAGE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 const PLANS = [
-  { id: 'weekly',  name: 'Weekly trial',  price: 45,  perMeal: 9,  meals: 5,  badge: 'Start here',   badgeStyle: { backgroundColor: C.greenLight, color: C.greenText } },
+  { id: 'weekly',  name: 'Try a Week',  price: 45,  perMeal: 9,  meals: 5,  badge: 'Start here',   badgeStyle: { backgroundColor: C.greenLight, color: C.greenText } },
   { id: 'monthly', name: 'Monthly saver', price: 160, perMeal: 8,  meals: 20, badge: 'Best value',  badgeStyle: { backgroundColor: C.amberLight, color: C.amberText } },
 ];
 
@@ -127,7 +127,7 @@ const DELIVERY_INSTRUCTIONS = [
 const STEPS = [
   { num: 1, label: 'Plan' }, { num: 2, label: 'Box' },
   { num: 3, label: 'Menu' }, { num: 4, label: 'Prefs' },
-  { num: 5, label: 'Details' }, { num: 6, label: 'Confirm' },
+  { num: 5, label: 'Details' }, { num: 6, label: 'Order' },
 ];
 
 /* ── week config ──────────────────────────────────────── */
@@ -810,6 +810,17 @@ const SubscriptionsInner = () => {
       )}
 
       <div ref={wizardTopRef} />
+      {step === 1 && (
+        <div className="text-center py-10 px-4 md:px-8" style={{ backgroundColor: C.cream }}>
+          <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: C.darkGold }}>Your daily home kitchen</p>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>
+            Start Your Dabba Wala
+          </h1>
+          <p className="text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
+            A fresh South Indian meal at your door, five days a week. Choose your plan, pick your box, tell us your preferences. Takes three minutes to set up — then we cook, and you eat.
+          </p>
+        </div>
+      )}
       <StepIndicator step={step} />
 
       <section className="py-10 md:py-14 px-4 md:px-8">

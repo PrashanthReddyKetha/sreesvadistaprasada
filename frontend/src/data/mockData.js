@@ -6,7 +6,7 @@ export const heroSlides = [
     image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
     title: "Welcome Home.",
     subtitle: "The authentic taste you missed, carried forward with love.",
-    description: "Now serving Milton Keynes, Edinburgh & Glasgow.",
+    description: "Cooking in Milton Keynes. Delivering to Edinburgh & Glasgow.",
     cta: "Explore Our Kitchen",
     link: "/menu"
   },
@@ -23,7 +23,7 @@ export const heroSlides = [
     id: 3,
     image: 'https://images.unsplash.com/photo-1727404679933-99daa2a7573a?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
     title: "Your Daily Dose\nof Home.",
-    subtitle: "Wholesome meal subscriptions delivered to your door.",
+    subtitle: "A fresh-cooked dabba at your door, five days a week. The Dabba Wala.",
     description: "The Dabba Wala service — just like mother used to pack.",
     cta: "Start Your Subscription",
     link: "/subscriptions"
@@ -321,7 +321,7 @@ export const menuItems = {
 export const subscriptionPlans = [
   {
     id: 1,
-    name: "Weekly Trial",
+    name: "Try a Week",
     subtitle: "5 Days",
     price: "£45",
     pricePerMeal: "£9/meal",

@@ -107,14 +107,14 @@ const Footer = () => {
               Grandmother's recipes, slow tadkas, and the patient kind of love that fills a house with aroma. Cooked in Milton Keynes. Carried to Edinburgh &amp; Glasgow. Sent across the UK in small, careful jars.
             </p>
             <p className="text-sm italic" style={{ color: '#F4C430' }}>
-              "Cooked with care. Served with love."
+              "Stirred slowly. Carried far. Meant for you."
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
             <h4 className="text-base font-semibold mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Quick Links
+              Explore
             </h4>
             <ul className="space-y-2.5">
               {[
@@ -151,7 +151,7 @@ const Footer = () => {
                 { name: 'Weekly & Monthly Plans', path: '/subscriptions' },
                 { name: 'Corporate Catering', path: '/catering' },
                 { name: 'Temple Prasada Catering', path: '/catering' },
-                { name: 'Hot, Sweet & Pickles', path: '/snacks' },
+                { name: 'Snacks & Pickles', path: '/snacks' },
                 { name: 'Event Catering', path: '/catering' },
               ].map((svc) => (
                 <li key={svc.name}>
@@ -170,7 +170,7 @@ const Footer = () => {
           {/* Contact */}
           <div>
             <h4 className="text-base font-semibold mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Get in Touch
+              Come Find Us
             </h4>
             <div className="space-y-3">
               <div className="flex items-start gap-3">

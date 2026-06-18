@@ -33,9 +33,9 @@ const Gallery = () => {
           <div className="max-w-xl">
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Gallery
+              The Kitchens. The Food. The Love.
             </h1>
-            <p className="text-base text-gray-200 leading-relaxed">A glimpse into our kitchens, our food, and our love for cooking.</p>
+            <p className="text-base text-gray-200 leading-relaxed">Every photo is from our kitchen. Shot on real days, real meals. This is exactly what arrives at your door.</p>
           </div>
         </div>
       </section>
@@ -92,19 +92,32 @@ const Gallery = () => {
           data-testid="gallery-lightbox"
         >
           <button
-            className="absolute top-4 right-4 text-white text-2xl font-light w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+            className="absolute top-4 right-4 text-white text-xl font-light w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
             onClick={() => setLightboxIdx(null)}
             data-testid="lightbox-close"
-          >
-            &times;
-          </button>
+          >&times;</button>
+          {lightboxIdx > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setLightboxIdx(lightboxIdx - 1); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl hover:bg-white/10 transition-colors"
+            >‹</button>
+          )}
+          {lightboxIdx < filtered.length - 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setLightboxIdx(lightboxIdx + 1); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl hover:bg-white/10 transition-colors"
+            >›</button>
+          )}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+            {lightboxIdx + 1} / {filtered.length}
+          </div>
           <img
             src={filtered[lightboxIdx]?.src}
             alt={filtered[lightboxIdx]?.alt}
             className="max-w-full max-h-[80vh] rounded-lg object-contain"
             onClick={(e) => e.stopPropagation()}
           />
-          <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white text-sm font-medium text-center">
+          <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium text-center">
             {filtered[lightboxIdx]?.alt}
           </p>
         </div>

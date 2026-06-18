@@ -50,7 +50,7 @@ const OurStory = () => {
             <div>
               <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Where it all began</p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                The Beginning
+                Born from Longing
               </h2>
               <p className="text-base text-gray-600 leading-relaxed mb-4">
                 Every great journey starts with a longing. For us, it was the longing for the taste of home —
@@ -83,19 +83,19 @@ const OurStory = () => {
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
             The Meaning of Our Name
           </h2>
-          <div className="grid md:grid-cols-3 gap-8 mt-10">
-            <div>
-              <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Sree</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">Divinity, prosperity, and auspiciousness. The sacred blessing that graces every meal.</p>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Svadista</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">Delicious and authentic — the traditional bold flavors that make your taste buds dance.</p>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Prasada</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">Sacred food offered with devotion, pure and blessed. Prepared with temple-like purity.</p>
-            </div>
+          <div className="grid md:grid-cols-3 gap-6 mt-10">
+            {[
+              { word: 'Sree',     telugu: 'శ్రీ',    meaning: 'Divinity, prosperity, and auspiciousness. The sacred blessing that graces every meal.' },
+              { word: 'Svadista', telugu: 'స్వాదిష్ట', meaning: 'Delicious and authentic — the traditional bold flavours that make your taste buds dance.' },
+              { word: 'Prasada',  telugu: 'ప్రసాద',   meaning: 'Sacred food offered with devotion, pure and blessed. Prepared with temple-like purity.' },
+            ].map(({ word, telugu, meaning }) => (
+              <div key={word} className="p-6 rounded-lg text-center" style={{ border: '1px solid rgba(244,196,48,0.4)', backgroundColor: 'white' }}>
+                <p className="text-3xl mb-1" style={{ color: '#B8860B', opacity: 0.7 }}>{telugu}</p>
+                <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>{word}</h3>
+                <div className="w-8 h-0.5 mx-auto mb-3" style={{ backgroundColor: '#F4C430' }} />
+                <p className="text-sm text-gray-600 leading-relaxed">{meaning}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -190,7 +190,7 @@ const OurStory = () => {
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>More than a restaurant</p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-            Serving Across the UK
+            A Kitchen Without Borders
           </h2>
           <p className="text-base text-gray-600 leading-relaxed mb-4">
             Sree Svadista Prasada is not just a restaurant — it's a gateway back home. Whether you're

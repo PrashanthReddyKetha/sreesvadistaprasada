@@ -62,7 +62,7 @@ const Catering = () => {
               Professional South Indian &amp; Andhra Catering in Milton Keynes
             </h1>
             <p className="text-lg text-gray-200 leading-relaxed" data-testid="catering-hero-subtitle">
-              Poojas, Weddings, Corporate Events & More. Authentic South Indian food for your special occasions.
+              From intimate poojas to 500-person weddings — we cook with the same devotion, regardless of the headcount.
             </p>
           </div>
         </div>
@@ -232,7 +232,7 @@ const Catering = () => {
               </div>
             )}
             <button type="submit" disabled={status === 'loading'} className="w-full py-3.5 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg disabled:opacity-60" style={{ backgroundColor: '#800020' }} data-testid="catering-submit-btn">
-              {status === 'loading' ? 'Submitting...' : 'Submit Enquiry'}
+              {status === 'loading' ? 'Submitting...' : 'Send My Catering Request'}
             </button>
           </form>
         </div>
@@ -243,9 +243,9 @@ const Catering = () => {
         <div className="max-w-4xl mx-auto text-center">
           <Phone size={32} className="mx-auto mb-4" style={{ color: '#F4C430' }} />
           <h2 className="text-3xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-            Need Immediate Assistance?
+            Want to Talk It Through?
           </h2>
-          <p className="text-gray-300 mb-6">Call us directly to discuss your catering needs.</p>
+          <p className="text-gray-300 mb-6">Sometimes the best decisions happen over a phone call. We're listening.</p>
           <a href="tel:+447307119962">
             <button className="px-8 py-3.5 text-sm font-semibold tracking-wide uppercase rounded-sm transition-all duration-300 hover:shadow-lg" style={{ backgroundColor: '#F4C430', color: '#2D2422' }} data-testid="catering-call-btn">
               Call +44 73 0711 9962

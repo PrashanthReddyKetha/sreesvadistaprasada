@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
+import { Leaf, Search, X, ShoppingCart } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
@@ -55,11 +57,11 @@ const RagiSpecials = () => {
               <span className="text-xs uppercase tracking-[0.25em] text-amber-200 font-medium">Traditional & Nutritious</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Ragi Specials
+              Ragi Specials — Healthy South Indian Food in Milton Keynes
             </h1>
             <p className="text-lg text-amber-100 leading-relaxed mb-1">Ancient grain. Timeless nourishment.</p>
             <p className="text-sm text-amber-200 leading-relaxed max-w-md">
-              Pearl millet the way it was always meant to be — Ragi Sangati, malts and buttermilk rooted in Telugu tradition.
+              Ancient finger millet, slow-ground and carefully cooked. Ragi Sangati, malts and buttermilk — nourishment rooted in Telugu tradition.
             </p>
           </div>
         </div>
@@ -83,6 +85,17 @@ const RagiSpecials = () => {
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {!loading && <p className="text-sm mb-8" style={{ color: '#5C4B47' }}>{filtered.length} items</p>}
+          {!loading && !search && (
+            <div className="mb-8 -mt-2 text-center">
+              <div className="inline-flex items-center gap-3 max-w-2xl">
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to right, transparent, #92400e)' }} />
+                <p className="text-sm italic" style={{ color: '#5c2406', fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', lineHeight: '1.6' }}>
+                  🌾&ensp;Ancient finger millet, slow-ground and carefully cooked. The grain your great-grandmother trusted — rediscovered.
+                </p>
+                <div className="w-8 sm:w-16 h-px flex-shrink-0" style={{ background: 'linear-gradient(to left, transparent, #92400e)' }} />
+              </div>
+            </div>
+          )}
           {loading ? (
             <MenuLoader color="#92400E" />
           ) : (
