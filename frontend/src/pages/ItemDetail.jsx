@@ -299,7 +299,7 @@ export default function ItemDetail() {
                 {CAT_LABELS[item.category]}
               </p>
               <h1 className="text-3xl md:text-4xl font-bold mb-3 leading-tight" style={{ fontFamily:"'Playfair Display',serif", color:'#3D2B1F' }}>
-                {item.name}
+                {item.seo_h1 || item.name}
               </h1>
 
               {/* Rating + social proof */}

@@ -5,6 +5,7 @@ import { Leaf, Search, X, ShoppingCart } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
+import { getCached, setCached } from '../../api/menuCache';
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
@@ -15,8 +16,10 @@ const RagiSpecials = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
+    const cached = getCached('ragiSpecials');
+    if (cached) { setItems(cached); setLoading(false); return; }
     api.get('/menu?category=ragiSpecials&available=true')
-      .then(r => setItems(r.data))
+      .then(r => { setItems(r.data); setCached('ragiSpecials', r.data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

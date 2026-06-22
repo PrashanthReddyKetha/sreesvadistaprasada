@@ -80,6 +80,7 @@ const Prasada = () => {
         <meta name="twitter:title" content="Pure Vegetarian Indian Food | Sree Prasada | Milton Keynes" />
         <meta name="twitter:description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Prasada — Pure Veg Menu",item:"https://sreesvadistaprasada.com/prasada"}]})}</script>
       </Helmet>
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ height: 'min(58vh, 460px)' }}>
@@ -97,7 +98,7 @@ const Prasada = () => {
               <span className="text-xs uppercase tracking-[0.25em] text-green-200 font-medium">Pure Vegetarian</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              100% Pure Vegetarian Indian Food in Milton Keynes
+              100% Pure Vegetarian Indian Restaurant Quality Food in Milton Keynes
             </h1>
             <p className="text-lg text-green-100 leading-relaxed mb-1">No meat. No compromise. Temple-grade devotion on every plate.</p>
             <p className="text-sm text-green-200 leading-relaxed max-w-md">

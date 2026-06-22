@@ -5,6 +5,7 @@ import math
 import os
 import re
 import stripe
+from pydantic import BaseModel
 from database import db
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
@@ -247,18 +248,25 @@ async def check_delivery_postcode(postcode: str):
     }
 
 
+class OrderCalculateRequest(BaseModel):
+    items: list = []
+    order_type: str = "delivery"
+    postcode: str = ""
+    free_item_price: float = 0.0
+
+
 @router.post("/calculate")
-async def preview_calculate(body: dict):
+async def preview_calculate(body: OrderCalculateRequest):
     """
     Live pricing preview — no auth. Called on every cart/postcode/type change.
     Does NOT create an order or charge anything.
     """
     try:
         result = calculate_order_total(
-            items=body.get("items", []),
-            order_type=body.get("order_type", "delivery"),
-            postcode=body.get("postcode", ""),
-            free_item_price=float(body.get("free_item_price", 0.0)),
+            items=body.items,
+            order_type=body.order_type,
+            postcode=body.postcode,
+            free_item_price=body.free_item_price,
         )
         return {"ok": True, **result}
     except ValueError as e:

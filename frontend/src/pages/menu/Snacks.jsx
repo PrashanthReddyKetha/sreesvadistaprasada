@@ -56,6 +56,7 @@ const Snacks = () => {
         <meta name="twitter:title" content="Buy South Indian Snacks &amp; Andhra Pickles Online | UK Delivery" />
         <meta name="twitter:description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Snacks & Pickles",item:"https://sreesvadistaprasada.com/snacks"}]})}</script>
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
@@ -86,7 +87,7 @@ const Snacks = () => {
       <div className="py-3 px-4 md:px-8 text-center" style={{ backgroundColor: '#4A7C59', color: 'white' }}>
         <div className="flex items-center justify-center gap-2 text-sm font-medium">
           <Truck size={16} />
-          <span>Free UK-wide delivery on orders over £25 · Dispatched from Milton Keynes to Edinburgh, Glasgow and everywhere in between</span>
+          <span>Free UK-wide delivery on orders over £25 · Dispatched from Milton Keynes to every corner of the UK</span>
         </div>
       </div>
 

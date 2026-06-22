@@ -101,7 +101,7 @@ const Header = () => {
           className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-medium tracking-wide overflow-hidden"
           style={{ backgroundColor: '#800020', color: '#FDFBF7' }}
         >
-          <span className="hidden sm:inline">Swagatam — welcome home &nbsp;·&nbsp; Hot meals in Milton Keynes, Edinburgh &amp; Glasgow &nbsp;·&nbsp; Free delivery over £30</span>
+          <span className="hidden sm:inline">Swagatam — welcome home &nbsp;·&nbsp; Hot meals in Milton Keynes &nbsp;·&nbsp; Free delivery over £30</span>
           <span className="sm:hidden whitespace-nowrap">Swagatam · welcome home &nbsp;·&nbsp; Free delivery £30+</span>
         </div>
       )}

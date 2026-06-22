@@ -45,6 +45,15 @@ const FAQ = () => {
         <meta name="twitter:title" content="FAQs | Indian Takeaway &amp; Tiffin Delivery | Milton Keynes" />
         <meta name="twitter:description" content="Got questions? Find out about our separate vegetarian kitchen, halal food sourcing, and tiffin subscription delivery zones across Milton Keynes." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqData.flatMap(cat => cat.items.map(item => ({
+            "@type": "Question",
+            name: item.q,
+            acceptedAnswer: { "@type": "Answer", text: item.a }
+          })))
+        })}</script>
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(35vh, 280px)' }}>

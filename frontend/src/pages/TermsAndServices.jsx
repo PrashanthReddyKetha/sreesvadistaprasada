@@ -17,8 +17,7 @@ const TermsAndServices = () => (
   <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
     <Helmet>
       <title>Terms & Conditions | Sree Svadista Prasada Milton Keynes</title>
-      <meta name="description" content="Terms and conditions for ordering, delivery, subscriptions and use of Sree Svadista Prasada services in Milton Keynes, UK." />
-    </Helmet>
+      <meta name="description" content="Terms and conditions for ordering, delivery, subscriptions and use of Sree Svadista Prasada services in Milton Keynes, UK." />      <link rel="canonical" href="https://sreesvadistaprasada.com/terms" />    </Helmet>
     {/* Hero */}
     <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: '#800020' }}>
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-14">

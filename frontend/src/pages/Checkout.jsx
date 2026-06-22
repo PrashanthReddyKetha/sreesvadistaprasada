@@ -125,15 +125,15 @@ function OrderSummary({ cartItems, cartTotal, updateQuantity, removeFromCart, de
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 <button onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                  className="w-7 h-7 rounded-full border flex items-center justify-center transition-all hover:bg-[#800020] hover:border-[#800020] hover:text-white"
+                  className="w-9 h-9 rounded-full border flex items-center justify-center transition-all hover:bg-[#800020] hover:border-[#800020] hover:text-white"
                   style={{ borderColor: '#ddd', color: '#5C4B47' }}>
-                  {item.quantity === 1 ? <Trash2 size={11} /> : <Minus size={11} />}
+                  {item.quantity === 1 ? <Trash2 size={12} /> : <Minus size={12} />}
                 </button>
                 <span className="w-6 text-center text-sm font-bold" style={{ color: '#2D2422' }}>{item.quantity}</span>
                 <button onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="w-7 h-7 rounded-full border flex items-center justify-center transition-all hover:bg-[#800020] hover:border-[#800020] hover:text-white"
+                  className="w-9 h-9 rounded-full border flex items-center justify-center transition-all hover:bg-[#800020] hover:border-[#800020] hover:text-white"
                   style={{ borderColor: '#ddd', color: '#5C4B47' }}>
-                  <Plus size={11} />
+                  <Plus size={12} />
                 </button>
               </div>
             </div>

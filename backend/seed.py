@@ -576,6 +576,7 @@ async def seed_menu():
 
     await update_item_categories()
     await cleanup_menu_april_2026()
+    await apply_seo_h1_june_2026()
 
 
 SAMPLE_DAILY_SPECIALS = [
@@ -606,6 +607,65 @@ async def seed_daily_specials():
     print(f"Seeded {len(docs)} daily specials.")
 
 
+async def apply_seo_h1_june_2026():
+    """Set seo_h1 on all 50 featured dish pages for ItemDetail.jsx H1 optimisation."""
+    SEO_H1 = {
+        "Chicken 65":                           "Crispy Chicken 65 Starter in Milton Keynes",
+        "Chicken Tikka":                         "Authentic Chicken Tikka in Milton Keynes",
+        "Tandoori Chicken":                      "Juicy Tandoori Chicken in Milton Keynes",
+        "Chicken Curry":                         "Home-Style Chicken Curry in Milton Keynes",
+        "Tomato Chicken Curry":                  "Authentic Tomato Chicken Curry in Milton Keynes",
+        "Gongura Chicken Curry":                 "Iconic Gongura Chicken Curry in Milton Keynes",
+        "Dum Chicken Curry":                     "Rich Dum Chicken Curry in Milton Keynes",
+        "Butter Chicken":                        "Creamy Butter Chicken Delivery in Milton Keynes",
+        "Andhra Egg Curry":                      "Spicy Andhra Egg Curry in Milton Keynes",
+        "Egg Kurma":                             "Creamy Egg Kurma in Milton Keynes",
+        "Spicy Andhra Chicken":                  "Fiery Spicy Andhra Chicken in Milton Keynes",
+        "Mutton Curry":                          "Tender Mutton Curry in Milton Keynes",
+        "Spicy Andhra Mutton":                   "Fiery Andhra Mutton Curry in Milton Keynes",
+        "Gongura Mutton":                        "Iconic Gongura Mutton in Milton Keynes",
+        "Fish Pulusu":                           "Authentic Andhra Fish Pulusu in Milton Keynes",
+        "Prawns Iguru":                          "Traditional Prawns Iguru in Milton Keynes",
+        "Chicken Biryani":                       "Authentic Chicken Biryani in Milton Keynes",
+        "Special Chicken Biryani with Egg":      "Special Chicken Biryani with Egg in Milton Keynes",
+        "Chicken Fry Piece Biryani":             "Andhra Chicken Fry Piece Biryani in Milton Keynes",
+        "Mutton Biriyani":                       "Slow-Cooked Mutton Biryani in Milton Keynes",
+        "Egg Biryani":                           "Fragrant Egg Biryani Delivery in Milton Keynes",
+        "Onion Bhaji":                           "Golden Crispy Onion Bhaji in Milton Keynes",
+        "Gongura Pappu":                         "Authentic Andhra Gongura Pappu in Milton Keynes",
+        "Sambar":                                "Authentic South Indian Sambar in Milton Keynes",
+        "Rasam":                                 "Warming Andhra Rasam in Milton Keynes",
+        "Bhindi Pulusu":                         "Tangy Bhindi Pulusu in Milton Keynes",
+        "Paneer Butter Masala":                  "Rich Paneer Butter Masala in Milton Keynes",
+        "Gutti Vankaya Masala":                  "Gutti Vankaya — Stuffed Brinjal Curry in Milton Keynes",
+        "Perugu Pulusu":                         "Traditional Andhra Perugu Pulusu in Milton Keynes",
+        "Pulihora":                              "Sacred Pulihora (Tamarind Rice) in Milton Keynes",
+        "Prasadam Pulihora":                     "Divine Temple-Style Prasadam Pulihora in Milton Keynes",
+        "Pongal":                                "Comforting Ven Pongal in Milton Keynes",
+        "Chekara Pongal":                        "Sweet Chakkara Pongal in Milton Keynes",
+        "Veg Biryani":                           "Aromatic Veg Biryani Delivery in Milton Keynes",
+        "Gongura Pickle":                        "Buy Authentic Gongura Pickle Online — UK Delivery",
+        "Mango Avakaya":                         "Buy Mango Avakaya Pickle Online — UK Delivery",
+        "Allam Pachadi":                         "Buy Andhra Allam Pachadi (Ginger Pickle) Online",
+        "Kandi Podi":                            "Buy Authentic Kandi Podi (Lentil Spice Mix) Online",
+        "Nalla Karam":                           "Buy Fiery Andhra Nalla Karam Podi Online",
+        "Idli (3 pcs)":                          "Fresh Steamed Idli Delivery in Milton Keynes",
+        "Vada (3 pcs)":                          "Crispy Golden Medu Vada in Milton Keynes",
+        "Masala Dosa (2 pcs)":                   "Crispy Masala Dosa Delivery in Milton Keynes",
+        "Uggani":                                "Authentic Andhra Uggani (Puffed Rice Upma) in Milton Keynes",
+        "Upma":                                  "Traditional South Indian Rava Upma in Milton Keynes",
+        "Chicken Wrap":                          "Spiced Chicken Wrap Delivery in Milton Keynes",
+        "Pani Puri (6 pcs)":                     "Crispy Pani Puri Street Food in Milton Keynes",
+        "Ragi Sangati with Chicken Curry":       "Nutritious Ragi Sangati with Chicken Curry in Milton Keynes",
+        "Ragi Jaava / Malt":                     "Healthy Ragi Jaava (Finger Millet Porridge) in Milton Keynes",
+        "Sweet Lassi":                           "Thick and Creamy Sweet Lassi in Milton Keynes",
+        "Mango Lassi":                           "Fresh Mango Lassi Delivery in Milton Keynes",
+    }
+    for name, h1 in SEO_H1.items():
+        await db.menu_items.update_one({"name": name}, {"$set": {"seo_h1": h1}})
+    print(f"Applied seo_h1 to {len(SEO_H1)} menu items.")
+
+
 async def create_indexes():
     await db.menu_items.create_index("id", unique=True)
     await db.menu_items.create_index("category")
@@ -613,6 +673,7 @@ async def create_indexes():
     await db.users.create_index("id", unique=True)
     await db.users.create_index("email", unique=True)
     await db.orders.create_index("id", unique=True)
+    await db.orders.create_index("payment_intent_id", unique=True, sparse=True)
     await db.daily_specials.create_index("id", unique=True)
 
 

@@ -25,7 +25,7 @@ function DeliveryBar({ total, deliveryType, freeOver = 30, deliveryFeeDisplay = 
             : <span className="text-xs font-medium text-gray-600">Add <strong style={{ color: '#800020' }}>{fmt(remaining)}</strong> more and delivery's on us</span>
           }
         </div>
-        {!isFree && <span className="text-[10px] text-gray-400">{fmt(DELIVERY_FEE)} fee</span>}
+        {!isFree && <span className="text-[10px] text-gray-400">{fmt(deliveryFeeDisplay)} fee</span>}
       </div>
       <div className="h-1.5 rounded-full overflow-hidden bg-gray-200">
         <div className="h-full rounded-full transition-all duration-500"
@@ -462,7 +462,7 @@ const CartDrawer = () => {
 
                 <button onClick={goToCheckout}
                   className="w-full py-3.5 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-2 hover:shadow-lg transition-all"
-                  style={{ backgroundColor: '#800020' }}>
+                  style={{ backgroundColor: '#800020', paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))' }}>
                   {deliveryType === 'takeaway' ? 'Collect my order' : 'Send it Home'} <ArrowRight size={16} />
                 </button>
               </div>

@@ -11,6 +11,11 @@ const Catering = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const guestCount = parseInt(formData.guests, 10);
+    if (!formData.guests || isNaN(guestCount) || guestCount < 1) {
+      setStatus('error');
+      return;
+    }
     setStatus('loading');
     try {
       await api.post('/enquiries/catering', {
@@ -19,7 +24,7 @@ const Catering = () => {
         phone: formData.phone,
         event_type: formData.eventType,
         event_date: formData.eventDate,
-        guest_count: parseInt(formData.guests, 10),
+        guest_count: guestCount,
         food_preference: formData.foodType,
         additional_details: formData.message,
       });

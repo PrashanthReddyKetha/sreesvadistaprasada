@@ -90,7 +90,7 @@ const Home = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
         <title>Sree Svadista Prasada | Indian Takeaway &amp; Food Delivery in Milton Keynes</title>
-        <meta name="description" content="Craving real South Indian flavors? Order Sree Svadista Prasada in Milton Keynes. Hot delivery of home-cooked veg and non-veg Andhra meals." />
+        <meta name="description" content="Order authentic South Indian food online in Milton Keynes. Indian takeaway &amp; home delivery — Andhra curries, tiffin subscriptions, snacks &amp; pickles from Sree Svadista Prasada." />
         <link rel="canonical" href="https://sreesvadistaprasada.com/" />
         <meta property="og:title" content="Sree Svadista Prasada | Indian Takeaway &amp; Food Delivery in Milton Keynes" />
         <meta property="og:description" content="Craving real South Indian flavors? Order Sree Svadista Prasada in Milton Keynes. Hot delivery of home-cooked veg and non-veg Andhra meals." />
@@ -643,6 +643,12 @@ const Home = () => {
                     <div><strong>Timing:</strong> {postcodeResult.estimated_time}</div>
                     <div><strong>Service:</strong> {postcodeResult.service_type === 'full' ? 'Full Menu' : 'Snacks & Pickles'}</div>
                   </div>
+                  {postcodeResult.service_type === 'snacks_only' && (
+                    <a href="/snacks" className="mt-3 inline-block w-full text-center py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
+                      style={{ backgroundColor: '#B8860B' }}>
+                      Browse Snacks & Pickles →
+                    </a>
+                  )}
                 </div>
               )}
             </div>
@@ -765,7 +771,7 @@ const Home = () => {
             <h2 className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
               South Indian Catering for Weddings, Poojas &amp; Corporate Events
             </h2>
-            <p className="text-sm mt-1" style={{ color: '#5C4B47' }}>Tailored menus · veg &amp; non-veg · Milton Keynes, Edinburgh, Glasgow</p>
+            <p className="text-sm mt-1" style={{ color: '#5C4B47' }}>Tailored menus · veg &amp; non-veg · Milton Keynes &amp; surrounding areas</p>
           </div>
           <Link
             to="/catering"

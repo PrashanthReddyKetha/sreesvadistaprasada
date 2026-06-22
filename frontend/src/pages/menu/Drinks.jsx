@@ -41,6 +41,7 @@ const Drinks = () => {
         <meta name="twitter:title" content="Traditional Indian Drinks &amp; Mango Lassi | Milton Keynes" />
         <meta name="twitter:description" content="Cool down with our refreshing Mango Lassi and traditional Masala Buttermilk in Milton Keynes. Fresh fruit juices and authentic hot drinks." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Indian Drinks",item:"https://sreesvadistaprasada.com/drinks"}]})}</script>
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>

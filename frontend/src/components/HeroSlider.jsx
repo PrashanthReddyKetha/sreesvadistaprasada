@@ -69,7 +69,7 @@ const HeroSlider = () => {
     <div
       data-testid="hero-slider"
       className="relative w-full overflow-hidden select-none"
-      style={{ height: 'min(80vh, 700px)' }}
+      style={{ height: 'min(60vh, 700px)' }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

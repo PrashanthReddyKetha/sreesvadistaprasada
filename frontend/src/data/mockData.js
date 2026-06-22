@@ -6,7 +6,7 @@ export const heroSlides = [
     image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
     title: "Welcome Home.",
     subtitle: "The authentic taste you missed, carried forward with love.",
-    description: "Cooking in Milton Keynes. Delivering to Edinburgh & Glasgow.",
+    description: "Cooking in Milton Keynes. Delivered with love, across the UK.",
     cta: "Explore Our Kitchen",
     link: "/menu"
   },

@@ -18,6 +18,7 @@ const PrivacyPolicy = () => (
     <Helmet>
       <title>Privacy Policy | Sree Svadista Prasada Milton Keynes</title>
       <meta name="description" content="Privacy policy for Sree Svadista Prasada — how we collect, use and protect your personal data in accordance with UK GDPR." />
+      <link rel="canonical" href="https://sreesvadistaprasada.com/privacy-policy" />
     </Helmet>
     {/* Hero */}
     <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: '#800020' }}>

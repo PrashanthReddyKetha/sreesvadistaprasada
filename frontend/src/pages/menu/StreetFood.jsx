@@ -5,6 +5,7 @@ import { Search, X, ShoppingCart, Star, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import MenuLoader from '../../components/MenuLoader';
 import api from '../../api';
+import { getCached, setCached } from '../../api/menuCache';
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
@@ -15,8 +16,10 @@ const StreetFood = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
+    const cached = getCached('streetFood');
+    if (cached) { setItems(cached); setLoading(false); return; }
     api.get('/menu?category=streetFood&available=true')
-      .then(r => { setItems(r.data); })
+      .then(r => { setItems(r.data); setCached('streetFood', r.data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -41,6 +44,7 @@ const StreetFood = () => {
         <meta name="twitter:title" content="Indian Street Food &amp; Chaat | Milton Keynes | Sree Svadista Prasada" />
         <meta name="twitter:description" content="Taste the best Indian street food in Milton Keynes. Order fresh pani puri, crispy chaat, spicy Gobi Manchurian, and hot street snacks." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Indian Street Food",item:"https://sreesvadistaprasada.com/street-food"}]})}</script>
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>

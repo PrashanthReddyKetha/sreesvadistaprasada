@@ -356,11 +356,11 @@ class WeeklyMenuTemplate(BaseModel):
 # --- Enquiries ---
 
 class ContactMessageCreate(BaseModel):
-    name: str
+    name: str = Field(max_length=100)
     email: EmailStr
-    phone: Optional[str] = None
-    subject: str
-    message: str
+    phone: Optional[str] = Field(default=None, max_length=20)
+    subject: str = Field(max_length=200)
+    message: str = Field(max_length=2000)
     user_id: Optional[str] = None
 
 
@@ -371,14 +371,14 @@ class ContactMessage(ContactMessageCreate):
 
 
 class CateringEnquiryCreate(BaseModel):
-    name: str
+    name: str = Field(max_length=100)
     email: EmailStr
-    phone: str
-    event_type: str
-    event_date: str
-    guest_count: int
-    food_preference: str
-    additional_details: Optional[str] = None
+    phone: str = Field(max_length=20)
+    event_type: str = Field(max_length=100)
+    event_date: str = Field(max_length=50)
+    guest_count: int = Field(ge=1, le=10000)
+    food_preference: str = Field(max_length=100)
+    additional_details: Optional[str] = Field(default=None, max_length=3000)
     user_id: Optional[str] = None
 
 

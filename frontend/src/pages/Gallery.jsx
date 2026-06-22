@@ -25,6 +25,17 @@ const Gallery = () => {
       <Helmet>
         <title>Food Gallery | Sree Svadista Prasada — Authentic South Indian Milton Keynes</title>
         <meta name="description" content="Browse our gallery of authentic South Indian dishes, kitchen moments and food photography from Sree Svadista Prasada, Milton Keynes." />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/gallery" />
+        <meta property="og:title" content="Food Gallery | Sree Svadista Prasada — Authentic South Indian Milton Keynes" />
+        <meta property="og:description" content="Browse our gallery of authentic South Indian dishes, kitchen moments and food photography from Sree Svadista Prasada, Milton Keynes." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sreesvadistaprasada.com/gallery" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:site_name" content="Sree Svadista Prasada" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Food Gallery | Sree Svadista Prasada — Authentic South Indian Milton Keynes" />
+        <meta name="twitter:description" content="Browse our gallery of authentic South Indian dishes, kitchen moments and food photography from Sree Svadista Prasada, Milton Keynes." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(35vh, 280px)' }}>

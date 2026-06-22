@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List, Optional
 from datetime import datetime
+from collections import defaultdict
+import time
 from database import db
 from models import (
     ContactMessage, ContactMessageCreate,
@@ -14,11 +16,25 @@ from notifications import send_email, notify_admin, email_enquiry_receipt, email
 
 router = APIRouter(prefix="/enquiries", tags=["enquiries"])
 
+# ── Rate limiter for public submission endpoints ───────────────────────────────
+_enquiry_rate_store: dict = defaultdict(list)
+ENQUIRY_RATE_WINDOW = 3600   # 1 hour
+ENQUIRY_RATE_MAX    = 5      # max 5 per hour per IP
+
+def _check_enquiry_rate(request: Request):
+    ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    cutoff = now - ENQUIRY_RATE_WINDOW
+    _enquiry_rate_store[ip] = [t for t in _enquiry_rate_store[ip] if t > cutoff]
+    if len(_enquiry_rate_store[ip]) >= ENQUIRY_RATE_MAX:
+        raise HTTPException(status_code=429, detail="Too many submissions. Please wait before trying again.")
+    _enquiry_rate_store[ip].append(now)
+
 
 # ── Contact ───────────────────────────────────────────────────────────────────
 
 @router.post("/contact", response_model=ContactMessage)
-async def submit_contact(payload: ContactMessageCreate):
+async def submit_contact(request: Request, payload: ContactMessageCreate, _: None = Depends(_check_enquiry_rate)):
     msg = ContactMessage(**payload.model_dump())
     await db.contact_messages.insert_one(msg.model_dump())
     name = getattr(payload, "name", None) or "there"
@@ -54,7 +70,7 @@ async def update_contact_status(msg_id: str, status: str, _: dict = Depends(requ
 # ── Catering ──────────────────────────────────────────────────────────────────
 
 @router.post("/catering", response_model=CateringEnquiry)
-async def submit_catering(payload: CateringEnquiryCreate):
+async def submit_catering(request: Request, payload: CateringEnquiryCreate, _: None = Depends(_check_enquiry_rate)):
     enquiry = CateringEnquiry(**payload.model_dump())
     await db.catering_enquiries.insert_one(enquiry.model_dump())
     name = getattr(payload, "name", None) or "there"

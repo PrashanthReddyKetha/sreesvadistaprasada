@@ -104,7 +104,7 @@ const Footer = () => {
               Taste for your heart · memories on a plate
             </span>
             <p className="text-sm leading-relaxed mb-4" style={{ color: '#A09890' }}>
-              Grandmother's recipes, slow tadkas, and the patient kind of love that fills a house with aroma. Cooked in Milton Keynes. Carried to Edinburgh &amp; Glasgow. Sent across the UK in small, careful jars.
+              Grandmother's recipes, slow tadkas, and the patient kind of love that fills a house with aroma. Cooked in Milton Keynes. Sent across the UK in small, careful jars.
             </p>
             <p className="text-sm italic" style={{ color: '#F4C430' }}>
               "Stirred slowly. Carried far. Meant for you."
@@ -176,7 +176,7 @@ const Footer = () => {
               <div className="flex items-start gap-3">
                 <MapPin size={16} className="mt-1 flex-shrink-0" style={{ color: '#F4C430' }} />
                 <p className="text-sm" style={{ color: '#A09890' }}>
-                  <strong className="text-white">Milton Keynes</strong> (Main), Edinburgh & Glasgow
+                  <strong className="text-white">Milton Keynes</strong>
                 </p>
               </div>
               <div className="flex items-center gap-3">

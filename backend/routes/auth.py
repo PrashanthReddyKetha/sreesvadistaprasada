@@ -61,10 +61,16 @@ def verify_firebase_phone_token(token: str) -> str | None:
     """
     Verify a Firebase ID token from phone auth.
     Returns the verified phone number, or None in dev mode (Firebase not configured).
-    Raises HTTPException if token is invalid.
+    Raises HTTPException if token is invalid or Firebase is missing in production.
     """
     app = _get_firebase_app()
     if not app:
+        is_production = bool(os.environ.get("JWT_SECRET")) and bool(os.environ.get("STRIPE_SECRET_KEY"))
+        if is_production:
+            raise HTTPException(
+                status_code=503,
+                detail="Phone verification service is not configured. Contact support."
+            )
         logger.warning("[DEV] FIREBASE_SERVICE_ACCOUNT_JSON not set — skipping phone token verification.")
         return None   # Dev mode: trust the phone number the client sent
     try:

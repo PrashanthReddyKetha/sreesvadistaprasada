@@ -96,7 +96,14 @@ function App() {
           <CartDrawer />
           <AuthModal />
           <TakeawayNudge />
-          <Suspense fallback={<div className="min-h-screen" />}>
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FDFBF7' }}>
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 rounded-full border-4 animate-spin" style={{ borderColor: 'rgba(128,0,32,0.2)', borderTopColor: '#800020' }} />
+                <p className="text-sm font-medium" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Loading…</p>
+              </div>
+            </div>
+          }>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/story" element={<OurStory />} />
