@@ -6,4 +6,4 @@ Disallow: /admin
 Disallow: /checkout
 Disallow: /dashboard
 
-Sitemap: https://sreesvadistaprasada.vercel.app/sitemap.xml
+Sitemap: https://sreesvadistaprasada.com/sitemap.xml

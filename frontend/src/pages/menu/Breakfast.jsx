@@ -59,11 +59,11 @@ const Breakfast = () => {
       <Helmet>
         <title>South Indian Breakfast &amp; Tiffins | Milton Keynes</title>
         <meta name="description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
-        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/breakfast" />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/breakfast" />
         <meta property="og:title" content="South Indian Breakfast &amp; Tiffins | Milton Keynes" />
         <meta property="og:description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/breakfast" />
+        <meta property="og:url" content="https://sreesvadistaprasada.com/breakfast" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />

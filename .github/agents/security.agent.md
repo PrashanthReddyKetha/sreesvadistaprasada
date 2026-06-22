@@ -40,7 +40,7 @@ TOKEN_EXPIRE_HOURS = 168  # 7 days
 Hardcoded allowlist in `backend/server.py`:
 ```python
 ALLOWED_ORIGINS = [
-    "https://sreesvadistaprasada.vercel.app",
+    "https://sreesvadistaprasada.com",
     "https://sreesvadistaprasada-git-main-prasanthreddykethas-projects.vercel.app",
     "https://sreesvadistaprasada.com",
     "https://www.sreesvadistaprasada.com",

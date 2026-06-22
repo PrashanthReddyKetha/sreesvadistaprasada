@@ -35,11 +35,11 @@ const Catering = () => {
       <Helmet>
         <title>South Indian Catering Services | Milton Keynes | Sree Svadista Prasada</title>
         <meta name="description" content="Professional South Indian catering in Milton Keynes. Tailored veg and non-veg menus for weddings, corporate events, and family parties." />
-        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/catering" />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/catering" />
         <meta property="og:title" content="South Indian Catering Services | Milton Keynes | Sree Svadista Prasada" />
         <meta property="og:description" content="Professional South Indian catering in Milton Keynes. Tailored veg and non-veg menus for weddings, corporate events, and family parties." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/catering" />
+        <meta property="og:url" content="https://sreesvadistaprasada.com/catering" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />

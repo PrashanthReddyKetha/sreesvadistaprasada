@@ -62,11 +62,11 @@ const Svadista = () => {
       <Helmet>
         <title>Non-Veg South Indian Menu | Sree Svadista | Milton Keynes</title>
         <meta name="description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
-        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/svadista" />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/svadista" />
         <meta property="og:title" content="Non-Veg South Indian Menu | Sree Svadista | Milton Keynes" />
         <meta property="og:description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/svadista" />
+        <meta property="og:url" content="https://sreesvadistaprasada.com/svadista" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />

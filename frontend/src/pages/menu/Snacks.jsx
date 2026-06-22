@@ -45,11 +45,11 @@ const Snacks = () => {
       <Helmet>
         <title>Buy South Indian Snacks &amp; Andhra Pickles Online | UK Delivery</title>
         <meta name="description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
-        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/snacks" />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/snacks" />
         <meta property="og:title" content="Buy South Indian Snacks &amp; Andhra Pickles Online | UK Delivery" />
         <meta property="og:description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/snacks" />
+        <meta property="og:url" content="https://sreesvadistaprasada.com/snacks" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />

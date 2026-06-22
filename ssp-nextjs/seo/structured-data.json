@@ -31,7 +31,7 @@
       "@type": "OrderAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": "https://sreesvadistaprasada.vercel.app",
+        "urlTemplate": "https://sreesvadistaprasada.com",
         "inLanguage": "en-GB"
       }
     },

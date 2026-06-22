@@ -30,7 +30,7 @@ const TermsAndServices = () => (
 
       <p className="text-sm leading-relaxed mb-10 p-5 rounded-lg" style={{ color: '#5C4B47', backgroundColor: 'rgba(128,0,32,0.04)', border: '1px solid rgba(128,0,32,0.1)' }}>
         Please read these Terms of Service carefully before using our website or placing an order.
-        By accessing <strong>sreesvadistaprasada.vercel.app</strong> or using our services, you agree to be bound by these terms.
+        By accessing <strong>sreesvadistaprasada.com</strong> or using our services, you agree to be bound by these terms.
         If you do not agree, please do not use our service.
       </p>
 

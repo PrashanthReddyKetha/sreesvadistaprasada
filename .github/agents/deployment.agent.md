@@ -9,7 +9,7 @@ You are the deployment specialist for Sree Svadista Prasada. You know how both d
 
 | Layer | Platform | URL | Auto-deploy trigger |
 |-------|----------|-----|-------------------|
-| React SPA (frontend) | Vercel | `https://sreesvadistaprasada.vercel.app` | Push to `main` |
+| React SPA (frontend) | Vercel | `https://sreesvadistaprasada.com` | Push to `main` |
 | Next.js SEO site | Vercel | `https://ssp-nextjs.vercel.app` | Push to `main` |
 | FastAPI backend | Render (free tier) | `https://svadista-backend.onrender.com` | Push to `main` |
 
@@ -66,7 +66,7 @@ If a new frontend URL is added (new Vercel preview, custom domain, etc.), add it
 
 ```python
 ALLOWED_ORIGINS = [
-    "https://sreesvadistaprasada.vercel.app",
+    "https://sreesvadistaprasada.com",
     "https://sreesvadistaprasada-git-main-prasanthreddykethas-projects.vercel.app",
     "https://sreesvadistaprasada.com",
     "https://www.sreesvadistaprasada.com",

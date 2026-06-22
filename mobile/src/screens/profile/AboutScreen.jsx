@@ -70,8 +70,8 @@ export default function AboutScreen() {
           <TouchableOpacity onPress={() => Linking.openURL('mailto:hello@sreesvadistaprasada.co.uk')}>
             <Text style={styles.contactLink}>✉️ hello@sreesvadistaprasada.co.uk</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => Linking.openURL('https://sreesvadistaprasada.vercel.app')}>
-            <Text style={styles.contactLink}>🌐 sreesvadistaprasada.vercel.app</Text>
+          <TouchableOpacity onPress={() => Linking.openURL('https://sreesvadistaprasada.com')}>
+            <Text style={styles.contactLink}>🌐 sreesvadistaprasada.com</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

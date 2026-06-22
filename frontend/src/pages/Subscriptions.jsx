@@ -751,11 +751,11 @@ const SubscriptionsInner = () => {
       <Helmet>
         <title>Indian Tiffin Service &amp; Meal Subscriptions | Milton Keynes</title>
         <meta name="description" content="Subscribe to the best Indian tiffin service in Milton Keynes. Fresh, home-cooked daily meal subscriptions delivered hot to your door or office." />
-        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/subscriptions" />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/subscriptions" />
         <meta property="og:title" content="Indian Tiffin Service &amp; Meal Subscriptions | Milton Keynes" />
         <meta property="og:description" content="Subscribe to the best Indian tiffin service in Milton Keynes. Fresh, home-cooked daily meal subscriptions delivered hot to your door or office." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/subscriptions" />
+        <meta property="og:url" content="https://sreesvadistaprasada.com/subscriptions" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1657205937707-940bf77b2602?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />

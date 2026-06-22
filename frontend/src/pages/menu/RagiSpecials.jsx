@@ -30,11 +30,11 @@ const RagiSpecials = () => {
       <Helmet>
         <title>Ragi Specials — Healthy South Indian | Milton Keynes | Sree Svadista Prasada</title>
         <meta name="description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
-        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/ragi-specials" />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/ragi-specials" />
         <meta property="og:title" content="Ragi Specials — Healthy South Indian | Milton Keynes" />
         <meta property="og:description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/ragi-specials" />
+        <meta property="og:url" content="https://sreesvadistaprasada.com/ragi-specials" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />

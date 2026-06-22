@@ -52,7 +52,7 @@ async def route(current_user = Depends(get_optional_user)): ...
 Origins are **hardcoded** in `backend/server.py`:
 ```python
 ALLOWED_ORIGINS = [
-    "https://sreesvadistaprasada.vercel.app",
+    "https://sreesvadistaprasada.com",
     "https://sreesvadistaprasada-git-main-prasanthreddykethas-projects.vercel.app",
     "http://localhost:3000",
     "http://localhost:3001",

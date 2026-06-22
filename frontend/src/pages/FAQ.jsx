@@ -34,11 +34,11 @@ const FAQ = () => {
       <Helmet>
         <title>FAQs | Indian Takeaway &amp; Tiffin Delivery | Milton Keynes</title>
         <meta name="description" content="Got questions? Find out about our separate vegetarian kitchen, halal food sourcing, and tiffin subscription delivery zones across Milton Keynes." />
-        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/faq" />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/faq" />
         <meta property="og:title" content="FAQs | Indian Takeaway &amp; Tiffin Delivery | Milton Keynes" />
         <meta property="og:description" content="Got questions? Find out about our separate vegetarian kitchen, halal food sourcing, and tiffin subscription delivery zones across Milton Keynes." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/faq" />
+        <meta property="og:url" content="https://sreesvadistaprasada.com/faq" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />

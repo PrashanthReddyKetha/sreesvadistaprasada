@@ -243,11 +243,11 @@ export default function ItemDetail() {
       <Helmet>
         <title>{item.name} | Sree Svadista Prasada — South Indian Food Milton Keynes</title>
         <meta name="description" content={item.seo_meta_description || (item.description ? item.description.slice(0, 155) + '...' : 'Authentic South Indian dish at Sree Svadista Prasada, Milton Keynes. Order online for delivery.')} />
-        <link rel="canonical" href={`https://sreesvadistaprasada.vercel.app/item/${item.id}`} />
+        <link rel="canonical" href={`https://sreesvadistaprasada.com/item/${item.id}`} />
         <meta property="og:title" content={`${item.name} | Sree Svadista Prasada`} />
         <meta property="og:description" content={item.seo_meta_description || (item.description ? item.description.slice(0, 155) : 'Authentic South Indian dish at Sree Svadista Prasada, Milton Keynes.')} />
         <meta property="og:type" content="product" />
-        <meta property="og:url" content={`https://sreesvadistaprasada.vercel.app/item/${item.id}`} />
+        <meta property="og:url" content={`https://sreesvadistaprasada.com/item/${item.id}`} />
         <meta property="og:image" content={item.image || 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'} />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />

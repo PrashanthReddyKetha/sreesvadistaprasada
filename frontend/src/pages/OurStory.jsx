@@ -10,11 +10,11 @@ const OurStory = () => {
       <Helmet>
         <title>Our Story | Authentic South Indian Restaurant | Milton Keynes</title>
         <meta name="description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
-        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/story" />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/story" />
         <meta property="og:title" content="Our Story | Authentic South Indian Restaurant | Milton Keynes" />
         <meta property="og:description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/story" />
+        <meta property="og:url" content="https://sreesvadistaprasada.com/story" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />

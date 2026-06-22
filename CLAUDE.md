@@ -12,7 +12,7 @@ A full-stack food ordering web app for an authentic South Indian restaurant serv
 
 | Layer     | Platform | URL |
 |-----------|----------|-----|
-| Frontend  | Vercel   | https://sreesvadistaprasada.vercel.app |
+| Frontend  | Vercel   | https://sreesvadistaprasada.com |
 | Backend   | Render   | https://svadista-backend.onrender.com |
 | Repo      | GitHub   | https://github.com/PrashanthReddyKetha/sreesvadistaprasada |
 
@@ -56,7 +56,7 @@ A full-stack food ordering web app for an authentic South Indian restaurant serv
 **IMPORTANT — CORS:** `CORS_ORIGINS` env var on Render was previously set to `"*"` which broke browser logins (`allow_origins=["*"]` + `allow_credentials=True` is invalid). It was removed. CORS origins are now **hardcoded** in `backend/server.py`:
 ```python
 ALLOWED_ORIGINS = [
-    "https://sreesvadistaprasada.vercel.app",
+    "https://sreesvadistaprasada.com",
     "https://sreesvadistaprasada-git-main-prasanthreddykethas-projects.vercel.app",
     "http://localhost:3000",
     "http://localhost:3001",

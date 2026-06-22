@@ -69,11 +69,11 @@ const Prasada = () => {
       <Helmet>
         <title>Pure Vegetarian Indian Food | Sree Prasada | Milton Keynes</title>
         <meta name="description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
-        <link rel="canonical" href="https://sreesvadistaprasada.vercel.app/prasada" />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/prasada" />
         <meta property="og:title" content="Pure Vegetarian Indian Food | Sree Prasada | Milton Keynes" />
         <meta property="og:description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://sreesvadistaprasada.vercel.app/prasada" />
+        <meta property="og:url" content="https://sreesvadistaprasada.com/prasada" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />

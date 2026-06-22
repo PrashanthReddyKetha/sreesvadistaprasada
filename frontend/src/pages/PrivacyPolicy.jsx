@@ -44,7 +44,7 @@ const PrivacyPolicy = () => (
         <ul className="list-disc ml-5 space-y-1">
           <li>Email: <a href="mailto:info@sreesvadistaprasada.com" className="underline" style={{ color: '#800020' }}>info@sreesvadistaprasada.com</a></li>
           <li>Phone: +44 73 0711 9962</li>
-          <li>Website: <a href="https://sreesvadistaprasada.vercel.app" className="underline" style={{ color: '#800020' }}>sreesvadistaprasada.vercel.app</a></li>
+          <li>Website: <a href="https://sreesvadistaprasada.com" className="underline" style={{ color: '#800020' }}>sreesvadistaprasada.com</a></li>
         </ul>
       </Section>
 
