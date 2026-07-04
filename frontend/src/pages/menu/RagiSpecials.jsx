@@ -49,7 +49,9 @@ const RagiSpecials = () => {
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
         <img
           src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?crop=entropy&cs=srgb&fm=jpg&q=85&w=1280"
-          alt="Ragi Specials"
+          srcSet="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?crop=entropy&cs=srgb&fm=jpg&q=85&w=640 640w, https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?crop=entropy&cs=srgb&fm=jpg&q=85&w=1280 1280w"
+          sizes="100vw"
+          alt="Healthy ragi finger millet South Indian dishes Milton Keynes — nutritious superfoods"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(92,36,6,0.92) 0%, rgba(120,53,15,0.8) 50%, rgba(92,36,6,0.6) 100%)' }} />

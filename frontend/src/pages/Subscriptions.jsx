@@ -765,8 +765,12 @@ const SubscriptionsInner = () => {
       </Helmet>
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ height: 'min(42vh, 340px)' }}>
-        <img src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1280"
-          alt="Dabba Wala" className="absolute inset-0 w-full h-full object-cover" />
+        <img
+          src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1280"
+          srcSet="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=640 640w, https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1280 1280w"
+          sizes="100vw"
+          alt="Home-cooked Indian tiffin subscription meal plan Milton Keynes — Dabba Wala service"
+          className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)` }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-end md:items-center pb-8 md:pb-0" style={{ paddingTop: 'calc(32px + 68px)' }}>
           <div className="max-w-xl">

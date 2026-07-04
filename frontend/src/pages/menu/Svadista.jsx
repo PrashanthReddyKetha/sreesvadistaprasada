@@ -79,7 +79,9 @@ const Svadista = () => {
       <section className="relative overflow-hidden" style={{ height: 'min(58vh, 460px)' }}>
         <img
           src="https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&q=85&w=1280"
-          alt="Sree Svadista"
+          srcSet="https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&q=85&w=640 640w, https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&q=85&w=1280 1280w"
+          sizes="100vw"
+          alt="Authentic South Indian non-veg food Milton Keynes — Sree Svadista Prasada"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(92,0,24,0.8) 50%, rgba(128,0,32,0.6) 100%)' }} />
