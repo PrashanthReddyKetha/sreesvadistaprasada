@@ -68,7 +68,7 @@ function UpsellRow({ cartItems, onAdd }) {
         .slice(0, 4);
       setSuggestions(candidates);
     }).catch(() => {});
-  }, [cartItems]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   if (suggestions.length === 0) return null;
   return (
     <div className="px-6 py-4 border-b" style={{ borderColor: 'rgba(128,0,32,0.08)', backgroundColor: '#FDFBF7' }}>
@@ -199,8 +199,8 @@ const CartDrawer = () => {
       // Fetch zone info from stored postcode if available
       const savedPostcode = user.address?.postcode || '';
       if (savedPostcode) {
-        api.post('/delivery/check', { postcode: savedPostcode })
-          .then(r => { if (r.data?.service_type === 'full') setZoneInfo(r.data); })
+        api.get('/orders/check-postcode', { params: { postcode: savedPostcode } })
+          .then(r => { if (r.data?.deliverable) setZoneInfo({ delivery_fee: r.data.delivery_fee, free_over: r.data.free_delivery_over }); })
           .catch(() => {});
       }
     }

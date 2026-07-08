@@ -13,7 +13,7 @@ const STATUS_COLORS = {
   pending:    { bg: '#FEF9C3', text: '#854D0E', label: 'Pending' },
   confirmed:  { bg: '#DBEAFE', text: '#1E40AF', label: 'Confirmed' },
   preparing:  { bg: '#FEF3C7', text: '#92400E', label: 'Preparing' },
-  out_for_delivery: { bg: '#DBEAFE', text: '#1E40AF', label: 'Out for Delivery' },
+  out_for_delivery: { bg: '#FDE8FF', text: '#7E22CE', label: 'Out for Delivery' },
   delivered:  { bg: '#DCFCE7', text: '#166534', label: 'Delivered' },
   cancelled:  { bg: '#FEE2E2', text: '#991B1B', label: 'Cancelled' },
   active:     { bg: '#DCFCE7', text: '#166534', label: 'Active' },
@@ -89,6 +89,15 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Poll for live order updates every 30 seconds when orders are in-flight
+  useEffect(() => {
+    const liveStatuses = ['pending', 'confirmed', 'preparing', 'out_for_delivery'];
+    const hasLive = orders.some(o => liveStatuses.includes(o.status));
+    if (!hasLive) return;
+    const interval = setInterval(() => { api.get('/orders').then(r => setOrders(r.data)).catch(() => {}); }, 30000);
+    return () => clearInterval(interval);
+  }, [orders]);
 
   if (!user) return null;
 
@@ -319,7 +328,7 @@ function OrdersTab({ orders, reload, expandedOrder, setExpandedOrder }) {
 }
 
 function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling }) {
-  const canCancel = ['pending', 'confirmed'].includes(o.status);
+  const canCancel = o.status === 'pending';
   const stepMap = { pending: 0, confirmed: 1, preparing: 2, out_for_delivery: 3, delivered: 4, cancelled: -1 };
   const step = stepMap[o.status] ?? 0;
   const steps = ['Order Placed', 'Confirmed', 'Preparing', 'Out for Delivery', 'Delivered'];
@@ -337,14 +346,14 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
           </div>
           <div>
             <p className="text-sm font-semibold" style={{ color: '#3D2B1F' }}>
-              Order #{o.id?.slice(-6).toUpperCase()}
+              Order #{o.id?.slice(0, 8).toUpperCase()}
             </p>
-            <p className="text-xs" style={{ color: '#9C7B6B' }}>{fmt(o.created_at)} · {o.items?.length} item{o.items?.length !== 1 ? 's' : ''}</p>
+          <span className="text-xs" style={{ color: '#9C7B6B' }}>{fmt(o.created_at)} · {o.items?.length} item{o.items?.length !== 1 ? 's' : ''}</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={o.status} />
-          <p className="font-bold text-sm" style={{ color: '#800020' }}>£{o.total?.toFixed(2)}</p>
+          <p className="font-bold text-sm" style={{ color: '#800020' }}>£{(o.total ?? 0).toFixed(2)}</p>
           {!compact && (
             expanded ? <ChevronUp size={16} style={{ color: '#9C7B6B' }} /> : <ChevronDown size={16} style={{ color: '#9C7B6B' }} />
           )}
@@ -368,7 +377,7 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
                         }}>
                         {i < step ? '✓' : i + 1}
                       </div>
-                      <span className="text-[10px] text-center hidden sm:block" style={{ color: i <= step ? '#800020' : '#9CA3AF' }}>{s}</span>
+                      <span className="text-[10px] text-center" style={{ color: i <= step ? '#800020' : '#9CA3AF' }}>{s}</span>
                     </div>
                     {i < steps.length - 1 && (
                       <div className="flex-1 h-0.5 mx-1" style={{ backgroundColor: i < step ? '#800020' : '#E5E7EB' }} />
@@ -397,30 +406,49 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
             </div>
             <div className="border-t mt-2 pt-2 space-y-1" style={{ borderColor: 'rgba(244,196,48,0.2)' }}>
               <div className="flex justify-between text-xs" style={{ color: '#9C7B6B' }}>
-                <span>Subtotal</span><span>£{o.subtotal?.toFixed(2)}</span>
+                <span>Subtotal</span><span>£{(o.subtotal ?? 0).toFixed(2)}</span>
               </div>
+              {(o.free_item_discount > 0) && (
+                <div className="flex justify-between text-xs" style={{ color: '#166534' }}>
+                  <span>🎁 Loyalty reward</span><span>-£{o.free_item_discount.toFixed(2)}</span>
+                </div>
+              )}
+              {(o.takeaway_discount > 0) && (
+                <div className="flex justify-between text-xs" style={{ color: '#166534' }}>
+                  <span>🛵 Takeaway 10% off</span><span>-£{o.takeaway_discount.toFixed(2)}</span>
+                </div>
+              )}
+              {(o.small_order_fee > 0) && (
+                <div className="flex justify-between text-xs" style={{ color: '#9C7B6B' }}>
+                  <span>📦 Small order fee</span><span>£{o.small_order_fee.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-xs" style={{ color: '#9C7B6B' }}>
-                <span>Delivery</span><span>{o.delivery_fee === 0 ? 'Free' : `£${o.delivery_fee?.toFixed(2)}`}</span>
+                <span>Delivery</span><span>{o.delivery_fee === 0 ? 'Free' : `£${(o.delivery_fee ?? 0).toFixed(2)}`}</span>
               </div>
               <div className="flex justify-between text-sm font-bold" style={{ color: '#800020' }}>
-                <span>Total</span><span>£{o.total?.toFixed(2)}</span>
+                <span>Total</span><span>£{(o.total ?? 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
 
           {/* Delivery address */}
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#9C7B6B' }}>Delivery To</p>
-            <p className="text-sm" style={{ color: '#3D2B1F' }}>
-              {o.delivery_address?.line1}, {o.delivery_address?.city}, {o.delivery_address?.postcode}
-            </p>
-          </div>
+          {o.delivery_type !== 'takeaway' && o.delivery_address && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#9C7B6B' }}>Delivery To</p>
+              <p className="text-sm" style={{ color: '#3D2B1F' }}>
+                {o.delivery_address?.line1}
+                {o.delivery_address?.line2 && `, ${o.delivery_address.line2}`}
+                {`, ${o.delivery_address?.city}, ${o.delivery_address?.postcode}`}
+              </p>
+            </div>
+          )}
 
           {/* Special instructions */}
-          {o.special_instructions && (
+          {o.notes && (
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#9C7B6B' }}>Notes</p>
-              <p className="text-sm italic" style={{ color: '#5C4B47' }}>{o.special_instructions}</p>
+              <p className="text-sm italic" style={{ color: '#5C4B47' }}>{o.notes}</p>
             </div>
           )}
 
@@ -659,11 +687,11 @@ function EmptyState({ icon: Icon, message, sub, link, linkLabel }) {
       <p className="font-semibold" style={{ color: '#3D2B1F' }}>{message}</p>
       <p className="text-sm text-center max-w-xs" style={{ color: '#9C7B6B' }}>{sub}</p>
       {link && (
-        <a href={link}
+        <Link to={link}
           className="mt-1 px-5 py-2.5 text-sm font-semibold text-white rounded-xl transition-all hover:shadow-md"
           style={{ backgroundColor: '#800020' }}>
           {linkLabel}
-        </a>
+        </Link>
       )}
     </div>
   );

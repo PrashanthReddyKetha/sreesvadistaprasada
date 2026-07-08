@@ -26,6 +26,9 @@ export const CartProvider = ({ children }) => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems)); } catch {}
   }, [cartItems]);
 
+  // Cleanup toast timer on unmount
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
   const showToast = useCallback((t) => {
     clearTimeout(toastTimer.current);
     setToast(t);
@@ -38,39 +41,46 @@ export const CartProvider = ({ children }) => {
   }, 0);
 
   const addToCart = useCallback((item) => {
+    let toastData = null;
     setCartItems(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
-        showToast({ type: 'update', name: item.name, qty: existing.quantity + 1 });
+        toastData = { type: 'update', name: item.name, qty: existing.quantity + 1 };
         return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      showToast({ type: 'add', name: item.name, price: item.price });
+      toastData = { type: 'add', name: item.name, price: item.price };
       return [...prev, { ...item, quantity: 1 }];
     });
+    if (toastData) showToast(toastData);
   }, [showToast]);
 
   const removeFromCart = useCallback((id) => {
+    let toastData = null;
     setCartItems(prev => {
       const item = prev.find(i => i.id === id);
-      if (item) showToast({ type: 'remove', name: item.name });
+      if (item) toastData = { type: 'remove', name: item.name };
       return prev.filter(i => i.id !== id);
     });
+    if (toastData) showToast(toastData);
   }, [showToast]);
 
   const updateQuantity = useCallback((id, quantity) => {
+    if (quantity > 99) return;
+    let toastData = null;
     if (quantity <= 0) {
       setCartItems(prev => {
         const item = prev.find(i => i.id === id);
-        if (item) showToast({ type: 'remove', name: item.name });
+        if (item) toastData = { type: 'remove', name: item.name };
         return prev.filter(i => i.id !== id);
       });
     } else {
       setCartItems(prev => {
         const item = prev.find(i => i.id === id);
-        if (item) showToast({ type: 'update', name: item.name, qty: quantity });
+        if (item) toastData = { type: 'update', name: item.name, qty: quantity };
         return prev.map(i => i.id === id ? { ...i, quantity } : i);
       });
     }
+    if (toastData) showToast(toastData);
   }, [showToast]);
 
   const clearCart = useCallback(() => {

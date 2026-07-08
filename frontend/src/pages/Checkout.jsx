@@ -84,10 +84,10 @@ function DeliveryBar({ total, onAddMore, freeOver = 30 }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, updateQuantity, removeFromCart, deliveryFee, deliveryType, freeItemDiscount, freeItem, takeawayDiscount }) {
+function OrderSummary({ cartItems, cartTotal, updateQuantity, removeFromCart, deliveryFee, deliveryType, freeItemDiscount, freeItem, takeawayDiscount, smallOrderFee }) {
   const [collapsed, setCollapsed] = useState(false);
   const effectiveSubtotal = cartTotal + freeItemDiscount;
-  const grandTotal = cartTotal - takeawayDiscount + deliveryFee;
+  const grandTotal = cartTotal - takeawayDiscount + deliveryFee + (smallOrderFee || 0);
 
   return (
     <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }}>
@@ -190,6 +190,14 @@ function OrderSummary({ cartItems, cartTotal, updateQuantity, removeFromCart, de
                 : <span className="text-gray-600">{fmt(deliveryFee)}</span>
               }
             </div>
+            {(smallOrderFee > 0) && (
+              <div className="flex justify-between text-sm">
+                <span className="flex items-center gap-1.5 text-gray-500">
+                  📦 Small order fee
+                </span>
+                <span className="text-gray-600">{fmt(smallOrderFee)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-base pt-2 border-t" style={{ borderColor: 'rgba(128,0,32,0.12)', color: '#800020' }}>
               <span style={{ color: '#2D2422' }}>Total</span>
               <span>{fmt(grandTotal)}</span>
@@ -296,12 +304,12 @@ const CATEGORY_LABELS = {
   snacks: 'Snacks', pickles: 'Pickles', podis: 'Podis', ragiSpecials: 'Ragi Specials',
 };
 
-function BrowseModal({ cartItems, onAdd, onClose, cartTotal }) {
+function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeOver = 30 }) {
   const [allItems, setAllItems] = useState([]);
   const [activeCat, setActiveCat] = useState('all');
   const [loading, setLoading] = useState(true);
   const cartIds = new Set(cartItems.map(i => i.id));
-  const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - cartTotal);
+  const remaining = Math.max(0, freeOver - cartTotal);
 
   useEffect(() => {
     api.get('/menu?available=true').then(r => setAllItems(r.data)).catch(() => {}).finally(() => setLoading(false));
@@ -402,6 +410,7 @@ const CheckoutInner = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null); // { orderId, isRedemption, loyaltyStatus }
+  const [billingPostcode, setBillingPostcode] = useState('');
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '',
@@ -428,29 +437,35 @@ const CheckoutInner = () => {
         city:     f.city     || user.address?.city     || '',
         postcode: f.postcode || user.address?.postcode || '',
       }));
+      setBillingPostcode(p => p || user.address?.postcode || '');
     }
   }, [user]);
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
   // Zone-based delivery fee — fetched from server when postcode is entered
-  const [zoneInfo, setZoneInfo] = useState(null); // { delivery_fee, free_over, min_order }
+  const [zoneInfo, setZoneInfo]   = useState(null); // { delivery_fee, free_over, min_order }
+  const [notDeliverable, setNotDeliverable] = useState(false);
 
   // Fetch zone info whenever postcode changes (delivery mode only)
   useEffect(() => {
-    if (deliveryType !== 'delivery') { setZoneInfo(null); return; }
+    if (deliveryType !== 'delivery') { setZoneInfo(null); setNotDeliverable(false); return; }
     const pc = form.postcode?.trim();
-    if (!pc || pc.length < 5) { setZoneInfo(null); return; }
+    if (!pc || pc.length < 5) { setZoneInfo(null); setNotDeliverable(false); return; }
     const t = setTimeout(() => {
       api.get('/orders/check-postcode', { params: { postcode: pc } })
         .then(r => {
           if (r.data?.deliverable) {
             setZoneInfo({ delivery_fee: r.data.delivery_fee, free_over: r.data.free_delivery_over });
+            setNotDeliverable(false);
+            setPcError('');
           } else {
             setZoneInfo(null);
+            setNotDeliverable(true);
+            setPcError('Sorry, we don\'t currently deliver to this postcode. Choose Takeaway/Collection or try a nearby MK postcode.');
           }
         })
-        .catch(() => setZoneInfo(null));
+        .catch(() => { setZoneInfo(null); setNotDeliverable(false); });
     }, 400);
     return () => clearTimeout(t);
   }, [form.postcode, deliveryType]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -465,8 +480,12 @@ const CheckoutInner = () => {
   // Use zone delivery fee when available, otherwise use sensible default
   const zoneDeliveryFee  = zoneInfo?.delivery_fee  ?? 3.99;
   const zoneFreeOver     = zoneInfo?.free_over     ?? 30;
-  const deliveryFee = deliveryType === 'takeaway' ? 0 : (effectiveSubtotal >= zoneFreeOver ? 0 : zoneDeliveryFee);
-  const grandTotal = cartTotal - takeawayDiscount + deliveryFee;
+  // Delivery threshold checked against cartTotal (regular items) to match backend logic
+  const deliveryFee = deliveryType === 'takeaway' ? 0 : (cartTotal >= zoneFreeOver ? 0 : zoneDeliveryFee);
+  // Small order fee: £1.50 for delivery orders with subtotal 15–19.99
+  const SMALL_ORDER_FEE = 1.50;
+  const smallOrderFee = deliveryType === 'delivery' && cartTotal >= 15 && cartTotal <= 19.99 ? SMALL_ORDER_FEE : 0;
+  const grandTotal = cartTotal - takeawayDiscount + deliveryFee + smallOrderFee;
 
   // Fallback: postcodes.io for city auto-fill
   const fallbackPostcodeIo = async (pc) => {
@@ -518,19 +537,30 @@ const CheckoutInner = () => {
 
   const handleOrder = async () => {
     setError('');
-    if (effectiveSubtotal < 15) { setError('Minimum order is £15.00. Please add more items to continue.'); return; }
+    // Minimum order check against regular cart items (matches backend logic)
+    if (cartTotal < 15) { setError('Minimum order is £15.00. Please add more items to continue.'); return; }
     const required = deliveryType === 'takeaway'
       ? ['name', 'email', 'phone']
       : ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
     if (required.some(k => !form[k].trim())) { setError('Please fill in all required fields.'); return; }
+    // Email format validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('Please enter a valid email address.'); return; }
+    // Block non-deliverable postcodes
+    if (deliveryType === 'delivery' && notDeliverable) { setError('We don\'t deliver to this postcode. Please choose Takeaway/Collection or change your postcode.'); return; }
     if (!stripe || !elements) { setError('Payment not ready. Please wait a moment.'); return; }
     const cardNumberElement = elements.getElement(CardNumberElement);
     if (!cardNumberElement) { setError('Card details are missing.'); return; }
     setSubmitting(true);
+    let paymentSucceeded = false;
+    let capturedPI = null;
     try {
       // 1. Get authoritative server total (never trust client calculation for payment)
       const calcRes = await api.post('/orders/calculate', {
-        items: cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity })),
+        items: [
+          ...cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity })),
+          // Include free item so backend applies discount consistently
+          ...(freeItem ? [{ menu_item_id: freeItem.id, quantity: 1 }] : []),
+        ],
         order_type: deliveryType,
         postcode: form.postcode || '',
         free_item_id: freeItem?.id || null,
@@ -540,18 +570,20 @@ const CheckoutInner = () => {
       // 2. Create payment intent using server-verified total
       const intentRes = await api.post('/payments/create-intent', { amount: serverGrandTotal });
       const { client_secret, payment_intent_id } = intentRes.data;
+      capturedPI = payment_intent_id;
 
-      // 2. Confirm card payment
+      // 3. Confirm card payment
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: {
           card: cardNumberElement,
-          billing_details: { name: form.name, email: form.email, address: { postal_code: form.postcode } },
+          billing_details: { name: form.name, email: form.email, address: { postal_code: billingPostcode || form.postcode } },
         },
       });
       if (stripeError) { setError(stripeError.message || 'Payment failed. Please try again.'); return; }
       if (paymentIntent.status !== 'succeeded') { setError('Payment was not completed. Please try again.'); return; }
+      paymentSucceeded = true;
 
-      // 3. Create order (backend will re-verify the PI amount against its own calculation)
+      // 4. Create order (backend will re-verify the PI amount against its own calculation)
       const res = await api.post('/orders', {
         customer_name:  form.name,
         customer_email: form.email,
@@ -572,7 +604,7 @@ const CheckoutInner = () => {
           postcode: form.postcode,
         },
         notes: form.notes || undefined,
-        payment_intent_id,
+        payment_intent_id: capturedPI,
         delivery_type: deliveryType,
         is_loyalty_redemption: !!freeItem,
         loyalty_free_item_id: freeItem?.id || undefined,
@@ -591,7 +623,11 @@ const CheckoutInner = () => {
           .catch(() => {});
       }
     } catch (e) {
-      setError(e.response?.data?.detail || 'Something went wrong. Please try again.');
+      if (paymentSucceeded && capturedPI) {
+        setError(`Your card was charged ${fmt(grandTotal)} (ref: ${capturedPI.slice(-8).toUpperCase()}) but the order could not be confirmed. Please WhatsApp or call us immediately quoting this reference so we can fix it.`);
+      } else {
+        setError(e.response?.data?.detail || 'Something went wrong. Please try again.');
+      }
     } finally { setSubmitting(false); }
   };
 
@@ -732,6 +768,7 @@ const CheckoutInner = () => {
           onAdd={addToCart}
           onClose={() => setShowBrowse(false)}
           cartTotal={cartTotal}
+          freeOver={zoneFreeOver}
         />
       )}
 
@@ -864,6 +901,9 @@ const CheckoutInner = () => {
                           ))}
                         </div>
                       )}
+                      {pcError && (
+                        <p className="mt-1.5 text-xs p-2.5 rounded-xl" style={{ backgroundColor: '#FFF0F0', color: '#991B1B' }}>{pcError}</p>
+                      )}
                     </div>
 
                     {form.postcode.replace(/\s/g, '').length >= 5 && (
@@ -933,6 +973,7 @@ const CheckoutInner = () => {
                 freeItemDiscount={freeItemDiscount}
                 freeItem={freeItem}
                 takeawayDiscount={takeawayDiscount}
+                smallOrderFee={smallOrderFee}
               />
 
               {/* Card payment */}
@@ -956,8 +997,8 @@ const CheckoutInner = () => {
                       </div>
                       <input
                         type="text"
-                        value={form.postcode}
-                        onChange={e => set('postcode')(e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase())}
+                        value={billingPostcode}
+                        onChange={e => setBillingPostcode(e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase())}
                         placeholder="Postcode"
                         className="p-3 rounded-xl border-2 text-sm focus:outline-none"
                         style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7', color: '#2D2422' }}

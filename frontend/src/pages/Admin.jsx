@@ -22,7 +22,7 @@ const STATUS_COLORS = {
   pending:   { bg:'#FFF8E1', text:'#B8860B', border:'#F4C430' },
   confirmed: { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
   preparing: { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
-  out_for_delivery: { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
+  out_for_delivery: { bg:'#EDE9FE', text:'#5B21B6', border:'#8B5CF6' },
   delivered: { bg:'#F3E5F5', text:'#6A1B9A', border:'#9C27B0' },
   cancelled: { bg:'#FFEBEE', text:'#C62828', border:'#EF5350' },
   active:    { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
@@ -32,11 +32,15 @@ const STATUS_COLORS = {
   contacted: { bg:'#FFF8E1', text:'#B8860B', border:'#F4C430' },
   resolved:  { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
 };
+const STATUS_LABELS = {
+  out_for_delivery: 'Out for Delivery',
+};
 const Badge = ({ status }) => {
   const c = STATUS_COLORS[status] || { bg:'#F5F5F5', text:'#666', border:'#CCC' };
+  const label = STATUS_LABELS[status] || (status ? status.charAt(0).toUpperCase() + status.slice(1) : status);
   return (
-    <span className="px-2.5 py-1 rounded-full text-xs font-semibold capitalize"
-      style={{ backgroundColor:c.bg, color:c.text, border:`1px solid ${c.border}` }}>{status}</span>
+    <span className="px-2.5 py-1 rounded-full text-xs font-semibold"
+      style={{ backgroundColor:c.bg, color:c.text, border:`1px solid ${c.border}` }}>{label}</span>
   );
 };
 
@@ -168,8 +172,10 @@ const Overview = ({ orders, subscriptions, users, contacts, catering, newsletter
 const OrdersTab = ({ orders, onStatusUpdate }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState('all');
-  const statuses = ['all','pending','confirmed','preparing','delivered','cancelled'];
+  const statuses = ['all','pending','confirmed','preparing','out_for_delivery','delivered','cancelled'];
   const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
+
+  const handleFilter = (s) => { setFilter(s); setExpandedId(null); };
 
   return (
     <div className="space-y-4">
@@ -177,15 +183,16 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
       <div className="flex gap-2 flex-wrap">
         {statuses.map(s => {
           const count = s === 'all' ? orders.length : orders.filter(o => o.status === s).length;
+          const label = s === 'all' ? 'All' : (STATUS_LABELS[s] || (s.charAt(0).toUpperCase() + s.slice(1)));
           return (
-            <button key={s} onClick={() => setFilter(s)}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all capitalize"
+            <button key={s} onClick={() => handleFilter(s)}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
               style={{
                 backgroundColor: filter === s ? '#800020' : 'white',
                 color: filter === s ? 'white' : '#5C4B47',
                 border: '1px solid rgba(128,0,32,0.2)',
               }}>
-              {s} ({count})
+              {label} ({count})
             </button>
           );
         })}
@@ -203,7 +210,7 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
                   onClick={() => setExpandedId(expandedId === o.id ? null : o.id)}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm text-gray-900">#{o.id?.slice(-6).toUpperCase()}</span>
+                      <span className="font-semibold text-sm text-gray-900">#{o.id?.slice(0, 8).toUpperCase()}</span>
                       <span className="text-sm text-gray-600">{o.customer_name}</span>
                       <span className="text-xs text-gray-400">{o.customer_email}</span>
                       {o.delivery_type === 'takeaway' && (
@@ -237,7 +244,7 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
                         ))}
                         <div className="border-t mt-2 pt-2 space-y-1" style={{ borderColor:'#e5e7eb' }}>
                           <div className="flex justify-between text-xs text-gray-400"><span>Subtotal</span><span>£{o.subtotal?.toFixed(2)}</span></div>
-                          <div className="flex justify-between text-xs text-gray-400"><span>Delivery</span><span>{o.delivery_fee===0?'Free':`£${o.delivery_fee?.toFixed(2)}`}</span></div>
+                          <div className="flex justify-between text-xs text-gray-400"><span>Delivery</span><span>{o.delivery_fee===0?'Free':`£${(o.delivery_fee ?? 0).toFixed(2)}`}</span></div>
                           <div className="flex justify-between text-sm font-bold" style={{ color:'#800020' }}><span>Total</span><span>£{o.total?.toFixed(2)}</span></div>
                         </div>
                       </div>
@@ -257,7 +264,7 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
                           </>
                         )}
                         {o.customer_phone && <p className="text-xs text-gray-400 mt-2">📞 {o.customer_phone}</p>}
-                        {o.special_instructions && <p className="text-xs italic text-gray-500 mt-1">"{o.special_instructions}"</p>}
+                        {o.notes && <p className="text-xs italic text-gray-500 mt-1">"{o.notes}"</p>}
                         {o.is_loyalty_redemption && (
                           <p className="text-xs mt-2 font-semibold" style={{ color: '#800020' }}>🎁 Free: {o.loyalty_free_item_name}</p>
                         )}
@@ -854,6 +861,13 @@ const Admin = () => {
 
   useEffect(() => { if (user?.role === 'admin') fetchAll(); }, [fetchAll, user]);
 
+  // Auto-refresh every 60 seconds while admin is on the page
+  useEffect(() => {
+    if (user?.role !== 'admin') return;
+    const interval = setInterval(() => fetchAll(), 60000);
+    return () => clearInterval(interval);
+  }, [fetchAll, user]);
+
   const handleStatusUpdate = async (type, id, status) => {
     try {
       if (type==='orders')        await api.put(`/orders/${id}/status`, { status });
@@ -861,7 +875,9 @@ const Admin = () => {
       if (type==='contact')       await api.put(`/enquiries/contact/${id}/status?status=${status}`);
       if (type==='catering')      await api.put(`/enquiries/catering/${id}/status?status=${status}`);
       await fetchAll();
-    } catch { /* silent */ }
+    } catch (e) {
+      alert(e?.response?.data?.detail || 'Failed to update status. Please try again.');
+    }
   };
 
   if (!user) return (

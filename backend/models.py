@@ -218,7 +218,7 @@ class OrderCreate(BaseModel):
     customer_name: str
     customer_email: EmailStr
     customer_phone: str
-    delivery_address: Address
+    delivery_address: Optional[Address] = None
     items: List[OrderItem]
     notes: Optional[str] = None
     user_id: Optional[str] = None

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from datetime import datetime
+import asyncio
 import math
 import os
 import re
@@ -39,6 +40,16 @@ MINIMUM_ORDER         = 15.00
 SMALL_ORDER_FEE       = 1.50
 SMALL_ORDER_THRESHOLD = 19.99   # small order fee applies if subtotal <= this
 TAKEAWAY_DISCOUNT_PCT = 0.10
+
+# ── Valid status transitions ──────────────────────────────────────────────────
+ALLOWED_TRANSITIONS = {
+    "pending":          {"confirmed", "cancelled"},
+    "confirmed":        {"preparing", "cancelled"},
+    "preparing":        {"out_for_delivery", "cancelled"},
+    "out_for_delivery": {"delivered", "cancelled"},
+    "delivered":        set(),
+    "cancelled":        set(),
+}
 
 
 # ── Pricing helpers ───────────────────────────────────────────────────────────
@@ -334,7 +345,8 @@ async def create_order(
     if not payload.payment_intent_id:
         raise HTTPException(400, "Payment is required to place an order")
     try:
-        pi = stripe.PaymentIntent.retrieve(payload.payment_intent_id)
+        loop = asyncio.get_event_loop()
+        pi = await loop.run_in_executor(None, lambda: stripe.PaymentIntent.retrieve(payload.payment_intent_id))
     except stripe.StripeError:
         raise HTTPException(400, "Invalid payment — please try again")
     if pi.status != "succeeded":
@@ -425,6 +437,13 @@ async def update_order_status(
     payload: OrderStatusUpdate,
     _: dict = Depends(require_admin),
 ):
+    current_doc = await db.orders.find_one({"id": order_id}, {"_id": 0, "status": 1})
+    if not current_doc:
+        raise HTTPException(status_code=404, detail="Order not found")
+    current_status = current_doc.get("status", "pending")
+    allowed = ALLOWED_TRANSITIONS.get(current_status, set())
+    if payload.status.value not in allowed:
+        raise HTTPException(status_code=400, detail=f"Cannot move order from '{current_status}' to '{payload.status.value}'")
     result = await db.orders.update_one(
         {"id": order_id},
         {"$set": {"status": payload.status.value, "updated_at": datetime.utcnow().isoformat()}},
@@ -454,11 +473,36 @@ async def update_order_status(
         # Trigger loyalty update for qualifying completed orders
         if payload.status.value == "delivered" and doc.get("is_loyalty_qualifying", True):
             user_id = doc.get("user_id")
-            if user_id:
+            if user_id and not doc.get("loyalty_credited"):
+                await db.orders.update_one({"id": order_id}, {"$set": {"loyalty_credited": True}})
                 await _update_loyalty_on_completion(user_id=user_id, order_id=order_id)
 
-        # Push notification
+        # In-app notification
         user_id = doc.get("user_id")
+        if user_id:
+            notif_titles = {
+                "confirmed": "Order confirmed! 🎉",
+                "preparing": "Chefs are cooking your order 🍳",
+                "out_for_delivery": "Your order is on the way! 🛵",
+                "delivered": "Order delivered — enjoy! 🏠",
+                "cancelled": "Order cancelled",
+            }
+            notif_bodies = {
+                "confirmed": f"Order #{order_id[:8].upper()} confirmed. We'll start prepping shortly.",
+                "preparing": f"Your order #{order_id[:8].upper()} is being prepared right now.",
+                "out_for_delivery": "Your order is heading to you. Should arrive in 10–15 mins.",
+                "delivered": "Your order has arrived. Please rate your experience in the dashboard.",
+                "cancelled": f"Order #{order_id[:8].upper()} has been cancelled.",
+            }
+            if payload.status.value in notif_titles:
+                await create_notification(
+                    user_id=user_id,
+                    title=notif_titles[payload.status.value],
+                    body=notif_bodies[payload.status.value],
+                    notif_type="order_status",
+                    action_url="/dashboard?tab=orders",
+                )
+        # Push notification
         if user_id:
             user_doc = await db.users.find_one({"id": user_id}, {"_id": 0, "push_token": 1})
             push_token = user_doc.get("push_token") if user_doc else None
@@ -506,4 +550,28 @@ async def cancel_order(order_id: str, current_user: dict = Depends(get_current_u
         {"id": order_id},
         {"$set": {"status": OrderStatus.cancelled.value, "updated_at": datetime.utcnow().isoformat()}},
     )
+
+    # Notify customer of self-cancellation
+    cust_email = doc.get("customer_email")
+    cust_phone = doc.get("customer_phone")
+    cust_name  = doc.get("customer_name") or "Customer"
+    short_id   = order_id[:8].upper()
+    if cust_email:
+        send_email(
+            cust_email,
+            f"Order #{short_id} Cancelled",
+            f"<p>Hi {cust_name},</p><p>Your order <b>#{short_id}</b> has been cancelled as requested.</p>"
+            "<p>If you did not request this, please contact us immediately.</p>",
+        )
+    if cust_phone:
+        send_sms(cust_phone, f"Sree Svadista Prasada: Order #{short_id} cancelled. Contact us if this was not you.")
+    user_id = doc.get("user_id")
+    if user_id:
+        await create_notification(
+            user_id=user_id,
+            title="Order cancelled",
+            body=f"Order #{short_id} has been cancelled.",
+            notif_type="order_status",
+            action_url="/dashboard?tab=orders",
+        )
     return {"message": "Order cancelled"}
