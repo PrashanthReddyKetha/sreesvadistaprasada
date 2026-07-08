@@ -442,8 +442,14 @@ const CheckoutInner = () => {
     const pc = form.postcode?.trim();
     if (!pc || pc.length < 5) { setZoneInfo(null); return; }
     const t = setTimeout(() => {
-      api.post('/delivery/check', { postcode: pc })
-        .then(r => { if (r.data?.serviceable && r.data?.service_type === 'full') setZoneInfo(r.data); else setZoneInfo(null); })
+      api.get('/orders/check-postcode', { params: { postcode: pc } })
+        .then(r => {
+          if (r.data?.deliverable) {
+            setZoneInfo({ delivery_fee: r.data.delivery_fee, free_over: r.data.free_delivery_over });
+          } else {
+            setZoneInfo(null);
+          }
+        })
         .catch(() => setZoneInfo(null));
     }, 400);
     return () => clearTimeout(t);
@@ -524,10 +530,10 @@ const CheckoutInner = () => {
     try {
       // 1. Get authoritative server total (never trust client calculation for payment)
       const calcRes = await api.post('/orders/calculate', {
-        items: cartItems.map(i => ({ price: price(i.price), quantity: i.quantity })),
+        items: cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity })),
         order_type: deliveryType,
         postcode: form.postcode || '',
-        free_item_price: freeItemDiscount,
+        free_item_id: freeItem?.id || null,
       });
       const serverGrandTotal = calcRes.data.grand_total;
 
@@ -667,14 +673,30 @@ const CheckoutInner = () => {
               style={{ borderColor: '#800020', color: '#800020' }}>
               Back to Home
             </button>
-            {user && (
+            {user ? (
               <button onClick={() => navigate('/dashboard')}
                 className="flex-1 py-3 text-sm font-bold text-white rounded-xl transition-all hover:shadow-md"
                 style={{ backgroundColor: '#800020' }}>
                 Track My Order
               </button>
+            ) : (
+              <a
+                href={`https://wa.me/447307119962?text=Hi%2C+my+order+reference+is+%23${success.orderId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-3 text-sm font-bold text-white rounded-xl text-center transition-all hover:opacity-90"
+                style={{ backgroundColor: '#25D366' }}>
+                Track on WhatsApp →
+              </a>
             )}
           </div>
+          {!user && (
+            <p className="text-xs text-center mt-3" style={{ color: '#9C7B6B' }}>
+              <button onClick={() => navigate('/', { state: { openAuth: true } })} className="underline hover:text-[#800020]">
+                Create a free account
+              </button>{' '}to track all your orders in one place
+            </p>
+          )}
         </div>
       </div>
     );

@@ -15,18 +15,18 @@ const OurStory = () => {
         <meta property="og:description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/story" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1748323123788-87a32949f4b0?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Our Story | Authentic South Indian Restaurant | Milton Keynes" />
         <meta name="twitter:description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
-        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1748323123788-87a32949f4b0?w=1200&q=80" />
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
         <img
           src={images.storyTeaser}
-          alt="Our Story"
+          alt="Traditional South Indian cooking — authentic Andhra recipes at Sree Svadista Prasada Milton Keynes"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)' }} />

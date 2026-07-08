@@ -64,12 +64,12 @@ const Breakfast = () => {
         <meta property="og:description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/breakfast" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=1200&q=80" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1630383249896-424e482df921?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="South Indian Breakfast &amp; Tiffins | Milton Keynes" />
         <meta name="twitter:description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
-        <meta name="twitter:image" content="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=1200&q=80" />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1630383249896-424e482df921?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"South Indian Breakfast",item:"https://sreesvadistaprasada.com/breakfast"}]})}</script>
       </Helmet>
       {/* Hero */}

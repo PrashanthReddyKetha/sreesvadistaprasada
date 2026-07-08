@@ -67,12 +67,12 @@ const Svadista = () => {
         <meta property="og:description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/svadista" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1773209927959-b2959be5e684?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Non-Veg South Indian Menu | Sree Svadista | Milton Keynes" />
         <meta name="twitter:description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
-        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1773209927959-b2959be5e684?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Svadista — Non-Veg Menu",item:"https://sreesvadistaprasada.com/svadista"}]})}</script>
       </Helmet>
       {/* Hero */}}

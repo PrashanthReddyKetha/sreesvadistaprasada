@@ -26,6 +26,7 @@ const Contact = () => {
       <Helmet>
         <title>Contact Us | Sree Svadista Prasada Milton Keynes</title>
         <meta name="description" content="Get in touch with Sree Svadista Prasada in Milton Keynes. Call, WhatsApp or send us a message for orders, enquiries and feedback." />
+        <link rel="canonical" href="https://sreesvadistaprasada.com/contact" />
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(40vh, 320px)' }}>
@@ -90,8 +91,8 @@ const Contact = () => {
                   <div>
                     <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Email Us</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      General: <a href="mailto:hello@sreesvadista.co.uk" className="hover:underline" style={{ color: '#800020' }}>hello@sreesvadista.co.uk</a><br />
-                      Catering: <a href="mailto:catering@sreesvadista.co.uk" className="hover:underline" style={{ color: '#800020' }}>catering@sreesvadista.co.uk</a>
+                      General: <a href="mailto:info@sreesvadistaprasada.com" className="hover:underline" style={{ color: '#800020' }}>info@sreesvadistaprasada.com</a><br />
+                      Catering: <a href="mailto:catering@sreesvadistaprasada.com" className="hover:underline" style={{ color: '#800020' }}>catering@sreesvadistaprasada.com</a>
                     </p>
                   </div>
                 </div>

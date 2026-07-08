@@ -34,7 +34,6 @@ const Home = () => {
   const { addToCart } = useCart();
   const { user, setAuthOpen } = useAuth();
   const [liveItems, setLiveItems] = useState([]);
-  const [chefSpecialId, setChefSpecialId] = useState(null);
   const [dailySpecials, setDailySpecials] = useState([]);
 
   useEffect(() => {
@@ -43,13 +42,6 @@ const Home = () => {
       .catch(() => {});
     api.get('/daily-specials')
       .then(r => setDailySpecials(r.data || []))
-      .catch(() => {});
-  }, []);
-
-  // Look up the chef's special item by name to get its real ID for the detail page link
-  useEffect(() => {
-    api.get('/menu?available=true&search=Pulihora')
-      .then(r => { if (r.data?.[0]?.id) setChefSpecialId(r.data[0].id); })
       .catch(() => {});
   }, []);
 
@@ -528,7 +520,7 @@ const Home = () => {
               </h2>
 
               <div className="relative rounded-lg overflow-hidden group" style={{ boxShadow: '0 8px 32px rgba(128, 0, 32, 0.08)' }}>
-                <Link to={chefSpecialId ? `/item/${chefSpecialId}` : '/prasada'} className="block">
+                <Link to="/prasada" className="block">
                 <div className="relative h-64 md:h-80 overflow-hidden">
                   <img
                     src={chefSpecial.image}

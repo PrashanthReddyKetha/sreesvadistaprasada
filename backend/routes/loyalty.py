@@ -1,10 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 import math
 from datetime import datetime
+from pydantic import BaseModel
 from database import db
 from auth import get_current_user
 
 router = APIRouter(prefix="/loyalty", tags=["loyalty"])
+
+
+class LoyaltyRedeemRequest(BaseModel):
+    free_item_id: str
 
 
 def _serialize(doc: dict) -> dict:
@@ -118,16 +123,14 @@ async def get_loyalty_status(current_user: dict = Depends(get_current_user)):
 
 
 @router.post("/redeem")
-async def redeem_loyalty_reward(body: dict, current_user: dict = Depends(get_current_user)):
+async def redeem_loyalty_reward(body: LoyaltyRedeemRequest, current_user: dict = Depends(get_current_user)):
     user = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0})
     if not user:
         raise HTTPException(404, "User not found")
     if not user.get("loyalty_pending_reward", False):
         raise HTTPException(400, "No loyalty reward available")
 
-    free_item_id = body.get("free_item_id")
-    if not free_item_id:
-        raise HTTPException(400, "free_item_id is required")
+    free_item_id = body.free_item_id
 
     free_item = await db.menu.find_one({"id": free_item_id, "available": True}, {"_id": 0})
     if not free_item:

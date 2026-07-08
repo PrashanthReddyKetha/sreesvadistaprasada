@@ -38,12 +38,12 @@ const RagiSpecials = () => {
         <meta property="og:description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/ragi-specials" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Ragi Specials — Healthy South Indian | Milton Keynes" />
         <meta name="twitter:description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
-        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1200&q=80" />
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>

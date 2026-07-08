@@ -248,25 +248,44 @@ async def check_delivery_postcode(postcode: str):
     }
 
 
+class OrderCalculateItem(BaseModel):
+    menu_item_id: str
+    quantity: int = 1
+
 class OrderCalculateRequest(BaseModel):
-    items: list = []
+    items: List[OrderCalculateItem] = []
     order_type: str = "delivery"
     postcode: str = ""
-    free_item_price: float = 0.0
+    free_item_id: Optional[str] = None
 
 
 @router.post("/calculate")
 async def preview_calculate(body: OrderCalculateRequest):
     """
     Live pricing preview — no auth. Called on every cart/postcode/type change.
+    Looks up prices from DB so the resulting PaymentIntent total matches
+    the server-verified total used at order creation.
     Does NOT create an order or charge anything.
     """
+    items_data = []
+    for i in body.items:
+        doc = await db.menu.find_one({"id": i.menu_item_id, "available": True}, {"price": 1, "_id": 0})
+        if not doc:
+            raise HTTPException(status_code=404, detail=f"Item '{i.menu_item_id}' is not available")
+        items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
+
+    free_item_price = 0.0
+    if body.free_item_id:
+        free_doc = await db.menu.find_one({"id": body.free_item_id, "available": True}, {"price": 1, "_id": 0})
+        if free_doc:
+            free_item_price = float(free_doc["price"])
+
     try:
         result = calculate_order_total(
-            items=body.items,
+            items=items_data,
             order_type=body.order_type,
             postcode=body.postcode,
-            free_item_price=body.free_item_price,
+            free_item_price=free_item_price,
         )
         return {"ok": True, **result}
     except ValueError as e:
@@ -382,7 +401,7 @@ async def get_orders(
     if status:
         query["status"] = status.value
 
-    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     return orders
 
 

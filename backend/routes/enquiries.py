@@ -107,7 +107,7 @@ async def update_catering_status(enquiry_id: str, status: str, _: dict = Depends
 # ── Newsletter ─────────────────────────────────────────────────────────────────
 
 @router.post("/newsletter", response_model=NewsletterSubscription)
-async def subscribe_newsletter(payload: NewsletterCreate):
+async def subscribe_newsletter(request: Request, payload: NewsletterCreate, _: None = Depends(_check_enquiry_rate)):
     existing = await db.newsletter.find_one({"email": payload.email}, {"_id": 0})
     if existing:
         if existing.get("active"):

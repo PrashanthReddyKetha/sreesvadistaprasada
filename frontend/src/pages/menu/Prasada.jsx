@@ -74,12 +74,12 @@ const Prasada = () => {
         <meta property="og:description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/prasada" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Pure Vegetarian Indian Food | Sree Prasada | Milton Keynes" />
         <meta name="twitter:description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
-        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Prasada — Pure Veg Menu",item:"https://sreesvadistaprasada.com/prasada"}]})}</script>
       </Helmet>
       {/* Hero */}

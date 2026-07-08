@@ -50,12 +50,12 @@ const Snacks = () => {
         <meta property="og:description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/snacks" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Buy South Indian Snacks &amp; Andhra Pickles Online | UK Delivery" />
         <meta name="twitter:description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
-        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Snacks & Pickles",item:"https://sreesvadistaprasada.com/snacks"}]})}</script>
       </Helmet>
       {/* Hero */}

@@ -45,12 +45,12 @@ const Catering = () => {
         <meta property="og:description" content="Professional South Indian catering in Milton Keynes. Tailored veg and non-veg menus for weddings, corporate events, and family parties." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/catering" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="South Indian Catering Services | Milton Keynes | Sree Svadista Prasada" />
         <meta name="twitter:description" content="Professional South Indian catering in Milton Keynes. Tailored veg and non-veg menus for weddings, corporate events, and family parties." />
-        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?w=1200&q=80" />
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>

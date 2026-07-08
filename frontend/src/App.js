@@ -43,7 +43,7 @@ function ScrollToTop() {
   return null;
 }
 
-const MENU_PATHS = ['/svadista', '/prasada', '/menu', '/breakfast', '/snacks', '/street-food', '/ragi-specials', '/drinks'];
+const MENU_PATHS = ['/svadista', '/prasada', '/menu', '/breakfast', '/street-food', '/ragi-specials', '/drinks'];
 
 function TakeawayNudge() {
   const { pathname } = useLocation();

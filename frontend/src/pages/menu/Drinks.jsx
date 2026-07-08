@@ -35,12 +35,12 @@ const Drinks = () => {
         <meta property="og:description" content="Cool down with our refreshing Mango Lassi and traditional Masala Buttermilk in Milton Keynes. Fresh fruit juices and authentic hot drinks." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/drinks" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1553909489-cd47e0907980?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Traditional Indian Drinks &amp; Mango Lassi | Milton Keynes" />
         <meta name="twitter:description" content="Cool down with our refreshing Mango Lassi and traditional Masala Buttermilk in Milton Keynes. Fresh fruit juices and authentic hot drinks." />
-        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1553909489-cd47e0907980?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Indian Drinks",item:"https://sreesvadistaprasada.com/drinks"}]})}</script>
       </Helmet>
       {/* Hero */}

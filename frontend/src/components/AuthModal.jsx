@@ -53,7 +53,7 @@ function passwordStrength(pw) {
 
 /* ── OTP boxes ───────────────────────────────────────────────────────────── */
 function OtpInput({ value, onChange }) {
-  const refs = Array(6).fill(null).map(() => useRef(null)); // eslint-disable-line react-hooks/rules-of-hooks
+  const refs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
 
   const handleChange = (i, v) => {
     const d = v.replace(/\D/g, '').slice(-1);

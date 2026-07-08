@@ -38,12 +38,12 @@ const StreetFood = () => {
         <meta property="og:description" content="Taste the best Indian street food in Milton Keynes. Order fresh pani puri, crispy chaat, spicy Gobi Manchurian, and hot street snacks." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/street-food" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Indian Street Food &amp; Chaat | Milton Keynes | Sree Svadista Prasada" />
         <meta name="twitter:description" content="Taste the best Indian street food in Milton Keynes. Order fresh pani puri, crispy chaat, spicy Gobi Manchurian, and hot street snacks." />
-        <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Indian Street Food",item:"https://sreesvadistaprasada.com/street-food"}]})}</script>
       </Helmet>
       {/* Hero */}

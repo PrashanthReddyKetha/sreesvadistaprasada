@@ -254,6 +254,31 @@ export default function ItemDetail() {
         <meta name="twitter:title" content={`${item.name} | Sree Svadista Prasada`} />
         <meta name="twitter:description" content={item.seo_meta_description || (item.description ? item.description.slice(0, 155) : 'Authentic South Indian dish at Sree Svadista Prasada, Milton Keynes.')} />
         <meta name="twitter:image" content={item.image || 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": item.name,
+          "description": item.seo_meta_description || item.description || '',
+          "image": item.image || '',
+          "brand": { "@type": "Brand", "name": "Sree Svadista Prasada" },
+          "offers": {
+            "@type": "Offer",
+            "price": item.price.toFixed(2),
+            "priceCurrency": "GBP",
+            "availability": "https://schema.org/InStock",
+            "url": `https://sreesvadistaprasada.com/item/${item.id}`,
+            "seller": { "@type": "Organization", "name": "Sree Svadista Prasada" },
+          },
+          ...(reviews.length > 0 && {
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": avgRating.toFixed(1),
+              "reviewCount": reviews.length,
+              "bestRating": "5",
+              "worstRating": "1",
+            },
+          }),
+        })}</script>
       </Helmet>
       <div className="max-w-6xl mx-auto px-4 md:px-8">
 
