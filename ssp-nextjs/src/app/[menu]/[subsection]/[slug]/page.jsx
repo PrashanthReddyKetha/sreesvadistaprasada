@@ -21,11 +21,12 @@ export async function generateMetadata({ params }) {
   const item = await getItem(params.slug);
   if (!item) return { title: 'Dish Not Found — Sree Svadista Prasada' };
   return {
-    title: `${item.name} — Sree Svadista Prasada`,
-    description: item.description?.slice(0, 160),
+    title: `${item.name} Milton Keynes | Order Online | Sree Svadista Prasada`,
+    description: item.seo_meta_description || `${item.name} in Milton Keynes — ${(item.description || '').slice(0, 100)}. Order online from Sree Svadista Prasada.`,
+    keywords: `${item.name}, ${item.name} Milton Keynes, ${item.name} delivery, ${item.name} near me, South Indian food Milton Keynes`,
     openGraph: {
-      title: item.name,
-      description: item.description?.slice(0, 160),
+      title: `${item.name} Milton Keynes | Sree Svadista Prasada`,
+      description: item.seo_meta_description || (item.description || '').slice(0, 160),
       images: item.image ? [{ url: item.image }] : [],
     },
   };

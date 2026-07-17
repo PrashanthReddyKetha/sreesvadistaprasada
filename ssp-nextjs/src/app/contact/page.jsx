@@ -1,8 +1,18 @@
 import ContactClient from './ContactClient';
 
 export const metadata = {
-  title: 'Contact Us',
-  description: 'Get in touch — order enquiries, catering, delivery areas. WhatsApp +44 73 0711 9962. Delivering across Milton Keynes (Wolverton, Stony Stratford, Greenleys), Edinburgh (Leith, Newington) and Glasgow (Pollokshields, Shawlands).',
+  title: 'Contact Sree Svadista Prasada | Indian Takeaway Milton Keynes',
+  description: 'Contact our Indian takeaway Milton Keynes — order enquiries, catering, Dabba Wala subscriptions. WhatsApp +44 73 0711 9962. Delivering across MK, Edinburgh & Glasgow.',
+  openGraph: {
+    title: 'Contact Sree Svadista Prasada | Indian Takeaway Milton Keynes',
+    description: 'Contact our Indian takeaway Milton Keynes — order enquiries, catering, Dabba Wala subscriptions. WhatsApp +44 73 0711 9962.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Contact Sree Svadista Prasada | Indian Takeaway Milton Keynes',
+    description: 'Contact our Indian takeaway Milton Keynes — order enquiries, catering, Dabba Wala subscriptions. WhatsApp +44 73 0711 9962.',
+  },
 };
 
 const jsonLd = {

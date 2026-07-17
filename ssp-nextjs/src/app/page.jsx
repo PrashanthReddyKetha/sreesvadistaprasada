@@ -1,8 +1,24 @@
 import HomeClient from './HomeClient';
 
 export const metadata = {
-  title: 'Sree Svadista Prasada | Authentic South Indian Food, Milton Keynes',
-  description: 'Authentic South Indian takeaway in Milton Keynes, Edinburgh & Glasgow. Order Gongura Chicken, Pulihora, Natu Kodi Biryani, dosas and more online. Dabba Wala weekly meal subscriptions available.',
+  title: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery | Sree Svadista Prasada',
+  description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
+  keywords: 'Indian takeaway Milton Keynes, Indian food delivery Milton Keynes, South Indian restaurant Milton Keynes, best Indian restaurant MK, South Indian food Milton Keynes, home cooked Indian food delivery MK, authentic South Indian food near me',
+  openGraph: {
+    title: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery',
+    description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
+    type: 'restaurant',
+    url: 'https://sreesvadistaprasada.com/',
+    siteName: 'Sree Svadista Prasada',
+    locale: 'en_GB',
+    images: [{ url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery',
+    description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
+    images: ['https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'],
+  },
 };
 
 const jsonLd = {

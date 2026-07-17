@@ -3,8 +3,19 @@ import BreakfastClient from './BreakfastClient';
 export const revalidate = 3600;
 
 export const metadata = {
-  title: 'Breakfast — South Indian Morning Classics',
-  description: 'Start your day the South Indian way: idli, dosa, upma, poha, pesarattu, vada and more. Hot breakfast delivered in Milton Keynes, Edinburgh & Glasgow.',
+  title: 'South Indian Breakfast Milton Keynes | Dosa, Idli & Vada Delivery',
+  description: 'South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar & freshly fried vada delivered hot. Light, fresh and authentic. Order now.',
+  keywords: ['South Indian breakfast Milton Keynes', 'dosa Milton Keynes', 'masala dosa near me', 'idli sambar delivery near me', 'sambar vada takeaway', 'South Indian breakfast buffet MK', 'crispy dosa takeaway Milton Keynes'],
+  openGraph: {
+    title: 'South Indian Breakfast Milton Keynes | Dosa, Idli & Vada Delivery',
+    description: 'South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar & freshly fried vada delivered hot. Light, fresh and authentic. Order now.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'South Indian Breakfast Milton Keynes | Dosa, Idli & Vada Delivery',
+    description: 'South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar & freshly fried vada delivered hot. Light, fresh and authentic. Order now.',
+  },
 };
 
 async function getItems() {

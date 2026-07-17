@@ -3,8 +3,19 @@ import DrinksClient from './DrinksClient';
 export const revalidate = 3600;
 
 export const metadata = {
-  title: 'Drinks — South Indian Beverages',
-  description: 'Refreshing South Indian drinks: filter coffee, masala chai, buttermilk, lassi, fresh juices and traditional cooling beverages. Order in Milton Keynes, Edinburgh & Glasgow.',
+  title: 'Mango Lassi Milton Keynes | Traditional Indian Drinks & Juices',
+  description: 'Mango Lassi Milton Keynes — ripe Alphonso mango blended with creamy yoghurt. Plus masala buttermilk, fresh juices & traditional Indian drinks. Order now.',
+  keywords: ['mango lassi Milton Keynes', 'Indian drinks Milton Keynes', 'lassi delivery near me', 'masala buttermilk delivery MK', 'fresh juice delivery Milton Keynes', 'Indian beverages online UK'],
+  openGraph: {
+    title: 'Mango Lassi Milton Keynes | Traditional Indian Drinks & Juices',
+    description: 'Mango Lassi Milton Keynes — ripe Alphonso mango blended with creamy yoghurt. Plus masala buttermilk, fresh juices & traditional Indian drinks. Order now.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Mango Lassi Milton Keynes | Traditional Indian Drinks & Juices',
+    description: 'Mango Lassi Milton Keynes — ripe Alphonso mango blended with creamy yoghurt. Plus masala buttermilk, fresh juices & traditional Indian drinks. Order now.',
+  },
 };
 
 async function getItems() {

@@ -2,8 +2,19 @@ import FaqClient from './FaqClient';
 import { faqData } from '@/data/mockData';
 
 export const metadata = {
-  title: 'FAQs — Ordering, Delivery & Dabba Wala',
-  description: 'Answers about ordering, delivery to Milton Keynes (Wolverton, Stony Stratford, Greenleys), Edinburgh (Leith, Newington) and Glasgow (Pollokshields, Shawlands). Dabba Wala subscriptions, allergens, catering.',
+  title: 'Indian Takeaway FAQs Milton Keynes | Tiffin & Delivery Questions',
+  description: 'Indian takeaway FAQs Milton Keynes — pure veg kitchen, halal sourcing, tiffin delivery zones, allergens & more. All your questions answered.',
+  keywords: ['Indian takeaway Milton Keynes postcodes', 'pure veg separate kitchens', 'how to pause tiffin subscription', 'best Indian food delivery app MK', 'halal Indian food Milton Keynes', 'South Indian restaurant opening hours', 'Indian meal delivery FAQ'],
+  openGraph: {
+    title: 'Indian Takeaway FAQs Milton Keynes | Tiffin & Delivery Questions',
+    description: 'Indian takeaway FAQs Milton Keynes — pure veg kitchen, halal sourcing, tiffin delivery zones, allergens & more. All your questions answered.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Indian Takeaway FAQs Milton Keynes | Tiffin & Delivery Questions',
+    description: 'Indian takeaway FAQs Milton Keynes — pure veg kitchen, halal sourcing, tiffin delivery zones, allergens & more. All your questions answered.',
+  },
 };
 
 const BASE_URL = 'https://www.sreesvadistaprasada.com';

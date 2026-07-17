@@ -16,10 +16,11 @@ const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'placeholde
 
 export const metadata: Metadata = {
   title: {
-    default: 'Sree Svadista Prasada | Authentic South Indian, Milton Keynes',
+    default: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery | Sree Svadista Prasada',
     template: '%s | Sree Svadista Prasada',
   },
-  description: 'Authentic South Indian takeaway in Milton Keynes, Edinburgh & Glasgow. Order dosas, idlis, biryani & curries online. Try our Dabba Wala weekly meal subscription.',
+  description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
+  keywords: ['Indian takeaway Milton Keynes', 'Indian food delivery Milton Keynes', 'South Indian restaurant Milton Keynes', 'best Indian restaurant MK', 'South Indian food Milton Keynes'],
   metadataBase: new URL('https://sreesvadistaprasada.com'),
   openGraph: {
     siteName: 'Sree Svadista Prasada',

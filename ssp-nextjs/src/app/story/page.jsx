@@ -1,8 +1,18 @@
 import StoryClient from './StoryClient';
 
 export const metadata = {
-  title: "Our Story — Grandmother's Recipes, Slow Tadkas",
-  description: "The story of Sree Svadista Prasada: grandmother's recipes, authentic South Indian cooking traditions, and the patient love that fills a house with aroma.",
+  title: 'Authentic South Indian Restaurant Milton Keynes | Our Story | Sree Svadista Prasada',
+  description: 'Authentic South Indian restaurant Milton Keynes — the story behind Sree Svadista Prasada. Home-style Andhra cooking from our family to yours.',
+  openGraph: {
+    title: 'Authentic South Indian Restaurant Milton Keynes | Our Story',
+    description: 'Authentic South Indian restaurant Milton Keynes — the story behind Sree Svadista Prasada. Home-style Andhra cooking from our family to yours.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Authentic South Indian Restaurant Milton Keynes | Our Story',
+    description: 'Authentic South Indian restaurant Milton Keynes — the story behind Sree Svadista Prasada. Home-style Andhra cooking from our family to yours.',
+  },
 };
 
 const jsonLd = {

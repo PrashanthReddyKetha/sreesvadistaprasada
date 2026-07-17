@@ -3,8 +3,19 @@ import RagiClient from './RagiClient';
 export const revalidate = 3600;
 
 export const metadata = {
-  title: 'Ragi Specials — Healthy Finger Millet Dishes',
-  description: 'Nutritious ragi (finger millet) dishes: ragi mudde, ragi dosa, ragi idli and more. Wholesome South Indian health food delivered in Milton Keynes, Edinburgh & Glasgow.',
+  title: 'Ragi Specials Milton Keynes | Healthy South Indian Millet Food Delivery',
+  description: 'Ragi Specials Milton Keynes — finger millet dishes including Ragi Sangati, Ragi Dosa & Ragi Malt. Nutritious traditional South Indian superfoods. Order now.',
+  keywords: ['ragi food Milton Keynes', 'finger millet delivery UK', 'ragi sangati near me', 'South Indian healthy food Milton Keynes', 'ragi dosa delivery', 'millet food delivery UK'],
+  openGraph: {
+    title: 'Ragi Specials Milton Keynes | Healthy South Indian Millet Food',
+    description: 'Ragi Specials Milton Keynes — finger millet dishes including Ragi Sangati, Ragi Dosa & Ragi Malt. Nutritious traditional South Indian superfoods. Order now.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ragi Specials Milton Keynes | Healthy South Indian Millet Food',
+    description: 'Ragi Specials Milton Keynes — finger millet dishes including Ragi Sangati, Ragi Dosa & Ragi Malt. Nutritious traditional South Indian superfoods. Order now.',
+  },
 };
 
 async function getItems() {

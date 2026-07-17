@@ -3,8 +3,19 @@ import SvadistaClient from './SvadistaClient';
 export const revalidate = 3600;
 
 export const metadata = {
-  title: 'Svadista — Halal Non-Veg South Indian Food, Milton Keynes',
-  description: 'Halal-certified non-veg South Indian food in Milton Keynes, Edinburgh & Glasgow. Gongura Chicken, Natu Kodi Biryani, Mutton Curry — bold Andhra flavours. Delivering to Wolverton, Stony Stratford, Leith, Pollokshields and surrounding areas.',
+  title: 'Non-Veg Indian Food Milton Keynes | Andhra Curries & Biryani | Sree Svadista',
+  description: 'Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, mutton biryani & more. Bold South Indian flavours. Order now.',
+  keywords: ['non veg Indian food Milton Keynes', 'chicken biryani Milton Keynes', 'South Indian meat curries MK', 'mutton curry delivery Milton Keynes', 'best biryani Milton Keynes', 'Andhra chicken curry delivery', 'authentic non veg South Indian food'],
+  openGraph: {
+    title: 'Non-Veg Indian Food Milton Keynes | Andhra Curries & Biryani',
+    description: 'Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, mutton biryani & more. Bold South Indian flavours. Order now.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Non-Veg Indian Food Milton Keynes | Andhra Curries & Biryani',
+    description: 'Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, mutton biryani & more. Bold South Indian flavours. Order now.',
+  },
 };
 
 async function getItems() {

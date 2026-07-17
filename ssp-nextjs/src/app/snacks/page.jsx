@@ -3,8 +3,19 @@ import SnacksClient from './SnacksClient';
 export const revalidate = 3600;
 
 export const metadata = {
-  title: 'Hot, Sweet & Pickles — South Indian Condiments & Snacks',
-  description: 'Handmade South Indian pickles, podis and snacks: mango pickle, gongura pickle, gun powder podi, murukku and more. Order in Milton Keynes, Edinburgh & Glasgow.',
+  title: 'Buy Indian Snacks Online UK | Andhra Pickles & Savouries | Sree Svadista Prasada',
+  description: 'Buy Indian snacks online UK — handmade Andhra pickles, traditional savouries & chutneys with fast UK-wide delivery. No preservatives, small batch. Shop now.',
+  keywords: ['buy Indian snacks online UK', 'South Indian sweets online UK', 'Andhra pickles online UK', 'Indian savouries delivery UK', 'buy mango pickle online', 'Gongura pickle online UK', 'authentic mango avakaya pickle', 'Kandi Podi online UK'],
+  openGraph: {
+    title: 'Buy Indian Snacks Online UK | Andhra Pickles & Savouries',
+    description: 'Buy Indian snacks online UK — handmade Andhra pickles, traditional savouries & chutneys with fast UK-wide delivery. No preservatives, small batch. Shop now.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Buy Indian Snacks Online UK | Andhra Pickles & Savouries',
+    description: 'Buy Indian snacks online UK — handmade Andhra pickles, traditional savouries & chutneys with fast UK-wide delivery. No preservatives, small batch. Shop now.',
+  },
 };
 
 async function getItems() {

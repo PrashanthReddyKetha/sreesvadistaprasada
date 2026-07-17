@@ -1,8 +1,19 @@
 import CateringClient from './CateringClient';
 
 export const metadata = {
-  title: 'South Indian Catering — Weddings, Temple & Corporate',
-  description: 'Authentic South Indian catering in Milton Keynes, Edinburgh & Glasgow. Weddings, temple prasada, corporate lunches and community events. Serving Wolverton, Stony Stratford, Greenleys, Leith, Pollokshields and surrounding areas.',
+  title: 'Indian Catering Milton Keynes | South Indian Events & Weddings',
+  description: 'Indian catering Milton Keynes — South Indian weddings, corporate events & family celebrations. Veg & non-veg menus tailored to your occasion. Get a quote.',
+  keywords: ['Indian catering Milton Keynes', 'South Indian wedding catering UK', 'Indian corporate catering MK', 'South Indian event catering Milton Keynes', 'Andhra catering UK', 'temple prasada catering', 'Indian buffet catering MK'],
+  openGraph: {
+    title: 'Indian Catering Milton Keynes | South Indian Events & Weddings',
+    description: 'Indian catering Milton Keynes — South Indian weddings, corporate events & family celebrations. Veg & non-veg menus tailored to your occasion. Get a quote.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Indian Catering Milton Keynes | South Indian Events & Weddings',
+    description: 'Indian catering Milton Keynes — South Indian weddings, corporate events & family celebrations. Veg & non-veg menus tailored to your occasion. Get a quote.',
+  },
 };
 
 const jsonLd = {

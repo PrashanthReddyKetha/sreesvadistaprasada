@@ -1,8 +1,19 @@
 import SubscriptionsClient from './SubscriptionsClient';
 
 export const metadata = {
-  title: 'Dabba Wala — Weekly South Indian Meal Subscription, Milton Keynes',
-  description: 'Milton Keynes\' only weekly home-cooked South Indian meal subscription. Fresh Andhra and Telugu food delivered to Wolverton, Stony Stratford, Greenleys, Newport Pagnell and all MK postcodes. Also delivering in Edinburgh (Leith, Newington) and Glasgow (Pollokshields, Shawlands). From £7 per meal.',
+  title: 'Indian Tiffin Service Milton Keynes | Daily Meal Subscriptions | Dabba Wala',
+  description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
+  keywords: ['Indian tiffin service Milton Keynes', 'tiffin delivery Milton Keynes', 'Dabba Wala MK', 'South Indian meal subscription UK', 'weekly Indian food delivery Milton Keynes', 'meal prep delivery MK', 'healthy Indian lunch delivery'],
+  openGraph: {
+    title: 'Indian Tiffin Service Milton Keynes | Dabba Wala Subscriptions',
+    description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Indian Tiffin Service Milton Keynes | Dabba Wala Subscriptions',
+    description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
+  },
 };
 
 const jsonLd = {
