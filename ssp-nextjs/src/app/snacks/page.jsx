@@ -3,19 +3,25 @@ import SnacksClient from './SnacksClient';
 export const revalidate = 3600;
 
 export const metadata = {
-  title: 'Buy Indian Snacks Online UK | Andhra Pickles & Savouries | Sree Svadista Prasada',
+  title: { absolute: 'Andhra Pickles & Indian Snacks Online UK | Sree Svadista Prasada' },
   description: 'Buy Indian snacks online UK — handmade Andhra pickles, traditional savouries & chutneys with fast UK-wide delivery. No preservatives, small batch. Shop now.',
   keywords: ['buy Indian snacks online UK', 'South Indian sweets online UK', 'Andhra pickles online UK', 'Indian savouries delivery UK', 'buy mango pickle online', 'Gongura pickle online UK', 'authentic mango avakaya pickle', 'Kandi Podi online UK'],
   openGraph: {
-    title: 'Buy Indian Snacks Online UK | Andhra Pickles & Savouries',
+    title: 'Andhra Pickles & Indian Snacks Online UK | Sree Svadista Prasada',
     description: 'Buy Indian snacks online UK — handmade Andhra pickles, traditional savouries & chutneys with fast UK-wide delivery. No preservatives, small batch. Shop now.',
     type: 'website',
+    url: 'https://sreesvadistaprasada.com/snacks',
+    siteName: 'Sree Svadista Prasada',
+    locale: 'en_GB',
+    images: [{ url: 'https://images.unsplash.com/photo-1680529672551-16132239d69b?w=1200&q=80', width: 1200, height: 630, alt: 'Andhra Pickles & Indian Snacks Online UK' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Buy Indian Snacks Online UK | Andhra Pickles & Savouries',
+    title: 'Andhra Pickles & Indian Snacks Online UK | Sree Svadista Prasada',
     description: 'Buy Indian snacks online UK — handmade Andhra pickles, traditional savouries & chutneys with fast UK-wide delivery. No preservatives, small batch. Shop now.',
+    images: ['https://images.unsplash.com/photo-1680529672551-16132239d69b?w=1200&q=80'],
   },
+  alternates: { canonical: 'https://sreesvadistaprasada.com/snacks' },
 };
 
 async function getItems() {
@@ -31,5 +37,10 @@ async function getItems() {
 
 export default async function SnacksPage() {
   const initialItems = await getItems();
-  return <SnacksClient initialItems={initialItems} initialTab="All" />;
+  return (
+    <>
+      <h1 className="sr-only">Andhra Pickles & Indian Snacks Online UK</h1>
+      <SnacksClient initialItems={initialItems} initialTab="All" />
+    </>
+  );
 }

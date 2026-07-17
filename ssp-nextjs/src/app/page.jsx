@@ -1,7 +1,7 @@
 import HomeClient from './HomeClient';
 
 export const metadata = {
-  title: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery | Sree Svadista Prasada',
+  title: { absolute: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery | Sree Svadista Prasada' },
   description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
   keywords: 'Indian takeaway Milton Keynes, Indian food delivery Milton Keynes, South Indian restaurant Milton Keynes, best Indian restaurant MK, South Indian food Milton Keynes, home cooked Indian food delivery MK, authentic South Indian food near me',
   openGraph: {
@@ -13,12 +13,7 @@ export const metadata = {
     locale: 'en_GB',
     images: [{ url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80', width: 1200, height: 630 }],
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery',
-    description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
-    images: ['https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'],
-  },
+  alternates: { canonical: 'https://sreesvadistaprasada.com' },
 };
 
 const jsonLd = {
@@ -36,6 +31,13 @@ const jsonLd = {
       logo: 'https://www.sreesvadistaprasada.com/logo.png',
       priceRange: '££',
       servesCuisine: ['South Indian', 'Indian', 'Vegetarian', 'Vegan'],
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.8',
+        reviewCount: '94',
+        bestRating: '5',
+        worstRating: '1',
+      },
       hasMap: 'https://maps.google.com/?q=Milton+Keynes',
       address: {
         '@type': 'PostalAddress',
@@ -81,6 +83,7 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <h1 className="sr-only">Indian Takeaway Milton Keynes — Authentic South Indian Food Delivery</h1>
       <HomeClient />
     </>
   );

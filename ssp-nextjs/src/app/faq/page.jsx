@@ -2,19 +2,25 @@ import FaqClient from './FaqClient';
 import { faqData } from '@/data/mockData';
 
 export const metadata = {
-  title: 'Indian Takeaway FAQs Milton Keynes | Tiffin & Delivery Questions',
+  title: { absolute: 'Indian Takeaway FAQs Milton Keynes | Sree Svadista Prasada' },
   description: 'Indian takeaway FAQs Milton Keynes — pure veg kitchen, halal sourcing, tiffin delivery zones, allergens & more. All your questions answered.',
   keywords: ['Indian takeaway Milton Keynes postcodes', 'pure veg separate kitchens', 'how to pause tiffin subscription', 'best Indian food delivery app MK', 'halal Indian food Milton Keynes', 'South Indian restaurant opening hours', 'Indian meal delivery FAQ'],
   openGraph: {
-    title: 'Indian Takeaway FAQs Milton Keynes | Tiffin & Delivery Questions',
+    title: 'Indian Takeaway FAQs Milton Keynes | Sree Svadista Prasada',
     description: 'Indian takeaway FAQs Milton Keynes — pure veg kitchen, halal sourcing, tiffin delivery zones, allergens & more. All your questions answered.',
     type: 'website',
+    url: 'https://sreesvadistaprasada.com/faq',
+    siteName: 'Sree Svadista Prasada',
+    locale: 'en_GB',
+    images: [{ url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80', width: 1200, height: 630, alt: 'Sree Svadista Prasada — Indian Takeaway Milton Keynes' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Indian Takeaway FAQs Milton Keynes | Tiffin & Delivery Questions',
+    title: 'Indian Takeaway FAQs Milton Keynes | Sree Svadista Prasada',
     description: 'Indian takeaway FAQs Milton Keynes — pure veg kitchen, halal sourcing, tiffin delivery zones, allergens & more. All your questions answered.',
+    images: ['https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'],
   },
+  alternates: { canonical: 'https://sreesvadistaprasada.com/faq' },
 };
 
 const BASE_URL = 'https://www.sreesvadistaprasada.com';
@@ -60,6 +66,7 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <h1 className="sr-only">Indian Takeaway FAQs Milton Keynes — Delivery, Tiffin & Dietary Questions</h1>
       <FaqClient />
     </>
   );

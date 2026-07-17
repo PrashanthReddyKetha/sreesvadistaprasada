@@ -25,7 +25,7 @@ const data = {
 
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'FoodEstablishment',
+  '@type': 'Restaurant',
   name: 'Sree Svadista Prasada',
   description: 'Authentic South Indian takeaway delivering across Glasgow. Dosas, biryani, Gongura chicken, curries, and Dabba Wala weekly meal subscriptions.',
   url: `${BASE_URL}/glasgow`,

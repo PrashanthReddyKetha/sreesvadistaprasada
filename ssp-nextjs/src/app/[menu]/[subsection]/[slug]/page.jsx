@@ -71,30 +71,41 @@ export default async function ItemPage({ params }) {
   const item = await getItem(params.slug);
   if (!item) notFound();
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'MenuItem',
-    name: item.name,
-    description: item.description,
-    image: item.image || undefined,
-    url: `${SITE}/${params.menu}/${params.subsection}/${params.slug}`,
-    offers: {
-      '@type': 'Offer',
-      price: item.price,
-      priceCurrency: 'GBP',
-      availability: item.available
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/OutOfStock',
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'MenuItem',
+      name: item.name,
+      description: item.description,
+      image: item.image || undefined,
+      url: `${SITE}/${params.menu}/${params.subsection}/${params.slug}`,
+      offers: {
+        '@type': 'Offer',
+        price: item.price,
+        priceCurrency: 'GBP',
+        availability: item.available
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+      },
+      suitableForDiet: item.is_veg
+        ? 'https://schema.org/VegetarianDiet'
+        : undefined,
+      inMenu: {
+        '@type': 'Menu',
+        name: 'Sree Svadista Prasada Menu',
+        url: `${SITE}/menu`,
+      },
     },
-    suitableForDiet: item.is_veg
-      ? 'https://schema.org/VegetarianDiet'
-      : undefined,
-    inMenu: {
-      '@type': 'Menu',
-      name: 'Sree Svadista Prasada Menu',
-      url: `${SITE}/menu`,
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
+        { '@type': 'ListItem', position: 2, name: params.menu.charAt(0).toUpperCase() + params.menu.slice(1), item: `${SITE}/${params.menu}` },
+        { '@type': 'ListItem', position: 3, name: item.name, item: `${SITE}/${params.menu}/${params.subsection}/${params.slug}` },
+      ],
     },
-  };
+  ];
 
   return (
     <>

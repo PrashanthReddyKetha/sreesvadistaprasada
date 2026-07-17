@@ -1,19 +1,25 @@
 import SubscriptionsClient from './SubscriptionsClient';
 
 export const metadata = {
-  title: 'Indian Tiffin Service Milton Keynes | Daily Meal Subscriptions | Dabba Wala',
+  title: { absolute: 'Indian Tiffin Delivery Milton Keynes | Sree Svadista Prasada' },
   description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
   keywords: ['Indian tiffin service Milton Keynes', 'tiffin delivery Milton Keynes', 'Dabba Wala MK', 'South Indian meal subscription UK', 'weekly Indian food delivery Milton Keynes', 'meal prep delivery MK', 'healthy Indian lunch delivery'],
   openGraph: {
-    title: 'Indian Tiffin Service Milton Keynes | Dabba Wala Subscriptions',
+    title: 'Indian Tiffin Delivery Milton Keynes | Dabba Wala | Sree Svadista Prasada',
     description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
     type: 'website',
+    url: 'https://sreesvadistaprasada.com/subscriptions',
+    siteName: 'Sree Svadista Prasada',
+    locale: 'en_GB',
+    images: [{ url: 'https://images.unsplash.com/photo-1727404679933-99daa2a7573a?w=1200&q=80', width: 1200, height: 630, alt: 'Indian Tiffin Delivery Milton Keynes — Dabba Wala' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Indian Tiffin Service Milton Keynes | Dabba Wala Subscriptions',
+    title: 'Indian Tiffin Delivery Milton Keynes | Sree Svadista Prasada',
     description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
+    images: ['https://images.unsplash.com/photo-1727404679933-99daa2a7573a?w=1200&q=80'],
   },
+  alternates: { canonical: 'https://sreesvadistaprasada.com/subscriptions' },
 };
 
 const jsonLd = {
