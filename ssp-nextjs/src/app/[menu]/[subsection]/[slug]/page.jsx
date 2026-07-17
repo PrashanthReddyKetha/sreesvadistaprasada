@@ -17,18 +17,53 @@ async function getItem(slug) {
   }
 }
 
+const SITE = 'https://sreesvadistaprasada.com';
+
+const CATEGORY_LABELS = {
+  nonVeg: 'Non-Veg Indian Food', veg: 'Vegetarian Indian Food',
+  prasada: 'Pure Veg South Indian', breakfast: 'South Indian Breakfast',
+  snacks: 'Indian Snacks', pickles: 'Andhra Pickles', podis: 'Andhra Podis',
+  drinks: 'Indian Drinks',
+};
+
 export async function generateMetadata({ params }) {
   const item = await getItem(params.slug);
   if (!item) return { title: 'Dish Not Found — Sree Svadista Prasada' };
+
+  const catLabel = CATEGORY_LABELS[item.category] || 'South Indian Food';
+  const desc = item.seo_meta_description
+    || `${item.name} — ${(item.description || '').slice(0, 130).trim()}. Order online in Milton Keynes from Sree Svadista Prasada.`;
+  const itemUrl = `${SITE}/${params.menu}/${params.subsection}/${params.slug}`;
+  const images = item.image ? [{ url: item.image, width: 800, height: 600, alt: item.name }] : [];
+
   return {
     title: `${item.name} Milton Keynes | Order Online | Sree Svadista Prasada`,
-    description: item.seo_meta_description || `${item.name} in Milton Keynes — ${(item.description || '').slice(0, 100)}. Order online from Sree Svadista Prasada.`,
-    keywords: `${item.name}, ${item.name} Milton Keynes, ${item.name} delivery, ${item.name} near me, South Indian food Milton Keynes`,
+    description: desc,
+    keywords: [
+      item.name,
+      `${item.name} Milton Keynes`,
+      `${item.name} delivery`,
+      `${item.name} near me`,
+      `${catLabel} Milton Keynes`,
+      'South Indian food Milton Keynes',
+      'Indian takeaway Milton Keynes',
+    ].join(', '),
     openGraph: {
-      title: `${item.name} Milton Keynes | Sree Svadista Prasada`,
-      description: item.seo_meta_description || (item.description || '').slice(0, 160),
-      images: item.image ? [{ url: item.image }] : [],
+      title: `${item.name} | ${catLabel} Milton Keynes | Sree Svadista Prasada`,
+      description: desc,
+      url: itemUrl,
+      siteName: 'Sree Svadista Prasada',
+      type: 'website',
+      locale: 'en_GB',
+      images,
     },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${item.name} | Order Online | Sree Svadista Prasada`,
+      description: desc,
+      images: item.image ? [item.image] : [],
+    },
+    alternates: { canonical: itemUrl },
   };
 }
 
@@ -41,6 +76,8 @@ export default async function ItemPage({ params }) {
     '@type': 'MenuItem',
     name: item.name,
     description: item.description,
+    image: item.image || undefined,
+    url: `${SITE}/${params.menu}/${params.subsection}/${params.slug}`,
     offers: {
       '@type': 'Offer',
       price: item.price,
@@ -52,6 +89,11 @@ export default async function ItemPage({ params }) {
     suitableForDiet: item.is_veg
       ? 'https://schema.org/VegetarianDiet'
       : undefined,
+    inMenu: {
+      '@type': 'Menu',
+      name: 'Sree Svadista Prasada Menu',
+      url: `${SITE}/menu`,
+    },
   };
 
   return (
