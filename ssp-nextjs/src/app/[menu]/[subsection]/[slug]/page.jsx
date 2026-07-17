@@ -28,7 +28,7 @@ const CATEGORY_LABELS = {
 
 export async function generateMetadata({ params }) {
   const item = await getItem(params.slug);
-  if (!item) return { title: 'Dish Not Found — Sree Svadista Prasada' };
+  if (!item) return { title: { absolute: 'Dish Not Found | Sree Svadista Prasada' } };
 
   const catLabel = CATEGORY_LABELS[item.category] || 'South Indian Food';
   const desc = item.seo_meta_description
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }) {
   const images = item.image ? [{ url: item.image, width: 800, height: 600, alt: item.name }] : [];
 
   return {
-    title: `${item.name} Milton Keynes | Order Online | Sree Svadista Prasada`,
+    title: { absolute: `${item.name} | Indian Takeaway Milton Keynes | Sree Svadista Prasada` },
     description: desc,
     keywords: [
       item.name,
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }) {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${item.name} | Order Online | Sree Svadista Prasada`,
+      title: `${item.name} | Indian Takeaway Milton Keynes | Sree Svadista Prasada`,
       description: desc,
       images: item.image ? [item.image] : [],
     },
