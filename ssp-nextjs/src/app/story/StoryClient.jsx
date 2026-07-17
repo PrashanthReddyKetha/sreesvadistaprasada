@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Leaf, Flame, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { images } from '@/data/mockData';
 
@@ -105,7 +106,7 @@ const OurStory = () => {
           <div className="grid md:grid-cols-2 gap-6 md:gap-8">
             {/* Svadista Card */}
             <div className="relative rounded-lg overflow-hidden" style={{ height: '320px' }}>
-              <img src={images.svadista} alt="Sree Svadista" className="absolute inset-0 w-full h-full object-cover" />
+              <Image fill src={images.svadista} alt="Sree Svadista" className="absolute inset-0 object-cover" sizes="(max-width:768px) 100vw,50vw" />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(139,58,58,0.95) 0%, rgba(139,58,58,0.5) 50%, rgba(139,58,58,0.1) 100%)' }} />
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <div className="flex items-center gap-2 mb-2">
@@ -122,7 +123,7 @@ const OurStory = () => {
 
             {/* Prasada Card */}
             <div className="relative rounded-lg overflow-hidden" style={{ height: '320px' }}>
-              <img src={images.prasada} alt="Sree Prasada" className="absolute inset-0 w-full h-full object-cover" />
+              <Image fill src={images.prasada} alt="Sree Prasada" className="absolute inset-0 object-cover" sizes="(max-width:768px) 100vw,50vw" />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(74,124,89,0.95) 0%, rgba(74,124,89,0.5) 50%, rgba(74,124,89,0.1) 100%)' }} />
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <div className="flex items-center gap-2 mb-2">

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { galleryImages } from '@/data/mockData';
 
 const categories = ['All', 'Kitchen', 'Svadista', 'Prasada', 'Breakfast', 'Snacks'];
@@ -60,7 +61,7 @@ const Gallery = () => {
                 className="relative aspect-square rounded-lg overflow-hidden group cursor-pointer"
                 data-testid={`gallery-image-${img.id}`}
               >
-                <img src={img.src} alt={img.alt} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <Image fill src={img.src} alt={img.alt} className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width:640px) 50vw,(max-width:1024px) 33vw,25vw" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
                   <p className="text-white text-xs font-medium p-3 translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
                     {img.alt}

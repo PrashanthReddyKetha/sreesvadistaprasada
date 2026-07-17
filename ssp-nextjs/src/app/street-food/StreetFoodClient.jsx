@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { ShoppingBag, ShoppingCart, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -81,7 +82,7 @@ const StreetFood = ({ initialItems = [] }) => {
                     style={{ boxShadow: '0 4px 20px rgba(30,58,138,0.08)', border: '1px solid rgba(30,58,138,0.08)' }}>
                     <div className="relative h-44 overflow-hidden">
                       {dish.image
-                        ? <img src={dish.image} alt={dish.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ? <Image fill src={dish.image} alt={dish.name} className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" />
                         : <div className="w-full h-full flex items-center justify-center bg-blue-50"><ShoppingBag size={32} className="text-blue-200" /></div>
                       }
                       {dish.is_veg && (

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, Truck, CheckCircle, MapPin, User, Mail, Phone, FileText,
@@ -112,7 +113,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
           {cartItems.map(item => (
             <div key={item.id} className="flex items-center gap-3">
               {item.image
-                ? <img src={item.image} alt={item.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+                ? <Image src={item.image} alt={item.name} width={56} height={56} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
                 : <div className="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(128,0,32,0.08)' }}>
                     <ShoppingBag size={18} style={{ color: '#800020', opacity: 0.4 }} />
                   </div>
@@ -331,7 +332,7 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
             return (
               <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl border transition-all"
                 style={{ borderColor: inCart ? 'rgba(128,0,32,0.2)' : 'rgba(128,0,32,0.08)', backgroundColor: inCart ? 'rgba(128,0,32,0.03)' : 'white' }}>
-                {item.image && <img src={item.image} alt={item.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />}
+                {item.image && <Image src={item.image} alt={item.name} width={56} height={56} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold leading-tight" style={{ color: '#2D2422' }}>{item.name}</p>
                   <p className="text-sm font-bold mt-0.5" style={{ color: '#800020' }}>{fmt(price(item.price))}</p>

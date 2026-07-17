@@ -66,6 +66,14 @@ const jsonLd = {
           { '@type': 'Offer', itemOffered: { '@type': 'MenuItem', name: 'Dabba Wala Weekly Subscription', url: 'https://www.sreesvadistaprasada.com/subscriptions' } },
         ],
       },
+      openingHoursSpecification: [
+        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '11:00', closes: '22:00' },
+        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday', 'Sunday'], opens: '08:00', closes: '22:00' },
+      ],
+      speakable: {
+        '@type': 'SpeakableSpecification',
+        cssSelector: ['.hero-description', '.about-tagline'],
+      },
     },
     {
       '@type': 'WebSite',

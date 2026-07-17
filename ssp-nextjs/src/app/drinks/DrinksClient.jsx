@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { ShoppingCart, Droplets, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -81,7 +82,7 @@ const Drinks = ({ initialItems = [] }) => {
                     style={{ boxShadow: '0 4px 20px rgba(126,34,206,0.08)', border: '1px solid rgba(126,34,206,0.08)' }}>
                     <div className="relative h-44 overflow-hidden">
                       {drink.image
-                        ? <img src={drink.image} alt={drink.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ? <Image fill src={drink.image} alt={drink.name} className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" />
                         : <div className="w-full h-full flex items-center justify-center bg-purple-50"><Droplets size={32} className="text-purple-200" /></div>
                       }
                       {drink.featured && (

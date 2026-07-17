@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, Truck, Zap, Gift, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -107,7 +108,7 @@ function UpsellRow({ cartItems, onAdd }) {
       <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
         {suggestions.map(item => (
           <div key={item.id} className="flex-shrink-0 w-28 rounded-xl overflow-hidden border group" style={{ borderColor: 'rgba(128,0,32,0.12)', backgroundColor: 'white' }}>
-            {item.image && <div className="h-16 overflow-hidden"><img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /></div>}
+            {item.image && <div className="relative h-16 overflow-hidden"><Image fill src={item.image} alt={item.name} className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="112px" /></div>}
             <div className="p-2">
               <p className="text-[10px] font-semibold leading-tight mb-1 line-clamp-2" style={{ color: '#2D2422' }}>{item.name}</p>
               <div className="flex items-center justify-between">
@@ -151,7 +152,7 @@ function FreeItemPicker({ onSelect, onSkip }) {
           <button key={item.id} onClick={() => onSelect(item)}
             className="w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:border-[#800020]/40"
             style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
-            {item.image && <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />}
+            {item.image && <Image src={item.image} alt={item.name} width={48} height={48} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate" style={{ color: '#2D2422' }}>{item.name}</p>
               <p className="text-xs line-through text-gray-400">{fmt(price(item.price))}</p>
@@ -441,7 +442,7 @@ const CartDrawer = () => {
                 {cartItems.map(item => (
                   <div key={item.id} className="flex items-center gap-3 pb-3 border-b last:border-0" style={{ borderColor: '#f0ebe6' }}>
                     {item.image
-                      ? <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
+                      ? <Image src={item.image} alt={item.name} width={64} height={64} className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
                       : <div className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(128,0,32,0.08)' }}>
                           <ShoppingBag size={20} style={{ color: '#800020', opacity: 0.4 }} />
                         </div>

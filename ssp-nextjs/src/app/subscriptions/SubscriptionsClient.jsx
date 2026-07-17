@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star, CreditCard, Lock } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -770,8 +771,8 @@ const SubscriptionsInner = () => {
     <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ height: 'min(42vh, 340px)' }}>
-        <img src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Dabba Wala" className="absolute inset-0 w-full h-full object-cover" />
+        <Image fill priority src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+          alt="Dabba Wala" className="absolute inset-0 object-cover" sizes="100vw" />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)` }} />
         <div className="relative h-full w-full px-4 md:px-8 flex items-end md:items-center pb-8 md:pb-0" style={{ paddingTop: 'calc(32px + 68px)' }}>
           <div className="max-w-7xl mx-auto w-full">

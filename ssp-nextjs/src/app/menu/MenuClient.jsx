@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { Flame, ShoppingCart, ArrowRight, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -129,7 +130,7 @@ const Menu = ({ initialItems = [] }) => {
                   <div className="rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }}>
                     {dish.image && (
                       <div className="relative h-40 overflow-hidden">
-                        <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <Image fill src={dish.image} alt={dish.name} className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
                         <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-sm border-2 flex items-center justify-center bg-white/90"
                           style={{ borderColor: dish.is_veg ? '#22c55e' : '#ef4444' }}>

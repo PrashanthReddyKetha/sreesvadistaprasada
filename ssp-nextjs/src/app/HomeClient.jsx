@@ -1,6 +1,7 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation';
 import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '@/data/mockData';
@@ -620,7 +621,7 @@ const Home = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {galleryImages.slice(0, 8).map(img => (
               <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden group">
-                <img src={img.src} alt={img.alt} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <Image fill src={img.src} alt={img.alt} className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
               </div>
             ))}

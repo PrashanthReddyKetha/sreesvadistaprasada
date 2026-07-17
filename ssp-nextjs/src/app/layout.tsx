@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Playfair_Display, Lato } from 'next/font/google'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
@@ -11,6 +12,21 @@ import CartToast from '@/components/CartToast'
 import ScrollToTop from '@/components/ScrollToTop'
 import BackendWarmup from '@/components/BackendWarmup'
 import '@/styles/globals.css'
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  style: ['normal', 'italic'],
+  variable: '--font-playfair',
+  display: 'swap',
+})
+
+const lato = Lato({
+  subsets: ['latin'],
+  weight: ['300', '400', '700', '900'],
+  variable: '--font-lato',
+  display: 'swap',
+})
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'placeholder'
 
@@ -31,7 +47,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-GB">
+    <html lang="en-GB" className={`${playfair.variable} ${lato.variable}`}>
       <body className="min-h-screen flex flex-col">
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
           <AuthProvider>

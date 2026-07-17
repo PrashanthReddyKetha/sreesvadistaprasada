@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { Flame, ArrowRight, Package, Truck, MessageCircle, Search, X } from 'lucide-react';
 import api from '@/api';
@@ -136,7 +137,7 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
                 <div className="rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }} data-testid={`snack-item-${item.id}`}>
                   {item.image && (
                     <div className="relative h-40 overflow-hidden">
-                      <img key={item.image} src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <Image fill key={item.image} src={item.image} alt={item.name} className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" />
                       <span className="absolute top-3 left-3 px-2 py-1 rounded-sm text-xs font-medium text-white" style={{ backgroundColor: '#800020' }}>
                         {item.type}
                       </span>

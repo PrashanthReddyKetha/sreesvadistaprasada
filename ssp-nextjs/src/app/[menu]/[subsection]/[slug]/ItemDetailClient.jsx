@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   Heart, ShoppingCart, Star, ChevronDown, ChevronUp,
   Flame, Leaf, AlertTriangle, Users, Plus, Minus,
@@ -106,7 +107,7 @@ const MiniCard = ({ item }) => {
   return (
     <Link href={buildItemUrl(item)} className="flex-shrink-0 w-44 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow" style={{ border:'1px solid rgba(244,196,48,0.2)' }}>
       {item.image ? (
-        <img src={item.image} alt={item.name} className="w-full h-28 object-cover" />
+        <Image src={item.image} alt={item.name} width={176} height={112} className="w-full h-28 object-cover" />
       ) : (
         <div className="w-full h-28 flex items-center justify-center" style={{ backgroundColor:'rgba(128,0,32,0.06)' }}>
           <ShoppingCart size={24} style={{ color:'#800020' }} />
@@ -253,7 +254,7 @@ export default function ItemDetailClient({ initialItem }) {
         <div className="grid md:grid-cols-2 gap-6 mb-10">
           <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio:'1/1', maxHeight:'420px' }}>
             {item.image ? (
-              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+              <Image fill src={item.image} alt={item.name} className="object-cover" sizes="(max-width:768px) 100vw,50vw" />
             ) : (
               <div className="w-full h-full flex items-center justify-center" style={{ background:'linear-gradient(135deg, rgba(128,0,32,0.08) 0%, rgba(184,134,11,0.08) 100%)' }}>
                 <ShoppingCart size={64} style={{ color:'#800020', opacity:0.3 }} />
@@ -571,7 +572,7 @@ export default function ItemDetailClient({ initialItem }) {
             </h3>
             <div className="flex items-center gap-4 flex-wrap mt-4">
               <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3">
-                {item.image && <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover" />}
+                {item.image && <Image src={item.image} alt={item.name} width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />}
                 <div>
                   <p className="text-white text-sm font-semibold">{item.name}</p>
                   <p className="text-white/70 text-xs">£{item.price.toFixed(2)}</p>
@@ -579,7 +580,7 @@ export default function ItemDetailClient({ initialItem }) {
               </div>
               <Plus size={20} style={{ color:'rgba(244,196,48,0.8)', flexShrink:0 }} />
               <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3">
-                {goesWith[0]?.image && <img src={goesWith[0].image} alt={goesWith[0].name} className="w-10 h-10 rounded-lg object-cover" />}
+                {goesWith[0]?.image && <Image src={goesWith[0].image} alt={goesWith[0].name} width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />}
                 <div>
                   <p className="text-white text-sm font-semibold">{goesWith[0]?.name}</p>
                   <p className="text-white/70 text-xs">£{goesWith[0]?.price?.toFixed(2)}</p>
