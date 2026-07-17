@@ -67,21 +67,21 @@ const Prasada = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>Pure Vegetarian Indian Food | Sree Prasada | Milton Keynes</title>
-        <meta name="description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
+        <title>Vegetarian Indian Restaurant Milton Keynes | Pure Veg Food | Sree Prasada</title>
+        <meta name="description" content="Vegetarian Indian restaurant Milton Keynes — 100% pure veg kitchen. Vegan, Jain &amp; gluten-free options. Authentic Andhra temple-style cooking. Order now." />
+        <meta name="keywords" content="vegetarian Indian restaurant Milton Keynes, pure veg restaurant Milton Keynes, vegan Indian food Milton Keynes, Indian vegetarian catering MK, veg thali delivery MK, no onion no garlic Indian food near me, Jain food delivery Milton Keynes" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/prasada" />
-        <meta property="og:title" content="Pure Vegetarian Indian Food | Sree Prasada | Milton Keynes" />
-        <meta property="og:description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
+        <meta property="og:title" content="Vegetarian Indian Restaurant Milton Keynes | Pure Veg Food" />
+        <meta property="og:description" content="Vegetarian Indian restaurant Milton Keynes — 100% pure veg kitchen. Vegan, Jain &amp; gluten-free options. Authentic Andhra temple-style cooking." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/prasada" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Pure Vegetarian Indian Food | Sree Prasada | Milton Keynes" />
-        <meta name="twitter:description" content="Enjoy 100% pure vegetarian Indian food in Milton Keynes. Freshly prepared in our dedicated veg kitchen. Vegan, Jain, and gluten-free options." />
+        <meta name="twitter:title" content="Vegetarian Indian Restaurant Milton Keynes | Pure Veg Food" />
+        <meta name="twitter:description" content="Vegetarian Indian restaurant Milton Keynes — 100% pure veg kitchen. Vegan, Jain &amp; gluten-free options. Authentic Andhra temple-style cooking." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1200&q=80" />
-        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Prasada — Pure Veg Menu",item:"https://sreesvadistaprasada.com/prasada"}]})}</script>
-      </Helmet>
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Prasada — Pure Veg Menu",item:"https://sreesvadistaprasada.com/prasada"}]})}</script>        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"Menu","name":"Sree Prasada — Pure Vegetarian Menu","description":"100% pure vegetarian Indian food prepared in a dedicated veg kitchen. Vegan, Jain, and gluten-free options available.","url":"https://sreesvadistaprasada.com/prasada","inLanguage":"en","hasMenuSection":[{"@type":"MenuSection","name":"Rice & Curries"},{"@type":"MenuSection","name":"Dals & Lentils"},{"@type":"MenuSection","name":"Veg Starters"},{"@type":"MenuSection","name":"Vegan Options"}],"provider":{"@type":"Restaurant","name":"Sree Svadista Prasada","url":"https://sreesvadistaprasada.com","servesCuisine":["South Indian","Vegetarian","Vegan","Indian"],"address":{"@type":"PostalAddress","addressLocality":"Milton Keynes","addressCountry":"GB"}}})}</script>      </Helmet>
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ height: 'min(58vh, 460px)' }}>
         <img

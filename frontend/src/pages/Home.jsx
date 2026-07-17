@@ -81,19 +81,21 @@ const Home = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>Sree Svadista Prasada | Indian Takeaway &amp; Food Delivery in Milton Keynes</title>
-        <meta name="description" content="Order authentic South Indian food online in Milton Keynes. Indian takeaway &amp; home delivery — Andhra curries, tiffin subscriptions, snacks &amp; pickles from Sree Svadista Prasada." />
+        <title>Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery | Sree Svadista Prasada</title>
+        <meta name="description" content="Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis &amp; Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online." />
+        <meta name="keywords" content="Indian takeaway Milton Keynes, Indian food delivery Milton Keynes, South Indian restaurant Milton Keynes, best Indian restaurant MK, South Indian food Milton Keynes, home cooked Indian food delivery MK, authentic South Indian food near me" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/" />
-        <meta property="og:title" content="Sree Svadista Prasada | Indian Takeaway &amp; Food Delivery in Milton Keynes" />
-        <meta property="og:description" content="Craving real South Indian flavors? Order Sree Svadista Prasada in Milton Keynes. Hot delivery of home-cooked veg and non-veg Andhra meals." />
-        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery" />
+        <meta property="og:description" content="Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis &amp; Dabba Wala tiffin subscriptions. Home-style South Indian food. Order online." />
+        <meta property="og:type" content="restaurant" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Sree Svadista Prasada | Indian Takeaway &amp; Food Delivery in Milton Keynes" />
-        <meta name="twitter:description" content="Craving real South Indian flavors? Order Sree Svadista Prasada in Milton Keynes. Hot delivery of home-cooked veg and non-veg Andhra meals." />
+        <meta name="twitter:title" content="Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery" />
+        <meta name="twitter:description" content="Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis &amp; Dabba Wala tiffin subscriptions. Home-style South Indian food. Order online." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80" />
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"Restaurant","name":"Sree Svadista Prasada","servesCuisine":["South Indian","Indian","Andhra","Vegetarian","Vegan"],"priceRange":"££","url":"https://sreesvadistaprasada.com","image":"https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80","description":"Authentic South Indian restaurant serving Milton Keynes with Andhra curries, dosas, biryanis, pure veg Prasada menu, and Dabba Wala tiffin subscriptions.","address":{"@type":"PostalAddress","addressLocality":"Milton Keynes","addressRegion":"Buckinghamshire","postalCode":"MK9","addressCountry":"GB"},"areaServed":["Milton Keynes","Edinburgh","Glasgow"],"openingHours":["Mo-Fr 11:00-22:00","Sa-Su 10:00-23:00"],"hasMenu":"https://sreesvadistaprasada.com/svadista","menu":"https://sreesvadistaprasada.com/svadista","sameAs":["https://sreesvadistaprasada.com"]})}</script>
       </Helmet>
 
       {/* Hero Slider */}

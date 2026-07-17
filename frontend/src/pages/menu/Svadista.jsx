@@ -60,21 +60,21 @@ const Svadista = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>Non-Veg South Indian Menu | Sree Svadista | Milton Keynes</title>
-        <meta name="description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
+        <title>Non-Veg Indian Food Milton Keynes | Andhra Curries &amp; Biryani | Sree Svadista</title>
+        <meta name="description" content="Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, mutton biryani &amp; more. Bold South Indian flavours. Order now." />
+        <meta name="keywords" content="non veg Indian food Milton Keynes, chicken biryani Milton Keynes, South Indian meat curries MK, mutton curry delivery Milton Keynes, best biryani Milton Keynes, Andhra chicken curry delivery, authentic non veg South Indian food" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/svadista" />
-        <meta property="og:title" content="Non-Veg South Indian Menu | Sree Svadista | Milton Keynes" />
-        <meta property="og:description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
+        <meta property="og:title" content="Non-Veg Indian Food Milton Keynes | Andhra Curries &amp; Biryani" />
+        <meta property="og:description" content="Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, mutton biryani &amp; more. Bold South Indian flavours." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/svadista" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1773209927959-b2959be5e684?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Non-Veg South Indian Menu | Sree Svadista | Milton Keynes" />
-        <meta name="twitter:description" content="Order authentic non-veg South Indian food in Milton Keynes. Slow-cooked mutton curries, village-style chicken, and bold Andhra recipes." />
+        <meta name="twitter:title" content="Non-Veg Indian Food Milton Keynes | Andhra Curries &amp; Biryani" />
+        <meta name="twitter:description" content="Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, mutton biryani &amp; more. Bold South Indian flavours." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1773209927959-b2959be5e684?w=1200&q=80" />
-        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Svadista — Non-Veg Menu",item:"https://sreesvadistaprasada.com/svadista"}]})}</script>
-      </Helmet>
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Svadista — Non-Veg Menu",item:"https://sreesvadistaprasada.com/svadista"}]})}</script>        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"Menu","name":"Sree Svadista — Non-Veg Menu","description":"Authentic non-vegetarian South Indian food including Andhra curries, biryanis, slow-cooked mutton, and village-style chicken dishes.","url":"https://sreesvadistaprasada.com/svadista","inLanguage":"en","hasMenuSection":[{"@type":"MenuSection","name":"Andhra Curries"},{"@type":"MenuSection","name":"Biryani"},{"@type":"MenuSection","name":"Chicken Dishes"},{"@type":"MenuSection","name":"Mutton Dishes"}],"provider":{"@type":"Restaurant","name":"Sree Svadista Prasada","url":"https://sreesvadistaprasada.com","servesCuisine":["South Indian","Andhra","Indian"],"address":{"@type":"PostalAddress","addressLocality":"Milton Keynes","addressCountry":"GB"}}})}</script>      </Helmet>
       {/* Hero */}}
       <section className="relative overflow-hidden" style={{ height: 'min(58vh, 460px)' }}>
         <img

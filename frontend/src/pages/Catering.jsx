@@ -38,19 +38,21 @@ const Catering = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>South Indian Catering Services | Milton Keynes | Sree Svadista Prasada</title>
-        <meta name="description" content="Professional South Indian catering in Milton Keynes. Tailored veg and non-veg menus for weddings, corporate events, and family parties." />
+        <title>Indian Catering Milton Keynes | South Indian Events &amp; Weddings</title>
+        <meta name="description" content="Indian catering Milton Keynes — South Indian weddings, corporate events &amp; family celebrations. Veg &amp; non-veg menus tailored to your occasion. Get a quote." />
+        <meta name="keywords" content="Indian catering Milton Keynes, Indian wedding catering Buckinghamshire, South Indian caterers near me, vegetarian event catering Milton Keynes, live dosa counter catering Milton Keynes, traditional Indian buffet MK, Indian grazing tables catering UK" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/catering" />
-        <meta property="og:title" content="South Indian Catering Services | Milton Keynes | Sree Svadista Prasada" />
-        <meta property="og:description" content="Professional South Indian catering in Milton Keynes. Tailored veg and non-veg menus for weddings, corporate events, and family parties." />
+        <meta property="og:title" content="Indian Catering Milton Keynes | South Indian Events &amp; Weddings" />
+        <meta property="og:description" content="Indian catering Milton Keynes — South Indian weddings, corporate events &amp; family celebrations. Veg &amp; non-veg menus tailored to your occasion." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/catering" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="South Indian Catering Services | Milton Keynes | Sree Svadista Prasada" />
-        <meta name="twitter:description" content="Professional South Indian catering in Milton Keynes. Tailored veg and non-veg menus for weddings, corporate events, and family parties." />
+        <meta name="twitter:title" content="Indian Catering Milton Keynes | South Indian Events &amp; Weddings" />
+        <meta name="twitter:description" content="Indian catering Milton Keynes — South Indian weddings, corporate events &amp; family celebrations. Veg &amp; non-veg menus tailored to your occasion." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?w=1200&q=80" />
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"FoodService","name":"Sree Svadista Prasada — Catering Services","description":"Professional South Indian catering for weddings, corporate events, and family celebrations in Milton Keynes and Buckinghamshire.","url":"https://sreesvadistaprasada.com/catering","areaServed":["Milton Keynes","Buckinghamshire","Northamptonshire","Edinburgh","Glasgow"],"servesCuisine":["South Indian","Indian","Vegetarian","Vegan","Andhra"],"provider":{"@type":"Restaurant","name":"Sree Svadista Prasada","url":"https://sreesvadistaprasada.com","address":{"@type":"PostalAddress","addressLocality":"Milton Keynes","addressCountry":"GB"}}})}</script>
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>

@@ -241,18 +241,19 @@ export default function ItemDetail() {
   return (
     <div className="min-h-screen pt-20 md:pt-24 pb-16" style={{ backgroundColor:'#FAF8F4' }}>
       <Helmet>
-        <title>{item.name} | Sree Svadista Prasada — South Indian Food Milton Keynes</title>
-        <meta name="description" content={item.seo_meta_description || (item.description ? item.description.slice(0, 155) + '...' : 'Authentic South Indian dish at Sree Svadista Prasada, Milton Keynes. Order online for delivery.')} />
+        <title>{item.name} Milton Keynes | Order Online | Sree Svadista Prasada</title>
+        <meta name="description" content={item.seo_meta_description || `${item.name} in Milton Keynes — ${(item.description || '').slice(0, 100)}. Order online from Sree Svadista Prasada.`} />
+        <meta name="keywords" content={`${item.name}, ${item.name} Milton Keynes, ${item.name} delivery, ${item.name} near me, ${item.name} takeaway, South Indian food Milton Keynes, ${item.is_veg ? 'vegetarian Indian food Milton Keynes' : 'non veg Indian food Milton Keynes'}`} />
         <link rel="canonical" href={`https://sreesvadistaprasada.com/item/${item.id}`} />
-        <meta property="og:title" content={`${item.name} | Sree Svadista Prasada`} />
-        <meta property="og:description" content={item.seo_meta_description || (item.description ? item.description.slice(0, 155) : 'Authentic South Indian dish at Sree Svadista Prasada, Milton Keynes.')} />
+        <meta property="og:title" content={`${item.name} Milton Keynes | Order Online | Sree Svadista Prasada`} />
+        <meta property="og:description" content={item.seo_meta_description || `${item.name} in Milton Keynes — ${(item.description || '').slice(0, 100)}. Order online from Sree Svadista Prasada.`} />
         <meta property="og:type" content="product" />
         <meta property="og:url" content={`https://sreesvadistaprasada.com/item/${item.id}`} />
         <meta property="og:image" content={item.image || 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'} />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${item.name} | Sree Svadista Prasada`} />
-        <meta name="twitter:description" content={item.seo_meta_description || (item.description ? item.description.slice(0, 155) : 'Authentic South Indian dish at Sree Svadista Prasada, Milton Keynes.')} />
+        <meta name="twitter:title" content={`${item.name} Milton Keynes | Order Online | Sree Svadista Prasada`} />
+        <meta name="twitter:description" content={item.seo_meta_description || `${item.name} in Milton Keynes — ${(item.description || '').slice(0, 100)}. Order online from Sree Svadista Prasada.`} />
         <meta name="twitter:image" content={item.image || 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'} />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
@@ -278,6 +279,15 @@ export default function ItemDetail() {
               "worstRating": "1",
             },
           }),
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://sreesvadistaprasada.com" },
+            { "@type": "ListItem", position: 2, name: "Menu", item: "https://sreesvadistaprasada.com/menu" },
+            { "@type": "ListItem", position: 3, name: item.name, item: `https://sreesvadistaprasada.com/item/${item.id}` },
+          ]
         })}</script>
       </Helmet>
       <div className="max-w-6xl mx-auto px-4 md:px-8">

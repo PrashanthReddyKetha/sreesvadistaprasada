@@ -28,20 +28,22 @@ const Drinks = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>Traditional Indian Drinks &amp; Mango Lassi | Milton Keynes</title>
-        <meta name="description" content="Cool down with our refreshing Mango Lassi and traditional Masala Buttermilk in Milton Keynes. Fresh fruit juices and authentic hot drinks." />
+        <title>Mango Lassi Milton Keynes | Traditional Indian Drinks &amp; Juices</title>
+        <meta name="description" content="Mango Lassi Milton Keynes — ripe Alphonso mango blended with creamy yoghurt. Plus masala buttermilk, fresh juices &amp; traditional Indian drinks. Order now." />
+        <meta name="keywords" content="mango lassi Milton Keynes, traditional Indian drinks takeaway, masala buttermilk near me, fresh fruit juices Milton Keynes, sweet lassi delivery MK, ragi malt drink online, South Indian filter coffee MK, mango lassi delivery near me" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/drinks" />
-        <meta property="og:title" content="Traditional Indian Drinks &amp; Mango Lassi | Milton Keynes" />
-        <meta property="og:description" content="Cool down with our refreshing Mango Lassi and traditional Masala Buttermilk in Milton Keynes. Fresh fruit juices and authentic hot drinks." />
+        <meta property="og:title" content="Mango Lassi Milton Keynes | Traditional Indian Drinks" />
+        <meta property="og:description" content="Mango Lassi Milton Keynes — ripe Alphonso mango blended with creamy yoghurt. Plus masala buttermilk, fresh juices &amp; traditional Indian drinks." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/drinks" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1553909489-cd47e0907980?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Traditional Indian Drinks &amp; Mango Lassi | Milton Keynes" />
-        <meta name="twitter:description" content="Cool down with our refreshing Mango Lassi and traditional Masala Buttermilk in Milton Keynes. Fresh fruit juices and authentic hot drinks." />
+        <meta name="twitter:title" content="Mango Lassi Milton Keynes | Traditional Indian Drinks" />
+        <meta name="twitter:description" content="Mango Lassi Milton Keynes — ripe Alphonso mango blended with creamy yoghurt. Plus masala buttermilk, fresh juices &amp; traditional Indian drinks." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1553909489-cd47e0907980?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Indian Drinks",item:"https://sreesvadistaprasada.com/drinks"}]})}</script>
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"Menu","name":"Traditional Indian Drinks Menu","description":"Refreshing Indian drinks including Mango Lassi, Masala Buttermilk, fresh fruit juices, and traditional hot beverages.","url":"https://sreesvadistaprasada.com/drinks","inLanguage":"en","hasMenuSection":[{"@type":"MenuSection","name":"Lassi & Yoghurt Drinks"},{"@type":"MenuSection","name":"Fresh Juices"},{"@type":"MenuSection","name":"Hot Drinks"},{"@type":"MenuSection","name":"Ragi Drinks"}],"provider":{"@type":"Restaurant","name":"Sree Svadista Prasada","url":"https://sreesvadistaprasada.com","servesCuisine":["South Indian","Indian"],"address":{"@type":"PostalAddress","addressLocality":"Milton Keynes","addressCountry":"GB"}}})}</script>
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>

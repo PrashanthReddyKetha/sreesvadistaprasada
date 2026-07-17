@@ -34,6 +34,8 @@ const RagiSpecials = React.lazy(() => import('./pages/menu/RagiSpecials'));
 const Drinks = React.lazy(() => import('./pages/menu/Drinks'));
 const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy'));
 const TermsAndServices = React.lazy(() => import('./pages/TermsAndServices'));
+const Edinburgh = React.lazy(() => import('./pages/Edinburgh'));
+const Glasgow = React.lazy(() => import('./pages/Glasgow'));
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "placeholder";
 
@@ -126,6 +128,8 @@ function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndServices />} />
+            <Route path="/edinburgh" element={<Edinburgh />} />
+            <Route path="/glasgow" element={<Glasgow />} />
           </Routes>
           </Suspense>
           <Footer />

@@ -749,19 +749,21 @@ const SubscriptionsInner = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
       <Helmet>
-        <title>Indian Tiffin Service &amp; Meal Subscriptions | Milton Keynes</title>
-        <meta name="description" content="Subscribe to the best Indian tiffin service in Milton Keynes. Fresh, home-cooked daily meal subscriptions delivered hot to your door or office." />
+        <title>Indian Tiffin Service Milton Keynes | Daily Meal Subscriptions | Dabba Wala</title>
+        <meta name="description" content="Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg &amp; non-veg Andhra boxes delivered Mon–Fri. Subscribe now." />
+        <meta name="keywords" content="Indian tiffin service Milton Keynes, home cooked Indian meal subscription, daily tiffin delivery Milton Keynes, Indian meal prep delivery MK, Dabba Wala meal plan Milton Keynes, weekly Indian meal box delivery, South Indian meal subscription UK" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/subscriptions" />
-        <meta property="og:title" content="Indian Tiffin Service &amp; Meal Subscriptions | Milton Keynes" />
-        <meta property="og:description" content="Subscribe to the best Indian tiffin service in Milton Keynes. Fresh, home-cooked daily meal subscriptions delivered hot to your door or office." />
+        <meta property="og:title" content="Indian Tiffin Service Milton Keynes | Daily Meal Subscriptions" />
+        <meta property="og:description" content="Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg &amp; non-veg Andhra boxes delivered Mon–Fri." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/subscriptions" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1657205937707-940bf77b2602?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Indian Tiffin Service &amp; Meal Subscriptions | Milton Keynes" />
-        <meta name="twitter:description" content="Subscribe to the best Indian tiffin service in Milton Keynes. Fresh, home-cooked daily meal subscriptions delivered hot to your door or office." />
+        <meta name="twitter:title" content="Indian Tiffin Service Milton Keynes | Daily Meal Subscriptions" />
+        <meta name="twitter:description" content="Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg &amp; non-veg Andhra boxes delivered Mon–Fri." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1657205937707-940bf77b2602?w=1200&q=80" />
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"Service","name":"Dabba Wala Indian Tiffin Subscription","description":"Home-cooked South Indian meal subscription service delivering daily tiffin boxes in Milton Keynes. Weekly and monthly plans available.","url":"https://sreesvadistaprasada.com/subscriptions","serviceType":"Indian Tiffin Meal Subscription","areaServed":{"@type":"City","name":"Milton Keynes"},"provider":{"@type":"Restaurant","name":"Sree Svadista Prasada","url":"https://sreesvadistaprasada.com","address":{"@type":"PostalAddress","addressLocality":"Milton Keynes","addressCountry":"GB"}},"offers":[{"@type":"Offer","name":"Weekly Tiffin Plan","price":"45","priceCurrency":"GBP","description":"5 meals per week"},{"@type":"Offer","name":"Monthly Tiffin Plan","price":"160","priceCurrency":"GBP","description":"20 meals per month"}]})}</script>
       </Helmet>
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ height: 'min(42vh, 340px)' }}>

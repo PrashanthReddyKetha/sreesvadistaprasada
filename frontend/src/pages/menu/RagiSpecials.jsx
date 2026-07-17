@@ -31,19 +31,21 @@ const RagiSpecials = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>Ragi Specials — Healthy South Indian | Milton Keynes | Sree Svadista Prasada</title>
-        <meta name="description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
+        <title>Ragi Specials Milton Keynes | Healthy South Indian Millet Food Delivery</title>
+        <meta name="description" content="Ragi Specials Milton Keynes — finger millet dishes including Ragi Sangati, Ragi Dosa &amp; Ragi Malt. Nutritious traditional South Indian superfoods. Order now." />
+        <meta name="keywords" content="ragi specials Milton Keynes, healthy South Indian food MK, Ragi Sangati delivery, finger millet food delivery MK, Ragi Dosa near me, Ragi Malt drink online, healthy Indian food delivery Milton Keynes, gluten free Indian food MK" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/ragi-specials" />
-        <meta property="og:title" content="Ragi Specials — Healthy South Indian | Milton Keynes" />
-        <meta property="og:description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
+        <meta property="og:title" content="Ragi Specials Milton Keynes | Healthy South Indian Millet Food" />
+        <meta property="og:description" content="Ragi Specials Milton Keynes — finger millet dishes including Ragi Sangati, Ragi Dosa &amp; Ragi Malt. Nutritious traditional South Indian superfoods." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/ragi-specials" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Ragi Specials — Healthy South Indian | Milton Keynes" />
-        <meta name="twitter:description" content="Order healthy ragi-based South Indian dishes in Milton Keynes. Ragi Sangati, Ragi Dosa, Ragi Malt and more. Nutritious traditional recipes." />
+        <meta name="twitter:title" content="Ragi Specials Milton Keynes | Healthy South Indian Millet Food" />
+        <meta name="twitter:description" content="Ragi Specials Milton Keynes — finger millet dishes including Ragi Sangati, Ragi Dosa &amp; Ragi Malt. Nutritious traditional South Indian superfoods." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1200&q=80" />
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"Menu","name":"Ragi Specials Menu","description":"Healthy ragi (finger millet) South Indian dishes including Ragi Sangati, Ragi Dosa, and Ragi Malt — nutritious traditional superfoods.","url":"https://sreesvadistaprasada.com/ragi-specials","inLanguage":"en","hasMenuSection":[{"@type":"MenuSection","name":"Ragi Rice Dishes"},{"@type":"MenuSection","name":"Ragi Dosas"},{"@type":"MenuSection","name":"Ragi Drinks"}],"provider":{"@type":"Restaurant","name":"Sree Svadista Prasada","url":"https://sreesvadistaprasada.com","servesCuisine":["South Indian","Indian","Healthy"],"address":{"@type":"PostalAddress","addressLocality":"Milton Keynes","addressCountry":"GB"}}})}</script>
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>

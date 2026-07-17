@@ -8,18 +8,19 @@ const OurStory = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>Our Story | Authentic South Indian Restaurant | Milton Keynes</title>
-        <meta name="description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
+        <title>Authentic South Indian Restaurant Milton Keynes | Our Story | Sree Svadista Prasada</title>
+        <meta name="description" content="Authentic South Indian restaurant Milton Keynes — the story behind Sree Svadista Prasada. Home-style Andhra cooking from our family to yours." />
+        <meta name="keywords" content="authentic South Indian restaurant Milton Keynes, home style Indian restaurant story, traditional Andhra cooking MK, best Telugu food in UK, South Indian family restaurant Milton Keynes, Andhra style cooking history" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/story" />
-        <meta property="og:title" content="Our Story | Authentic South Indian Restaurant | Milton Keynes" />
-        <meta property="og:description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
+        <meta property="og:title" content="Authentic South Indian Restaurant Milton Keynes | Our Story" />
+        <meta property="og:description" content="Authentic South Indian restaurant Milton Keynes — the story behind Sree Svadista Prasada. Home-style Andhra cooking from our family to yours." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/story" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1748323123788-87a32949f4b0?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Our Story | Authentic South Indian Restaurant | Milton Keynes" />
-        <meta name="twitter:description" content="Discover Sree Svadista Prasada. Read how we bring the warmth of authentic, home-style South Indian cooking to Milton Keynes." />
+        <meta name="twitter:title" content="Authentic South Indian Restaurant Milton Keynes | Our Story" />
+        <meta name="twitter:description" content="Authentic South Indian restaurant Milton Keynes — the story behind Sree Svadista Prasada. Home-style Andhra cooking from our family to yours." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1748323123788-87a32949f4b0?w=1200&q=80" />
       </Helmet>
       {/* Hero */}

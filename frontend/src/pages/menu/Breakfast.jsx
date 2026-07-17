@@ -57,20 +57,22 @@ const Breakfast = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>South Indian Breakfast &amp; Tiffins | Milton Keynes</title>
-        <meta name="description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
+        <title>South Indian Breakfast Milton Keynes | Dosa, Idli &amp; Vada Delivery</title>
+        <meta name="description" content="South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar &amp; freshly fried vada delivered hot. Light, fresh and authentic. Order now." />
+        <meta name="keywords" content="South Indian breakfast Milton Keynes, dosa Milton Keynes, masala dosa near me, idli sambar delivery near me, sambar vada takeaway, South Indian breakfast buffet MK, crispy dosa takeaway Milton Keynes, ghee podi idli delivery" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/breakfast" />
-        <meta property="og:title" content="South Indian Breakfast &amp; Tiffins | Milton Keynes" />
-        <meta property="og:description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
+        <meta property="og:title" content="South Indian Breakfast Milton Keynes | Dosa, Idli &amp; Vada" />
+        <meta property="og:description" content="South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar &amp; freshly fried vada delivered hot. Light, fresh and authentic." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/breakfast" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1630383249896-424e482df921?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="South Indian Breakfast &amp; Tiffins | Milton Keynes" />
-        <meta name="twitter:description" content="Order fresh South Indian breakfast in Milton Keynes. Get crispy masala dosas, idli, and vada delivered hot to start your morning right." />
+        <meta name="twitter:title" content="South Indian Breakfast Milton Keynes | Dosa, Idli &amp; Vada" />
+        <meta name="twitter:description" content="South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar &amp; freshly fried vada delivered hot. Light, fresh and authentic." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1630383249896-424e482df921?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"South Indian Breakfast",item:"https://sreesvadistaprasada.com/breakfast"}]})}</script>
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"Menu","name":"South Indian Breakfast Menu","description":"Fresh South Indian breakfast dishes including crispy dosas, idli, sambar vada, and traditional tiffin items.","url":"https://sreesvadistaprasada.com/breakfast","inLanguage":"en","hasMenuSection":[{"@type":"MenuSection","name":"Dosas"},{"@type":"MenuSection","name":"Idli & Vada"},{"@type":"MenuSection","name":"Uttapam"},{"@type":"MenuSection","name":"Tiffin Combos"}],"provider":{"@type":"Restaurant","name":"Sree Svadista Prasada","url":"https://sreesvadistaprasada.com","servesCuisine":["South Indian","Indian"],"address":{"@type":"PostalAddress","addressLocality":"Milton Keynes","addressCountry":"GB"}}})}</script>
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>

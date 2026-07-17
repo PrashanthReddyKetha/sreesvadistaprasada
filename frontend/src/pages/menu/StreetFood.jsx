@@ -31,20 +31,22 @@ const StreetFood = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>Indian Street Food &amp; Chaat | Milton Keynes | Sree Svadista Prasada</title>
-        <meta name="description" content="Taste the best Indian street food in Milton Keynes. Order fresh pani puri, crispy chaat, spicy Gobi Manchurian, and hot street snacks." />
+        <title>Indian Street Food Milton Keynes | Pani Puri &amp; Chaat Delivery</title>
+        <meta name="description" content="Indian street food Milton Keynes — pani puri, crispy chaat, chicken momos &amp; Gobi Manchurian. Real Hyderabad &amp; Mumbai street flavours to your door." />
+        <meta name="keywords" content="Indian street food Milton Keynes, pani puri Milton Keynes, chaat delivery Milton Keynes, Indo Chinese food takeaway MK, chicken momos online, spicy gobi manchurian near me, punugulu street snacks delivery, best pav bhaji Milton Keynes" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/street-food" />
-        <meta property="og:title" content="Indian Street Food &amp; Chaat | Milton Keynes | Sree Svadista Prasada" />
-        <meta property="og:description" content="Taste the best Indian street food in Milton Keynes. Order fresh pani puri, crispy chaat, spicy Gobi Manchurian, and hot street snacks." />
+        <meta property="og:title" content="Indian Street Food Milton Keynes | Pani Puri &amp; Chaat" />
+        <meta property="og:description" content="Indian street food Milton Keynes — pani puri, crispy chaat, chicken momos &amp; Gobi Manchurian. Real Hyderabad &amp; Mumbai street flavours to your door." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/street-food" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Indian Street Food &amp; Chaat | Milton Keynes | Sree Svadista Prasada" />
-        <meta name="twitter:description" content="Taste the best Indian street food in Milton Keynes. Order fresh pani puri, crispy chaat, spicy Gobi Manchurian, and hot street snacks." />
+        <meta name="twitter:title" content="Indian Street Food Milton Keynes | Pani Puri &amp; Chaat" />
+        <meta name="twitter:description" content="Indian street food Milton Keynes — pani puri, crispy chaat, chicken momos &amp; Gobi Manchurian. Real Hyderabad &amp; Mumbai street flavours to your door." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Indian Street Food",item:"https://sreesvadistaprasada.com/street-food"}]})}</script>
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"Menu","name":"Indian Street Food & Chaat Menu","description":"Authentic Indian street food in Milton Keynes — pani puri, chaat, momos, Gobi Manchurian, and Indo-Chinese snacks.","url":"https://sreesvadistaprasada.com/street-food","inLanguage":"en","hasMenuSection":[{"@type":"MenuSection","name":"Chaat"},{"@type":"MenuSection","name":"Pani Puri"},{"@type":"MenuSection","name":"Indo-Chinese"},{"@type":"MenuSection","name":"Momos"}],"provider":{"@type":"Restaurant","name":"Sree Svadista Prasada","url":"https://sreesvadistaprasada.com","servesCuisine":["South Indian","Indian Street Food","Indo-Chinese"],"address":{"@type":"PostalAddress","addressLocality":"Milton Keynes","addressCountry":"GB"}}})}</script>
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>

@@ -32,18 +32,19 @@ const FAQ = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>FAQs | Indian Takeaway &amp; Tiffin Delivery | Milton Keynes</title>
-        <meta name="description" content="Got questions? Find out about our separate vegetarian kitchen, halal food sourcing, and tiffin subscription delivery zones across Milton Keynes." />
+        <title>Indian Takeaway FAQs Milton Keynes | Tiffin &amp; Delivery Questions</title>
+        <meta name="description" content="Indian takeaway FAQs Milton Keynes — pure veg kitchen, halal sourcing, tiffin delivery zones, allergens &amp; more. All your questions answered." />
+        <meta name="keywords" content="Indian takeaway Milton Keynes postcodes, pure veg separate kitchens, how to pause tiffin subscription, best Indian food delivery app MK, halal Indian food Milton Keynes, South Indian restaurant opening hours, Indian meal delivery FAQ" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/faq" />
-        <meta property="og:title" content="FAQs | Indian Takeaway &amp; Tiffin Delivery | Milton Keynes" />
-        <meta property="og:description" content="Got questions? Find out about our separate vegetarian kitchen, halal food sourcing, and tiffin subscription delivery zones across Milton Keynes." />
+        <meta property="og:title" content="Indian Takeaway FAQs Milton Keynes | Tiffin &amp; Delivery Questions" />
+        <meta property="og:description" content="Indian takeaway FAQs Milton Keynes — pure veg kitchen, halal sourcing, tiffin delivery zones, allergens &amp; more. All your questions answered." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/faq" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1742281258189-3b933879867a?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="FAQs | Indian Takeaway &amp; Tiffin Delivery | Milton Keynes" />
-        <meta name="twitter:description" content="Got questions? Find out about our separate vegetarian kitchen, halal food sourcing, and tiffin subscription delivery zones across Milton Keynes." />
+        <meta name="twitter:title" content="Indian Takeaway FAQs Milton Keynes | Tiffin &amp; Delivery Questions" />
+        <meta name="twitter:description" content="Indian takeaway FAQs Milton Keynes — pure veg kitchen, halal sourcing, tiffin delivery zones, allergens &amp; more. All your questions answered." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1742281258189-3b933879867a?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",

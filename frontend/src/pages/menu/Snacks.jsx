@@ -43,20 +43,22 @@ const Snacks = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <Helmet>
-        <title>Buy South Indian Snacks &amp; Andhra Pickles Online | UK Delivery</title>
-        <meta name="description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
+        <title>Buy Indian Snacks Online UK | Andhra Pickles &amp; Savouries | Sree Svadista Prasada</title>
+        <meta name="description" content="Buy Indian snacks online UK — handmade Andhra pickles, traditional savouries &amp; chutneys with fast UK-wide delivery. No preservatives, small batch. Shop now." />
+        <meta name="keywords" content="buy Indian snacks online UK, South Indian sweets online UK, Andhra pickles online UK, Indian savouries delivery UK, buy mango pickle online, Gongura pickle online UK, authentic mango avakaya pickle, Kandi Podi online UK" />
         <link rel="canonical" href="https://sreesvadistaprasada.com/snacks" />
-        <meta property="og:title" content="Buy South Indian Snacks &amp; Andhra Pickles Online | UK Delivery" />
-        <meta property="og:description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
+        <meta property="og:title" content="Buy Indian Snacks Online UK | Andhra Pickles &amp; Savouries" />
+        <meta property="og:description" content="Buy Indian snacks online UK — handmade Andhra pickles, traditional savouries &amp; chutneys with fast UK-wide delivery. No preservatives, small batch." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sreesvadistaprasada.com/snacks" />
         <meta property="og:image" content="https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?w=1200&q=80" />
         <meta property="og:site_name" content="Sree Svadista Prasada" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Buy South Indian Snacks &amp; Andhra Pickles Online | UK Delivery" />
-        <meta name="twitter:description" content="Buy authentic South Indian snacks and homemade Andhra pickles online with fast UK-wide delivery. Enjoy fresh, small-batch traditional savouries." />
+        <meta name="twitter:title" content="Buy Indian Snacks Online UK | Andhra Pickles &amp; Savouries" />
+        <meta name="twitter:description" content="Buy Indian snacks online UK — handmade Andhra pickles, traditional savouries &amp; chutneys with fast UK-wide delivery. No preservatives, small batch." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?w=1200&q=80" />
         <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:"https://sreesvadistaprasada.com"},{"@type":"ListItem",position:2,name:"Snacks & Pickles",item:"https://sreesvadistaprasada.com/snacks"}]})}</script>
+        <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"Menu","name":"South Indian Snacks & Andhra Pickles","description":"Authentic South Indian snacks and handmade Andhra pickles available for online purchase with UK-wide delivery.","url":"https://sreesvadistaprasada.com/snacks","inLanguage":"en","hasMenuSection":[{"@type":"MenuSection","name":"Andhra Pickles"},{"@type":"MenuSection","name":"South Indian Sweets"},{"@type":"MenuSection","name":"Traditional Savouries"},{"@type":"MenuSection","name":"Chutneys & Podis"}],"provider":{"@type":"Restaurant","name":"Sree Svadista Prasada","url":"https://sreesvadistaprasada.com","servesCuisine":["South Indian","Andhra","Indian"],"address":{"@type":"PostalAddress","addressLocality":"Milton Keynes","addressCountry":"GB"}}})}</script>
       </Helmet>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
