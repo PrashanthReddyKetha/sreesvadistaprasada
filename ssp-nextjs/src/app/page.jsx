@@ -7,7 +7,7 @@ export const metadata = {
   openGraph: {
     title: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery',
     description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
-    type: 'restaurant',
+    type: 'website',
     url: 'https://sreesvadistaprasada.com/',
     siteName: 'Sree Svadista Prasada',
     locale: 'en_GB',
