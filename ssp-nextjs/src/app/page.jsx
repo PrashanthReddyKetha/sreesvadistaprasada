@@ -30,7 +30,8 @@ const jsonLd = {
       image: 'https://www.sreesvadistaprasada.com/logo.png',
       logo: 'https://www.sreesvadistaprasada.com/logo.png',
       priceRange: '££',
-      servesCuisine: ['South Indian', 'Indian', 'Vegetarian', 'Vegan'],
+      servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan', 'Halal'],
+      knowsAbout: ['Gongura', 'Andhra cuisine', 'Telugu food', 'Dabba Wala', 'Ragi', 'Pulihora', 'Avakaya', 'Chicken 65', 'Gutti Vankaya'],
       aggregateRating: {
         '@type': 'AggregateRating',
         ratingValue: '4.8',

@@ -465,6 +465,71 @@ export const faqData = [
       { q: 'What payment methods do you accept?', a: 'We accept all major credit/debit cards, Apple Pay, Google Pay, and bank transfers. Cash on delivery available in Milton Keynes.' },
       { q: 'How do I contact you?', a: 'Call us at +44 73 0711 9962, WhatsApp the same number, or email hello@sreesvadista.co.uk. You can also use the contact form on our website.' },
     ]
+  },
+  {
+    category: 'South Indian Food Guide',
+    items: [
+      {
+        q: 'What is gongura?',
+        a: 'Gongura is a leafy green (Hibiscus sabdariffa / sorrel) native to Andhra Pradesh, South India, prized for its intense tangy-sour flavour. Known as the "pride of Andhra", it is used in chutneys, curries (Gongura Chicken, Gongura Mutton), pickles (gongura pachadi), and dals. Rich in iron, calcium, and folate, it is also one of the most nutritionally dense leafy greens in South Indian cooking. No other regional Indian cuisine uses it as extensively as Telugu cuisine.',
+      },
+      {
+        q: 'What makes Andhra food different from other Indian cuisines?',
+        a: 'Andhra Pradesh (Telugu) cuisine is distinguished by its exceptional heat — it uses Guntur chillies, among the hottest varieties in the world. Flavour profiles are built on a combination of tamarind (sourness), Guntur chilli (heat), and sesame or peanut (richness), a combination not found elsewhere. Signature ingredients like gongura (sorrel), raw mango, and tamarind feature heavily. Unlike Mughal-influenced North Indian cooking, Andhra cuisine relies on dry tempering (talimpu/tadka) rather than cream-based gravies, and rice is the staple grain.',
+      },
+      {
+        q: 'What are the health benefits of ragi (finger millet)?',
+        a: 'Ragi (finger millet / Eleusine coracana) is one of the most nutritious grains in South India. It contains more calcium than milk gram-for-gram, is exceptionally high in dietary fibre, has a low glycaemic index making it suitable for diabetics, and is naturally gluten-free. It is rich in the amino acid methionine and has been a dietary staple in rural Andhra and Karnataka for centuries. At Sree Svadista Prasada, ragi features in our Ragi Dosa, Ragi Sangati, and Ragi Laddu.',
+      },
+      {
+        q: 'What is sambar?',
+        a: 'Sambar is a South Indian lentil-based vegetable stew — a cornerstone of the cuisine. Made with toor dal (split pigeon peas), tamarind, tomatoes, and sambar powder (a blend of coriander, cumin, pepper, and dried chillies), it is served daily alongside idli, dosa, vada, and rice. It is naturally vegan and an excellent source of plant protein and fibre. Every household has its own recipe; ours uses a slow-cooked tamarind base with a fresh curry leaf and mustard seed tadka.',
+      },
+      {
+        q: 'What is rasam?',
+        a: 'Rasam is a thin, peppery South Indian soup served at the end of a meal to aid digestion. Made from tamarind water, tomatoes, black pepper, cumin, and curry leaves, it is lighter than sambar and distinctly peppery. It is drunk directly like a soup or poured over rice. In South Indian homes, rasam is the go-to remedy for colds, sore throats, and digestive discomfort — the pepper, cumin, and tamarind combination has well-documented digestive and antimicrobial properties.',
+      },
+      {
+        q: 'What is pulihora?',
+        a: 'Pulihora (also called tamarind rice or puliyodarai) is a tangy, spiced rice dish from Andhra Pradesh and Tamil Nadu. Cooked rice is mixed with a tamarind paste tempered with mustard seeds, dried red chillies, curry leaves, peanuts, and turmeric. It is one of the oldest South Indian dishes — historically prepared as temple prasadam (sacred offering). The tangy-spicy-nutty flavour is completely unlike any North Indian rice preparation. It also keeps well at room temperature, making it a traditional travel food.',
+      },
+      {
+        q: 'What does "Prasada" mean?',
+        a: 'In Sanskrit and Telugu, "Prasada" (Prasad) means blessing or divine grace — specifically food offered to a deity and then distributed to devotees as a sacred gift. Our Prasada kitchen honours this tradition: it serves only pure vegetarian food, prepared in a completely separate kitchen with dedicated utensils and cooking oils, in the spirit of clean, wholesome, sattvic cooking. It is suitable for strict vegetarians, Jains, and those following temple dietary practices.',
+      },
+      {
+        q: 'What does "Svadista" mean?',
+        a: '"Svadista" (Sanskrit: स्वादिष्ट) means delicious or tasty — literally "having good taste". Our Svadista kitchen represents the full, bold flavour range of Andhra non-vegetarian cooking: Chicken 65, Gongura Chicken Curry, Gongura Mutton, Pesarattu, and slow-cooked biryani. The name reflects our commitment to genuine Andhra flavour — no shortcuts, no shortcuts to heat, no watered-down spicing for mass-market appeal.',
+      },
+      {
+        q: 'What is a Dabba Wala?',
+        a: 'Dabba Wala (also spelled Dabbawala) refers to the legendary Mumbai tiffin delivery network, where carriers collect home-cooked food in metal tiffin boxes (dabbas) and deliver them to offices across the city with near-zero error rates — a system studied by Harvard Business School. Our Dabba Wala subscription honours this tradition: weekly or monthly subscriptions of freshly cooked South Indian home-style meals delivered to your door in Milton Keynes, Edinburgh, and Glasgow.',
+      },
+      {
+        q: 'Is South Indian food gluten-free?',
+        a: 'Most traditional South Indian food is naturally gluten-free. The primary grains are rice, ragi (finger millet), and jowar (sorghum) — all gluten-free. Idli, dosa, vada, sambar, rasam, most chutneys, rice-based curries, pickles, and podis contain no wheat. The exceptions are dishes using wheat flour (paratha, maida-based items) or semolina (rava dosa, upma). At Sree Svadista Prasada, the majority of our menu is naturally gluten-free — allergens including gluten are clearly marked on every dish.',
+      },
+      {
+        q: 'Is South Indian food vegan?',
+        a: 'The majority of our Prasada (vegetarian) menu is vegan. Traditional South Indian temple food is entirely plant-based — no dairy, no eggs, no onion, no garlic. Sambar, rasam, pulihora, all rice dishes, most dals, pickles, and podis are 100% vegan. Our Svadista (non-vegetarian) menu includes meat and some dairy-based preparations. We clearly mark vegan options across our menu, and our Prasada kitchen is entirely separate from the non-vegetarian kitchen.',
+      },
+      {
+        q: 'What is Chicken 65?',
+        a: 'Chicken 65 is one of India\'s most beloved fried chicken dishes, originating in Chennai in 1965 (hence the name). Bite-sized chicken pieces are marinated in yoghurt, red chilli, ginger-garlic paste, and South Indian spices, then deep-fried until crispy and tossed with curry leaves, green chillies, and lime. The result is a fiery, aromatic starter — crunchy outside, juicy inside. It is the most-ordered starter on our Svadista menu and one of the defining dishes of South Indian restaurant cooking worldwide.',
+      },
+      {
+        q: 'What is Gutti Vankaya?',
+        a: 'Gutti Vankaya Kura is a classic Andhra stuffed baby aubergine curry. Small, tender brinjals are slit and stuffed with a dry masala paste made from roasted peanuts, sesame seeds, coconut, tamarind, and Andhra spices, then slow-cooked in a rich gravy. It is considered one of the signature dishes of Telugu cuisine and a vegetarian centrepiece. "Gutti" means stuffed and "vankaya" means brinjal/aubergine in Telugu. It is entirely vegan and a staple of festive Andhra meals.',
+      },
+      {
+        q: 'What is Avakaya pickle?',
+        a: 'Avakaya (Avakai) is the most iconic pickle of Andhra Pradesh — a raw mango pickle made with coarsely ground mustard seeds, Guntur red chilli powder, salt, and sesame or groundnut oil. Unlike North Indian mango pickles, Avakaya uses large pieces of unripe green mango, giving it a chunky texture and an intensely sour-spicy-pungent flavour. It is a daily fixture on every Andhra dining table, eaten with plain rice and ghee or yoghurt rice. Our Avakaya is made using traditional stone-ground mustard and whole spices.',
+      },
+      {
+        q: 'What is the difference between South Indian and North Indian food?',
+        a: 'South Indian food is rice-based, uses coconut, tamarind, curry leaves, and mustard seeds, and features lighter, tangier flavour profiles. North Indian food is predominantly wheat-based (chapati, naan, paratha), uses cream, butter, and tomato-based gravies (butter chicken, korma, paneer makhani), and has a richer, sweeter, Mughal-influenced character. South Indian breakfasts — idli, dosa, vada, upma — are entirely different from North Indian parathas. Spice blends also differ: South India uses pepper, Guntur chillies, and tempering techniques that create fundamentally different flavour outcomes.',
+      },
+    ]
   }
 ];
 
