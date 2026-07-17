@@ -419,6 +419,7 @@ const CheckoutInner = () => {
   const [serverPricing, setServerPricing] = useState(null);
   const [postOrderLoyalty, setPostOrderLoyalty] = useState(null);
   const [cardBrand, setCardBrand] = useState(null);
+  const [billingPostcode, setBillingPostcode] = useState('');
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '',
@@ -456,6 +457,7 @@ const CheckoutInner = () => {
         city:     f.city     || user.address?.city     || '',
         postcode: f.postcode || user.address?.postcode || zoneInfo?.postcode || '',
       }));
+      setBillingPostcode(p => p || user.address?.postcode || '');
     }
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -577,24 +579,30 @@ const CheckoutInner = () => {
       ? ['name', 'email', 'phone']
       : ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
     if (required.some(k => !form[k].trim())) { setError('Please fill in all required fields.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('Please enter a valid email address.'); return; }
+    if (deliveryType === 'delivery' && pcError) { setError("We don't deliver to this postcode. Please choose Takeaway/Collection or change your postcode."); return; }
     if (!stripe || !elements) { setError('Payment not ready. Please wait a moment.'); return; }
     const cardNumberElement = elements.getElement(CardNumberElement);
     if (!cardNumberElement) { setError('Card details are missing.'); return; }
     setSubmitting(true);
+    let paymentSucceeded = false;
+    let capturedPI = null;
     try {
       // Always use server-calculated total — never trust client amount
       const chargeAmount = validPricing?.grand_total ?? grandTotal;
       const intentRes = await api.post('/payments/create-intent', { amount: chargeAmount });
       const { client_secret, payment_intent_id } = intentRes.data;
+      capturedPI = payment_intent_id;
 
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: {
           card: cardNumberElement,
-          billing_details: { name: form.name, email: form.email, address: { postal_code: form.postcode } },
+          billing_details: { name: form.name, email: form.email, address: { postal_code: billingPostcode || form.postcode } },
         },
       });
       if (stripeError) { setError(stripeError.message || 'Payment failed. Please try again.'); return; }
       if (paymentIntent.status !== 'succeeded') { setError('Payment was not completed. Please try again.'); return; }
+      paymentSucceeded = true;
 
       const items = [
         ...cartItems.map(i => ({ menu_item_id: i.id, name: i.name, price: price(i.price), quantity: i.quantity })),
@@ -630,7 +638,11 @@ const CheckoutInner = () => {
       setSuccess({ orderId: res.data?.id?.slice(-6).toUpperCase() || '', isRedemption: !!freeItem });
       clearCart();
     } catch (e) {
-      setError(e.response?.data?.detail || 'Something went wrong. Please try again.');
+      if (paymentSucceeded && capturedPI) {
+        setError(`Your card was charged ${fmt(validPricing?.grand_total ?? grandTotal)} (ref: ${capturedPI.slice(-8).toUpperCase()}) but the order could not be confirmed. Please WhatsApp or call us immediately quoting this reference so we can fix it.`);
+      } else {
+        setError(e.response?.data?.detail || 'Something went wrong. Please try again.');
+      }
     } finally { setSubmitting(false); }
   };
 
@@ -713,12 +725,21 @@ const CheckoutInner = () => {
               style={{ borderColor: '#800020', color: '#800020' }}>
               Back to Home
             </button>
-            {user && (
+            {user ? (
               <button onClick={() => router.push('/dashboard')}
                 className="flex-1 py-3 text-sm font-bold text-white rounded-xl transition-all hover:shadow-md"
                 style={{ backgroundColor: '#800020' }}>
                 Track My Order
               </button>
+            ) : (
+              <a
+                href={`https://wa.me/447307119962?text=Hi%2C+my+order+reference+is+%23${success.orderId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-3 text-sm font-bold text-white rounded-xl text-center transition-all hover:opacity-90"
+                style={{ backgroundColor: '#25D366' }}>
+                Track on WhatsApp →
+              </a>
             )}
           </div>
         </div>
@@ -1025,10 +1046,10 @@ const CheckoutInner = () => {
                       </div>
                       <input
                         type="text"
-                        value={form.postcode}
-                        onChange={e => set('postcode')(e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase())}
-                        placeholder="Postcode"
-                        className="p-3 rounded-xl border-2 text-sm focus:outline-none"
+                        value={billingPostcode}
+                        onChange={e => setBillingPostcode(e.target.value.replace(/[^a-zA-Z0-9\s]/g, '').toUpperCase())}
+                        placeholder="Billing postcode"
+                        className="p-3 rounded-xl border-2 text-sm focus:outline-none uppercase"
                         style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7', color: '#2D2422' }}
                       />
                     </div>
