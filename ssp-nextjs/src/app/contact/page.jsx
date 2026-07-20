@@ -24,7 +24,7 @@ export const metadata = {
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ContactPage',
-  mainEntity: { '@id': 'https://www.sreesvadistaprasada.com/#restaurant' },
+  mainEntity: { '@id': 'https://sreesvadistaprasada.com/#restaurant' },
 };
 
 export default function Page() {

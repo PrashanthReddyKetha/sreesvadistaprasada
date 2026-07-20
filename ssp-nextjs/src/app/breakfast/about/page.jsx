@@ -6,7 +6,7 @@ export const metadata = {
     'The story behind our South Indian breakfast: crispy dosas with fermented batter, ' +
     'Nellore Ghee Karam Dosa, Uggani and Andhra tiffin classics ' +
     'unavailable anywhere else in Milton Keynes. Freshly made daily.',
-  alternates: { canonical: 'https://www.sreesvadistaprasada.com/breakfast/about' },
+  alternates: { canonical: 'https://sreesvadistaprasada.com/breakfast/about' },
 };
 
 export default function BreakfastAboutPage() {

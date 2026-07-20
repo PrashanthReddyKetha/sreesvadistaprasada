@@ -11,6 +11,7 @@ import AuthModal from '@/components/AuthModal'
 import CartToast from '@/components/CartToast'
 import ScrollToTop from '@/components/ScrollToTop'
 import BackendWarmup from '@/components/BackendWarmup'
+import TakeawayNudge from '@/components/TakeawayNudge'
 import '@/styles/globals.css'
 
 const playfair = Playfair_Display({
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartProvider>
               <ScrollToTop />
               <BackendWarmup />
+              <TakeawayNudge />
               <Header />
               <CartDrawer />
               <AuthModal />

@@ -34,7 +34,7 @@ const jsonLd = {
     price: '7.00',
     priceValidUntil: '2027-12-31',
     availability: 'https://schema.org/InStock',
-    url: 'https://www.sreesvadistaprasada.com/subscriptions',
+    url: 'https://sreesvadistaprasada.com/subscriptions',
   },
   areaServed: [
     { '@type': 'City', name: 'Milton Keynes' },

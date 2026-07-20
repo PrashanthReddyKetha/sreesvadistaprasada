@@ -6,7 +6,7 @@ export const metadata = {
     'The Dabba Wala is the only weekly home-cooked South Indian meal subscription ' +
     'in Milton Keynes. Freshly made Andhra and Telugu food delivered daily — ' +
     'not frozen, not reheated. Real ghar ka khana.',
-  alternates: { canonical: 'https://www.sreesvadistaprasada.com/subscriptions/about' },
+  alternates: { canonical: 'https://sreesvadistaprasada.com/subscriptions/about' },
 };
 
 const faqSchema = {

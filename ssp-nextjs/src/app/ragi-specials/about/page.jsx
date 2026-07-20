@@ -7,7 +7,7 @@ export const metadata = {
     'a wholesome ball, served with curries, pappu and pulusu. ' +
     'Sree Svadista Prasada is the only place in the UK where you can order ' +
     'Ragi Sangati for delivery. Freshly made in Milton Keynes.',
-  alternates: { canonical: 'https://www.sreesvadistaprasada.com/ragi-specials/about' },
+  alternates: { canonical: 'https://sreesvadistaprasada.com/ragi-specials/about' },
 };
 
 const faqSchema = {

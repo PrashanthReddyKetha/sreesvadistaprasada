@@ -7,7 +7,7 @@ export const metadata = {
     'Naivedyam sacred rice and the full breadth of Andhra vegetarian cooking — ' +
     'freshly made and delivered across Milton Keynes. ' +
     'No other restaurant in MK offers these dishes.',
-  alternates: { canonical: 'https://www.sreesvadistaprasada.com/prasada/about' },
+  alternates: { canonical: 'https://sreesvadistaprasada.com/prasada/about' },
 };
 
 export default function PrasadaAboutPage() {

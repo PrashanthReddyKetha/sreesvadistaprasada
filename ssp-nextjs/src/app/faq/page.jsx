@@ -23,7 +23,7 @@ export const metadata = {
   alternates: { canonical: 'https://sreesvadistaprasada.com/faq' },
 };
 
-const BASE_URL = 'https://www.sreesvadistaprasada.com';
+const BASE_URL = 'https://sreesvadistaprasada.com';
 
 const extraQAs = [
   {

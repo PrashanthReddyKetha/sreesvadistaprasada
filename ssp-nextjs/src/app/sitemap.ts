@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 
-const BASE_URL = 'https://www.sreesvadistaprasada.com'
+const BASE_URL = 'https://sreesvadistaprasada.com'
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com'
 
 async function getMenuItems(): Promise<{ id: string; updated_at?: string }[]> {

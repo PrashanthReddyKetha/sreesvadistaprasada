@@ -1,6 +1,6 @@
 import CityPage from '@/components/CityPage';
 
-const BASE_URL = 'https://www.sreesvadistaprasada.com';
+const BASE_URL = 'https://sreesvadistaprasada.com';
 
 export const metadata = {
   title: { absolute: 'South Indian Food Delivery Milton Keynes | Sree Svadista Prasada' },
@@ -54,7 +54,7 @@ const jsonLd = [
     },
     areaServed: { '@type': 'City', name: 'Milton Keynes' },
     hasMap: 'https://maps.google.com/?q=Milton+Keynes',
-    sameAs: ['https://www.sreesvadistaprasada.com'],
+    sameAs: ['https://sreesvadistaprasada.com'],
     openingHoursSpecification: [
       { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '11:00', closes: '22:00' },
       { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday', 'Sunday'], opens: '08:00', closes: '22:00' },

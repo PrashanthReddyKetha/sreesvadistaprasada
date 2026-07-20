@@ -6,7 +6,7 @@ export const metadata = {
     'The story behind Svadista: Gongura Chicken, Gongura Mutton, Whole Grilled Chicken, ' +
     'halal-certified Andhra and Telugu non-vegetarian cooking freshly made and ' +
     'delivered across Milton Keynes. The only Gongura kitchen in MK.',
-  alternates: { canonical: 'https://www.sreesvadistaprasada.com/svadista/about' },
+  alternates: { canonical: 'https://sreesvadistaprasada.com/svadista/about' },
 };
 
 export default function SvadistaAboutPage() {

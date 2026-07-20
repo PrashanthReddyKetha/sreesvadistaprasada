@@ -30,7 +30,7 @@ const jsonLd = {
   provider: {
     '@type': 'Restaurant',
     name: 'Sree Svadista Prasada',
-    url: 'https://www.sreesvadistaprasada.com',
+    url: 'https://sreesvadistaprasada.com',
     telephone: '+447307119962',
   },
   areaServed: [
