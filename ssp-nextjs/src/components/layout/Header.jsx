@@ -68,6 +68,7 @@ const Header = () => {
     {
       name: 'More',
       dropdown: [
+        { name: 'Blog', path: '/blog' },
         { name: 'Gallery', path: '/gallery' },
         { name: 'FAQ', path: '/faq' },
         { name: 'Contact', path: '/contact' },
