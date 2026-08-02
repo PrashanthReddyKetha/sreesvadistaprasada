@@ -11,7 +11,7 @@ function getMessage(position, pendingReward) {
   if (position === 3)
     return { text: 'Halfway there — 3 down, 2 to go! 🌿', color: 'text-[#5C4B47]', weight: '' };
   if (position === 4)
-    return { text: 'One more order and your free dish is yours! ⭐', color: 'text-[#B8860B]', weight: 'font-semibold' };
+    return { text: 'One more order and your free dish is yours! ⭐', color: 'text-[#8B6914]', weight: 'font-semibold' };
   return { text: 'Every 5 orders earns you a free dish.', color: 'text-[#5C4B47]', weight: '' };
 }
 

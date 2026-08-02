@@ -34,7 +34,7 @@ const OurStory = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
             <div>
-              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Where it all began</p>
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>Where it all began</p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                 The Beginning
               </h2>
@@ -90,7 +90,7 @@ const OurStory = () => {
       <section className="py-16 md:py-24 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Two kitchens, one love</p>
+            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>Two kitchens, one love</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
               Two Culinary Worlds
             </h2>
@@ -174,7 +174,7 @@ const OurStory = () => {
       {/* Serving Across the UK */}
       <section className="py-16 md:py-24 px-4 md:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>More than a restaurant</p>
+          <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>More than a restaurant</p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
             Serving Across the UK
           </h2>

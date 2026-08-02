@@ -263,7 +263,7 @@ export default function AdminLoyaltyTab() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={Users} label="Loyalty members" value={stats?.participation_rate ? `${stats.participation_rate}%` : '0%'} />
-        <StatCard icon={Gift} label="Pending rewards" value={stats?.pending_count ?? 0} color="#B8860B" />
+        <StatCard icon={Gift} label="Pending rewards" value={stats?.pending_count ?? 0} color="#8B6914" />
         <StatCard icon={TrendingUp} label="Rewards earned" value={stats?.total_rewards_earned ?? 0} color="#166534" />
         <StatCard icon={AlertCircle} label="Almost there" value={stats?.almost_there_count ?? 0} color="#854D0E" />
       </div>

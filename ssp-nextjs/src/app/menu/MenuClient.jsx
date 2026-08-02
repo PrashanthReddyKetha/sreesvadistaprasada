@@ -117,7 +117,7 @@ const Menu = ({ initialItems = [] }) => {
             <div className="flex gap-4">
               <Link href="/svadista" className="text-xs font-semibold transition-colors duration-200 hover:underline" style={{ color: '#8B3A3A' }}>Svadista Menu</Link>
               <Link href="/prasada" className="text-xs font-semibold transition-colors duration-200 hover:underline" style={{ color: '#4A7C59' }}>Prasada Menu</Link>
-              <Link href="/breakfast" className="text-xs font-semibold transition-colors duration-200 hover:underline" style={{ color: '#B8860B' }}>Breakfast</Link>
+              <Link href="/breakfast" className="text-xs font-semibold transition-colors duration-200 hover:underline" style={{ color: '#8B6914' }}>Breakfast</Link>
             </div>
           </div>
 

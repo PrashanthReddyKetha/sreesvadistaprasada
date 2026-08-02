@@ -57,7 +57,7 @@ const Catering = () => {
       <section className="py-16 md:py-24 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>What we offer</p>
+            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>What we offer</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
               Our Catering Services
             </h2>
@@ -110,7 +110,7 @@ const Catering = () => {
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>The difference</p>
+            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>The difference</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
               Why Choose Our Catering?
             </h2>
@@ -138,7 +138,7 @@ const Catering = () => {
       <section className="py-16 md:py-24 px-4 md:px-8">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
-            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Get started</p>
+            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>Get started</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
               Request a Quote
             </h2>

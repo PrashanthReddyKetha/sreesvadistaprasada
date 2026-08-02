@@ -192,7 +192,7 @@ function OverviewTab({ orders, subs, pending, active, delivered, totalSpent, act
 
   const stats = [
     { label: 'Total Orders',   value: orders.length, icon: ShoppingBag, color: '#800020' },
-    { label: 'Active Orders',  value: active + pending, icon: Clock, color: '#B8860B' },
+    { label: 'Active Orders',  value: active + pending, icon: Clock, color: '#8B6914' },
     { label: 'Delivered',      value: delivered, icon: CheckCircle, color: '#166534' },
     { label: 'Total Spent',    value: `£${totalSpent.toFixed(2)}`, icon: Package, color: '#1E40AF' },
   ];
@@ -203,7 +203,7 @@ function OverviewTab({ orders, subs, pending, active, delivered, totalSpent, act
       {pendingReviews > 0 && (
         <button onClick={() => setActiveTab('reviews')}
           className="w-full flex items-center gap-3 p-4 rounded-2xl text-left transition-opacity hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #B8860B 0%, #8B6508 100%)' }}>
+          style={{ background: 'linear-gradient(135deg, #8B6914 0%, #8B6508 100%)' }}>
           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
             <Star size={18} className="fill-white text-white" />
           </div>
@@ -267,7 +267,7 @@ function OverviewTab({ orders, subs, pending, active, delivered, totalSpent, act
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold" style={{ color: '#800020', fontFamily: "'Playfair Display', serif" }}>Recent Orders</h3>
           {orders.length > 3 && (
-            <button onClick={() => setActiveTab('orders')} className="text-xs font-semibold hover:underline" style={{ color: '#B8860B' }}>
+            <button onClick={() => setActiveTab('orders')} className="text-xs font-semibold hover:underline" style={{ color: '#8B6914' }}>
               View all →
             </button>
           )}
@@ -511,7 +511,7 @@ function SubsTab({ subs, reload }) {
   // ── ENDING SOON ─────────────────────────────────────
   if (endingSoon) return (
     <div>
-      <div className="rounded-2xl p-5 mb-5" style={{ backgroundColor: '#FAEEDA', border: '0.5px solid #B8860B' }}>
+      <div className="rounded-2xl p-5 mb-5" style={{ backgroundColor: '#FAEEDA', border: '0.5px solid #8B6914' }}>
         <p className="font-bold" style={{ color: '#854F0B' }}>Your Dabba Wala ends {fmtDay(activeSub.end_date)} 🍱</p>
       </div>
       <SubActiveCard sub={activeSub} />
@@ -579,7 +579,7 @@ function AccountTab({ user, login }) {
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Profile Details</h3>
           {!editing ? (
-            <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: '#B8860B' }}>
+            <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: '#8B6914' }}>
               <Edit2 size={14} /> Edit
             </button>
           ) : (

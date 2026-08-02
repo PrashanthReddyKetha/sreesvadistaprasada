@@ -174,7 +174,7 @@ const Snacks = ({ initialItems = [], initialTab = 'All' }) => {
       {/* Gifting Section */}
       <section className="py-16 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }}>
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>Perfect for gifting</p>
+          <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>Perfect for gifting</p>
           <h2 className="text-3xl font-bold mb-4 tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
             Send a Piece of Home
           </h2>

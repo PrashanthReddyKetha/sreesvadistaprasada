@@ -20,7 +20,7 @@ const CARD_STYLE = {
 
 /* ── brand ────────────────────────────────────────────── */
 const C = {
-  primary: '#800020', gold: '#F4C430', darkGold: '#B8860B',
+  primary: '#800020', gold: '#F4C430', darkGold: '#8B6914',
   green: '#4A7C59', greenLight: '#E1F5EE', greenText: '#0F6E56',
   amberLight: '#FAEEDA', amberText: '#854F0B',
   cream: '#FDFBF7', surface: '#F9F6EE',

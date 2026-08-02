@@ -7,16 +7,16 @@ import api from '@/api';
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '—';
 
 const STATUS_COLORS = {
-  pending:   { bg:'#FFF8E1', text:'#B8860B', border:'#F4C430' },
+  pending:   { bg:'#FFF8E1', text:'#8B6914', border:'#F4C430' },
   confirmed: { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
   preparing: { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
   delivered: { bg:'#F3E5F5', text:'#6A1B9A', border:'#9C27B0' },
   cancelled: { bg:'#FFEBEE', text:'#C62828', border:'#EF5350' },
   active:    { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
-  paused:    { bg:'#FFF8E1', text:'#B8860B', border:'#F4C430' },
+  paused:    { bg:'#FFF8E1', text:'#8B6914', border:'#F4C430' },
   completed: { bg:'#F3E5F5', text:'#6A1B9A', border:'#9C27B0' },
   new:       { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
-  contacted: { bg:'#FFF8E1', text:'#B8860B', border:'#F4C430' },
+  contacted: { bg:'#FFF8E1', text:'#8B6914', border:'#F4C430' },
   resolved:  { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
 };
 
@@ -227,7 +227,7 @@ function DabbaOperations() {
             </div>
             {deliveries.filter(d => d.custom_request).length > 0 && (
               <div className="mt-4 pt-4" style={{ borderTop:'1px solid rgba(128,0,32,0.08)' }}>
-                <p className="text-xs font-semibold mb-2" style={{ color:'#B8860B' }}>Custom requests:</p>
+                <p className="text-xs font-semibold mb-2" style={{ color:'#8B6914' }}>Custom requests:</p>
                 {deliveries.filter(d => d.custom_request).map(d => (
                   <p key={d.delivery_id} className="text-xs" style={{ color:'#5C4B47' }}><strong>{d.name}:</strong> {d.custom_request}</p>
                 ))}
@@ -295,7 +295,7 @@ function DabbaSubscribers() {
           {filtered.length === 0 && <p className="text-sm text-center py-8" style={{ color:'#7A5C50' }}>No subscribers found.</p>}
           {filtered.map(s => {
             const initials = s.customer_name?.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase() || '?';
-            const statusColor = s.status==='active'?'#4A7C59': s.status==='cancelled'?'#9CA3AF':'#B8860B';
+            const statusColor = s.status==='active'?'#4A7C59': s.status==='cancelled'?'#9CA3AF':'#8B6914';
             const bm = BOX_BADGE[s.box_type] || BOX_BADGE.prasada;
             return (
               <button key={s.id} onClick={() => setSelected(s)} className="w-full text-left">
@@ -375,14 +375,14 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
               ['Delivery', sub.delivery_instruction || '—'],
             ].map(([k,v]) => (
               <div key={k}>
-                <p className="text-[10px] uppercase font-semibold mb-0.5" style={{ color:'#B8860B' }}>{k}</p>
+                <p className="text-[10px] uppercase font-semibold mb-0.5" style={{ color:'#8B6914' }}>{k}</p>
                 <p style={{ color:'#2D2422' }}>{v}</p>
               </div>
             ))}
           </div>
           {sub.preferences?.length > 0 && (
             <div className="mt-3 pt-3" style={{ borderTop:'1px solid rgba(128,0,32,0.08)' }}>
-              <p className="text-[10px] uppercase font-semibold mb-2" style={{ color:'#B8860B' }}>Preferences</p>
+              <p className="text-[10px] uppercase font-semibold mb-2" style={{ color:'#8B6914' }}>Preferences</p>
               <div className="flex flex-wrap gap-1.5">
                 {sub.preferences.map(p => <span key={p} className="px-2.5 py-1 rounded-full text-xs" style={{ backgroundColor:'rgba(128,0,32,0.08)', color:'#800020' }}>{p}</span>)}
               </div>
@@ -390,7 +390,7 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
           )}
           {sub.custom_request && (
             <div className="mt-3 pt-3" style={{ borderTop:'1px solid rgba(128,0,32,0.08)' }}>
-              <p className="text-[10px] uppercase font-semibold mb-1" style={{ color:'#B8860B' }}>Special request</p>
+              <p className="text-[10px] uppercase font-semibold mb-1" style={{ color:'#8B6914' }}>Special request</p>
               <p className="text-sm italic" style={{ color:'#5C4B47' }}>{sub.custom_request}</p>
             </div>
           )}
@@ -755,7 +755,7 @@ function DabbaDeliverySheet() {
                     </div>
                     <p className="text-xs mb-0.5" style={{ color:'#800020', fontWeight:500 }}>{prefs}</p>
                     <p className="text-xs" style={{ color:'#5C4B47' }}>{addr}</p>
-                    {d.delivery_instruction && d.delivery_instruction !== 'door' && <p className="text-xs mt-0.5" style={{ color:'#B8860B' }}>Note: {d.delivery_instruction}{d.neighbour_name ? ` — ${d.neighbour_name}, ${d.neighbour_door}` : ''}{d.safe_place_description ? ` — ${d.safe_place_description}` : ''}</p>}
+                    {d.delivery_instruction && d.delivery_instruction !== 'door' && <p className="text-xs mt-0.5" style={{ color:'#8B6914' }}>Note: {d.delivery_instruction}{d.neighbour_name ? ` — ${d.neighbour_name}, ${d.neighbour_door}` : ''}{d.safe_place_description ? ` — ${d.safe_place_description}` : ''}</p>}
                     {d.custom_request && <p className="text-xs mt-0.5 italic" style={{ color:'#7A5C50' }}>"{d.custom_request}"</p>}
                   </div>
                   <input type="checkbox" checked={d.status==='delivered'} onChange={() => toggleDelivered(d.delivery_id, d.status)} className="mt-1 w-4 h-4 accent-[#4A7C59] cursor-pointer" />
@@ -791,7 +791,7 @@ function DabbaAnalytics() {
   const cards = summary ? [
     { label:'Active subscribers', value:summary.active_subscribers, color:'#4A7C59' },
     { label:'Monthly revenue', value:`£${summary.monthly_revenue}`, color:'#800020' },
-    { label:'Meals this month', value:summary.meals_this_month, color:'#B8860B' },
+    { label:'Meals this month', value:summary.meals_this_month, color:'#8B6914' },
     { label:'Churn rate', value:`${summary.churn_rate}%`, color:'#DC2626' },
   ] : [];
 
@@ -823,7 +823,7 @@ function DabbaAnalytics() {
                     <td className="px-4 py-3">{s.customer_name}</td>
                     <td className="px-4 py-3 capitalize">{s.plan}</td>
                     <td className="px-4 py-3">{new Date(s.end_date+'T12:00:00').toLocaleDateString('en-GB')}</td>
-                    <td className="px-4 py-3"><span style={{ color:days<=3?'#DC2626':'#B8860B', fontWeight:500 }}>{days}d</span></td>
+                    <td className="px-4 py-3"><span style={{ color:days<=3?'#DC2626':'#8B6914', fontWeight:500 }}>{days}d</span></td>
                     <td className="px-4 py-3">
                       <button onClick={() => api.post(`/admin/subscriptions/${s.id}/send-renewal-reminder`)} className="px-3 py-1 text-xs font-semibold rounded-lg" style={{ backgroundColor:'#F9F6EE', color:'#800020' }}>Send reminder</button>
                     </td>

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Playfair_Display, Lato } from 'next/font/google'
 import dynamic from 'next/dynamic'
-import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
 import Header from '@/components/layout/Header'
@@ -11,10 +10,10 @@ import CartToast from '@/components/CartToast'
 import ScrollToTop from '@/components/ScrollToTop'
 import BackendWarmup from '@/components/BackendWarmup'
 import TakeawayNudge from '@/components/TakeawayNudge'
+import AuthModalLoader from '@/components/AuthModalLoader'
 import '@/styles/globals.css'
 
-// Lazy-load heavy components — Firebase & cart JS only load when actually needed
-const AuthModal  = dynamic(() => import('@/components/AuthModal'),  { ssr: false })
+// Lazy-load cart drawer — only loads its JS when first rendered
 const CartDrawer = dynamic(() => import('@/components/CartDrawer'), { ssr: false })
 
 const playfair = Playfair_Display({
@@ -32,7 +31,6 @@ const lato = Lato({
   display: 'swap',
 })
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'placeholder'
 
 export const metadata: Metadata = {
   title: {
@@ -53,7 +51,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-GB" className={`${playfair.variable} ${lato.variable}`}>
       <body className="min-h-screen flex flex-col">
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
           <AuthProvider>
             <CartProvider>
               <ScrollToTop />
@@ -61,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <TakeawayNudge />
               <Header />
               <CartDrawer />
-              <AuthModal />
+              <AuthModalLoader />
               <main className="flex-1">
                 {children}
               </main>
@@ -70,7 +67,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <CartToast />
             </CartProvider>
           </AuthProvider>
-        </GoogleOAuthProvider>
       </body>
     </html>
   )

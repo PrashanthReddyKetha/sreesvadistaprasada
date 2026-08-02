@@ -20,7 +20,7 @@ function DeliveryBar({ subtotal, freeOver }) {
     <div className="px-6 py-3 border-b" style={{ backgroundColor: isFree ? '#F0FFF4' : '#FFFBEB', borderColor: 'rgba(128,0,32,0.08)' }}>
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5">
-          <Truck size={13} style={{ color: isFree ? '#166534' : '#B8860B' }} />
+          <Truck size={13} style={{ color: isFree ? '#166534' : '#8B6914' }} />
           {isFree
             ? <span className="text-xs font-semibold" style={{ color: '#166534' }}>Delivery&apos;s on us!</span>
             : <span className="text-xs font-medium text-gray-600">
@@ -32,7 +32,7 @@ function DeliveryBar({ subtotal, freeOver }) {
       </div>
       <div className="h-1.5 rounded-full overflow-hidden bg-gray-200">
         <div className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: isFree ? '#166534' : '#B8860B' }} />
+          style={{ width: `${pct}%`, backgroundColor: isFree ? '#166534' : '#8B6914' }} />
       </div>
     </div>
   );
@@ -102,8 +102,8 @@ function UpsellRow({ cartItems, onAdd }) {
   return (
     <div className="px-6 py-4 border-b" style={{ borderColor: 'rgba(128,0,32,0.08)', backgroundColor: '#FDFBF7' }}>
       <div className="flex items-center gap-1.5 mb-3">
-        <Zap size={13} style={{ color: '#B8860B' }} />
-        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#B8860B' }}>Goes well on the same plate</p>
+        <Zap size={13} style={{ color: '#8B6914' }} />
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#8B6914' }}>Goes well on the same plate</p>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
         {suggestions.map(item => (

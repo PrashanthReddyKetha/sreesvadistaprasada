@@ -122,7 +122,7 @@ const Header = () => {
                 >
                   Sree Svadista Prasada
                 </h1>
-                <span className="text-[9px] md:text-xs italic leading-none" style={{ fontFamily: "'Playfair Display', serif", color: '#B8860B' }}>
+                <span className="text-[9px] md:text-xs italic leading-none" style={{ fontFamily: "'Playfair Display', serif", color: '#8B6914' }}>
                   Taste for your heart · memories on a plate
                 </span>
               </div>
@@ -283,7 +283,7 @@ const Header = () => {
                           key={sub.path}
                           href={sub.path}
                           className="block py-2 text-sm border-b"
-                          style={{ color: isActive(sub.path) ? '#B8860B' : '#333', borderColor: 'rgba(244,196,48,0.15)', touchAction: 'manipulation' }}
+                          style={{ color: isActive(sub.path) ? '#8B6914' : '#333', borderColor: 'rgba(244,196,48,0.15)', touchAction: 'manipulation' }}
                           onClick={() => { setIsMenuOpen(false); setOpenDropdown(null); window.scrollTo({ top: 0, behavior: 'instant' }); }}
                         >
                           {sub.name}
@@ -296,7 +296,7 @@ const Header = () => {
                     href={item.path}
                     onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'instant' }); }}
                     className="block py-3 text-base font-medium border-b"
-                    style={{ color: isActive(item.path) ? '#B8860B' : '#800020', borderColor: 'rgba(244,196,48,0.3)' }}
+                    style={{ color: isActive(item.path) ? '#8B6914' : '#800020', borderColor: 'rgba(244,196,48,0.3)' }}
                   >
                     {item.name}
                   </Link>

@@ -162,7 +162,7 @@ export default function ReviewsTab({ reviews, reload }) {
   if (reviews.length === 0) {
     return (
       <div className="rounded-2xl p-10 text-center" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(244,196,48,0.2)' }}>
-        <Star size={32} className="mx-auto mb-3" style={{ color: '#B8860B' }} />
+        <Star size={32} className="mx-auto mb-3" style={{ color: '#8B6914' }} />
         <p className="font-semibold mb-1" style={{ color: '#800020' }}>No reviews yet</p>
         <p className="text-sm" style={{ color: '#7A5C50' }}>We'll ask for your feedback once your first meal or order is delivered.</p>
       </div>

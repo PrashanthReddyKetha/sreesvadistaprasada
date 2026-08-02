@@ -61,7 +61,7 @@ function DeliveryBar({ total, freeOver, onAddMore }) {
     <div className="p-4 rounded-xl" style={{ backgroundColor: isFree ? '#F0FFF4' : '#FFFBEB' }}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <Truck size={14} style={{ color: isFree ? '#166534' : '#B8860B' }} />
+          <Truck size={14} style={{ color: isFree ? '#166534' : '#8B6914' }} />
           {isFree ? (
             <span className="text-sm font-semibold" style={{ color: '#166534' }}>Free delivery unlocked!</span>
           ) : (
@@ -80,7 +80,7 @@ function DeliveryBar({ total, freeOver, onAddMore }) {
       </div>
       <div className="h-2 rounded-full overflow-hidden bg-gray-200">
         <div className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: isFree ? '#166534' : '#B8860B' }} />
+          style={{ width: `${pct}%`, backgroundColor: isFree ? '#166534' : '#8B6914' }} />
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import api from '@/api';
 
 const ENQ_STATUS_COLORS = {
   new:       { bg:'#EFF6FF', text:'#1D4ED8' },
-  contacted: { bg:'#FFF8E1', text:'#B8860B' },
+  contacted: { bg:'#FFF8E1', text:'#8B6914' },
   resolved:  { bg:'#DCFCE7', text:'#166534' },
 };
 
@@ -167,8 +167,8 @@ export default function EnquiriesTab({ enquiries, reload }) {
         </div>
       </div>
 
-      <div className="rounded-2xl p-4 mb-3 border-l-4" style={{ backgroundColor:'#FDFBF7', borderLeftColor:'#B8860B' }}>
-        <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color:'#B8860B' }}>
+      <div className="rounded-2xl p-4 mb-3 border-l-4" style={{ backgroundColor:'#FDFBF7', borderLeftColor:'#8B6914' }}>
+        <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color:'#8B6914' }}>
           Your original message
         </p>
         {type === 'contact' ? (

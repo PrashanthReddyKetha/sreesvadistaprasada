@@ -45,7 +45,7 @@ const Contact = () => {
           <div className="grid lg:grid-cols-5 gap-10 md:gap-16">
             {/* Contact Info */}
             <div className="lg:col-span-2">
-              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Our details</p>
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>Our details</p>
               <h2 className="text-3xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                 Contact Information
               </h2>
@@ -103,14 +103,14 @@ const Contact = () => {
                     <p className="text-sm text-gray-600 leading-relaxed">
                       Mon – Fri: 11am – 10pm<br />
                       Sat – Sun: 10am – 11pm<br />
-                      <span className="text-xs italic" style={{ color: '#B8860B' }}>Delivery available during all hours</span>
+                      <span className="text-xs italic" style={{ color: '#8B6914' }}>Delivery available during all hours</span>
                     </p>
                   </div>
                 </div>
 
                 {/* Social */}
                 <div className="pt-2">
-                  <h4 className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: '#B8860B' }}>Follow Us</h4>
+                  <h4 className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: '#8B6914' }}>Follow Us</h4>
                   <div className="flex gap-3">
                     {[
                       { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/sreesvadistaprasada/' },
@@ -126,7 +126,7 @@ const Contact = () => {
 
             {/* Contact Form */}
             <div className="lg:col-span-3">
-              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Send us a message</p>
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>Send us a message</p>
               <h2 className="text-3xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                 We'd Love to Hear From You
               </h2>

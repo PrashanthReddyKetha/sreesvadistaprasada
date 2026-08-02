@@ -20,17 +20,17 @@ const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digi
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '—';
 
 const STATUS_COLORS = {
-  pending:   { bg:'#FFF8E1', text:'#B8860B', border:'#F4C430' },
+  pending:   { bg:'#FFF8E1', text:'#8B6914', border:'#F4C430' },
   confirmed: { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
   preparing: { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
   out_for_delivery: { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
   delivered: { bg:'#F3E5F5', text:'#6A1B9A', border:'#9C27B0' },
   cancelled: { bg:'#FFEBEE', text:'#C62828', border:'#EF5350' },
   active:    { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
-  paused:    { bg:'#FFF8E1', text:'#B8860B', border:'#F4C430' },
+  paused:    { bg:'#FFF8E1', text:'#8B6914', border:'#F4C430' },
   completed: { bg:'#F3E5F5', text:'#6A1B9A', border:'#9C27B0' },
   new:       { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
-  contacted: { bg:'#FFF8E1', text:'#B8860B', border:'#F4C430' },
+  contacted: { bg:'#FFF8E1', text:'#8B6914', border:'#F4C430' },
   resolved:  { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
 };
 const Badge = ({ status }) => {
@@ -107,13 +107,13 @@ const Overview = ({ orders, subscriptions, users, contacts, catering, newsletter
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard icon={TrendingUp}  label="Total Revenue"        value={`£${revenue.toFixed(2)}`} color="#4A7C59" />
         <StatCard icon={ShoppingBag} label="Total Orders"         value={orders.length}             color="#800020" />
-        <StatCard icon={Clock}       label="Pending Orders"       value={pendingOrders}             color="#B8860B" />
+        <StatCard icon={Clock}       label="Pending Orders"       value={pendingOrders}             color="#8B6914" />
         <StatCard icon={Package}     label="Active Subscriptions" value={activeSubs}                color="#1565C0" />
         <StatCard icon={Users}       label="Registered Users"     value={users.length}              color="#6A1B9A" />
         <StatCard icon={Bell}        label="New Enquiries"        value={newEnquiries}              color="#C62828" />
         {reviewStats && (
           <>
-            <StatCard icon={Star}       label="Avg Rating"          value={reviewStats.average_rating || '—'} color="#B8860B" />
+            <StatCard icon={Star}       label="Avg Rating"          value={reviewStats.average_rating || '—'} color="#8B6914" />
             <StatCard icon={AlertCircle} label="Low Ratings (7d)"   value={reviewStats.low_star_7d}           color="#C62828" />
           </>
         )}
@@ -506,8 +506,8 @@ const EnquiriesTab = ({ contacts, catering, onStatusUpdate, reload }) => {
       </div>
 
       {/* Original message card */}
-      <div className="bg-white rounded-xl p-4 mb-3 border-l-4" style={{ boxShadow:'0 1px 6px rgba(0,0,0,0.05)', borderLeftColor:'#B8860B' }}>
-        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color:'#B8860B' }}>Original Message · {fmt(enq.created_at)}</p>
+      <div className="bg-white rounded-xl p-4 mb-3 border-l-4" style={{ boxShadow:'0 1px 6px rgba(0,0,0,0.05)', borderLeftColor:'#8B6914' }}>
+        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color:'#8B6914' }}>Original Message · {fmt(enq.created_at)}</p>
         {isContact ? (
           <p className="text-sm text-gray-700 leading-relaxed">{enq.message}</p>
         ) : (
@@ -636,7 +636,7 @@ const NewsletterTab = ({ newsletter, reload }) => {
                     <div className="flex gap-2">
                       <button onClick={() => toggle(n.id)}
                         className="text-xs px-2 py-1 rounded border font-medium"
-                        style={{ color:'#B8860B', borderColor:'#B8860B' }}>
+                        style={{ color:'#8B6914', borderColor:'#8B6914' }}>
                         {n.active ? 'Unsubscribe' : 'Resubscribe'}
                       </button>
                       <button onClick={() => remove(n.id)}
@@ -660,7 +660,7 @@ const NewsletterTab = ({ newsletter, reload }) => {
 const TYPE_LABEL = { order:'Order', meal_day:'Meal Day', week_summary:'Weekly' };
 const TYPE_COLOR = {
   order:        { bg:'#E3F2FD', text:'#1565C0' },
-  meal_day:     { bg:'#FFF8E1', text:'#B8860B' },
+  meal_day:     { bg:'#FFF8E1', text:'#8B6914' },
   week_summary: { bg:'#F3E5F5', text:'#6A1B9A' },
 };
 const RatingStars = ({ value }) => (
@@ -706,7 +706,7 @@ const ReviewsTab = () => {
           <StatMini label="Avg Rating"        value={stats.average_rating || '—'}  color="#4A7C59" />
           <StatMini label="Submitted Total"   value={stats.total_submitted}        color="#800020" />
           <StatMini label="Low Stars (7d)"    value={stats.low_star_7d}            color="#C62828" />
-          <StatMini label="Pending"           value={stats.pending}                color="#B8860B" />
+          <StatMini label="Pending"           value={stats.pending}                color="#8B6914" />
         </div>
       )}
       <div className="bg-white rounded-xl p-4 flex flex-wrap gap-3 items-center" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
@@ -860,7 +860,7 @@ const Admin = () => {
       <XCircle size={48} style={{ color:'#800020' }} />
       <p className="text-lg font-semibold" style={{ color:'#800020' }}>Access Denied</p>
       <p className="text-sm text-gray-500">This page is only accessible to administrators.</p>
-      <Link href="/" className="text-sm font-semibold mt-2" style={{ color:'#B8860B' }}>← Back to site</Link>
+      <Link href="/" className="text-sm font-semibold mt-2" style={{ color:'#8B6914' }}>← Back to site</Link>
     </div>
   );
 

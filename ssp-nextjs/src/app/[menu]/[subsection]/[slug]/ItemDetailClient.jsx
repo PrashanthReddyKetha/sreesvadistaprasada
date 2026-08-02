@@ -222,7 +222,7 @@ export default function ItemDetailClient({ initialItem }) {
   if (!item) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 pt-24" style={{ backgroundColor:'#FAF8F4' }}>
       <p className="text-xl font-semibold" style={{ color:'#800020' }}>Dish not found</p>
-      <button onClick={() => router.back()} className="text-sm font-semibold" style={{ color:'#B8860B' }}>← Go back</button>
+      <button onClick={() => router.back()} className="text-sm font-semibold" style={{ color:'#8B6914' }}>← Go back</button>
     </div>
   );
 
@@ -273,7 +273,7 @@ export default function ItemDetailClient({ initialItem }) {
 
           <div className="flex flex-col justify-between">
             <div>
-              <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color:'#B8860B' }}>
+              <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color:'#8B6914' }}>
                 {CAT_LABELS[item.category]}
                 {item.subcategory && ` · ${item.subcategory}`}
               </p>
@@ -308,7 +308,7 @@ export default function ItemDetailClient({ initialItem }) {
               {item.allergens?.length > 0 && (
                 <div className="mb-4">
                   <div className="flex items-center gap-1.5 mb-2">
-                    <AlertTriangle size={13} style={{ color:'#B8860B' }} />
+                    <AlertTriangle size={13} style={{ color:'#8B6914' }} />
                     <p className="text-xs font-semibold uppercase tracking-wide" style={{ color:'#7A5C50' }}>Allergens</p>
                   </div>
                   <div className="flex gap-1.5 flex-wrap">
@@ -371,7 +371,7 @@ export default function ItemDetailClient({ initialItem }) {
             { icon: Package, label:'Packaging',    value:'Eco-friendly' },
           ].map(({ icon:Icon, label, value }) => (
             <div key={label} className="rounded-xl p-4 text-center" style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)' }}>
-              <Icon size={20} className="mx-auto mb-1.5" style={{ color:'#B8860B' }} />
+              <Icon size={20} className="mx-auto mb-1.5" style={{ color:'#8B6914' }} />
               <p className="text-xs font-semibold" style={{ color:'#7A5C50' }}>{label}</p>
               <p className="text-sm font-bold mt-0.5" style={{ color:'#3D2B1F' }}>{value}</p>
             </div>

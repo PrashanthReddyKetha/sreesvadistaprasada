@@ -182,7 +182,7 @@ export default function SubActiveCard({ sub }) {
 
   let heroBg = '#800020', heroText = 'Next delivery coming up', heroSub = '';
   if (daysLeft !== null && daysLeft < 0) {
-    heroBg = '#B8860B'; heroText = 'Your plan has ended'; heroSub = 'Renew to keep meals coming.';
+    heroBg = '#8B6914'; heroText = 'Your plan has ended'; heroSub = 'Renew to keep meals coming.';
   } else if (nextDeliveryDate === today) {
     heroBg = '#F4C430'; heroText = 'Your delivery is on its way today'; heroSub = 'Arriving between 12pm and 2pm';
   } else if (nextDaysAway === 1) {
@@ -283,13 +283,13 @@ export default function SubActiveCard({ sub }) {
               ['If not home', sub.delivery_instruction || '—'],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between items-start gap-4">
-                <p className="text-xs font-semibold shrink-0" style={{ color: '#B8860B', minWidth: 90 }}>{k}</p>
+                <p className="text-xs font-semibold shrink-0" style={{ color: '#8B6914', minWidth: 90 }}>{k}</p>
                 <p className="text-sm text-right" style={{ color: '#3D2B1F' }}>{v}</p>
               </div>
             ))}
             {sub.preferences?.length > 0 && (
               <div className="flex justify-between items-start gap-4">
-                <p className="text-xs font-semibold shrink-0" style={{ color: '#B8860B', minWidth: 90 }}>Preferences</p>
+                <p className="text-xs font-semibold shrink-0" style={{ color: '#8B6914', minWidth: 90 }}>Preferences</p>
                 <div className="flex flex-wrap gap-1 justify-end">
                   {sub.preferences.map(p => <span key={p} className="px-2 py-0.5 rounded-full text-xs" style={{ backgroundColor:'rgba(128,0,32,0.08)',color:'#800020'}}>{p}</span>)}
                 </div>
@@ -297,7 +297,7 @@ export default function SubActiveCard({ sub }) {
             )}
             {sub.custom_request && (
               <div className="flex justify-between items-start gap-4">
-                <p className="text-xs font-semibold shrink-0" style={{ color: '#B8860B', minWidth: 90 }}>Special request</p>
+                <p className="text-xs font-semibold shrink-0" style={{ color: '#8B6914', minWidth: 90 }}>Special request</p>
                 <p className="text-sm text-right italic" style={{ color: '#5C4B47' }}>{sub.custom_request}</p>
               </div>
             )}

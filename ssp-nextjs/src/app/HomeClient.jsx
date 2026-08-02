@@ -85,7 +85,7 @@ const Home = () => {
       <section id="two-worlds" className="py-16 md:py-24 px-4 md:px-8" data-testid="two-worlds-section">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
-            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>
+            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
               Two kitchens, one soul
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
@@ -164,7 +164,7 @@ const Home = () => {
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-5">
               <div>
-                <p className="text-xs uppercase tracking-[0.25em] mb-1" style={{ color: '#B8860B' }}>
+                <p className="text-xs uppercase tracking-[0.25em] mb-1" style={{ color: '#8B6914' }}>
                   Straight off this morning's stove
                 </p>
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
@@ -258,7 +258,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>
+              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>
                 The plates our families keep asking for
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
@@ -452,7 +452,7 @@ const Home = () => {
           <div className="grid lg:grid-cols-5 gap-8 md:gap-12">
             {/* Chef's Special - 3 columns */}
             <div className="lg:col-span-3">
-              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>
+              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>
                 Cooked slow · served with both hands
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
@@ -479,7 +479,7 @@ const Home = () => {
                   <h3 className="text-2xl md:text-3xl font-bold mb-2 hover:underline" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                     {chefSpecial.name}
                   </h3>
-                  <p className="text-sm italic mb-3" style={{ color: '#B8860B' }}>
+                  <p className="text-sm italic mb-3" style={{ color: '#8B6914' }}>
                     "{chefSpecial.tagline}"
                   </p>
                   <p className="text-sm text-gray-600 leading-relaxed mb-4">
@@ -503,7 +503,7 @@ const Home = () => {
 
             {/* Explore by Meal Moment - 2 columns */}
             <div className="lg:col-span-2">
-              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>
+              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>
                 Pick a time of day
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
@@ -541,7 +541,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div>
-              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>Let's find your door</p>
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>Let's find your door</p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
                 Where Shall We Bring the Warmth?
               </h2>
@@ -566,7 +566,7 @@ const Home = () => {
               </form>
               {postcodeResult && (
                 <div className="p-4 rounded-lg text-sm" style={{ backgroundColor: postcodeResult.service_type === 'snacks_only' ? '#FDF5E6' : '#F0FFF4', border: `1px solid ${postcodeResult.service_type === 'snacks_only' ? 'rgba(184,134,11,0.3)' : 'rgba(74,124,89,0.3)'}` }} data-testid="postcode-result">
-                  <p className="font-bold mb-2" style={{ color: postcodeResult.service_type === 'snacks_only' ? '#B8860B' : '#4A7C59' }}>
+                  <p className="font-bold mb-2" style={{ color: postcodeResult.service_type === 'snacks_only' ? '#8B6914' : '#4A7C59' }}>
                     {postcodeResult.message}
                   </p>
                   <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
@@ -591,7 +591,7 @@ const Home = () => {
                   <div key={area.city} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: area.city === 'Milton Keynes' ? 'rgba(128,0,32,0.04)' : '#fafafa' }} data-testid={`delivery-area-${area.city.toLowerCase().replace(/\s/g, '-')}`}>
                     <div>
                       <p className="text-sm font-bold" style={{ color: area.city === 'Milton Keynes' ? '#800020' : '#2D2422' }}>
-                        {area.city} {area.city === 'Milton Keynes' && <span className="text-xs font-normal ml-1" style={{ color: '#B8860B' }}>(Main)</span>}
+                        {area.city} {area.city === 'Milton Keynes' && <span className="text-xs font-normal ml-1" style={{ color: '#8B6914' }}>(Main)</span>}
                       </p>
                       <p className="text-xs text-gray-500">{area.postcodes}</p>
                     </div>
@@ -613,7 +613,7 @@ const Home = () => {
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }} data-testid="gallery-preview-section">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
-            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>A peek into our kitchen</p>
+            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>A peek into our kitchen</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
               From Our Kitchen
             </h2>
@@ -646,7 +646,7 @@ const Home = () => {
             <div className="absolute top-0 left-0 w-24 h-24 rounded-full opacity-10" style={{ backgroundColor: '#F4C430', transform: 'translate(-50%, -50%)' }} />
             <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full opacity-10" style={{ backgroundColor: '#800020', transform: 'translate(50%, 50%)' }} />
 
-            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#B8860B' }}>A little welcome gift</p>
+            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>A little welcome gift</p>
             <h2 className="text-4xl sm:text-5xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
               15% OFF
             </h2>
@@ -685,7 +685,7 @@ const Home = () => {
               </span>
             </div>
             <div>
-              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
                 Small jars · big memories
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
@@ -722,7 +722,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="order-2 md:order-1">
-              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#B8860B' }}>
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
                 Not just food · a feeling we kept chasing
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
