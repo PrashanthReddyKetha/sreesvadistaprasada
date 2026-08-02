@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-const BASE_URL = 'https://sreesvadistaprasada.com';
+const BASE_URL = 'https://www.sreesvadistaprasada.com';
 
 export const metadata = {
   title: { absolute: 'South Indian Food Glasgow — Coming Soon | Sree Svadista Prasada' },
@@ -29,7 +29,7 @@ const jsonLd = [
     servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan', 'Halal'],
     address: { '@type': 'PostalAddress', addressLocality: 'Glasgow', addressRegion: 'Scotland', addressCountry: 'GB' },
     areaServed: { '@type': 'City', name: 'Glasgow' },
-    sameAs: ['https://sreesvadistaprasada.com'],
+    sameAs: ['https://www.sreesvadistaprasada.com'],
   },
   {
     '@context': 'https://schema.org',

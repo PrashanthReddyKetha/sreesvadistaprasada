@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { heroSlides } from '../data/mockData';
 
@@ -56,7 +57,17 @@ const HeroSlider = () => {
           className={`absolute inset-0 ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
           style={{ transition: 'all 700ms ease-in-out' }}
         >
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${slide.image})` }} />
+          <div className="absolute inset-0">
+            <Image
+              src={slide.image}
+              alt={slide.title.replace(/\n/g, ' ')}
+              fill
+              className="object-cover object-center"
+              priority={index === 0}
+              sizes="100vw"
+              quality={80}
+            />
+          </div>
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.92) 0%, rgba(45, 36, 34, 0.8) 35%, rgba(45, 36, 34, 0.5) 65%, rgba(45, 36, 34, 0.3) 100%)' }} />
           <div className="absolute inset-0 grain-overlay" />
           <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
