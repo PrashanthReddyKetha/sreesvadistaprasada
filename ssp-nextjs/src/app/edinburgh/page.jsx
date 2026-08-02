@@ -112,8 +112,8 @@ export default function EdinburghPage() {
             <h2 className="text-2xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'var(--font-playfair), serif' }}>Want Authentic South Indian Food Now?</h2>
             <p className="text-gray-600 mb-8">While Edinburgh is coming soon, our full menu including UK-wide shipping for snacks, pickles and podis is available today. Dabba Wala subscriptions ship UK-wide.</p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/snacks"><button className="px-6 py-3 rounded-sm font-semibold text-sm" style={{ backgroundColor: '#800020', color: '#fff' }}>Shop Snacks &amp; Pickles</button></Link>
-              <Link href="/subscriptions"><button className="px-6 py-3 rounded-sm font-semibold text-sm border" style={{ borderColor: '#800020', color: '#800020' }}>Dabba Wala Subscriptions</button></Link>
+              <Link href="/snacks" className="inline-block px-6 py-3 rounded-sm font-semibold text-sm" style={{ backgroundColor: '#800020', color: '#fff' }}>Shop Snacks &amp; Pickles</Link>
+              <Link href="/subscriptions" className="inline-block px-6 py-3 rounded-sm font-semibold text-sm border" style={{ borderColor: '#800020', color: '#800020' }}>Dabba Wala Subscriptions</Link>
             </div>
           </div>
         </section>
