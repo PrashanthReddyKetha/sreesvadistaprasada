@@ -72,7 +72,7 @@ function ReviewCard({ review, onSubmit, onDismiss }) {
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="font-semibold" style={{ color: '#800020', fontFamily: "'Playfair Display', serif" }}>{copy.title}</p>
-          <p className="text-xs mt-0.5" style={{ color: '#9C7B6B' }}>
+          <p className="text-xs mt-0.5" style={{ color: '#7A5C50' }}>
             {copy.sub}
             {review.meal_date && <> · {fmtDate(review.meal_date)}</>}
             {review.week_start && <> · week of {fmtDate(review.week_start)}</>}
@@ -164,7 +164,7 @@ export default function ReviewsTab({ reviews, reload }) {
       <div className="rounded-2xl p-10 text-center" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(244,196,48,0.2)' }}>
         <Star size={32} className="mx-auto mb-3" style={{ color: '#B8860B' }} />
         <p className="font-semibold mb-1" style={{ color: '#800020' }}>No reviews yet</p>
-        <p className="text-sm" style={{ color: '#9C7B6B' }}>We'll ask for your feedback once your first meal or order is delivered.</p>
+        <p className="text-sm" style={{ color: '#7A5C50' }}>We'll ask for your feedback once your first meal or order is delivered.</p>
       </div>
     );
   }

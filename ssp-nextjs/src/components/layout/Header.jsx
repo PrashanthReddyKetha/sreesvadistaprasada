@@ -186,6 +186,7 @@ const Header = () => {
                 <button
                   className="relative p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5"
                   data-testid="cart-button"
+                  aria-label="Open cart"
                   style={{ color: '#800020' }}
                   onClick={() => setCartOpen(true)}
                 >
@@ -208,12 +209,12 @@ const Header = () => {
                     ) : (
                       <Link href="/dashboard" className="text-xs font-semibold hidden xl:block max-w-[100px] truncate hover:underline" style={{ color: '#800020' }}>{user.name}</Link>
                     )}
-                    <Link href="/dashboard" className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" style={{ color: '#800020' }} data-testid="dashboard-button" title="My Account">
+                    <Link href="/dashboard" className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" style={{ color: '#800020' }} data-testid="dashboard-button" aria-label="My Account">
                       <User size={20} />
                     </Link>
                   </div>
                 ) : (
-                  <button onClick={() => setAuthOpen(true)} className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" data-testid="account-button" style={{ color: '#800020' }} title="Sign in">
+                  <button onClick={() => setAuthOpen(true)} className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" data-testid="account-button" aria-label="Sign in" style={{ color: '#800020' }}>
                     <User size={20} />
                   </button>
                 )}
@@ -225,6 +226,7 @@ const Header = () => {
               <button
                 className="relative p-2 rounded-full"
                 data-testid="mobile-cart-button"
+                aria-label="Open cart"
                 style={{ color: '#800020' }}
                 onClick={() => setCartOpen(true)}
               >

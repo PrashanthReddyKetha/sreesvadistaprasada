@@ -120,7 +120,7 @@ function Field({ label, icon: Icon, type = 'text', name, autoComplete, placehold
         {!suffix && error && <AlertCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#EF4444' }} />}
       </div>
       {error && <p className="text-xs mt-1 flex items-start gap-1" style={{ color: '#EF4444' }}>{error}</p>}
-      {!error && hint && <p className="text-xs mt-1" style={{ color: '#9C7B6B' }}>{hint}</p>}
+      {!error && hint && <p className="text-xs mt-1" style={{ color: '#7A5C50' }}>{hint}</p>}
       {!error && !hint && success && typeof success === 'string' && (
         <p className="text-xs mt-1" style={{ color: '#22C55E' }}>{success}</p>
       )}

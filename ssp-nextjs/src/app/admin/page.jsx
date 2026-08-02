@@ -898,10 +898,10 @@ const Admin = () => {
             </button>
           ))}
           <div className="mt-auto pb-6 px-1">
-            <Link href="/dashboard" className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all" style={{ color:'#9C7B6B' }}>
+            <Link href="/dashboard" className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all" style={{ color:'#7A5C50' }}>
               <LayoutDashboard size={17} /> My Dashboard
             </Link>
-            <Link href="/" className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all" style={{ color:'#9C7B6B' }}>
+            <Link href="/" className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all" style={{ color:'#7A5C50' }}>
               ← Back to site
             </Link>
           </div>

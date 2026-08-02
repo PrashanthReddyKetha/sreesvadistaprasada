@@ -113,7 +113,7 @@ function DashboardInner() {
             <h1 className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
               Welcome back, {user.name.split(' ')[0]}
             </h1>
-            <p className="text-sm mt-0.5" style={{ color: '#9C7B6B' }}>Here's everything about your account</p>
+            <p className="text-sm mt-0.5" style={{ color: '#7A5C50' }}>Here's everything about your account</p>
           </div>
           <div className="flex items-center gap-2">
             {user.role === 'admin' && (
@@ -167,7 +167,7 @@ function DashboardInner() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-48 gap-3" style={{ color: '#9C7B6B' }}>
+          <div className="flex items-center justify-center h-48 gap-3" style={{ color: '#7A5C50' }}>
             <RefreshCw size={20} className="animate-spin" /> Loading your data…
           </div>
         ) : (
@@ -238,7 +238,7 @@ function OverviewTab({ orders, subs, pending, active, delivered, totalSpent, act
           return (
             <div key={s.label} className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(244,196,48,0.2)' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium" style={{ color: '#9C7B6B' }}>{s.label}</span>
+                <span className="text-xs font-medium" style={{ color: '#7A5C50' }}>{s.label}</span>
                 <Icon size={16} style={{ color: s.color }} />
               </div>
               <p className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</p>
@@ -339,14 +339,14 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
             <p className="text-sm font-semibold" style={{ color: '#3D2B1F' }}>
               Order #{o.id?.slice(-6).toUpperCase()}
             </p>
-            <p className="text-xs" style={{ color: '#9C7B6B' }}>{fmt(o.created_at)} · {o.items?.length} item{o.items?.length !== 1 ? 's' : ''}</p>
+            <p className="text-xs" style={{ color: '#7A5C50' }}>{fmt(o.created_at)} · {o.items?.length} item{o.items?.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={o.status} />
           <p className="font-bold text-sm" style={{ color: '#800020' }}>£{o.total?.toFixed(2)}</p>
           {!compact && (
-            expanded ? <ChevronUp size={16} style={{ color: '#9C7B6B' }} /> : <ChevronDown size={16} style={{ color: '#9C7B6B' }} />
+            expanded ? <ChevronUp size={16} style={{ color: '#7A5C50' }} /> : <ChevronDown size={16} style={{ color: '#7A5C50' }} />
           )}
         </div>
       </div>
@@ -386,7 +386,7 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
 
           {/* Items */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#9C7B6B' }}>Items</p>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#7A5C50' }}>Items</p>
             <div className="space-y-1.5">
               {o.items?.map((item, i) => (
                 <div key={i} className="flex justify-between text-sm">
@@ -396,10 +396,10 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
               ))}
             </div>
             <div className="border-t mt-2 pt-2 space-y-1" style={{ borderColor: 'rgba(244,196,48,0.2)' }}>
-              <div className="flex justify-between text-xs" style={{ color: '#9C7B6B' }}>
+              <div className="flex justify-between text-xs" style={{ color: '#7A5C50' }}>
                 <span>Subtotal</span><span>£{o.subtotal?.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-xs" style={{ color: '#9C7B6B' }}>
+              <div className="flex justify-between text-xs" style={{ color: '#7A5C50' }}>
                 <span>Delivery</span><span>{o.delivery_fee === 0 ? 'Free' : `£${o.delivery_fee?.toFixed(2)}`}</span>
               </div>
               <div className="flex justify-between text-sm font-bold" style={{ color: '#800020' }}>
@@ -410,7 +410,7 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
 
           {/* Delivery address */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#9C7B6B' }}>Delivery To</p>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#7A5C50' }}>Delivery To</p>
             <p className="text-sm" style={{ color: '#3D2B1F' }}>
               {o.delivery_address?.line1}, {o.delivery_address?.city}, {o.delivery_address?.postcode}
             </p>
@@ -419,7 +419,7 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
           {/* Special instructions */}
           {o.special_instructions && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#9C7B6B' }}>Notes</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#7A5C50' }}>Notes</p>
               <p className="text-sm italic" style={{ color: '#5C4B47' }}>{o.special_instructions}</p>
             </div>
           )}
@@ -451,7 +451,7 @@ function PrevSubDetails({ sub }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="mt-6 max-w-sm mx-auto">
-      <button onClick={() => setExpanded(e => !e)} className="text-sm font-semibold flex items-center gap-1 mx-auto" style={{ color: '#9C7B6B' }}>
+      <button onClick={() => setExpanded(e => !e)} className="text-sm font-semibold flex items-center gap-1 mx-auto" style={{ color: '#7A5C50' }}>
         Your previous subscription {expanded ? <ChevronDown size={14} style={{ transform:'rotate(180deg)' }} /> : <ChevronDown size={14} />}
       </button>
       {expanded && (
@@ -463,7 +463,7 @@ function PrevSubDetails({ sub }) {
             ['Ended', sub.end_date ? new Date(sub.end_date + 'T12:00:00').toLocaleDateString('en-GB') : '—'],
           ].map(([k, v]) => (
             <div key={k} className="flex justify-between text-sm py-1.5" style={{ borderBottom: '0.5px solid #e0d9d0' }}>
-              <span style={{ color: '#9C7B6B' }}>{k}</span><span style={{ color: '#2D2422' }}>{v}</span>
+              <span style={{ color: '#7A5C50' }}>{k}</span><span style={{ color: '#2D2422' }}>{v}</span>
             </div>
           ))}
         </div>
@@ -481,7 +481,7 @@ function SubsTab({ subs, reload }) {
       <div className="text-center py-12">
         <Package size={48} className="mx-auto mb-4" style={{ color: '#800020' }} />
         <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>You have not tried Dabba Wala yet</h3>
-        <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: '#9C7B6B' }}>
+        <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: '#7A5C50' }}>
           Home-cooked South Indian meals every weekday — freshly made each morning, delivered to your door. From £9 per meal.
         </p>
         <Link href="/subscriptions" className="inline-block px-8 py-3 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>
@@ -493,7 +493,7 @@ function SubsTab({ subs, reload }) {
             { icon: Clock,   text: 'Delivered 12–2pm' },
             { icon: Shield,  text: '48hr cancellation window' },
           ].map(({ icon: Icon, text }) => (
-            <div key={text} className="flex flex-col items-center gap-1.5 text-xs" style={{ color: '#9C7B6B' }}>
+            <div key={text} className="flex flex-col items-center gap-1.5 text-xs" style={{ color: '#7A5C50' }}>
               <Icon size={18} style={{ color: '#800020' }} /> {text}
             </div>
           ))}
@@ -528,7 +528,7 @@ function SubsTab({ subs, reload }) {
       <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
         Your Dabba Wala ended on {fmtDay(expiredSub.end_date)}
       </h3>
-      <p className="text-sm mb-6" style={{ color: '#9C7B6B' }}>We miss cooking for you. Whenever you are ready to come back, we will be here.</p>
+      <p className="text-sm mb-6" style={{ color: '#7A5C50' }}>We miss cooking for you. Whenever you are ready to come back, we will be here.</p>
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Link href="/subscriptions" className="px-8 py-3 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>Come back — same preferences</Link>
         <Link href="/subscriptions" className="px-8 py-3 text-sm font-semibold rounded-sm border-2" style={{ borderColor: '#800020', color: '#800020' }}>Start fresh</Link>
@@ -542,7 +542,7 @@ function SubsTab({ subs, reload }) {
     <div className="text-center py-12">
       <Package size={40} className="mx-auto mb-4" style={{ color: '#9CA3AF' }} />
       <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Your subscription was cancelled</h3>
-      <p className="text-sm mb-6" style={{ color: '#9C7B6B' }}>We hope to see you again whenever you are ready.</p>
+      <p className="text-sm mb-6" style={{ color: '#7A5C50' }}>We hope to see you again whenever you are ready.</p>
       <Link href="/subscriptions" className="inline-block px-8 py-3 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>Subscribe again</Link>
       <PrevSubDetails sub={cancelledSub} />
     </div>
@@ -603,7 +603,7 @@ function AccountTab({ user, login }) {
             { label: 'Phone Number', key: 'phone', type: 'tel' },
           ].map(f => (
             <div key={f.key}>
-              <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#9C7B6B' }}>{f.label}</label>
+              <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A5C50' }}>{f.label}</label>
               {editing ? (
                 <input
                   type={f.type}
@@ -614,7 +614,7 @@ function AccountTab({ user, login }) {
                 />
               ) : (
                 <p className="text-sm px-3 py-2.5 rounded-xl" style={{ backgroundColor: 'rgba(128,0,32,0.04)', color: '#3D2B1F' }}>
-                  {user[f.key] || <span style={{ color: '#9C7B6B' }}>Not set</span>}
+                  {user[f.key] || <span style={{ color: '#7A5C50' }}>Not set</span>}
                 </p>
               )}
             </div>
@@ -622,15 +622,15 @@ function AccountTab({ user, login }) {
 
           {/* Email — read only */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#9C7B6B' }}>Email Address</label>
-            <p className="text-sm px-3 py-2.5 rounded-xl" style={{ backgroundColor: 'rgba(128,0,32,0.04)', color: '#9C7B6B' }}>
+            <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A5C50' }}>Email Address</label>
+            <p className="text-sm px-3 py-2.5 rounded-xl" style={{ backgroundColor: 'rgba(128,0,32,0.04)', color: '#7A5C50' }}>
               {user.email} <span className="text-[10px] ml-1">(cannot be changed)</span>
             </p>
           </div>
 
           {/* Role badge */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#9C7B6B' }}>Account Type</label>
+            <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A5C50' }}>Account Type</label>
             <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize"
               style={{ backgroundColor: user.role === 'admin' ? '#FEF3C7' : '#DBEAFE', color: user.role === 'admin' ? '#92400E' : '#1E40AF' }}>
               {user.role || 'customer'}
@@ -657,7 +657,7 @@ function EmptyState({ icon: Icon, message, sub, link, linkLabel }) {
         <Icon size={26} style={{ color: '#800020' }} />
       </div>
       <p className="font-semibold" style={{ color: '#3D2B1F' }}>{message}</p>
-      <p className="text-sm text-center max-w-xs" style={{ color: '#9C7B6B' }}>{sub}</p>
+      <p className="text-sm text-center max-w-xs" style={{ color: '#7A5C50' }}>{sub}</p>
       {link && (
         <a href={link}
           className="mt-1 px-5 py-2.5 text-sm font-semibold text-white rounded-xl transition-all hover:shadow-md"

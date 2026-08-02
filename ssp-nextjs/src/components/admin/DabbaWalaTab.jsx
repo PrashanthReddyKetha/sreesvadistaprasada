@@ -53,7 +53,7 @@ export default function DabbaWalaTab() {
         {DABBA_VIEWS.map(v => (
           <button key={v.id} onClick={() => setView(v.id)}
             className="px-4 py-2.5 text-sm font-medium transition-colors"
-            style={{ color: view===v.id?'#800020':'#9C7B6B', fontWeight: view===v.id?500:400, borderBottom: view===v.id?'2px solid #800020':'2px solid transparent' }}>
+            style={{ color: view===v.id?'#800020':'#7A5C50', fontWeight: view===v.id?500:400, borderBottom: view===v.id?'2px solid #800020':'2px solid transparent' }}>
             {v.label}
           </button>
         ))}
@@ -123,7 +123,7 @@ function DabbaOperations() {
             <div className="bg-white rounded-xl p-5" style={{ boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
               <p className="text-3xl font-bold" style={{ color:'#800020' }}>{deliveries.length}</p>
               <p className="text-sm text-gray-500">Total deliveries today</p>
-              <p className="text-xs mt-1" style={{ color:'#9C7B6B' }}>Prasada: {prasadaCount} · Svadista: {svadistCount}</p>
+              <p className="text-xs mt-1" style={{ color:'#7A5C50' }}>Prasada: {prasadaCount} · Svadista: {svadistCount}</p>
             </div>
             <div className="bg-white rounded-xl p-5" style={{ boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
               <p className="text-3xl font-bold" style={{ color:'#4A7C59' }}>
@@ -143,7 +143,7 @@ function DabbaOperations() {
                   <thead>
                     <tr style={{ backgroundColor:'#F9F6EE' }}>
                       {['#','Name','Box','Dietary flags','Address','Status','Action'].map(h => (
-                        <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color:'#9C7B6B' }}>{h}</th>
+                        <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color:'#7A5C50' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -152,7 +152,7 @@ function DabbaOperations() {
                       const bm = BOX_BADGE[d.box_type] || BOX_BADGE.prasada;
                       return (
                         <tr key={d.delivery_id} className="border-b" style={{ borderColor:'rgba(128,0,32,0.06)', backgroundColor: d.status==='delivered'?'#F0FFF4':'white' }}>
-                          <td className="px-4 py-3 text-xs" style={{ color:'#9C7B6B' }}>{i+1}</td>
+                          <td className="px-4 py-3 text-xs" style={{ color:'#7A5C50' }}>{i+1}</td>
                           <td className="px-4 py-3 font-medium" style={{ color:'#2D2422' }}>{d.name}</td>
                           <td className="px-4 py-3">
                             <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor:bm.bg, color:bm.color }}>{bm.label}</span>
@@ -160,7 +160,7 @@ function DabbaOperations() {
                           <td className="px-4 py-3">
                             <div className="flex flex-wrap gap-1">
                               {(d.preferences || []).slice(0,3).map(p => <span key={p} className="px-1.5 py-0.5 rounded text-[10px]" style={{ backgroundColor:'rgba(128,0,32,0.07)', color:'#800020' }}>{p}</span>)}
-                              {(d.preferences || []).length > 3 && <span className="text-[10px]" style={{ color:'#9C7B6B' }}>+{d.preferences.length-3}</span>}
+                              {(d.preferences || []).length > 3 && <span className="text-[10px]" style={{ color:'#7A5C50' }}>+{d.preferences.length-3}</span>}
                             </div>
                           </td>
                           <td className="px-4 py-3 text-xs" style={{ color:'#5C4B47' }}>
@@ -201,7 +201,7 @@ function DabbaOperations() {
           <div className="bg-white rounded-xl p-5" style={{ boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
             <div className="flex items-center justify-between mb-4">
               <p className="font-semibold" style={{ color:'#800020' }}>Kitchen summary for today</p>
-              <button onClick={() => window.print()} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg" style={{ backgroundColor:'#F9F6EE', color:'#9C7B6B' }}>
+              <button onClick={() => window.print()} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg" style={{ backgroundColor:'#F9F6EE', color:'#7A5C50' }}>
                 <Printer size={13} /> Print
               </button>
             </div>
@@ -292,7 +292,7 @@ function DabbaSubscribers() {
 
       {loading ? <div className="flex justify-center py-12"><RefreshCw size={20} className="animate-spin" style={{ color:'#800020' }} /></div> : (
         <div className="space-y-3">
-          {filtered.length === 0 && <p className="text-sm text-center py-8" style={{ color:'#9C7B6B' }}>No subscribers found.</p>}
+          {filtered.length === 0 && <p className="text-sm text-center py-8" style={{ color:'#7A5C50' }}>No subscribers found.</p>}
           {filtered.map(s => {
             const initials = s.customer_name?.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase() || '?';
             const statusColor = s.status==='active'?'#4A7C59': s.status==='cancelled'?'#9CA3AF':'#B8860B';
@@ -303,16 +303,16 @@ function DabbaSubscribers() {
                   <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0" style={{ backgroundColor:`${statusColor}20`, color:statusColor }}>{initials}</div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm" style={{ color:'#2D2422' }}>{s.customer_name}</p>
-                    <p className="text-xs truncate" style={{ color:'#9C7B6B' }}>{s.customer_email} · {s.customer_phone}</p>
+                    <p className="text-xs truncate" style={{ color:'#7A5C50' }}>{s.customer_email} · {s.customer_phone}</p>
                     <div className="flex gap-2 mt-1 flex-wrap">
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-medium capitalize" style={{ backgroundColor:'rgba(128,0,32,0.08)', color:'#800020' }}>{s.plan}</span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-medium" style={{ backgroundColor:bm.bg, color:bm.color }}>{bm.label}</span>
-                      {(s.preferences||[]).slice(0,2).map(p => <span key={p} className="px-2 py-0.5 rounded-full text-[10px]" style={{ backgroundColor:'#F9F6EE', color:'#9C7B6B' }}>{p}</span>)}
+                      {(s.preferences||[]).slice(0,2).map(p => <span key={p} className="px-2 py-0.5 rounded-full text-[10px]" style={{ backgroundColor:'#F9F6EE', color:'#7A5C50' }}>{p}</span>)}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
                     <Badge status={s.status} />
-                    {s.end_date && <p className="text-[10px] mt-1" style={{ color:'#9C7B6B' }}>Ends {new Date(s.end_date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</p>}
+                    {s.end_date && <p className="text-[10px] mt-1" style={{ color:'#7A5C50' }}>Ends {new Date(s.end_date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</p>}
                   </div>
                 </div>
               </button>
@@ -347,7 +347,7 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-sm font-semibold" style={{ color:'#9C7B6B' }}>
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm font-semibold" style={{ color:'#7A5C50' }}>
           <ArrowLeft size={16} /> Back to list
         </button>
       </div>
@@ -355,7 +355,7 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
           <h2 className="text-2xl font-bold" style={{ fontFamily:"'Playfair Display', serif", color:'#800020' }}>{sub.customer_name}</h2>
-          <p className="text-sm" style={{ color:'#9C7B6B' }}>{sub.customer_email} · {sub.customer_phone}</p>
+          <p className="text-sm" style={{ color:'#7A5C50' }}>{sub.customer_email} · {sub.customer_phone}</p>
         </div>
         <Badge status={sub.status} />
       </div>
@@ -406,16 +406,16 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
               <textarea rows={3} value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Write a note…" className="w-full p-3 rounded-xl text-sm border" style={{ border:'1px solid rgba(128,0,32,0.2)', resize:'none' }} />
               <div className="flex gap-2 mt-2">
                 <button onClick={saveNote} disabled={saving} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ backgroundColor:'#800020' }}>{saving?'Saving…':'Save note'}</button>
-                <button onClick={() => setAddingNote(false)} className="px-4 py-2 text-xs font-semibold rounded-lg" style={{ color:'#9C7B6B', border:'1px solid #e0d9d0' }}>Cancel</button>
+                <button onClick={() => setAddingNote(false)} className="px-4 py-2 text-xs font-semibold rounded-lg" style={{ color:'#7A5C50', border:'1px solid #e0d9d0' }}>Cancel</button>
               </div>
             </div>
           )}
-          {(sub.internal_notes || []).length === 0 && !addingNote && <p className="text-sm" style={{ color:'#9C7B6B' }}>No notes yet.</p>}
+          {(sub.internal_notes || []).length === 0 && !addingNote && <p className="text-sm" style={{ color:'#7A5C50' }}>No notes yet.</p>}
           <div className="space-y-3">
             {(sub.internal_notes || []).slice().reverse().map(n => (
               <div key={n.id} className="p-3 rounded-xl" style={{ backgroundColor:'#F9F6EE' }}>
                 <p className="text-sm" style={{ color:'#2D2422' }}>{n.text}</p>
-                <p className="text-[10px] mt-1.5" style={{ color:'#9C7B6B' }}>{n.admin_name} · {new Date(n.created_at).toLocaleString('en-GB')}</p>
+                <p className="text-[10px] mt-1.5" style={{ color:'#7A5C50' }}>{n.admin_name} · {new Date(n.created_at).toLocaleString('en-GB')}</p>
               </div>
             ))}
           </div>
@@ -427,7 +427,7 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
             <div className="space-y-2">
               {(sub.audit_trail || []).slice().reverse().slice(0,10).map((a, i) => (
                 <div key={i} className="flex items-start gap-2 text-xs" style={{ color:'#5C4B47' }}>
-                  <span style={{ color:'#9C7B6B', minWidth:120 }}>{new Date(a.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span>
+                  <span style={{ color:'#7A5C50', minWidth:120 }}>{new Date(a.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'})}</span>
                   <span><strong>{a.admin_name}</strong> updated <em>{a.field}</em>{a.reason ? ` (${a.reason})` : ''}</span>
                 </div>
               ))}
@@ -599,7 +599,7 @@ function DabbaMenuPlanner() {
           );
         })}
         <div className="ml-auto flex items-center gap-3">
-          {lastSaved && <p className="text-xs" style={{ color:'#9C7B6B' }}>Last saved {lastSaved}</p>}
+          {lastSaved && <p className="text-xs" style={{ color:'#7A5C50' }}>Last saved {lastSaved}</p>}
           <button onClick={saveDraft} disabled={saving} className="px-4 py-2 text-xs font-semibold rounded-lg" style={{ backgroundColor:'#F9F6EE', color:'#800020' }}>{saving?'Saving…':'Save as draft'}</button>
           <button onClick={() => setShowPublishModal(true)} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ backgroundColor:'#800020' }}>Publish this week</button>
         </div>
@@ -609,9 +609,9 @@ function DabbaMenuPlanner() {
         <table className="w-full border-collapse" style={{ minWidth:700 }}>
           <thead>
             <tr>
-              <th className="p-3 text-left text-xs font-semibold w-24" style={{ color:'#9C7B6B' }}>Box</th>
+              <th className="p-3 text-left text-xs font-semibold w-24" style={{ color:'#7A5C50' }}>Box</th>
               {weekDates.map((d, i) => (
-                <th key={d} className="p-3 text-center text-xs font-semibold" style={{ color:'#9C7B6B' }}>
+                <th key={d} className="p-3 text-center text-xs font-semibold" style={{ color:'#7A5C50' }}>
                   {DAY_LABELS[i]}<br/><span className="font-normal">{new Date(d+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>
                 </th>
               ))}
@@ -663,7 +663,7 @@ function DabbaMenuPlanner() {
       </div>
 
       <div className="mt-5 p-4 rounded-xl" style={{ backgroundColor:'#F9F6EE', border:'0.5px solid #e0d9d0' }}>
-        <p className="text-xs" style={{ color:'#9C7B6B' }}>
+        <p className="text-xs" style={{ color:'#7A5C50' }}>
           <strong>Mixed Box</strong> is automatically constructed: Mon, Wed, Fri use Prasada menu. Tue, Thu use Svadista menu.
         </p>
       </div>
@@ -675,7 +675,7 @@ function DabbaMenuPlanner() {
             <p className="text-sm mb-4" style={{ color:'#5C4B47' }}>Subscribers will immediately see the menus for all filled cells.</p>
             <div className="flex gap-3">
               <button onClick={publishWeek} disabled={publishing} className="flex-1 py-2.5 text-sm font-semibold text-white rounded-lg" style={{ backgroundColor:'#800020' }}>{publishing?'Publishing…':'Publish'}</button>
-              <button onClick={() => setShowPublishModal(false)} className="flex-1 py-2.5 text-sm font-semibold rounded-lg border" style={{ color:'#9C7B6B', borderColor:'#e0d9d0' }}>Cancel</button>
+              <button onClick={() => setShowPublishModal(false)} className="flex-1 py-2.5 text-sm font-semibold rounded-lg border" style={{ color:'#7A5C50', borderColor:'#e0d9d0' }}>Cancel</button>
             </div>
           </div>
         </div>
@@ -737,9 +737,9 @@ function DabbaDeliverySheet() {
         <div className="bg-white rounded-xl overflow-hidden" style={{ border:'0.5px solid #e0d9d0' }}>
           <div className="p-4 border-b" style={{ borderColor:'rgba(128,0,32,0.08)', backgroundColor:'#F9F6EE' }}>
             <p className="font-bold" style={{ color:'#800020' }}>Dabba Wala Deliveries — {new Date(date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</p>
-            <p className="text-sm" style={{ color:'#9C7B6B' }}>Total: {deliveries.length} · Prasada: {deliveries.filter(d=>d.box_type==='prasada').length} · Svadista: {deliveries.filter(d=>d.box_type==='svadista').length}</p>
+            <p className="text-sm" style={{ color:'#7A5C50' }}>Total: {deliveries.length} · Prasada: {deliveries.filter(d=>d.box_type==='prasada').length} · Svadista: {deliveries.filter(d=>d.box_type==='svadista').length}</p>
           </div>
-          {deliveries.length === 0 && <p className="text-sm text-center py-8" style={{ color:'#9C7B6B' }}>No deliveries for this date.</p>}
+          {deliveries.length === 0 && <p className="text-sm text-center py-8" style={{ color:'#7A5C50' }}>No deliveries for this date.</p>}
           <div className="divide-y" style={{ borderColor:'rgba(128,0,32,0.06)' }}>
             {deliveries.map((d, i) => {
               const bm = BOX_BADGE[d.box_type] || BOX_BADGE.prasada;
@@ -747,7 +747,7 @@ function DabbaDeliverySheet() {
               const addr = d.address ? `${d.address.line1}${d.address.line2?', '+d.address.line2:''}, ${d.address.city} ${d.address.postcode}` : '—';
               return (
                 <div key={d.delivery_id} className="p-4 flex items-start gap-4">
-                  <span className="w-6 shrink-0 text-xs font-bold pt-0.5" style={{ color:'#9C7B6B' }}>{i+1}</span>
+                  <span className="w-6 shrink-0 text-xs font-bold pt-0.5" style={{ color:'#7A5C50' }}>{i+1}</span>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="font-semibold" style={{ color:'#2D2422' }}>{d.full_name}</span>
@@ -756,7 +756,7 @@ function DabbaDeliverySheet() {
                     <p className="text-xs mb-0.5" style={{ color:'#800020', fontWeight:500 }}>{prefs}</p>
                     <p className="text-xs" style={{ color:'#5C4B47' }}>{addr}</p>
                     {d.delivery_instruction && d.delivery_instruction !== 'door' && <p className="text-xs mt-0.5" style={{ color:'#B8860B' }}>Note: {d.delivery_instruction}{d.neighbour_name ? ` — ${d.neighbour_name}, ${d.neighbour_door}` : ''}{d.safe_place_description ? ` — ${d.safe_place_description}` : ''}</p>}
-                    {d.custom_request && <p className="text-xs mt-0.5 italic" style={{ color:'#9C7B6B' }}>"{d.custom_request}"</p>}
+                    {d.custom_request && <p className="text-xs mt-0.5 italic" style={{ color:'#7A5C50' }}>"{d.custom_request}"</p>}
                   </div>
                   <input type="checkbox" checked={d.status==='delivered'} onChange={() => toggleDelivered(d.delivery_id, d.status)} className="mt-1 w-4 h-4 accent-[#4A7C59] cursor-pointer" />
                 </div>
@@ -813,7 +813,7 @@ function DabbaAnalytics() {
           </div>
           <table className="w-full text-sm">
             <thead><tr style={{ backgroundColor:'#F9F6EE' }}>
-              {['Name','Plan','End date','Days remaining','Action'].map(h => <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color:'#9C7B6B' }}>{h}</th>)}
+              {['Name','Plan','End date','Days remaining','Action'].map(h => <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color:'#7A5C50' }}>{h}</th>)}
             </tr></thead>
             <tbody>
               {ending.map(s => {
@@ -842,7 +842,7 @@ function DabbaAnalytics() {
           </div>
           <table className="w-full text-sm">
             <thead><tr style={{ backgroundColor:'#F9F6EE' }}>
-              {['Name','Plan','Box','Subscribed','Cancelled'].map(h => <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color:'#9C7B6B' }}>{h}</th>)}
+              {['Name','Plan','Box','Subscribed','Cancelled'].map(h => <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color:'#7A5C50' }}>{h}</th>)}
             </tr></thead>
             <tbody>
               {churn.map(s => (
@@ -860,7 +860,7 @@ function DabbaAnalytics() {
       )}
 
       {churn.length === 0 && ending.length === 0 && (
-        <p className="text-sm text-center py-8" style={{ color:'#9C7B6B' }}>No churn data yet.</p>
+        <p className="text-sm text-center py-8" style={{ color:'#7A5C50' }}>No churn data yet.</p>
       )}
     </div>
   );

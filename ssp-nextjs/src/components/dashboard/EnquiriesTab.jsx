@@ -22,7 +22,7 @@ function EmptyEnquiries({ link }) {
     <div className="text-center py-12">
       <MessageSquare size={40} className="mx-auto mb-4 text-gray-300" />
       <p className="font-semibold mb-1" style={{ color: '#5C4B47' }}>No enquiries yet</p>
-      <p className="text-sm mb-4" style={{ color: '#9C7B6B' }}>Have a question or special request? Get in touch with us.</p>
+      <p className="text-sm mb-4" style={{ color: '#7A5C50' }}>Have a question or special request? Get in touch with us.</p>
       <a href={link} className="text-sm font-semibold underline" style={{ color: '#800020' }}>Send an Enquiry</a>
     </div>
   );
@@ -126,7 +126,7 @@ export default function EnquiriesTab({ enquiries, reload }) {
                       {enq.event_type} · {enq.guest_count} guests · {enq.event_date}
                     </p>
                   )}
-                  <p className="text-xs line-clamp-1" style={{ color:'#9C7B6B' }}>
+                  <p className="text-xs line-clamp-1" style={{ color:'#7A5C50' }}>
                     {sub === 'contact' ? enq.message : enq.additional_details || 'Catering enquiry'}
                   </p>
                 </div>
@@ -160,7 +160,7 @@ export default function EnquiriesTab({ enquiries, reload }) {
             <p className="text-sm font-medium mt-0.5" style={{ color:'#800020' }}>Re: {enq.subject}</p>
           )}
           {type === 'catering' && (
-            <p className="text-xs mt-0.5" style={{ color:'#9C7B6B' }}>
+            <p className="text-xs mt-0.5" style={{ color:'#7A5C50' }}>
               {enq.event_type} · {enq.guest_count} guests · {enq.event_date}
             </p>
           )}
@@ -186,7 +186,7 @@ export default function EnquiriesTab({ enquiries, reload }) {
         {msgLoading ? (
           <div className="flex justify-center py-8"><RefreshCw size={18} className="animate-spin text-gray-400" /></div>
         ) : messages.length === 0 ? (
-          <p className="text-center text-sm py-8" style={{ color:'#9C7B6B' }}>
+          <p className="text-center text-sm py-8" style={{ color:'#7A5C50' }}>
             No replies yet — we'll respond as soon as possible.
           </p>
         ) : (

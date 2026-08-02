@@ -24,7 +24,7 @@ const C = {
   green: '#4A7C59', greenLight: '#E1F5EE', greenText: '#0F6E56',
   amberLight: '#FAEEDA', amberText: '#854F0B',
   cream: '#FDFBF7', surface: '#F9F6EE',
-  dark: '#2D2422', muted: '#9C7B6B',
+  dark: '#2D2422', muted: '#7A5C50',
 };
 
 /* ── Upgrade modal ─────────────────────────────────────── */

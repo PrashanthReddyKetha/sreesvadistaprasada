@@ -96,7 +96,7 @@ const SpiceDots = ({ level }) => (
     {[1,2,3,4,5].map(i => (
       <span key={i} style={{ fontSize: '16px', opacity: i <= level ? 1 : 0.2 }}>🌶️</span>
     ))}
-    <span className="text-xs ml-1.5" style={{ color:'#9C7B6B' }}>
+    <span className="text-xs ml-1.5" style={{ color:'#7A5C50' }}>
       {level === 0 ? 'No spice' : level <= 1 ? 'Mild' : level <= 2 ? 'Medium' : level <= 3 ? 'Spicy' : level <= 4 ? 'Very Spicy' : 'Extremely Hot'}
     </span>
   </div>
@@ -239,7 +239,7 @@ export default function ItemDetailClient({ initialItem }) {
       <div className="max-w-6xl mx-auto px-4 md:px-8">
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs mb-4 flex-wrap" style={{ color:'#9C7B6B' }}>
+        <div className="flex items-center gap-2 text-xs mb-4 flex-wrap" style={{ color:'#7A5C50' }}>
           <Link href="/" className="hover:underline">Home</Link>
           <span>/</span>
           <Link href={MENU_PATHS[item.category] || '/menu'} className="hover:underline capitalize">
@@ -286,10 +286,10 @@ export default function ItemDetailClient({ initialItem }) {
                   <div className="flex items-center gap-2">
                     <StarRow rating={avgRating} size={18} />
                     <span className="text-sm font-bold" style={{ color:'#3D2B1F' }}>{avgRating.toFixed(1)}</span>
-                    <span className="text-sm" style={{ color:'#9C7B6B' }}>({reviews.length} review{reviews.length!==1?'s':''})</span>
+                    <span className="text-sm" style={{ color:'#7A5C50' }}>({reviews.length} review{reviews.length!==1?'s':''})</span>
                   </div>
                 ) : (
-                  <span className="text-sm" style={{ color:'#9C7B6B' }}>No reviews yet — be the first!</span>
+                  <span className="text-sm" style={{ color:'#7A5C50' }}>No reviews yet — be the first!</span>
                 )}
                 {social.order_count > 0 && (
                   <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor:'rgba(128,0,32,0.08)', color:'#800020' }}>
@@ -301,7 +301,7 @@ export default function ItemDetailClient({ initialItem }) {
               <p className="text-sm leading-relaxed mb-5" style={{ color:'#5C4B47' }}>{item.description}</p>
 
               <div className="mb-4">
-                <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color:'#9C7B6B' }}>Spice Level</p>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color:'#7A5C50' }}>Spice Level</p>
                 <SpiceDots level={item.spice_level} />
               </div>
 
@@ -309,7 +309,7 @@ export default function ItemDetailClient({ initialItem }) {
                 <div className="mb-4">
                   <div className="flex items-center gap-1.5 mb-2">
                     <AlertTriangle size={13} style={{ color:'#B8860B' }} />
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color:'#9C7B6B' }}>Allergens</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color:'#7A5C50' }}>Allergens</p>
                   </div>
                   <div className="flex gap-1.5 flex-wrap">
                     {item.allergens.map(a => (
@@ -327,11 +327,11 @@ export default function ItemDetailClient({ initialItem }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-3xl font-bold" style={{ color:'#800020' }}>£{item.price.toFixed(2)}</p>
-                  <p className="text-xs" style={{ color:'#9C7B6B' }}>per serving</p>
+                  <p className="text-xs" style={{ color:'#7A5C50' }}>per serving</p>
                 </div>
                 <button onClick={handleLike} disabled={liking}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
-                  style={{ backgroundColor: social.user_liked ? '#FEE2E2' : 'rgba(128,0,32,0.08)', color: social.user_liked ? '#C62828' : '#9C7B6B' }}>
+                  style={{ backgroundColor: social.user_liked ? '#FEE2E2' : 'rgba(128,0,32,0.08)', color: social.user_liked ? '#C62828' : '#7A5C50' }}>
                   <Heart size={18} style={{ fill: social.user_liked ? '#C62828' : 'none' }} />
                   <span className="text-sm font-semibold">{social.likes}</span>
                 </button>
@@ -372,7 +372,7 @@ export default function ItemDetailClient({ initialItem }) {
           ].map(({ icon:Icon, label, value }) => (
             <div key={label} className="rounded-xl p-4 text-center" style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)' }}>
               <Icon size={20} className="mx-auto mb-1.5" style={{ color:'#B8860B' }} />
-              <p className="text-xs font-semibold" style={{ color:'#9C7B6B' }}>{label}</p>
+              <p className="text-xs font-semibold" style={{ color:'#7A5C50' }}>{label}</p>
               <p className="text-sm font-bold mt-0.5" style={{ color:'#3D2B1F' }}>{value}</p>
             </div>
           ))}
@@ -403,7 +403,7 @@ export default function ItemDetailClient({ initialItem }) {
                   ['Spice Level', `${item.spice_level}/5`],
                 ].map(([k,v]) => (
                   <div key={k} className="flex items-center justify-between text-sm py-2 border-b" style={{ borderColor:'rgba(244,196,48,0.15)' }}>
-                    <span style={{ color:'#9C7B6B' }}>{k}</span>
+                    <span style={{ color:'#7A5C50' }}>{k}</span>
                     <span className="font-semibold" style={{ color:'#3D2B1F' }}>{v}</span>
                   </div>
                 ))}
@@ -411,7 +411,7 @@ export default function ItemDetailClient({ initialItem }) {
               <div className="space-y-2">
                 {item.allergens?.length > 0 && (
                   <div className="py-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color:'#9C7B6B' }}>Contains Allergens</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color:'#7A5C50' }}>Contains Allergens</p>
                     <div className="flex flex-wrap gap-1.5">
                       {item.allergens.map(a => (
                         <span key={a} className="px-2.5 py-1 rounded-full text-xs font-semibold capitalize"
@@ -439,7 +439,7 @@ export default function ItemDetailClient({ initialItem }) {
                   <div className="flex flex-col items-center justify-center">
                     <p className="text-6xl font-bold mb-1" style={{ color:'#800020' }}>{avgRating.toFixed(1)}</p>
                     <StarRow rating={avgRating} size={22} />
-                    <p className="text-sm mt-2" style={{ color:'#9C7B6B' }}>{reviews.length} review{reviews.length!==1?'s':''}</p>
+                    <p className="text-sm mt-2" style={{ color:'#7A5C50' }}>{reviews.length} review{reviews.length!==1?'s':''}</p>
                   </div>
                   <div className="space-y-2">
                     {ratingDist.map(({ n, count }) => (
@@ -449,7 +449,7 @@ export default function ItemDetailClient({ initialItem }) {
                         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor:'#E5E7EB' }}>
                           <div className="h-full rounded-full" style={{ width:`${reviews.length ? (count/reviews.length)*100 : 0}%`, backgroundColor:'#F4C430' }} />
                         </div>
-                        <span className="w-5 text-xs" style={{ color:'#9C7B6B' }}>{count}</span>
+                        <span className="w-5 text-xs" style={{ color:'#7A5C50' }}>{count}</span>
                       </div>
                     ))}
                   </div>
@@ -499,7 +499,7 @@ export default function ItemDetailClient({ initialItem }) {
             )}
 
             {reviews.length === 0 ? (
-              <div className="text-center py-10" style={{ color:'#9C7B6B' }}>
+              <div className="text-center py-10" style={{ color:'#7A5C50' }}>
                 <Star size={32} className="mx-auto mb-3 opacity-30" />
                 <p className="font-semibold">No reviews yet</p>
                 <p className="text-sm mt-1">Be the first to share your experience!</p>
@@ -516,7 +516,7 @@ export default function ItemDetailClient({ initialItem }) {
                         </div>
                         <div>
                           <p className="font-semibold text-sm" style={{ color:'#3D2B1F' }}>{r.user_name}</p>
-                          <p className="text-xs" style={{ color:'#9C7B6B' }}>
+                          <p className="text-xs" style={{ color:'#7A5C50' }}>
                             {new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}
                           </p>
                         </div>
@@ -539,7 +539,7 @@ export default function ItemDetailClient({ initialItem }) {
                 <button onClick={() => setOpenFaq(openFaq===i?null:i)}
                   className="w-full flex items-center justify-between px-5 py-4 text-left">
                   <span className="font-semibold text-sm pr-4" style={{ color:'#3D2B1F' }}>{faq.q}</span>
-                  {openFaq===i ? <ChevronUp size={16} style={{ color:'#800020', flexShrink:0 }} /> : <ChevronDown size={16} style={{ color:'#9C7B6B', flexShrink:0 }} />}
+                  {openFaq===i ? <ChevronUp size={16} style={{ color:'#800020', flexShrink:0 }} /> : <ChevronDown size={16} style={{ color:'#7A5C50', flexShrink:0 }} />}
                 </button>
                 {openFaq===i && (
                   <div className="px-5 pb-4 text-sm leading-relaxed border-t" style={{ color:'#5C4B47', borderColor:'rgba(244,196,48,0.15)' }}>

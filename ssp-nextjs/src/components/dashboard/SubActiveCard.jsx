@@ -232,12 +232,12 @@ export default function SubActiveCard({ sub }) {
                 <div key={date} className="px-4 py-3" style={{ opacity: isPast && !isToday ? 0.5 : 1 }}>
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <p className="text-xs font-bold" style={{ color: isToday ? '#166534' : '#800020' }}>{WEEKDAYS[idx]}</p>
-                    <p className="text-[10px]" style={{ color: '#9C7B6B' }}>
+                    <p className="text-[10px]" style={{ color: '#7A5C50' }}>
                       {new Date(date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
                     </p>
                     {isToday && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor:'#DCFCE7',color:'#166534'}}>Today</span>}
                     {isTomorrow && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor:'#FEF3C7',color:'#92400E'}}>Upcoming delivery</span>}
-                    {isPast && !isToday && !status && <span className="text-[9px]" style={{ color:'#9C7B6B'}}>Passed</span>}
+                    {isPast && !isToday && !status && <span className="text-[9px]" style={{ color:'#7A5C50'}}>Passed</span>}
                     {statusMeta && (
                       <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
                         style={{ backgroundColor: statusMeta.bg, color: statusMeta.fg }}>
@@ -253,7 +253,7 @@ export default function SubActiveCard({ sub }) {
                     )}
                   </div>
                   {day.is_placeholder || items.length === 0 ? (
-                    <p className="text-xs italic" style={{ color: '#9C7B6B' }}>Menu is on the way 🍱</p>
+                    <p className="text-xs italic" style={{ color: '#7A5C50' }}>Menu is on the way 🍱</p>
                   ) : (
                     <DishCards items={items} />
                   )}
@@ -262,14 +262,14 @@ export default function SubActiveCard({ sub }) {
             })}
           </div>
         ) : (
-          <p className="px-5 py-4 text-sm italic" style={{ color: '#9C7B6B' }}>Could not load this week's menu.</p>
+          <p className="px-5 py-4 text-sm italic" style={{ color: '#7A5C50' }}>Could not load this week's menu.</p>
         )}
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(244,196,48,0.2)', backgroundColor: '#FDFBF7' }}>
         <button onClick={() => setDetailsOpen(e => !e)} className="w-full flex items-center justify-between p-5 text-left">
           <p className="font-semibold text-sm" style={{ color: '#800020' }}>Subscription details</p>
-          {detailsOpen ? <ChevronUp size={16} style={{ color: '#9C7B6B' }} /> : <ChevronDown size={16} style={{ color: '#9C7B6B' }} />}
+          {detailsOpen ? <ChevronUp size={16} style={{ color: '#7A5C50' }} /> : <ChevronDown size={16} style={{ color: '#7A5C50' }} />}
         </button>
         {detailsOpen && (
           <div className="px-5 pb-5 space-y-3" style={{ borderTop: '1px solid rgba(244,196,48,0.15)' }}>
@@ -302,7 +302,7 @@ export default function SubActiveCard({ sub }) {
               </div>
             )}
             <div className="pt-3 mt-3" style={{ borderTop: '1px solid rgba(128,0,32,0.08)' }}>
-              <p className="text-xs text-center" style={{ color: '#9C7B6B' }}>
+              <p className="text-xs text-center" style={{ color: '#7A5C50' }}>
                 Need to make a change?{' '}
                 <a href="https://wa.me/447307119962?text=Hi,%20I%20need%20help%20with%20my%20Dabba%20Wala%20subscription." target="_blank" rel="noopener noreferrer" className="underline font-semibold" style={{ color: '#800020' }}>Contact us on WhatsApp</a>
                 {' '}— we aim to respond within 2 hours.

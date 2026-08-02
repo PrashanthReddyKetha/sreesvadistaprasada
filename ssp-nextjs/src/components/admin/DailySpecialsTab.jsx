@@ -166,7 +166,7 @@ const DailySpecialsTab = () => {
               <h3 className="text-lg font-bold" style={{ color: '#800020', fontFamily: "'Playfair Display', serif" }}>
                 {editing ? 'Edit Special' : 'Add Special'}
               </h3>
-              <button onClick={closeForm} className="p-1 rounded hover:bg-gray-100"><X size={18} /></button>
+              <button onClick={closeForm} aria-label="Close form" className="p-1 rounded hover:bg-gray-100"><X size={18} /></button>
             </div>
             <div className="p-5 space-y-4">
               <Field label="Title *" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />

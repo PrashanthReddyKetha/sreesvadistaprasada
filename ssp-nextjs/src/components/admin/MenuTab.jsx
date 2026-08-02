@@ -246,7 +246,7 @@ export default function MenuTab() {
           </button>
         </div>
       </div>
-      {search && <p className="text-xs" style={{ color:'#9C7B6B' }}>{filtered.length} result{filtered.length !== 1 ? 's' : ''} for "<strong>{search}</strong>"</p>}
+      {search && <p className="text-xs" style={{ color:'#7A5C50' }}>{filtered.length} result{filtered.length !== 1 ? 's' : ''} for "<strong>{search}</strong>"</p>}
 
       {/* Bulk action bar */}
       {filtered.length > 0 && (

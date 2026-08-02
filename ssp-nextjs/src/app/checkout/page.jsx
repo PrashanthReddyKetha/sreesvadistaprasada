@@ -47,7 +47,7 @@ function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange,
         />
         {locked && <CheckCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#166534' }} />}
       </div>
-      {hint && <p className="text-[10px] mt-0.5" style={{ color: '#9C7B6B' }}>{hint}</p>}
+      {hint && <p className="text-[10px] mt-0.5" style={{ color: '#7A5C50' }}>{hint}</p>}
     </div>
   );
 }
@@ -307,7 +307,7 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
               <p className="text-xs text-gray-500">Add <strong style={{ color: '#800020' }}>{fmt(remaining)}</strong> more for free delivery</p>
             )}
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+          <button onClick={onClose} aria-label="Close" className="p-2 rounded-full hover:bg-gray-100 transition-colors">
             <X size={18} className="text-gray-500" />
           </button>
         </div>
@@ -946,7 +946,7 @@ const CheckoutInner = () => {
                   {addressDropdown && addressOptions.length > 0 && (
                     <div className="mt-1.5 border-2 rounded-xl overflow-hidden shadow-lg"
                       style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: 'white', maxHeight: '200px', overflowY: 'auto' }}>
-                      <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider bg-gray-50 sticky top-0" style={{ color: '#9C7B6B' }}>
+                      <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider bg-gray-50 sticky top-0" style={{ color: '#7A5C50' }}>
                         {addressOptions.length} addresses — select yours
                       </p>
                       {addressOptions.map((addr, i) => (
