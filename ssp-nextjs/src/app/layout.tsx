@@ -1,17 +1,21 @@
 import type { Metadata } from 'next'
 import { Playfair_Display, Lato } from 'next/font/google'
+import dynamic from 'next/dynamic'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import WhatsAppButton from '@/components/layout/WhatsAppButton'
-import CartDrawer from '@/components/CartDrawer'
-import AuthModal from '@/components/AuthModal'
 import CartToast from '@/components/CartToast'
 import ScrollToTop from '@/components/ScrollToTop'
 import BackendWarmup from '@/components/BackendWarmup'
+import TakeawayNudge from '@/components/TakeawayNudge'
 import '@/styles/globals.css'
+
+// Lazy-load heavy components — Firebase & cart JS only load when actually needed
+const AuthModal  = dynamic(() => import('@/components/AuthModal'),  { ssr: false })
+const CartDrawer = dynamic(() => import('@/components/CartDrawer'), { ssr: false })
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -54,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartProvider>
               <ScrollToTop />
               <BackendWarmup />
+              <TakeawayNudge />
               <Header />
               <CartDrawer />
               <AuthModal />
