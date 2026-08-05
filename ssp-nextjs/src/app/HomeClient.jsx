@@ -44,21 +44,23 @@ const Home = () => {
 
   const scrollTrending = (direction) => {
     if (trendingRef.current) {
-      const scrollAmount = 340;
+      trendingPausedRef.current = true;
       trendingRef.current.scrollBy({
-        left: direction === 'right' ? scrollAmount : -scrollAmount,
+        left: direction === 'right' ? 340 : -340,
         behavior: 'smooth'
       });
+      setTimeout(() => { trendingPausedRef.current = false; }, 600);
     }
   };
 
   const scrollSpecials = (direction) => {
     if (specialsRef.current) {
-      const scrollAmount = 220;
+      specialsPausedRef.current = true;
       specialsRef.current.scrollBy({
-        left: direction === 'right' ? scrollAmount : -scrollAmount,
+        left: direction === 'right' ? 220 : -220,
         behavior: 'smooth',
       });
+      setTimeout(() => { specialsPausedRef.current = false; }, 600);
     }
   };
 
@@ -321,7 +323,7 @@ const Home = () => {
       )}
 
       {/* ============================================ */}
-      {/* TRENDING & LOVED */
+      {/* TRENDING & LOVED */}
       {/* ============================================ */}
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }} data-testid="trending-section">
         <div className="max-w-7xl mx-auto">
