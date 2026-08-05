@@ -17,6 +17,22 @@ async function getItem(slug) {
   }
 }
 
+async function getGoesWith(pairIds) {
+  if (!pairIds?.length) return [];
+  try {
+    const results = await Promise.all(
+      pairIds.slice(0, 6).map(id =>
+        fetch(`${BASE}/api/menu/${id}`, { next: { revalidate: 60 } })
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null)
+      )
+    );
+    return results.filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 const SITE = 'https://sreesvadistaprasada.com';
 
 const CATEGORY_LABELS = {
@@ -71,6 +87,8 @@ export default async function ItemPage({ params }) {
   const item = await getItem(params.slug);
   if (!item) notFound();
 
+  const initialGoesWith = await getGoesWith(item.pairs_with);
+
   const jsonLd = [
     {
       '@context': 'https://schema.org',
@@ -113,7 +131,7 @@ export default async function ItemPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ItemDetailClient initialItem={item} />
+      <ItemDetailClient initialItem={item} initialGoesWith={initialGoesWith} />
     </>
   );
 }

@@ -139,7 +139,7 @@ const MiniCard = ({ item }) => {
 };
 
 // ── main component ─────────────────────────────────────────────────────────
-export default function ItemDetailClient({ initialItem }) {
+export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) {
   const router = useRouter();
   const { user, setAuthOpen } = useAuth();
   const { addToCart } = useCart();
@@ -148,7 +148,7 @@ export default function ItemDetailClient({ initialItem }) {
   const [item]                = useState(initialItem);
   const [reviews, setReviews] = useState([]);
   const [social, setSocial]   = useState({ likes:0, order_count:0, user_liked:false, user_reviewed:false });
-  const [goesWith, setGoesWith] = useState([]);
+  const [goesWith, setGoesWith] = useState(initialGoesWith);
   const [similar, setSimilar]   = useState([]);
 
   const [qty, setQty]   = useState(1);
@@ -178,19 +178,25 @@ export default function ItemDetailClient({ initialItem }) {
       const cats = COMPLEMENTS[item.category] || [];
       const promises = [api.get(`/menu?category=${item.category}&available=true`)];
 
-      if (item.pairs_with?.length > 0) {
-        promises.push(...item.pairs_with.slice(0, 6).map(id => api.get(`/menu/${id}`)));
-      } else if (cats[0]) {
-        promises.push(api.get(`/menu?category=${cats[0]}&available=true`));
+      // Only fetch goesWith client-side if not already supplied server-side
+      const needsGoesWith = initialGoesWith.length === 0;
+      if (needsGoesWith) {
+        if (item.pairs_with?.length > 0) {
+          promises.push(...item.pairs_with.slice(0, 6).map(id => api.get(`/menu/${id}`)));
+        } else if (cats[0]) {
+          promises.push(api.get(`/menu?category=${cats[0]}&available=true`));
+        }
       }
 
       const [simRes, ...pairResults] = await Promise.all(promises);
       setSimilar(simRes.data.filter(i => i.id !== item.id).slice(0, 8));
 
-      if (item.pairs_with?.length > 0) {
-        setGoesWith(pairResults.map(r => r.data).filter(Boolean));
-      } else if (pairResults[0]) {
-        setGoesWith(pairResults[0].data.filter(i => i.id !== item.id).slice(0, 6));
+      if (needsGoesWith) {
+        if (item.pairs_with?.length > 0) {
+          setGoesWith(pairResults.map(r => r.data).filter(Boolean));
+        } else if (pairResults[0]) {
+          setGoesWith(pairResults[0].data.filter(i => i.id !== item.id).slice(0, 6));
+        }
       }
     } catch { /* ignore */ }
   }, [item]);
