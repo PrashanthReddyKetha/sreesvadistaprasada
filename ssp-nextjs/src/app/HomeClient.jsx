@@ -307,12 +307,21 @@ const Home = () => {
                 );
               })}
             </div>
+            <div className="text-center mt-5">
+              <Link
+                href="/breakfast"
+                className="inline-flex items-center gap-2 text-sm font-semibold tracking-wide transition-colors duration-200 hover:gap-3"
+                style={{ color: '#800020' }}
+              >
+                View Breakfast Menu <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
         </section>
       )}
 
       {/* ============================================ */}
-      {/* TRENDING & LOVED */}
+      {/* TRENDING & LOVED */
       {/* ============================================ */}
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }} data-testid="trending-section">
         <div className="max-w-7xl mx-auto">

@@ -37,7 +37,7 @@ const COMPLEMENTS = {
   nonVeg:    ['pickles','podis'],
   veg:       ['pickles','podis'],
   prasada:   ['veg','pickles'],
-  breakfast: ['podis','pickles'],
+  breakfast: ['breakfast'],
   pickles:   ['nonVeg','veg'],
   podis:     ['nonVeg','breakfast'],
 };
@@ -188,9 +188,9 @@ export default function ItemDetailClient({ initialItem }) {
       setSimilar(simRes.data.filter(i => i.id !== item.id).slice(0, 8));
 
       if (item.pairs_with?.length > 0) {
-        setGoesWith(pairResults.map(r => r.data).filter(Boolean));
+        setGoesWith(pairResults.map(r => r.data).filter(Boolean).filter(i => i?.category === 'breakfast'));
       } else if (pairResults[0]) {
-        setGoesWith(pairResults[0].data.slice(0, 6));
+        setGoesWith(pairResults[0].data.filter(i => i.category === 'breakfast').slice(0, 6));
       }
     } catch { /* ignore */ }
   }, [item]);
