@@ -3,6 +3,7 @@ import { Playfair_Display, Lato } from 'next/font/google'
 import dynamic from 'next/dynamic'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
+import { NotifyMeProvider } from '@/context/NotifyMeContext'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import WhatsAppButton from '@/components/layout/WhatsAppButton'
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col">
           <AuthProvider>
             <CartProvider>
+              <NotifyMeProvider>
               <ScrollToTop />
               <BackendWarmup />
               <TakeawayNudge />
@@ -65,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Footer />
               <WhatsAppButton />
               <CartToast />
+              </NotifyMeProvider>
             </CartProvider>
           </AuthProvider>
       </body>

@@ -6,10 +6,11 @@ import Image from 'next/image';
 import {
   Heart, ShoppingCart, Star, ChevronDown, ChevronUp,
   Flame, Leaf, AlertTriangle, Users, Plus, Minus,
-  CheckCircle, Award, Clock, Package, MessageCircle
+  CheckCircle, Award, Clock, Package, Bell
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
+import { useNotifyMe } from '@/context/NotifyMeContext';
 import api from '@/api';
 import { buildItemUrl } from '@/lib/itemUrl';
 
@@ -104,6 +105,7 @@ const SpiceDots = ({ level }) => (
 
 const MiniCard = ({ item }) => {
   const { addToCart } = useCart();
+  const { openNotifyMe } = useNotifyMe();
   return (
     <Link href={buildItemUrl(item)} className="flex-shrink-0 w-44 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow" style={{ border:'1px solid rgba(244,196,48,0.2)' }}>
       {item.image ? (
@@ -124,12 +126,11 @@ const MiniCard = ({ item }) => {
               <Plus size={12} />
             </button>
           ) : (
-            <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!" target="_blank" rel="noopener noreferrer"
-              onClick={e => { e.preventDefault(); window.open(e.currentTarget.href, '_blank'); }}
-              className="w-6 h-6 rounded-full flex items-center justify-center text-white"
-              style={{ backgroundColor:'#25D366' }}>
-              <MessageCircle size={10} />
-            </a>
+            <button onClick={e => { e.preventDefault(); openNotifyMe(item.name, item.category); }}
+              className="w-6 h-6 rounded-full flex items-center justify-center border"
+              style={{ borderColor:'rgba(139,105,20,0.45)', backgroundColor:'rgba(139,105,20,0.06)', color:'#8B6914' }}>
+              <Bell size={10} />
+            </button>
           )}
         </div>
       </div>
@@ -142,6 +143,7 @@ export default function ItemDetailClient({ initialItem }) {
   const router = useRouter();
   const { user, setAuthOpen } = useAuth();
   const { addToCart } = useCart();
+  const { openNotifyMe } = useNotifyMe();
 
   const [item]                = useState(initialItem);
   const [reviews, setReviews] = useState([]);
@@ -373,15 +375,14 @@ export default function ItemDetailClient({ initialItem }) {
               ) : (
                 <>
                   <div className="rounded-xl p-4 text-center" style={{ backgroundColor:'rgba(139,105,20,0.06)', border:'1px dashed rgba(139,105,20,0.5)' }}>
-                    <p className="text-sm font-bold mb-1" style={{ color:'#8B6914' }}>🕐 Coming Soon</p>
-                    <p className="text-xs text-gray-500">Currently serving Breakfast only — this dish launches soon!</p>
-                  </div>
-                  <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!"
-                    target="_blank" rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white transition-all hover:shadow-lg"
-                    style={{ backgroundColor:'#25D366' }}>
-                    <MessageCircle size={18} /> Enquire for Bulk Orders
-                  </a>
+                      <p className="text-sm font-bold mb-1" style={{ color:'#8B6914' }}>🕐 Launching Soon</p>
+                      <p className="text-xs text-gray-500">Currently serving Breakfast only — this dish is coming very soon!</p>
+                    </div>
+                    <button onClick={() => openNotifyMe(item.name, item.category)}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold border transition-all hover:opacity-90 active:scale-95"
+                      style={{ color:'#8B6914', borderColor:'rgba(139,105,20,0.45)', backgroundColor:'rgba(139,105,20,0.06)' }}>
+                      <Bell size={18} /> Be First to Taste It — Notify Me
+                    </button>
                 </>
               )}
             </div>
@@ -627,12 +628,11 @@ export default function ItemDetailClient({ initialItem }) {
                 Add Both to Cart
               </button>
             ) : (
-              <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!"
-                target="_blank" rel="noopener noreferrer"
-                className="mt-4 w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 text-white transition-all hover:shadow-lg"
-                style={{ backgroundColor:'#25D366' }}>
-                <MessageCircle size={16} /> Enquire for Bulk Orders
-              </a>
+              <button onClick={() => openNotifyMe(item.name, item.category)}
+                className="mt-4 w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 border transition-all hover:opacity-90"
+                style={{ color:'#8B6914', borderColor:'rgba(139,105,20,0.45)', backgroundColor:'rgba(139,105,20,0.06)' }}>
+                <Bell size={16} /> Notify Me When This Launches
+              </button>
             )}
           </div>
         )}

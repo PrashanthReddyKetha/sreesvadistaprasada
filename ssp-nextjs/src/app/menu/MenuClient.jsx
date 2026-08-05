@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { buildItemUrl } from '@/lib/itemUrl';
-import { Flame, ShoppingCart, ArrowRight, Search, MessageCircle } from 'lucide-react';
+import { Flame, ShoppingCart, ArrowRight, Search, Bell } from 'lucide-react';
+import { useNotifyMe } from '@/context/NotifyMeContext';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
@@ -28,6 +29,7 @@ const Menu = ({ initialItems = [] }) => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const { addToCart } = useCart();
+  const { openNotifyMe } = useNotifyMe();
 
   useEffect(() => {
     const key = 'all';
@@ -157,12 +159,13 @@ const Menu = ({ initialItems = [] }) => {
                             <ShoppingCart size={11} /> Add
                           </button>
                         ) : (
-                          <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!" target="_blank" rel="noopener noreferrer"
-                            onClick={e => { e.preventDefault(); e.stopPropagation(); window.open(e.currentTarget.href, '_blank'); }}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white rounded-sm"
-                            style={{ backgroundColor: '#25D366' }} data-testid={`menu-soon-${dish.id}`}>
-                            <MessageCircle size={11} /> Soon
-                          </a>
+                          <button
+                            onClick={e => { e.preventDefault(); e.stopPropagation(); openNotifyMe(dish.name, dish.category); }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-sm border transition-all hover:opacity-90"
+                            style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.45)', backgroundColor: 'rgba(139,105,20,0.06)' }}
+                            data-testid={`menu-soon-${dish.id}`}>
+                            <Bell size={11} /> Notify
+                          </button>
                         )}
                       </div>
                     </div>

@@ -3,11 +3,12 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation';
-import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin, MessageCircle } from 'lucide-react';
+import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin, Bell } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '@/data/mockData';
 import HeroSlider from '@/components/HeroSlider';
 import api from '@/api';
 import { useCart } from '@/context/CartContext';
+import { useNotifyMe } from '@/context/NotifyMeContext';
 import { buildItemUrl } from '@/lib/itemUrl';
 
 const Home = () => {
@@ -18,6 +19,7 @@ const Home = () => {
   const [postcodeResult, setPostcodeResult] = useState(null);
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const { addToCart } = useCart();
+  const { openNotifyMe } = useNotifyMe();
   const [liveItems, setLiveItems] = useState([]);
   const [chefSpecialItem, setChefSpecialItem] = useState(null);
   const [dailySpecials, setDailySpecials] = useState([]);
@@ -371,15 +373,14 @@ const Home = () => {
                         <ShoppingCart size={13} /> Add
                       </button>
                     ) : (
-                      <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!"
-                        target="_blank" rel="noopener noreferrer"
-                        onClick={e => { e.stopPropagation(); window.open(e.currentTarget.href, '_blank'); e.preventDefault(); }}
-                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white rounded-sm"
-                        style={{ backgroundColor: '#25D366' }}
+                      <button
+                        onClick={e => { e.stopPropagation(); openNotifyMe(dish.name, dish.category); }}
+                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-sm border transition-all hover:opacity-90"
+                        style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.45)', backgroundColor: 'rgba(139,105,20,0.06)' }}
                         data-testid={`coming-soon-${dish.id}`}
                       >
-                        <MessageCircle size={13} /> Soon
-                      </a>
+                        <Bell size={12} /> Notify Me
+                      </button>
                     )}
                   </div>
                 </div>
@@ -509,15 +510,14 @@ const Home = () => {
                         <ShoppingCart size={15} /> Order Now
                       </button>
                     ) : (
-                      <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!"
-                        target="_blank" rel="noopener noreferrer"
-                        onClick={e => { e.preventDefault(); window.open(e.currentTarget.href, '_blank'); }}
-                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md"
-                        style={{ backgroundColor: '#25D366' }}
-                        data-testid="chef-special-wa-btn"
+                      <button
+                        onClick={e => { e.preventDefault(); openNotifyMe(chefSpecial.name, chefSpecialItem?.category || ''); }}
+                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm border transition-all hover:opacity-90"
+                        style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.45)', backgroundColor: 'rgba(139,105,20,0.06)' }}
+                        data-testid="chef-special-notify-btn"
                       >
-                        <MessageCircle size={15} /> Bulk Order?
-                      </a>
+                        <Bell size={15} /> Notify Me
+                      </button>
                     )}
                   </div>
                 </div>

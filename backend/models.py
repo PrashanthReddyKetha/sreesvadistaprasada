@@ -428,6 +428,22 @@ class NewsletterSubscription(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+# --- Waitlist (soft-launch notify-me) ---
+
+class WaitlistCreate(BaseModel):
+    phone: str
+    category: str
+    item_name: Optional[str] = None
+
+
+class WaitlistEntry(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    phone: str
+    category: str
+    item_name: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 # --- Delivery ---
 
 class PostcodeCheckRequest(BaseModel):

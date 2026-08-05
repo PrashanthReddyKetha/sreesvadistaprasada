@@ -36,9 +36,14 @@ const config: Config = {
           '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(-100%)' },
         },
+        slideUp: {
+          '0%': { transform: 'translateY(100%)' },
+          '100%': { transform: 'translateY(0)' },
+        },
       },
       animation: {
         marquee: 'marquee 18s linear infinite',
+        'slide-up': 'slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
       },
     },
   },

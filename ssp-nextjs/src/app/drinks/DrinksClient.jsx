@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { buildItemUrl } from '@/lib/itemUrl';
-import { ShoppingCart, Droplets, Search, X, MessageCircle } from 'lucide-react';
+import { ShoppingCart, Droplets, Search, X, Bell } from 'lucide-react';
+import { useNotifyMe } from '@/context/NotifyMeContext';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
@@ -14,7 +15,7 @@ const Drinks = ({ initialItems = [] }) => {
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [search, setSearch] = useState('');
-  const { addToCart } = useCart();
+  const { openNotifyMe } = useNotifyMe();
 
   useEffect(() => {
     api.get('/menu?category=drinks&available=true')
@@ -99,16 +100,12 @@ const Drinks = ({ initialItems = [] }) => {
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3 flex-1">{drink.description}</p>
                       )}
                       <div className="w-full space-y-1.5">
-                        <div className="w-full py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 border"
-                          style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.4)', backgroundColor: 'rgba(139,105,20,0.05)' }}>
-                          🕐 Coming Soon
-                        </div>
-                        <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!" target="_blank" rel="noopener noreferrer"
-                          onClick={e => { e.preventDefault(); e.stopPropagation(); window.open(e.currentTarget.href, '_blank'); }}
-                          className="w-full py-1.5 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1"
-                          style={{ backgroundColor: '#25D366' }}>
-                          <MessageCircle size={11} /> Bulk Order? WhatsApp
-                        </a>
+                        <button
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); openNotifyMe(drink.name, drink.category || 'drinks'); }}
+                          className="w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all hover:opacity-90 active:scale-95"
+                          style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.45)', backgroundColor: 'rgba(139,105,20,0.06)' }}>
+                          <Bell size={12} /> Coming Soon · Notify Me
+                        </button>
                       </div>
                     </div>
                   </div>

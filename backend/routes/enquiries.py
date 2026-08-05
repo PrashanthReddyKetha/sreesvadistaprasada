@@ -8,6 +8,7 @@ from models import (
     ContactMessage, ContactMessageCreate,
     CateringEnquiry, CateringEnquiryCreate,
     NewsletterSubscription, NewsletterCreate,
+    WaitlistCreate, WaitlistEntry,
     EnquiryMessage, EnquiryMessageCreate,
     Notification,
 )
@@ -143,6 +144,25 @@ async def toggle_newsletter_subscriber(subscriber_id: str, _: dict = Depends(req
     new_active = not doc.get("active", True)
     await db.newsletter.update_one({"id": subscriber_id}, {"$set": {"active": new_active}})
     return {"active": new_active}
+
+
+# ── Soft-launch waitlist ───────────────────────────────────────────────────────
+
+@router.post("/waitlist")
+async def join_waitlist(request: Request, payload: WaitlistCreate, _: None = Depends(_check_enquiry_rate)):
+    # De-duplicate: same phone + category counts as already on list
+    existing = await db.waitlist.find_one(
+        {"phone": payload.phone, "category": payload.category}, {"_id": 0}
+    )
+    if existing:
+        return {"ok": True, "already_subscribed": True}
+    entry = WaitlistEntry(
+        phone=payload.phone,
+        category=payload.category,
+        item_name=payload.item_name,
+    )
+    await db.waitlist.insert_one(entry.model_dump())
+    return {"ok": True}
 
 
 # ── My Enquiries (customer) ────────────────────────────────────────────────────
