@@ -14,6 +14,8 @@ import { buildItemUrl } from '@/lib/itemUrl';
 const Home = () => {
   const trendingRef = useRef(null);
   const specialsRef = useRef(null);
+  const trendingPausedRef = useRef(false);
+  const specialsPausedRef = useRef(false);
   const router = useRouter();
   const [postcode, setPostcode] = useState('');
   const [postcodeResult, setPostcodeResult] = useState(null);
@@ -59,6 +61,62 @@ const Home = () => {
       });
     }
   };
+
+  // Infinite auto-scroll — Loved & Reordered
+  useEffect(() => {
+    const el = trendingRef.current;
+    if (!el) return;
+    let rafId;
+    const tick = () => {
+      if (!trendingPausedRef.current) {
+        el.scrollLeft += 0.5;
+        if (el.scrollLeft >= el.scrollWidth / 2) el.scrollLeft = 0;
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    const pause = () => { trendingPausedRef.current = true; };
+    const resume = () => { trendingPausedRef.current = false; };
+    el.addEventListener('mouseenter', pause);
+    el.addEventListener('mouseleave', resume);
+    el.addEventListener('touchstart', pause, { passive: true });
+    el.addEventListener('touchend', resume);
+    return () => {
+      cancelAnimationFrame(rafId);
+      el.removeEventListener('mouseenter', pause);
+      el.removeEventListener('mouseleave', resume);
+      el.removeEventListener('touchstart', pause);
+      el.removeEventListener('touchend', resume);
+    };
+  }, [liveItems]);
+
+  // Infinite auto-scroll — Today's Specials
+  useEffect(() => {
+    const el = specialsRef.current;
+    if (!el) return;
+    let rafId;
+    const tick = () => {
+      if (!specialsPausedRef.current) {
+        el.scrollLeft += 0.5;
+        if (el.scrollLeft >= el.scrollWidth / 2) el.scrollLeft = 0;
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    const pause = () => { specialsPausedRef.current = true; };
+    const resume = () => { specialsPausedRef.current = false; };
+    el.addEventListener('mouseenter', pause);
+    el.addEventListener('mouseleave', resume);
+    el.addEventListener('touchstart', pause, { passive: true });
+    el.addEventListener('touchend', resume);
+    return () => {
+      cancelAnimationFrame(rafId);
+      el.removeEventListener('mouseenter', pause);
+      el.removeEventListener('mouseleave', resume);
+      el.removeEventListener('touchstart', pause);
+      el.removeEventListener('touchend', resume);
+    };
+  }, [dailySpecials]);
 
   const checkPostcode = async (e) => {
     e.preventDefault();
@@ -198,7 +256,7 @@ const Home = () => {
               className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {dailySpecials.map((s) => {
+              {[...dailySpecials, ...dailySpecials].map((s, _si) => {
                 const card = (
                   <div
                     className="rounded-lg overflow-hidden bg-white transition-all duration-200 group h-full"
@@ -229,20 +287,20 @@ const Home = () => {
                 );
                 return s.link ? (
                   <Link
-                    key={s.id}
+                    key={`${s.id}-${_si}`}
                     href={s.link}
                     className="flex-shrink-0 block"
                     style={{ width: '200px' }}
-                    data-testid={`daily-special-${s.id}`}
+                    data-testid={`daily-special-${s.id}-${_si}`}
                   >
                     {card}
                   </Link>
                 ) : (
                   <div
-                    key={s.id}
+                    key={`${s.id}-${_si}`}
                     className="flex-shrink-0"
                     style={{ width: '200px' }}
-                    data-testid={`daily-special-${s.id}`}
+                    data-testid={`daily-special-${s.id}-${_si}`}
                   >
                     {card}
                   </div>
@@ -293,7 +351,8 @@ const Home = () => {
             className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {(liveItems.length > 0 ? liveItems : featuredDishes).map((dish) => {
+            {(() => { const _d = liveItems.length > 0 ? liveItems : featuredDishes; return [..._d, ..._d]; })()
+              .map((dish, _di) => {
               const isLive = liveItems.length > 0;
               const isVeg = isLive ? dish.is_veg : dish.category !== 'Non-Veg';
               const spice = isLive ? (dish.spice_level || 0) : (dish.spiceLevel || 0);
@@ -301,7 +360,7 @@ const Home = () => {
               const itemPath = isLive ? buildItemUrl(dish) : null;
               return (
               <div
-                key={dish.id}
+                key={`${dish.id}-${_di}`}
                 className="flex-shrink-0 w-72 md:w-80 rounded-lg overflow-hidden group card-hover bg-white"
                 style={{ boxShadow: '0 4px 20px rgba(128, 0, 32, 0.06)', cursor: itemPath ? 'pointer' : 'default' }}
                 onClick={() => itemPath && router.push(itemPath)}
