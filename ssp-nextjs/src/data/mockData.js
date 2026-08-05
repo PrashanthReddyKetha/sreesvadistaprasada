@@ -397,12 +397,13 @@ export const testimonials = [
 ];
 
 export const chefSpecial = {
-  name: "Prasadam Pulihora",
-  tagline: "Taste for your heart. If you can touch someone's heart, that is limitless.",
-  description: "Tangy, temple-style tamarind rice prepared with hand-pounded spices. Each grain carries the devotion of a thousand-year tradition. Served on fresh banana leaf with coconut chutney and papad.",
+  name: "Nellore Ghee Karam Dosa",
+  tagline: "Crispy, fiery, and finished with hand-churned ghee — this is the dosa Nellore is famous for.",
+  description: "Thin, lacy rice crepe slathered in Nellore's legendary red karam chutney and finished generously with hand-churned ghee. Served with coconut chutney, sambar, and butter. The kind of breakfast that makes you close your eyes on the first bite.",
   price: "£8.99",
-  link: "/prasada",
-  image: "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&q=85&w=800"
+  link: "/breakfast",
+  category: "breakfast",
+  image: "https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&q=85&w=800"
 };
 
 export const images = {

@@ -23,7 +23,7 @@ const Home = () => {
   const [dailySpecials, setDailySpecials] = useState([]);
 
   useEffect(() => {
-    api.get('/menu?available=true&featured=true')
+    api.get('/menu?available=true&featured=true&category=breakfast')
       .then(r => setLiveItems(r.data))
       .catch(() => {});
     api.get('/daily-specials')
@@ -33,7 +33,7 @@ const Home = () => {
 
   // Look up the chef's special item by name to get its real ID for the detail page link
   useEffect(() => {
-    api.get('/menu?available=true&search=Pulihora')
+    api.get('/menu?available=true&search=Karam+Dosa')
       .then(r => { if (r.data?.[0]) setChefSpecialItem(r.data[0]); })
       .catch(() => {});
   }, []);
@@ -390,12 +390,12 @@ const Home = () => {
 
           <div className="text-center mt-8">
             <Link
-              href="/menu"
+              href="/breakfast"
               className="inline-flex items-center gap-2 text-sm font-semibold tracking-wide transition-colors duration-200 hover:gap-3"
               style={{ color: '#800020' }}
               data-testid="view-all-menu-link"
             >
-              View Full Menu <ArrowRight size={16} />
+              View Breakfast Menu <ArrowRight size={16} />
             </Link>
           </div>
         </div>
@@ -535,23 +535,32 @@ const Home = () => {
               </h2>
 
               <div className="grid grid-cols-2 gap-4 md:gap-5">
-                {mealMoments.map((moment) => (
-                  <Link key={moment.id} href={moment.link} className="group text-center" data-testid={`meal-moment-${moment.id}`}>
-                    <div className="relative w-full aspect-square rounded-full overflow-hidden mb-3 transition-all duration-300 group-hover:shadow-lg"
-                      style={{ border: '3px solid rgba(244, 196, 48, 0.3)' }}
-                    >
-                      <img
-                        src={moment.image}
-                        alt={moment.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 rounded-full transition-colors duration-300 group-hover:bg-[#800020]/10" />
+                {mealMoments.map((moment) => {
+                  const isAvailable = moment.id === 1; // only Breakfast is live
+                  return isAvailable ? (
+                    <Link key={moment.id} href={moment.link} className="group text-center" data-testid={`meal-moment-${moment.id}`}>
+                      <div className="relative w-full aspect-square rounded-full overflow-hidden mb-3 transition-all duration-300 group-hover:shadow-lg"
+                        style={{ border: '3px solid rgba(244, 196, 48, 0.3)' }}>
+                        <img src={moment.image} alt={moment.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/65 to-transparent flex items-end justify-center pb-4 transition-colors duration-300 group-hover:from-[#800020]/70">
+                          <span className="text-[11px] font-bold text-white tracking-widest uppercase">Order Now →</span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-semibold tracking-wide" style={{ color: '#800020' }}>{moment.name}</p>
+                    </Link>
+                  ) : (
+                    <div key={moment.id} className="text-center opacity-80" data-testid={`meal-moment-${moment.id}`}>
+                      <div className="relative w-full aspect-square rounded-full overflow-hidden mb-3"
+                        style={{ border: '3px solid rgba(0,0,0,0.08)' }}>
+                        <img src={moment.image} alt={moment.name} className="w-full h-full object-cover grayscale-[30%]" />
+                        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                          <span className="text-[11px] font-bold text-white/90 tracking-widest uppercase">Coming Soon</span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-semibold tracking-wide" style={{ color: '#9CA3AF' }}>{moment.name}</p>
                     </div>
-                    <p className="text-sm font-semibold tracking-wide" style={{ color: '#800020' }}>
-                      {moment.name}
-                    </p>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
