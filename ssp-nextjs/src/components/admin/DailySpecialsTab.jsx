@@ -1,7 +1,8 @@
 'use client';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import api from '@/api';
-import { Plus, Edit2, Trash2, Eye, EyeOff, RefreshCw, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, RefreshCw, X, Search } from 'lucide-react';
+import { buildItemUrl } from '@/lib/itemUrl';
 
 const BLANK = {
   title: '',
@@ -20,6 +21,12 @@ const DailySpecialsTab = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(BLANK);
   const [saving, setSaving] = useState(false);
+
+  // Menu search
+  const [menuQuery, setMenuQuery] = useState('');
+  const [menuResults, setMenuResults] = useState([]);
+  const [menuSearching, setMenuSearching] = useState(false);
+  const searchTimer = useRef(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,6 +66,39 @@ const DailySpecialsTab = () => {
     setShowForm(false);
     setEditing(null);
     setForm(BLANK);
+    setMenuQuery('');
+    setMenuResults([]);
+  };
+
+  // Debounced menu search
+  useEffect(() => {
+    if (!menuQuery.trim()) { setMenuResults([]); return; }
+    clearTimeout(searchTimer.current);
+    setMenuSearching(true);
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const r = await api.get(`/menu?available=true&search=${encodeURIComponent(menuQuery)}`);
+        setMenuResults((r.data || []).slice(0, 8));
+      } catch {
+        setMenuResults([]);
+      } finally {
+        setMenuSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(searchTimer.current);
+  }, [menuQuery]);
+
+  const pickMenuItem = (item) => {
+    setForm(f => ({
+      ...f,
+      title: item.name,
+      subtitle: item.description ? item.description.slice(0, 100) : '',
+      price: item.price != null ? String(item.price) : f.price,
+      image: item.image || f.image,
+      link: buildItemUrl(item),
+    }));
+    setMenuQuery('');
+    setMenuResults([]);
   };
 
   const save = async () => {
@@ -169,14 +209,68 @@ const DailySpecialsTab = () => {
               <button onClick={closeForm} aria-label="Close form" className="p-1 rounded hover:bg-gray-100"><X size={18} /></button>
             </div>
             <div className="p-5 space-y-4">
+              {/* ── Menu item search picker ── */}
+              <div>
+                <span className="block text-xs font-semibold mb-1" style={{ color: '#5C4B47' }}>
+                  Search Menu to Auto-fill
+                </span>
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Type a dish name…"
+                    value={menuQuery}
+                    onChange={e => setMenuQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1"
+                    style={{ borderColor: 'rgba(128,0,32,0.2)' }}
+                  />
+                  {menuSearching && (
+                    <RefreshCw size={12} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-gray-400" />
+                  )}
+                </div>
+                {menuResults.length > 0 && (
+                  <div className="mt-1 border rounded-lg overflow-hidden shadow-sm" style={{ borderColor: 'rgba(128,0,32,0.15)' }}>
+                    {menuResults.map(item => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => pickMenuItem(item)}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-amber-50 border-b last:border-0 transition-colors"
+                        style={{ borderColor: 'rgba(128,0,32,0.08)' }}
+                      >
+                        {item.image && (
+                          <img src={item.image} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold truncate" style={{ color: '#2D2422' }}>{item.name}</p>
+                          <p className="text-xs text-gray-400 capitalize">{item.category}</p>
+                        </div>
+                        {item.price != null && (
+                          <span className="text-xs font-bold flex-shrink-0" style={{ color: '#800020' }}>£{Number(item.price).toFixed(2)}</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t pt-4" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
+                <p className="text-[11px] font-medium mb-3 uppercase tracking-wider" style={{ color: '#8B6914' }}>
+                  Details {form.title ? `— ${form.title}` : '(manual entry or auto-filled above)'}
+                </p>
+              </div>
+
               <Field label="Title *" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
-              <Field label="Subtitle" value={form.subtitle} onChange={(v) => setForm({ ...form, subtitle: v })} />
+              <Field label="Subtitle / Note" value={form.subtitle} onChange={(v) => setForm({ ...form, subtitle: v })} />
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Price (£)" type="number" step="0.01" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
                 <Field label="Display Order" type="number" value={form.display_order} onChange={(v) => setForm({ ...form, display_order: v })} />
               </div>
               <Field label="Image URL" value={form.image} onChange={(v) => setForm({ ...form, image: v })} />
-              <Field label="Link (optional, e.g. /item/abc123)" value={form.link} onChange={(v) => setForm({ ...form, link: v })} />
+              {form.image && (
+                <img src={form.image} alt="preview" className="w-full h-28 object-cover rounded-lg" />
+              )}
+              <Field label="Link (auto-set from menu, or e.g. /breakfast)" value={form.link} onChange={(v) => setForm({ ...form, link: v })} />
               <label className="flex items-center gap-2 text-sm font-medium cursor-pointer" style={{ color: '#5C4B47' }}>
                 <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
                 Show on home page (Live)
