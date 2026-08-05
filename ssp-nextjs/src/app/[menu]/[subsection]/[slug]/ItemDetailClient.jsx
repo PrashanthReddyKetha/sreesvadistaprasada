@@ -37,7 +37,7 @@ const COMPLEMENTS = {
   nonVeg:    ['pickles','podis'],
   veg:       ['pickles','podis'],
   prasada:   ['veg','pickles'],
-  breakfast: ['breakfast'],
+  breakfast: ['podis','pickles'],
   pickles:   ['nonVeg','veg'],
   podis:     ['nonVeg','breakfast'],
 };
@@ -168,16 +168,30 @@ export default function ItemDetailClient({ initialItem }) {
   const loadDynamic = useCallback(async () => {
     if (!item) return;
     try {
-      const [reviewsRes, socialRes, simRes, goesWithRes] = await Promise.all([
+      const [reviewsRes, socialRes] = await Promise.all([
         api.get(`/menu/${item.id}/reviews`),
         api.get(`/menu/${item.id}/social`),
-        api.get(`/menu?category=${item.category}&available=true`),
-        api.get('/menu?category=breakfast&available=true'),
       ]);
       setReviews(reviewsRes.data);
       setSocial(socialRes.data);
+
+      const cats = COMPLEMENTS[item.category] || [];
+      const promises = [api.get(`/menu?category=${item.category}&available=true`)];
+
+      if (item.pairs_with?.length > 0) {
+        promises.push(...item.pairs_with.slice(0, 6).map(id => api.get(`/menu/${id}`)));
+      } else if (cats[0]) {
+        promises.push(api.get(`/menu?category=${cats[0]}&available=true`));
+      }
+
+      const [simRes, ...pairResults] = await Promise.all(promises);
       setSimilar(simRes.data.filter(i => i.id !== item.id).slice(0, 8));
-      setGoesWith(goesWithRes.data.filter(i => i.id !== item.id).slice(0, 6));
+
+      if (item.pairs_with?.length > 0) {
+        setGoesWith(pairResults.map(r => r.data).filter(Boolean));
+      } else if (pairResults[0]) {
+        setGoesWith(pairResults[0].data.filter(i => i.id !== item.id).slice(0, 6));
+      }
     } catch { /* ignore */ }
   }, [item]);
 
