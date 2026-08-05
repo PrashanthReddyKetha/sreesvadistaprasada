@@ -8,6 +8,7 @@ const firebaseConfig = {
   appId:      process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+/** @type {import('firebase/auth').Auth | null} */
 let auth = null;
 
 if (typeof window !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.projectId) {
