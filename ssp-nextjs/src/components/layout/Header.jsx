@@ -90,12 +90,8 @@ const Header = () => {
           </Link>
         ) : (
           <>
-            <span className="hidden sm:inline">Swagatam Milton Keynes 🙏 &nbsp;·&nbsp; 10% off Takeaways &nbsp;·&nbsp; Delivery available</span>
-            <span className="sm:hidden absolute inset-0 flex items-center overflow-hidden">
-              <span className="whitespace-nowrap animate-[marquee_18s_linear_infinite]">
-                Swagatam Milton Keynes 🙏 &nbsp;·&nbsp; 10% off Takeaways &nbsp;·&nbsp; Delivery available &nbsp;&nbsp;&nbsp;
-              </span>
-            </span>
+            <span className="hidden sm:inline">Swagatam MK 🙏 &nbsp;·&nbsp; 🌅 Breakfast Only Now &nbsp;·&nbsp; Full Menu Coming Soon</span>
+            <span className="sm:hidden">Swagatam MK 🙏 · Breakfast Now · More Soon</span>
           </>
         )}
       </div>

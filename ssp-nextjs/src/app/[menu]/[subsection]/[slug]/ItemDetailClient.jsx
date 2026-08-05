@@ -6,7 +6,7 @@ import Image from 'next/image';
 import {
   Heart, ShoppingCart, Star, ChevronDown, ChevronUp,
   Flame, Leaf, AlertTriangle, Users, Plus, Minus,
-  CheckCircle, Award, Clock, Package
+  CheckCircle, Award, Clock, Package, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
@@ -117,11 +117,20 @@ const MiniCard = ({ item }) => {
         <p className="text-xs font-semibold text-gray-800 line-clamp-1">{item.name}</p>
         <div className="flex items-center justify-between mt-1.5">
           <span className="text-sm font-bold" style={{ color:'#800020' }}>£{item.price?.toFixed(2)}</span>
-          <button onClick={e => { e.preventDefault(); addToCart({ ...item, price:`£${item.price.toFixed(2)}` }); }}
-            className="w-6 h-6 rounded-full flex items-center justify-center text-white"
-            style={{ backgroundColor:'#800020' }}>
-            <Plus size={12} />
-          </button>
+          {item.category === 'breakfast' ? (
+            <button onClick={e => { e.preventDefault(); addToCart({ ...item, price:`£${item.price.toFixed(2)}` }); }}
+              className="w-6 h-6 rounded-full flex items-center justify-center text-white"
+              style={{ backgroundColor:'#800020' }}>
+              <Plus size={12} />
+            </button>
+          ) : (
+            <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!" target="_blank" rel="noopener noreferrer"
+              onClick={e => { e.preventDefault(); window.open(e.currentTarget.href, '_blank'); }}
+              className="w-6 h-6 rounded-full flex items-center justify-center text-white"
+              style={{ backgroundColor:'#25D366' }}>
+              <MessageCircle size={10} />
+            </a>
+          )}
         </div>
       </div>
     </Link>
@@ -337,27 +346,44 @@ export default function ItemDetailClient({ initialItem }) {
                 </button>
               </div>
 
-              <div className="flex items-center gap-3">
-                <p className="text-sm font-semibold" style={{ color:'#5C4B47' }}>Quantity</p>
-                <div className="flex items-center gap-2 rounded-xl overflow-hidden" style={{ border:'1px solid rgba(128,0,32,0.2)' }}>
-                  <button onClick={() => setQty(q => Math.max(1, q-1))}
-                    className="w-9 h-9 flex items-center justify-center hover:bg-gray-50" style={{ color:'#800020' }}>
-                    <Minus size={14} />
-                  </button>
-                  <span className="w-8 text-center font-bold text-sm">{qty}</span>
-                  <button onClick={() => setQty(q => q+1)}
-                    className="w-9 h-9 flex items-center justify-center hover:bg-gray-50" style={{ color:'#800020' }}>
-                    <Plus size={14} />
-                  </button>
-                </div>
-                <span className="text-sm font-bold" style={{ color:'#800020' }}>= £{(item.price * qty).toFixed(2)}</span>
-              </div>
+              {item.category === 'breakfast' ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm font-semibold" style={{ color:'#5C4B47' }}>Quantity</p>
+                    <div className="flex items-center gap-2 rounded-xl overflow-hidden" style={{ border:'1px solid rgba(128,0,32,0.2)' }}>
+                      <button onClick={() => setQty(q => Math.max(1, q-1))}
+                        className="w-9 h-9 flex items-center justify-center hover:bg-gray-50" style={{ color:'#800020' }}>
+                        <Minus size={14} />
+                      </button>
+                      <span className="w-8 text-center font-bold text-sm">{qty}</span>
+                      <button onClick={() => setQty(q => q+1)}
+                        className="w-9 h-9 flex items-center justify-center hover:bg-gray-50" style={{ color:'#800020' }}>
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <span className="text-sm font-bold" style={{ color:'#800020' }}>= £{(item.price * qty).toFixed(2)}</span>
+                  </div>
 
-              <button onClick={handleAddToCart}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white transition-all hover:shadow-lg active:scale-95"
-                style={{ backgroundColor: added ? '#166534' : '#800020' }}>
-                {added ? <><CheckCircle size={18} /> Added to Cart!</> : <><ShoppingCart size={18} /> Add to Cart</>}
-              </button>
+                  <button onClick={handleAddToCart}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white transition-all hover:shadow-lg active:scale-95"
+                    style={{ backgroundColor: added ? '#166534' : '#800020' }}>
+                    {added ? <><CheckCircle size={18} /> Added to Cart!</> : <><ShoppingCart size={18} /> Add to Cart</>}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="rounded-xl p-4 text-center" style={{ backgroundColor:'rgba(139,105,20,0.06)', border:'1px dashed rgba(139,105,20,0.5)' }}>
+                    <p className="text-sm font-bold mb-1" style={{ color:'#8B6914' }}>🕐 Coming Soon</p>
+                    <p className="text-xs text-gray-500">Currently serving Breakfast only — this dish launches soon!</p>
+                  </div>
+                  <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!"
+                    target="_blank" rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white transition-all hover:shadow-lg"
+                    style={{ backgroundColor:'#25D366' }}>
+                    <MessageCircle size={18} /> Enquire for Bulk Orders
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -592,13 +618,22 @@ export default function ItemDetailClient({ initialItem }) {
                 <p className="text-xs" style={{ color:'rgba(244,196,48,0.7)' }}>Save 5% together</p>
               </div>
             </div>
-            <button onClick={() => {
-              addToCart({ ...item, price:`£${item.price.toFixed(2)}` });
-              if (goesWith[0]) addToCart({ ...goesWith[0], price:`£${goesWith[0].price.toFixed(2)}` });
-            }} className="mt-4 w-full py-3 rounded-xl font-semibold text-sm transition-all hover:shadow-lg"
-              style={{ backgroundColor:'#F4C430', color:'#3D2B1F' }}>
-              Add Both to Cart
-            </button>
+            {item.category === 'breakfast' ? (
+              <button onClick={() => {
+                addToCart({ ...item, price:`£${item.price.toFixed(2)}` });
+                if (goesWith[0]) addToCart({ ...goesWith[0], price:`£${goesWith[0].price.toFixed(2)}` });
+              }} className="mt-4 w-full py-3 rounded-xl font-semibold text-sm transition-all hover:shadow-lg"
+                style={{ backgroundColor:'#F4C430', color:'#3D2B1F' }}>
+                Add Both to Cart
+              </button>
+            ) : (
+              <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!"
+                target="_blank" rel="noopener noreferrer"
+                className="mt-4 w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 text-white transition-all hover:shadow-lg"
+                style={{ backgroundColor:'#25D366' }}>
+                <MessageCircle size={16} /> Enquire for Bulk Orders
+              </a>
+            )}
           </div>
         )}
 

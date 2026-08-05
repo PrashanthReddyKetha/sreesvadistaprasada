@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { buildItemUrl } from '@/lib/itemUrl';
-import { ShoppingCart, Droplets, Search, X } from 'lucide-react';
+import { ShoppingCart, Droplets, Search, X, MessageCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
@@ -98,12 +98,18 @@ const Drinks = ({ initialItems = [] }) => {
                       {drink.description && (
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3 flex-1">{drink.description}</p>
                       )}
-                      <button
-                        onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: drink.id, name: drink.name, price: drink.price, image: drink.image, category: drink.category }); }}
-                        className="w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
-                        style={{ backgroundColor: '#7E22CE' }}>
-                        <ShoppingCart size={13} /> Add to Basket
-                      </button>
+                      <div className="w-full space-y-1.5">
+                        <div className="w-full py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 border"
+                          style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.4)', backgroundColor: 'rgba(139,105,20,0.05)' }}>
+                          🕐 Coming Soon
+                        </div>
+                        <a href="https://wa.me/447307119962?text=Hi%2C%20I%27m%20interested%20in%20a%20bulk%20order.%20Please%20tell%20me%20more!" target="_blank" rel="noopener noreferrer"
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); window.open(e.currentTarget.href, '_blank'); }}
+                          className="w-full py-1.5 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1"
+                          style={{ backgroundColor: '#25D366' }}>
+                          <MessageCircle size={11} /> Bulk Order? WhatsApp
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </Link>
