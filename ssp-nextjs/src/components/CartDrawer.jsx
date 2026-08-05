@@ -85,14 +85,10 @@ function scoreComplement(item, cartCategories) {
 function UpsellRow({ cartItems, onAdd }) {
   const [suggestions, setSuggestions] = useState([]);
   useEffect(() => {
-    api.get('/menu?available=true').then(r => {
-      const cartIds  = new Set(cartItems.map(i => i.id));
-      const cartCats = [...new Set(cartItems.map(i => i.category))];
+    api.get('/menu?available=true&category=breakfast').then(r => {
+      const cartIds = new Set(cartItems.map(i => i.id));
       const candidates = r.data
         .filter(i => !cartIds.has(i.id))
-        .map(i => ({ ...i, _score: scoreComplement(i, cartCats) }))
-        .filter(i => i._score < 99)
-        .sort((a, b) => a._score - b._score || a.price - b.price)
         .slice(0, 4);
       setSuggestions(candidates);
     }).catch(() => {});
