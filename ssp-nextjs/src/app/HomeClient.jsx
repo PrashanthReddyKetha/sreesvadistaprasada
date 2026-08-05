@@ -25,7 +25,7 @@ const Home = () => {
   const [dailySpecials, setDailySpecials] = useState([]);
 
   useEffect(() => {
-    api.get('/menu?available=true&featured=true&category=breakfast')
+    api.get('/menu?available=true&category=breakfast')
       .then(r => setLiveItems(r.data))
       .catch(() => {});
     api.get('/daily-specials')
