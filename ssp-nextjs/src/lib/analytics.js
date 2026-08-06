@@ -130,6 +130,17 @@ export function trackBeginSubscription(plan) {
   });
 }
 
+/** Fired on every wizard step view — enables full funnel analysis in GA4 */
+export function trackSubscriptionStepView(stepNum, stepLabel, plan, boxType) {
+  push({
+    event:        'subscription_step_view',
+    step_number:  stepNum,
+    step_name:    stepLabel,
+    plan:         plan  || '',
+    box_type:     boxType || '',
+  });
+}
+
 /** Fired when user picks a subscription plan */
 export function trackSelectSubscriptionPlan(plan, price) {
   push({

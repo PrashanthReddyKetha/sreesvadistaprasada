@@ -7,7 +7,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
-import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase } from '@/lib/analytics';
+import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase, trackSubscriptionStepView } from '@/lib/analytics';
 
 const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
@@ -415,6 +415,13 @@ const SubscriptionsInner = () => {
       window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
   }, [step, pageState]);
+
+  /* GA4 funnel: fire subscription_step_view on every step */
+  useEffect(() => {
+    if (pageState !== 'wizard') return;
+    const stepLabel = STEPS.find(s => s.num === step)?.label || `Step ${step}`;
+    trackSubscriptionStepView(step, stepLabel, selectedPlan, selectedBox);
+  }, [step, pageState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* detect user state on mount */
   useEffect(() => {
