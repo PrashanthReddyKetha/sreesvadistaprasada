@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Phone, Mail, MapPin, Instagram, ArrowRight } from 'lucide-react';
 import api from '@/api';
+import { trackNewsletterSignup } from '@/lib/analytics';
 
 const WhatsAppIcon = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -20,6 +21,7 @@ const Footer = () => {
     try {
       await api.post('/enquiries/newsletter', { email });
     } catch { /* already subscribed or error — still show success */ }
+    trackNewsletterSignup();
     setSubscribed(true);
     setEmail('');
     setTimeout(() => setSubscribed(false), 4000);

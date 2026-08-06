@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
+import { trackViewCart, trackBeginCheckout } from '@/lib/analytics';
 
 const MINIMUM_ORDER = 15.00;
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
@@ -250,6 +251,7 @@ const CartDrawer = () => {
   // Hide picker when cart closes
   useEffect(() => {
     if (!cartOpen) setShowPicker(false);
+    else if (cartItems.length > 0) trackViewCart(cartItems, cartTotal);
   }, [cartOpen]);
 
   // Fetch loyalty status when drawer opens
@@ -300,6 +302,7 @@ const CartDrawer = () => {
       // deliveryType + zoneInfo already live in context/storage; only freeItem needs handoff
       sessionStorage.setItem('ssp_checkout_state', JSON.stringify({ freeItem }));
     } catch {}
+    trackBeginCheckout(cartItems, grandTotal);
     setCartOpen(false);
     router.push('/checkout');
   };

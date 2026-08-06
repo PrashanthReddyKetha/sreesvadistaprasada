@@ -8,6 +8,7 @@ import {
   Flame, Leaf, AlertTriangle, Users, Plus, Minus,
   CheckCircle, Award, Clock, Package, Bell
 } from 'lucide-react';
+import { trackViewItem, trackNotifyMeSignup } from '@/lib/analytics';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useNotifyMe } from '@/context/NotifyMeContext';
@@ -164,6 +165,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
   const [activeTab, setActiveTab] = useState('about');
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [initialItem?.id]);
+  useEffect(() => { if (item) trackViewItem(item); }, [item?.id]);
 
   const loadDynamic = useCallback(async () => {
     if (!item) return;

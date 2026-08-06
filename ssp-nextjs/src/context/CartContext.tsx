@@ -1,5 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { trackAddToCart, trackRemoveFromCart } from '@/lib/analytics';
 
 interface CartItem {
   id: string;
@@ -118,9 +119,11 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
         showToast({ type: 'update', name: item.name, qty: existing.quantity + 1 });
+        trackAddToCart(item, 1);
         return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
       showToast({ type: 'add', name: item.name, price: item.price });
+      trackAddToCart(item, 1);
       return [...prev, { ...item, quantity: 1 }];
     });
   }, [showToast]);
@@ -128,7 +131,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const removeFromCart = useCallback((id: string) => {
     setCartItems(prev => {
       const item = prev.find(i => i.id === id);
-      if (item) showToast({ type: 'remove', name: item.name });
+      if (item) {
+        showToast({ type: 'remove', name: item.name });
+        trackRemoveFromCart(item, item.quantity);
+      }
       return prev.filter(i => i.id !== id);
     });
   }, [showToast]);

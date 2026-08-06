@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { useCart } from '@/context/CartContext';
+import { trackWhatsAppClick } from '@/lib/analytics';
 
 const MENU_PATHS = ['/svadista', '/prasada', '/menu', '/breakfast', '/street-food', '/ragi-specials', '/drinks', '/snacks'];
 
@@ -16,6 +17,7 @@ const WhatsAppButton = () => {
       href="https://wa.me/447307119962?text=Hi%2C%20I%27d%20like%20to%20order%20from%20Sree%20Svadista%20Prasada"
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => trackWhatsAppClick('floating_button')}
       className={`fixed right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl ${nudgeVisible ? 'bottom-20 md:bottom-6' : 'bottom-6'}`}
       style={{ backgroundColor: '#25D366' }}
       aria-label="Order via WhatsApp"

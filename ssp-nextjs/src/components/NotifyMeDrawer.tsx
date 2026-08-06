@@ -4,6 +4,7 @@ import { X, Bell, Phone, CheckCircle, ArrowRight } from 'lucide-react'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { auth } from '@/firebase'
 import api from '@/api'
+import { trackNotifyMeSignup } from '@/lib/analytics'
 
 interface Props {
   isOpen: boolean
@@ -70,6 +71,7 @@ export default function NotifyMeDrawer({ isOpen, onClose, itemName, category }: 
         category: category ?? 'general',
         item_name: itemName ?? 'Full Menu',
       })
+      trackNotifyMeSignup(itemName ?? 'Full Menu', category ?? 'general')
       setStep('success')
     } catch {
       setError('Wrong code — please check and try again.')

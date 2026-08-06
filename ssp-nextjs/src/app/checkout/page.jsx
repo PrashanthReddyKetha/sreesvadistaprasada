@@ -13,6 +13,7 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
+import { trackBeginCheckout, trackPurchase } from '@/lib/analytics';
 
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
@@ -469,6 +470,13 @@ const CheckoutInner = () => {
     }
   }, [zoneInfo?.postcode]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // GA4 begin_checkout — fire once when items are known
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      trackBeginCheckout(cartItems, cartTotal);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
   // Fallback: postcodes.io for city auto-fill
@@ -636,7 +644,10 @@ const CheckoutInner = () => {
       }
 
       try { sessionStorage.removeItem('ssp_checkout_state'); } catch {}
-      setSuccess({ orderId: res.data?.id?.slice(-6).toUpperCase() || '', isRedemption: !!freeItem });
+      const orderId = res.data?.id?.slice(-6).toUpperCase() || '';
+      const deliveryFee = (validPricing?.delivery_fee ?? 0);
+      trackPurchase(orderId, cartItems, validPricing?.subtotal ?? cartTotal, deliveryFee);
+      setSuccess({ orderId, isRedemption: !!freeItem });
       clearCart();
     } catch (e) {
       if (paymentSucceeded && capturedPI) {
