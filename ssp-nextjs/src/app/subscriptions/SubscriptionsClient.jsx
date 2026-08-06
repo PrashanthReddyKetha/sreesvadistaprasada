@@ -618,7 +618,7 @@ const SubscriptionsInner = () => {
       });
       clearProg();
       localStorage.setItem('ssp_subscription_success', 'true');
-      trackSubscriptionPurchase(selectedPlan, selectedBox, planData?.price || 45);
+      trackSubscriptionPurchase(selectedPlan, selectedBox, planData?.price || 45, planData?.meals || 0, planData?.perMeal || 0);
       setSubmitStatus('success');
     } catch (e) {
       setSubmitStatus('error');

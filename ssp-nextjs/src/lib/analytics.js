@@ -152,21 +152,25 @@ export function trackSelectSubscriptionPlan(plan, price) {
 }
 
 /** Fired when subscription payment succeeds */
-export function trackSubscriptionPurchase(plan, boxType, price) {
+export function trackSubscriptionPurchase(plan, boxType, price, meals, perMeal) {
   push({ ecommerce: null });
   push({
     event: 'subscription_purchase',
+    plan,
+    box_type:  boxType,
+    meals:     meals   || 0,
+    per_meal:  perMeal || 0,
     ecommerce: {
       transaction_id: `sub_${Date.now()}`,
       currency: 'GBP',
-      value: price,
+      value:    price,
       items: [{
-        item_id:       `dabba_wala_${plan}`,
-        item_name:     `Dabba Wala — ${plan}`,
+        item_id:       `dabba_wala_${plan}_${boxType}`,
+        item_name:     `Dabba Wala — ${plan} (${boxType})`,
         item_category: 'Subscription',
         item_variant:  boxType,
         price,
-        quantity: 1,
+        quantity: meals || 1,
       }],
     },
   });
