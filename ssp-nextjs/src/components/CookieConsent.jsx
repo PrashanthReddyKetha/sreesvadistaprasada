@@ -5,13 +5,13 @@ const STORAGE_KEY = 'ssp_cookie_consent';
 
 function pushConsent(granted) {
   window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({
-    event: 'consent_update',
-    analytics_storage: granted ? 'granted' : 'denied',
-    ad_storage: granted ? 'granted' : 'denied',
-    ad_user_data: granted ? 'granted' : 'denied',
+  // GTM Consent Mode v2 requires the array format, not an event object
+  window.dataLayer.push(['consent', 'update', {
+    analytics_storage:  granted ? 'granted' : 'denied',
+    ad_storage:         granted ? 'granted' : 'denied',
+    ad_user_data:       granted ? 'granted' : 'denied',
     ad_personalization: granted ? 'granted' : 'denied',
-  });
+  }]);
 }
 
 export default function CookieConsent() {
