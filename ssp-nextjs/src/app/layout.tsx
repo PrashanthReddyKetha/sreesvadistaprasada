@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Playfair_Display, Lato } from 'next/font/google'
 import dynamic from 'next/dynamic'
 import { AuthProvider } from '@/context/AuthContext'
@@ -13,6 +14,7 @@ import BackendWarmup from '@/components/BackendWarmup'
 import TakeawayNudge from '@/components/TakeawayNudge'
 import AuthModalLoader from '@/components/AuthModalLoader'
 import CookieConsent from '@/components/CookieConsent'
+import GTMPageView from '@/components/GTMPageView'
 import '@/styles/globals.css'
 
 // Lazy-load cart drawer — only loads its JS when first rendered
@@ -66,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AuthProvider>
             <CartProvider>
               <NotifyMeProvider>
+              <Suspense fallback={null}><GTMPageView /></Suspense>
               <ScrollToTop />
               <BackendWarmup />
               <TakeawayNudge />
