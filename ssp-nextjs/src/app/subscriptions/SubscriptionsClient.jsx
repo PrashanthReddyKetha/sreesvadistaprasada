@@ -7,6 +7,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
+import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase } from '@/lib/analytics';
 
 const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
@@ -535,6 +536,7 @@ const SubscriptionsInner = () => {
   const goNext = () => {
     if (canProceed() && step < 6) {
       window.history.pushState({ wizard: true }, '', window.location.href);
+      if (step === 1) trackBeginSubscription(selectedPlan);
       setStep(s => s + 1);
     }
   };
@@ -609,6 +611,7 @@ const SubscriptionsInner = () => {
       });
       clearProg();
       localStorage.setItem('ssp_subscription_success', 'true');
+      trackSubscriptionPurchase(selectedPlan, selectedBox, planData?.price || 45);
       setSubmitStatus('success');
     } catch (e) {
       setSubmitStatus('error');
@@ -846,7 +849,7 @@ const SubscriptionsInner = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                 {PLANS.map(plan => (
-                  <button key={plan.id} onClick={() => setSelectedPlan(plan.id)}
+                  <button key={plan.id} onClick={() => { setSelectedPlan(plan.id); trackSelectSubscriptionPlan(plan.id, plan.price); }}
                     className="relative p-5 rounded-xl text-left transition-all duration-200"
                     style={{ backgroundColor: 'white', border: selectedPlan === plan.id ? `2px solid ${C.primary}` : '0.5px solid #e0d9d0', boxShadow: selectedPlan === plan.id ? `0 4px 20px rgba(128,0,32,0.1)` : '0 2px 6px rgba(0,0,0,0.04)' }}>
                     <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-3" style={plan.badgeStyle}>{plan.badge}</span>

@@ -122,6 +122,45 @@ export function trackPurchase(orderId, cartItems, cartTotal, deliveryFee = 0, co
   });
 }
 
+/** Fired when user starts the Dabba Wala subscription wizard */
+export function trackBeginSubscription(plan) {
+  push({
+    event: 'begin_subscription',
+    plan,
+  });
+}
+
+/** Fired when user picks a subscription plan */
+export function trackSelectSubscriptionPlan(plan, price) {
+  push({
+    event: 'select_subscription_plan',
+    plan,
+    value: price,
+    currency: 'GBP',
+  });
+}
+
+/** Fired when subscription payment succeeds */
+export function trackSubscriptionPurchase(plan, boxType, price) {
+  push({ ecommerce: null });
+  push({
+    event: 'subscription_purchase',
+    ecommerce: {
+      transaction_id: `sub_${Date.now()}`,
+      currency: 'GBP',
+      value: price,
+      items: [{
+        item_id:       `dabba_wala_${plan}`,
+        item_name:     `Dabba Wala — ${plan}`,
+        item_category: 'Subscription',
+        item_variant:  boxType,
+        price,
+        quantity: 1,
+      }],
+    },
+  });
+}
+
 // ── Custom events ────────────────────────────────────────────────────────
 
 /** Fired when a user joins the Notify Me waitlist */
