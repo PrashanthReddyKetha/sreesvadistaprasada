@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { trackPageView } from '@/lib/analytics';
 
 /**
  * Fires a GTM page_view event on every client-side route change.
@@ -15,15 +16,7 @@ export default function GTMPageView() {
   useEffect(() => {
     // Skip the very first render — GTM fires page_view on initial hard load itself
     if (isFirst.current) { isFirst.current = false; return; }
-
-    const url = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
-      event:         'page_view',
-      page_path:     pathname,
-      page_location: window.location.href,
-      page_title:    document.title,
-    });
+    trackPageView(pathname, document.title);
   }, [pathname, searchParams]);
 
   return null;

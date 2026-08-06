@@ -13,6 +13,16 @@ function push(obj) {
   window.dataLayer.push(obj);
 }
 
+/** Fired on every client-side route change (SPA navigation) */
+export function trackPageView(pathname, title) {
+  push({
+    event:         'page_view',
+    page_path:     pathname,
+    page_location: typeof window !== 'undefined' ? window.location.href : '',
+    page_title:    title,
+  });
+}
+
 // ── E-commerce helpers ───────────────────────────────────────────────────
 
 function itemPayload(item, quantity = 1) {
