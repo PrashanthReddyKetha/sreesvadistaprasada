@@ -49,7 +49,7 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
     if (!anchor) return;
     const headerH = document.querySelector('header')?.offsetHeight ?? 96;
     const anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: anchorTop - headerH, behavior: 'smooth' });
+    window.scrollTo({ top: anchorTop - headerH, behavior: 'instant' });
   }, [activeTab]);
 
   useEffect(() => {
