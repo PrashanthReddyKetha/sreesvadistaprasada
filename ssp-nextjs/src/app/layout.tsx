@@ -72,10 +72,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <ScrollToTop />
               <BackendWarmup />
               <TakeawayNudge />
-              {/* Launching Soon — top announcement bar */}
-              <div className="bg-[#800020] text-white text-center text-sm font-medium py-2.5 px-4 tracking-wide">
-                🚀 We&apos;re launching soon — online ordering will be live very shortly. Stay tuned!
-              </div>
               <Header />
               <CartDrawer />
               <AuthModalLoader />
