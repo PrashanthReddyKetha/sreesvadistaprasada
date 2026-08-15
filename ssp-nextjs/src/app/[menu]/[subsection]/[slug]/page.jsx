@@ -35,6 +35,18 @@ async function getGoesWith(pairIds) {
 
 const SITE = 'https://sreesvadistaprasada.com';
 
+async function getReviews(itemId) {
+  try {
+    const res = await fetch(`${BASE}/api/menu/${itemId}/reviews`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 const CATEGORY_LABELS = {
   nonVeg: 'Non-Veg Indian Food', veg: 'Vegetarian Indian Food',
   prasada: 'Pure Veg South Indian', breakfast: 'South Indian Breakfast',
@@ -87,7 +99,42 @@ export default async function ItemPage({ params }) {
   const item = await getItem(params.slug);
   if (!item) notFound();
 
-  const initialGoesWith = await getGoesWith(item.pairs_with);
+  const [initialGoesWith, reviews] = await Promise.all([
+    getGoesWith(item.pairs_with),
+    getReviews(item.id),
+  ]);
+
+  const itemUrl = `${SITE}/${params.menu}/${params.subsection}/${params.slug}`;
+  const reviewCount = reviews.length;
+  const avgRating = reviewCount > 0
+    ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviewCount) * 10) / 10
+    : null;
+
+  const ratingSchema = avgRating ? {
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: avgRating,
+      reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    },
+    review: reviews.slice(0, 5).map(r => ({
+      '@type': 'Review',
+      author: { '@type': 'Person', name: r.user_name },
+      reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+      reviewBody: r.comment,
+      datePublished: r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : undefined,
+    })),
+  } : {};
+
+  const offerSchema = {
+    '@type': 'Offer',
+    price: item.price,
+    priceCurrency: 'GBP',
+    availability: item.available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    url: itemUrl,
+    seller: { '@type': 'Organization', name: 'Sree Svadista Prasada' },
+  };
 
   const jsonLd = [
     {
@@ -96,23 +143,11 @@ export default async function ItemPage({ params }) {
       name: item.name,
       description: item.description,
       image: item.image || undefined,
-      url: `${SITE}/${params.menu}/${params.subsection}/${params.slug}`,
-      offers: {
-        '@type': 'Offer',
-        price: item.price,
-        priceCurrency: 'GBP',
-        availability: item.available
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-      },
-      suitableForDiet: item.is_veg
-        ? 'https://schema.org/VegetarianDiet'
-        : undefined,
-      inMenu: {
-        '@type': 'Menu',
-        name: 'Sree Svadista Prasada Menu',
-        url: `${SITE}/menu`,
-      },
+      url: itemUrl,
+      offers: offerSchema,
+      suitableForDiet: item.is_veg ? 'https://schema.org/VegetarianDiet' : undefined,
+      inMenu: { '@type': 'Menu', name: 'Sree Svadista Prasada Menu', url: `${SITE}/menu` },
+      ...ratingSchema,
     },
     {
       '@context': 'https://schema.org',
@@ -120,10 +155,25 @@ export default async function ItemPage({ params }) {
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
         { '@type': 'ListItem', position: 2, name: params.menu.charAt(0).toUpperCase() + params.menu.slice(1), item: `${SITE}/${params.menu}` },
-        { '@type': 'ListItem', position: 3, name: item.name, item: `${SITE}/${params.menu}/${params.subsection}/${params.slug}` },
+        { '@type': 'ListItem', position: 3, name: item.name, item: itemUrl },
       ],
     },
   ];
+
+  // Product schema — Google reliably shows star ratings for this type
+  if (avgRating) {
+    jsonLd.push({
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: item.name,
+      description: item.description,
+      image: item.image || undefined,
+      url: itemUrl,
+      brand: { '@type': 'Brand', name: 'Sree Svadista Prasada' },
+      offers: offerSchema,
+      ...ratingSchema,
+    });
+  }
 
   return (
     <>
