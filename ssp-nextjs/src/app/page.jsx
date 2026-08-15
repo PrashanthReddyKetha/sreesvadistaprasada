@@ -81,6 +81,14 @@ const jsonLd = {
       url: 'https://www.sreesvadistaprasada.com',
       name: 'Sree Svadista Prasada',
       publisher: { '@id': 'https://www.sreesvadistaprasada.com/#restaurant' },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://www.sreesvadistaprasada.com/breakfast?search={search_term_string}',
+        },
+        'query-input': 'required name=search_term_string',
+      },
     },
   ],
 };

@@ -175,6 +175,20 @@ export default async function ItemPage({ params }) {
     });
   }
 
+  // FAQPage schema — shows expandable Q&A under the result in Google Search
+  const validFaqs = item.faqs?.filter(f => f.q && f.a) || [];
+  if (validFaqs.length > 0) {
+    jsonLd.push({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: validFaqs.slice(0, 10).map(f => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    });
+  }
+
   return (
     <>
       <script

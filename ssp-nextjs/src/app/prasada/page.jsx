@@ -33,10 +33,43 @@ async function getItems() {
   } catch { return []; }
 }
 
+const PRASADA_FAQ = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Is the Prasada menu 100% vegetarian?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes. The Prasada menu is entirely plant-based — no meat, fish, or eggs. Every dish is cooked in a dedicated pure-veg kitchen using fresh vegetables, lentils, and traditional Andhra spices.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'Do you offer vegan options on the Prasada menu?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes, many Prasada dishes are naturally vegan. Items using ghee, yoghurt, or paneer are clearly labelled on the menu. Contact us if you need a fully vegan meal.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can I order Prasada dishes for delivery in Milton Keynes?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes! We deliver pure veg South Indian food across Milton Keynes including Greenleys, Wolverton, Stony Stratford, Central MK, and Bletchley. Enter your postcode at checkout to confirm your delivery zone.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'What makes Prasada food different from regular vegetarian Indian food?',
+      acceptedAnswer: { '@type': 'Answer', text: "Prasada means divine offering. Our recipes follow the tradition of South Indian temple cooking — pure ingredients, slow-cooked dals, hand-ground chutneys, and grandmother's recipes with no shortcuts." },
+    },
+    {
+      '@type': 'Question',
+      name: 'Is there a minimum order for Prasada delivery?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes, a minimum order of £15 applies for delivery. Collection orders have no minimum. You can also schedule a pickup time at checkout.' },
+    },
+  ],
+};
+
 export default async function PrasadaPage() {
   const initialItems = await getItems();
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PRASADA_FAQ) }} />
       <h1 className="sr-only">Pure Veg South Indian Food Milton Keynes — Temple-Style Andhra Cooking</h1>
       <PrasadaClient initialItems={initialItems} initialTab="Bites & Starters" />
     </>
