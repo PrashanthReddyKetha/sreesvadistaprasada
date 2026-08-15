@@ -300,6 +300,7 @@ class DailySpecialCreate(BaseModel):
     link: Optional[str] = None
     active: bool = True
     display_order: int = 0
+    menu_item_id: Optional[str] = None  # links to MenuItem.id for live price/image sync
 
 
 class DailySpecialUpdate(BaseModel):
@@ -310,6 +311,7 @@ class DailySpecialUpdate(BaseModel):
     link: Optional[str] = None
     active: Optional[bool] = None
     display_order: Optional[int] = None
+    menu_item_id: Optional[str] = None
 
 
 class DailySpecial(DailySpecialCreate):

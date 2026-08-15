@@ -13,6 +13,23 @@ async def list_active_specials():
     docs = await db.daily_specials.find(
         {"active": True}, {"_id": 0}
     ).sort("display_order", 1).to_list(50)
+
+    # Overlay live price + image from the linked menu item so edits always reflect
+    item_ids = [d["menu_item_id"] for d in docs if d.get("menu_item_id")]
+    if item_ids:
+        live = await db.menu.find(
+            {"id": {"$in": item_ids}},
+            {"_id": 0, "id": 1, "price": 1, "image": 1},
+        ).to_list(len(item_ids))
+        live_map = {item["id"]: item for item in live}
+        for doc in docs:
+            mid = doc.get("menu_item_id")
+            if mid and mid in live_map:
+                if live_map[mid].get("price") is not None:
+                    doc["price"] = live_map[mid]["price"]
+                if live_map[mid].get("image"):
+                    doc["image"] = live_map[mid]["image"]
+
     return docs
 
 

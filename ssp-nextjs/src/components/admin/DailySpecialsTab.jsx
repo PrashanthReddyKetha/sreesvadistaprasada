@@ -12,6 +12,7 @@ const BLANK = {
   link: '',
   active: true,
   display_order: 0,
+  menu_item_id: null,
 };
 
 const DailySpecialsTab = () => {
@@ -58,6 +59,7 @@ const DailySpecialsTab = () => {
       link: it.link || '',
       active: it.active !== false,
       display_order: it.display_order ?? 0,
+      menu_item_id: it.menu_item_id || null,
     });
     setShowForm(true);
   };
@@ -96,6 +98,7 @@ const DailySpecialsTab = () => {
       price: item.price != null ? String(item.price) : f.price,
       image: item.image || f.image,
       link: buildItemUrl(item),
+      menu_item_id: item.id,
     }));
     setMenuQuery('');
     setMenuResults([]);
@@ -113,6 +116,7 @@ const DailySpecialsTab = () => {
         link: form.link.trim() || null,
         active: !!form.active,
         display_order: parseInt(form.display_order, 10) || 0,
+        menu_item_id: form.menu_item_id || null,
       };
       if (editing) {
         await api.put(`/daily-specials/${editing.id}`, payload);
