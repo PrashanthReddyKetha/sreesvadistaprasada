@@ -193,7 +193,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
                     style={{ boxShadow: '0 4px 20px rgba(22,101,52,0.08)', border: '1px solid rgba(22,101,52,0.08)' }}>
                     <div className="relative h-44 overflow-hidden">
                       {dish.image
-                        ? <Image fill key={dish.image} src={dish.image} alt={dish.name} className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" />
+                        ? <Image fill key={dish.image} src={dish.image} alt={dish.name} className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" quality={75} />
                         : <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: '#F0FFF4' }}><Leaf size={32} className="text-green-200" /></div>
                       }
                       {dish.tag && (

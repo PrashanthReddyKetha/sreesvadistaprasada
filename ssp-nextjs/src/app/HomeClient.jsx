@@ -265,10 +265,13 @@ const Home = () => {
                     style={{ boxShadow: '0 2px 10px rgba(128,0,32,0.06)', border: '1px solid rgba(244,196,48,0.4)' }}
                   >
                     <div className="relative h-28 overflow-hidden">
-                      <img
+                      <Image
                         src={s.image || 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400'}
                         alt={s.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="200px"
+                        quality={75}
                       />
                       <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-sm" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
                         Today
@@ -378,10 +381,13 @@ const Home = () => {
                 data-testid={`trending-dish-${dish.id}`}
               >
                 <div className="block relative h-48 overflow-hidden">
-                  <img
-                    src={dish.image}
+                  <Image
+                    src={dish.image || 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600'}
                     alt={dish.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    sizes="(max-width: 640px) 280px, 340px"
+                    quality={75}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   {dish.tag && (
