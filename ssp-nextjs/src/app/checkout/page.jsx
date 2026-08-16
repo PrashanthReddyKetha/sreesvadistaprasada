@@ -228,11 +228,11 @@ function CheckoutPostcodeInput({ onZoneFound }) {
       if (r.data.deliverable) {
         onZoneFound(r.data);
       } else {
-        setError("We don't deliver to this postcode yet — switch to Collect & save 10%.");
+        setError("Sorry, your postcode is outside our delivery area. You're welcome to collect from our Greenleys kitchen & save 10%.");
       }
     } catch (e) {
       if (e.response?.status === 404) {
-        setError("We don't deliver to this postcode yet — switch to Collect & save 10%.");
+        setError("Sorry, your postcode is outside our delivery area. You're welcome to collect from our Greenleys kitchen & save 10%.");
       } else {
         setError('Could not verify postcode — please try again.');
       }
@@ -594,7 +594,7 @@ const CheckoutInner = () => {
       : ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
     if (required.some(k => !form[k].trim())) { setError('Please fill in all required fields.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('Please enter a valid email address.'); return; }
-    if (deliveryType === 'delivery' && pcError) { setError("We don't deliver to this postcode. Please choose Takeaway/Collection or change your postcode."); return; }
+    if (deliveryType === 'delivery' && pcError) { setError("Sorry, your postcode is outside our delivery area. Please switch to collection or use a Milton Keynes postcode."); return; }
     if (!stripe || !elements) { setError('Payment not ready. Please wait a moment.'); return; }
     const cardNumberElement = elements.getElement(CardNumberElement);
     if (!cardNumberElement) { setError('Card details are missing.'); return; }

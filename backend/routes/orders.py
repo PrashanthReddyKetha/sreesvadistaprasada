@@ -110,8 +110,8 @@ def calculate_order_total(
         zone = get_zone_from_postcode(postcode)
         if zone is None:
             raise ValueError(
-                "We don't deliver to this postcode yet. "
-                "Please choose Collect or enter a valid MK postcode."
+                "Sorry, your postcode is outside our current delivery area. "
+                "We deliver across Milton Keynes — or you're welcome to collect from our Greenleys kitchen."
             )
 
         free_delivery_at = ZONE_FREE_DELIVERY_THRESHOLD[zone]

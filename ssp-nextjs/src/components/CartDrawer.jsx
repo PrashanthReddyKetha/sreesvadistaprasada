@@ -181,11 +181,11 @@ function PostcodeInput({ onZoneFound }) {
       if (r.data.deliverable) {
         onZoneFound(r.data); // context setter handles persistence
       } else {
-        setError("We don't deliver to this postcode yet — switch to Collect & save 10%.");
+        setError("Sorry, your postcode is outside our delivery area — but you're welcome to collect from our Greenleys kitchen & save 10%.");
       }
     } catch (e) {
       if (e.response?.status === 404) {
-        setError("We don't deliver to this postcode yet — switch to Collect & save 10%.");
+        setError("Sorry, your postcode is outside our delivery area — but you're welcome to collect from our Greenleys kitchen & save 10%.");
       } else {
         setError('Could not verify postcode — please try again.');
       }

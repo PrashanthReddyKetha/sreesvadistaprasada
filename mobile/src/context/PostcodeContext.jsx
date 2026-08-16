@@ -123,7 +123,7 @@ function PostcodeSheet({ visible, onClose, currentPostcode, onConfirm }) {
             <Text style={[sheetStyles.feedback, { color: confirmed ? '#059669' : '#DC2626' }]}>
               {confirmed
                 ? `We deliver to ${status.city}!${status.fee != null ? `  Delivery from £${status.fee.toFixed(2)}` : ''}`
-                : "Sorry, we don't deliver to this postcode yet"}
+                : "Sorry, your postcode is outside our delivery area — collect from our kitchen instead!"}
             </Text>
           )}
 
