@@ -281,6 +281,15 @@ const CartDrawer = () => {
     return effectiveSubtotal <= 19.99 ? 1.50 : 0;
   })();
 
+  // Total saving vs delivery — used in both collection confirmation + delivery-mode switch nudge
+  // potentialDeliveryFee uses zoneInfo directly (not deliveryFee, which returns 0 on takeaway)
+  const potentialDeliveryFee = zoneInfo
+    ? (effectiveSubtotal >= zoneInfo.free_delivery_over ? 0 : zoneInfo.delivery_fee)
+    : null;
+  const collectSaving = potentialDeliveryFee !== null && meetsMinimum
+    ? Math.round((potentialDeliveryFee + (effectiveSubtotal <= 19.99 ? 1.50 : 0) + effectiveSubtotal * 0.10) * 100) / 100
+    : null;
+
   const grandTotal = (() => {
     if (!meetsMinimum) return effectiveSubtotal;
     if (deliveryType === 'takeaway') return Math.round((effectiveSubtotal - takeawayDiscount) * 100) / 100;
@@ -360,7 +369,9 @@ const CartDrawer = () => {
               <div className="px-6 py-2.5 border-b flex items-center"
                 style={{ backgroundColor: '#F0FFF4', borderColor: 'rgba(22,101,52,0.2)' }}>
                 <span className="text-xs font-semibold" style={{ color: '#166534' }}>
-                  🎉 You save {fmt(takeawayDiscount)} by collecting — no delivery fee either!
+                  {collectSaving
+                    ? <>🎉 You&apos;re saving <strong>{fmt(collectSaving)}</strong> on this order vs delivery!</>
+                    : <>🎉 You save <strong>{fmt(takeawayDiscount)}</strong> by collecting — plus no delivery fee!</>}
                 </span>
               </div>
             )}
@@ -392,7 +403,9 @@ const CartDrawer = () => {
               <div className="px-6 py-2 border-b flex items-center justify-between gap-2"
                 style={{ backgroundColor: '#FFFBEB', borderColor: 'rgba(180,101,11,0.15)' }}>
                 <span className="text-[11px] font-medium" style={{ color: '#92400E' }}>
-                  🛵 Collect & save <strong>10%</strong>{smallOrderFee > 0 && <> + <strong>no small order fee</strong></>} — switch above to apply
+                  {collectSaving
+                    ? <>🛵 Collect &amp; save <strong>{fmt(collectSaving)}</strong> on this order — switch above to apply</>
+                    : <>🛵 Collect &amp; save <strong>10%</strong>{smallOrderFee > 0 && <> + <strong>no small order fee</strong></>} — switch above to apply</>}
                 </span>
                 <button onClick={() => setDeliveryType('takeaway')}
                   className="text-[11px] font-bold px-2 py-0.5 rounded-md flex-shrink-0"
