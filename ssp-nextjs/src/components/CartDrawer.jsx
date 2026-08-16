@@ -9,6 +9,7 @@ import api from '../api';
 import { trackViewCart, trackBeginCheckout } from '@/lib/analytics';
 
 const MINIMUM_ORDER = 15.00;
+const MIN_DELIVERY_FEE = 2.49; // Zone 1 (nearest MK postcodes) — floor used before postcode is known
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
 const fmt   = (n)   => `£${Number(n).toFixed(2)}`;
 
@@ -286,8 +287,9 @@ const CartDrawer = () => {
   const potentialDeliveryFee = zoneInfo
     ? (effectiveSubtotal >= zoneInfo.free_delivery_over ? 0 : zoneInfo.delivery_fee)
     : null;
-  const collectSaving = potentialDeliveryFee !== null && meetsMinimum
-    ? Math.round((potentialDeliveryFee + (effectiveSubtotal <= 19.99 ? 1.50 : 0) + effectiveSubtotal * 0.10) * 100) / 100
+  const collectSavingIsEstimate = potentialDeliveryFee === null; // true = using MIN_DELIVERY_FEE floor
+  const collectSaving = meetsMinimum
+    ? Math.round(((potentialDeliveryFee ?? MIN_DELIVERY_FEE) + (effectiveSubtotal <= 19.99 ? 1.50 : 0) + effectiveSubtotal * 0.10) * 100) / 100
     : null;
 
   const grandTotal = (() => {
@@ -370,8 +372,9 @@ const CartDrawer = () => {
                 style={{ backgroundColor: '#F0FFF4', borderColor: 'rgba(22,101,52,0.2)' }}>
                 <span className="text-xs font-semibold" style={{ color: '#166534' }}>
                   {collectSaving
-                    ? <>🎉 You&apos;re saving <strong>{fmt(collectSaving)}</strong> on this order vs delivery!</>
-                    : <>🎉 You save <strong>{fmt(takeawayDiscount)}</strong> by collecting — plus no delivery fee!</>}
+                    ? <>🎉 You&apos;re saving {collectSavingIsEstimate ? <>at least </> : null}<strong>{fmt(collectSaving)}</strong> on this order{collectSavingIsEstimate ? '' : ' vs delivery'}!
+                    </>
+                    : <>🎉 You save by collecting — plus no delivery fee!</>}
                 </span>
               </div>
             )}
@@ -404,8 +407,8 @@ const CartDrawer = () => {
                 style={{ backgroundColor: '#FFFBEB', borderColor: 'rgba(180,101,11,0.15)' }}>
                 <span className="text-[11px] font-medium" style={{ color: '#92400E' }}>
                   {collectSaving
-                    ? <>🛵 Collect &amp; save <strong>{fmt(collectSaving)}</strong> on this order — switch above to apply</>
-                    : <>🛵 Collect &amp; save <strong>10%</strong>{smallOrderFee > 0 && <> + <strong>no small order fee</strong></>} — switch above to apply</>}
+                    ? <>🛵 Collect &amp; save {collectSavingIsEstimate ? <>at least </> : null}<strong>{fmt(collectSaving)}</strong> on this order — switch above to apply</>
+                    : <>🛵 Collect &amp; save <strong>10%</strong> — switch above to apply</>}
                 </span>
                 <button onClick={() => setDeliveryType('takeaway')}
                   className="text-[11px] font-bold px-2 py-0.5 rounded-md flex-shrink-0"
