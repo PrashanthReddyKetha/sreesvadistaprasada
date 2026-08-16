@@ -874,6 +874,20 @@ const CheckoutInner = () => {
                 />
               )}
 
+              {/* Delivery: collect nudge — mirrors cart drawer */}
+              {deliveryType === 'delivery' && meetsMinimum && (
+                <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[11px] font-medium"
+                  style={{ backgroundColor: '#FFFBEB', color: '#92400E' }}>
+                  <span>
+                    🛵 Collect & save{' '}
+                    {collectSaving
+                      ? <><strong>{fmt(collectSaving)}</strong> on this order</>
+                      : <><strong>10%</strong> + no delivery fee</>
+                    } — switch above to apply
+                  </span>
+                </div>
+              )}
+
               {/* Takeaway savings callout */}
               {deliveryType === 'takeaway' && takeawayDiscount > 0 && (
                 <div className="text-xs font-semibold px-3 py-2 rounded-lg"
