@@ -19,6 +19,7 @@ const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 const MINIMUM_ORDER = 15.00;
+const MIN_DELIVERY_FEE = 2.49; // Zone 1 floor — used before postcode is known
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
 const fmt   = (n)   => `£${Number(n).toFixed(2)}`;
 
@@ -576,6 +577,15 @@ const CheckoutInner = () => {
     ?? Math.round((effectiveSubtotal - takeawayDiscount + deliveryFee + smallOrderFee) * 100) / 100;
   const freeDeliveryAt = validPricing?.free_delivery_at ?? zoneInfo?.free_delivery_over ?? null;
 
+  // Total saving vs delivery — used in collection savings callout
+  const potentialDeliveryFee = zoneInfo
+    ? (effectiveSubtotal >= (freeDeliveryAt ?? Infinity) ? 0 : zoneInfo.delivery_fee)
+    : null;
+  const collectSavingIsEstimate = potentialDeliveryFee === null;
+  const collectSaving = meetsMinimum
+    ? Math.round(((potentialDeliveryFee ?? MIN_DELIVERY_FEE) + (effectiveSubtotal <= 19.99 ? 1.50 : 0) + effectiveSubtotal * 0.10) * 100) / 100
+    : null;
+
   const handleOrder = async () => {
     setError('');
     if (!meetsMinimum) { setError(`Minimum order is ${fmt(MINIMUM_ORDER)} — please add more items.`); return; }
@@ -868,7 +878,9 @@ const CheckoutInner = () => {
               {deliveryType === 'takeaway' && takeawayDiscount > 0 && (
                 <div className="text-xs font-semibold px-3 py-2 rounded-lg"
                   style={{ backgroundColor: '#F0FFF4', color: '#166534' }}>
-                  🎉 You save {fmt(takeawayDiscount)} by collecting — no delivery fee either!
+                  {collectSaving
+                    ? <>🎉 You&apos;re saving {collectSavingIsEstimate ? 'at least ' : ''}<strong>{fmt(collectSaving)}</strong> on this order{collectSavingIsEstimate ? '' : ' vs delivery'}!</>
+                    : <>🎉 You save {fmt(takeawayDiscount)} by collecting — no delivery fee either!</>}
                 </div>
               )}
             </div>
