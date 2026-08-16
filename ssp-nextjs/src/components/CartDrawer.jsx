@@ -352,7 +352,7 @@ const CartDrawer = () => {
             <div className="px-6 py-3 border-b flex gap-2" style={{ borderColor: 'rgba(128,0,32,0.08)', backgroundColor: '#FDFBF7' }}>
               {[
                 { id: 'delivery', label: '🚚 Delivery' },
-                { id: 'takeaway', label: '🛵 Collect & save 10%' },
+                { id: 'takeaway', label: collectSaving && !collectSavingIsEstimate ? `🛵 Collect & save ${fmt(collectSaving)}` : '🛵 Collect & save 10%' },
               ].map(opt => (
                 <button key={opt.id} onClick={() => setDeliveryType(opt.id)}
                   className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
