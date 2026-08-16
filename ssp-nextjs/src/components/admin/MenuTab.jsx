@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useCallback, useEffect } from 'react';
-import { Plus, X, Save, RefreshCw, Utensils, Leaf, Flame, Edit2, Trash2 } from 'lucide-react';
+import { Plus, X, Save, RefreshCw, Utensils, Leaf, Flame, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
 import api from '@/api';
 import { clearMenuCache } from '@/api/menuCache';
 
@@ -113,6 +113,7 @@ export default function MenuTab() {
   const [aiLoading, setAiLoading] = useState(false);
   const [selected, setSelected]   = useState(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -189,6 +190,15 @@ export default function MenuTab() {
     setBulkDeleting(false);
   };
 
+  const setAvailabilityForSelected = async (available) => {
+    if (selected.size === 0) return;
+    setBulkUpdating(true);
+    await Promise.all([...selected].map(id => api.put(`/menu/${id}`, { available }).catch(() => {})));
+    clearMenuCache(); setSelected(new Set());
+    await load();
+    setBulkUpdating(false);
+  };
+
   const toggleSelect = (id) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const allFilteredSelected = filtered => filtered.length > 0 && filtered.every(i => selected.has(i.id));
   const toggleSelectAll = (filtered) => {
@@ -261,11 +271,23 @@ export default function MenuTab() {
             </span>
           </label>
           {selected.size > 0 && (
-            <button onClick={deleteSelected} disabled={bulkDeleting}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-60 transition-all"
-              style={{ backgroundColor: '#991B1B' }}>
-              <Trash2 size={12} /> {bulkDeleting ? 'Deleting…' : `Delete selected (${selected.size})`}
-            </button>
+            <>
+              <button onClick={() => setAvailabilityForSelected(false)} disabled={bulkUpdating}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-60 transition-all"
+                style={{ backgroundColor: '#F3F4F6', color: '#374151' }}>
+                <EyeOff size={12} /> {bulkUpdating ? 'Updating…' : `Hide selected (${selected.size})`}
+              </button>
+              <button onClick={() => setAvailabilityForSelected(true)} disabled={bulkUpdating}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-60 transition-all"
+                style={{ backgroundColor: '#F3F4F6', color: '#374151' }}>
+                <Eye size={12} /> {bulkUpdating ? 'Updating…' : `Show selected (${selected.size})`}
+              </button>
+              <button onClick={deleteSelected} disabled={bulkDeleting}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-60 transition-all"
+                style={{ backgroundColor: '#991B1B' }}>
+                <Trash2 size={12} /> {bulkDeleting ? 'Deleting…' : `Delete selected (${selected.size})`}
+              </button>
+            </>
           )}
         </div>
       )}
