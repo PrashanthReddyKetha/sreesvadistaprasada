@@ -157,7 +157,7 @@ export default function SubActiveCard({ sub }) {
       s + (d.items||[]).reduce((a, it) => a + (typeof it==='object' && it.price ? it.price : 0), 0), 0);
     const mealsWithPrices = days.filter(d => (d.items||[]).some(it => typeof it==='object' && it.price));
     if (!mealsWithPrices.length) return null;
-    const perMealPlan = sub.plan === 'monthly' ? 8 : 9;
+    const perMealPlan = sub.plan === 'monthly' ? 12.5 : 15;
     const avgRetail = totalRetail / mealsWithPrices.length;
     const weekSaving = (avgRetail - perMealPlan) * mealsWithPrices.length;
     if (weekSaving < 1) return null;

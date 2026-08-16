@@ -510,7 +510,7 @@ function SubsTab({ subs, reload }) {
         <Package size={48} className="mx-auto mb-4" style={{ color: '#800020' }} />
         <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>You have not tried Dabba Wala yet</h3>
         <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: '#9C7B6B' }}>
-          Home-cooked South Indian meals every weekday — freshly made each morning, delivered to your door. From £9 per meal.
+          Home-cooked South Indian meals every weekday — freshly made each morning, delivered to your door. From £12.50 per meal.
         </p>
         <Link to="/subscriptions" className="inline-block px-8 py-3 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>
           Start my subscription

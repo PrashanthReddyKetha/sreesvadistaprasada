@@ -21,7 +21,7 @@ const FAQ_DATA = [
   {
     section: 'The Dabba Wala',
     items: [
-      { q: 'What is the Dabba Wala?', a: 'The Dabba Wala is our weekly meal plan — a hot dabba delivered to your door Monday to Friday. Choose between our Weekly trial (£45, 5 meals) or Monthly saver (£160, 20 meals).' },
+      { q: 'What is the Dabba Wala?', a: 'The Dabba Wala is our weekly meal plan — a hot dabba delivered to your door Monday to Friday. Choose between our Weekly trial (£75, 5 meals) or Monthly saver (£250, 20 meals).' },
       { q: 'What\'s the difference between Prasada and Svadista boxes?', a: 'Prasada is 100% vegetarian, cooked in the sattvic temple tradition. Svadista is non-vegetarian — bold, rustic Telugu flavours with meat and egg dishes.' },
       { q: 'When does my Dabba start?', a: 'Subscriptions start on the next available Monday. If you subscribe on a Sunday after 5 PM, we\'ll start the following week.' },
       { q: 'Can I pause or cancel?', a: 'Yes — you can pause for a week or cancel anytime from your profile, with no fees or penalties.' },

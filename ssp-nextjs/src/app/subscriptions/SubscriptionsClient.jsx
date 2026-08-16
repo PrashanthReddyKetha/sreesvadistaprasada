@@ -94,8 +94,8 @@ const STORAGE_KEY = 'ssp_dabba_v4';
 const STORAGE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 const PLANS = [
-  { id: 'weekly',  name: 'Weekly trial',  price: 45,  perMeal: 9,  meals: 5,  badge: 'Start here',   badgeStyle: { backgroundColor: C.greenLight, color: C.greenText } },
-  { id: 'monthly', name: 'Monthly saver', price: 160, perMeal: 8,  meals: 20, badge: 'Best value',  badgeStyle: { backgroundColor: C.amberLight, color: C.amberText } },
+  { id: 'weekly',  name: 'Weekly trial',  price: 75,  perMeal: 15,  meals: 5,  badge: 'Start here',   badgeStyle: { backgroundColor: C.greenLight, color: C.greenText } },
+  { id: 'monthly', name: 'Monthly saver', price: 250, perMeal: 12.5, meals: 20, badge: 'Best value',  badgeStyle: { backgroundColor: C.amberLight, color: C.amberText } },
 ];
 
 const BOXES = [
@@ -618,7 +618,7 @@ const SubscriptionsInner = () => {
       });
       clearProg();
       localStorage.setItem('ssp_subscription_success', 'true');
-      trackSubscriptionPurchase(selectedPlan, selectedBox, planData?.price || 45, planData?.meals || 0, planData?.perMeal || 0);
+      trackSubscriptionPurchase(selectedPlan, selectedBox, planData?.price || 75, planData?.meals || 0, planData?.perMeal || 0);
       setSubmitStatus('success');
     } catch (e) {
       setSubmitStatus('error');

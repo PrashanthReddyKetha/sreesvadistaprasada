@@ -13,8 +13,8 @@ import LoadingScreen from '../../components/LoadingScreen';
 
 // ─── Plans & boxes (spec-exact) ──────────────────────────────────────────────
 const PLANS = [
-  { id: 'weekly', name: 'Weekly trial', price: 45, perMeal: 9, meals: 5, badge: 'Start here', badgeColor: COLORS.crimson },
-  { id: 'monthly', name: 'Monthly saver', price: 160, perMeal: 8, meals: 20, badge: 'Best value', badgeColor: '#059669' },
+  { id: 'weekly', name: 'Weekly trial', price: 75, perMeal: 15, meals: 5, badge: 'Start here', badgeColor: COLORS.crimson },
+  { id: 'monthly', name: 'Monthly saver', price: 250, perMeal: 12.5, meals: 20, badge: 'Best value', badgeColor: '#059669' },
 ];
 
 const BOXES = [

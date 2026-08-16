@@ -13,8 +13,8 @@ from notifications import (
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
 PLAN_PRICES = {
-    "weekly":  45.0,
-    "monthly": 160.0,
+    "weekly":  75.0,
+    "monthly": 250.0,
 }
 
 PLAN_DAYS = {
@@ -28,7 +28,7 @@ async def create_subscription(
     payload: SubscriptionCreate,
     current_user: Optional[dict] = Depends(get_optional_user),
 ):
-    price = PLAN_PRICES.get(payload.plan.lower(), 45.0)
+    price = PLAN_PRICES.get(payload.plan.lower(), 75.0)
     days  = PLAN_DAYS.get(payload.plan.lower(), 4)
     user_id = current_user["sub"] if current_user else payload.user_id
 

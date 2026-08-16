@@ -6,7 +6,7 @@ const MENU_CATEGORIES = [
   { label: 'Svadista — Non-Veg', sub: 'Gongura chicken, Natu Kodi biryani & more', href: '/svadista', emoji: '🍗' },
   { label: 'Breakfast', sub: 'Idli, vada, dosas, poori — fresh every morning', href: '/breakfast', emoji: '🌅' },
   { label: 'Snacks & Pickles', sub: 'Handmade podis, pickles & nibbles', href: '/snacks', emoji: '🫙' },
-  { label: 'Dabba Wala Subscriptions', sub: 'Weekly meal plans from £7 per meal', href: '/subscriptions', emoji: '🥡' },
+  { label: 'Dabba Wala Subscriptions', sub: 'Weekly meal plans from £12.50 per meal', href: '/subscriptions', emoji: '🥡' },
   { label: 'Catering', sub: 'Events, temple prasada, corporate', href: '/catering', emoji: '🎊' },
 ];
 
@@ -179,7 +179,7 @@ export default function CityPage({ data, jsonLd }) {
                 Rice, curry, dal, sambar, pickle, papad — the whole meal, every time.
               </p>
               <ul className="space-y-1.5 mb-6">
-                {['Starting from £7 per meal', 'Weekly & monthly plans', 'Veg (Prasada) or non-veg (Svadista)', 'Pause or cancel anytime'].map(pt => (
+                {['Starting from £12.50 per meal', 'Weekly & monthly plans', 'Veg (Prasada) or non-veg (Svadista)', 'Pause or cancel anytime'].map(pt => (
                   <li key={pt} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>
                     <span style={{ color: '#F4C430' }}>✓</span> {pt}
                   </li>

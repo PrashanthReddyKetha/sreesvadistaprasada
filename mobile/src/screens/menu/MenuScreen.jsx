@@ -161,7 +161,7 @@ export default function MenuScreen() {
             <View style={styles.dabbaLeft}>
               <Text style={styles.dabbaTag}>📦 Meal Plans</Text>
               <Text style={styles.dabbaTitle}>The Dabba Wala</Text>
-              <Text style={styles.dabbaSub}>Weekly · Mon–Fri · From £9/meal</Text>
+              <Text style={styles.dabbaSub}>Weekly · Mon–Fri · From £12.50/meal</Text>
             </View>
             <Text style={styles.dabbaArrow}>→</Text>
           </LinearGradient>

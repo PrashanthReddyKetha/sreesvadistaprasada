@@ -37,7 +37,7 @@ const jsonLd = [
     mainEntity: [
       { '@type': 'Question', name: 'Is there an authentic South Indian restaurant in Edinburgh?', acceptedAnswer: { '@type': 'Answer', text: 'Sree Svadista Prasada, the UK\'s only dedicated Andhra kitchen, is expanding to Edinburgh. Currently serving Milton Keynes. Register your interest for Edinburgh delivery and be first to know when we launch.' } },
       { '@type': 'Question', name: 'Where can I get South Indian food delivered in Edinburgh?', acceptedAnswer: { '@type': 'Answer', text: 'We are bringing authentic Andhra curries, dosas, gongura dishes, and our Dabba Wala tiffin subscription to Edinburgh. Contact us via WhatsApp to register your postcode.' } },
-      { '@type': 'Question', name: 'What is Dabba Wala tiffin delivery?', acceptedAnswer: { '@type': 'Answer', text: 'Dabba Wala is a weekly South Indian home-style meal subscription — fresh tiffin boxes delivered to your door. From £7 per meal, currently available in Milton Keynes and coming to Edinburgh.' } },
+      { '@type': 'Question', name: 'What is Dabba Wala tiffin delivery?', acceptedAnswer: { '@type': 'Answer', text: 'Dabba Wala is a weekly South Indian home-style meal subscription — fresh tiffin boxes delivered to your door. From £12.50 per meal, currently available in Milton Keynes and coming to Edinburgh.' } },
     ],
   },
   {

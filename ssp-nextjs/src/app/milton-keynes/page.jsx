@@ -4,7 +4,7 @@ const BASE_URL = 'https://www.sreesvadistaprasada.com';
 
 export const metadata = {
   title: { absolute: 'South Indian Food Delivery Milton Keynes | Sree Svadista Prasada' },
-  description: 'Authentic South Indian food delivery in Milton Keynes — Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley, Westcroft, Central MK and all MK postcodes. Halal non-veg, pure veg Prasada, Dabba Wala subscriptions from £7/meal.',
+  description: 'Authentic South Indian food delivery in Milton Keynes — Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley, Westcroft, Central MK and all MK postcodes. Halal non-veg, pure veg Prasada, Dabba Wala subscriptions from £12.50/meal.',
   alternates: { canonical: `${BASE_URL}/milton-keynes` },
   openGraph: {
     title: 'South Indian Food Delivery Milton Keynes | Sree Svadista Prasada',
@@ -74,7 +74,7 @@ const jsonLd = [
       { '@type': 'Question', name: 'What South Indian restaurants deliver in Milton Keynes?', acceptedAnswer: { '@type': 'Answer', text: 'Sree Svadista Prasada is Milton Keynes\' only dedicated authentic South Indian restaurant. We deliver across all MK postcodes (MK1–MK19) including Wolverton, Stony Stratford, Bletchley, Newport Pagnell, Central MK, and surrounding areas.' } },
       { '@type': 'Question', name: 'How long does South Indian food delivery take in Milton Keynes?', acceptedAnswer: { '@type': 'Answer', text: 'Delivery across Milton Keynes takes 30–60 minutes from our Greenleys kitchen. Free delivery on orders over £30.' } },
       { '@type': 'Question', name: 'Is there a halal South Indian restaurant in Milton Keynes?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. All meat in our Svadista non-vegetarian menu is sourced from halal-certified suppliers. Our Prasada kitchen is fully vegetarian with a completely separate preparation area.' } },
-      { '@type': 'Question', name: 'What is the Dabba Wala meal subscription in Milton Keynes?', acceptedAnswer: { '@type': 'Answer', text: 'Dabba Wala is our weekly South Indian tiffin subscription service — fresh home-style meals delivered to your door in Milton Keynes from £7 per meal. Choose from Prasada (pure veg), Svadista (non-veg), or Mixed boxes.' } },
+      { '@type': 'Question', name: 'What is the Dabba Wala meal subscription in Milton Keynes?', acceptedAnswer: { '@type': 'Answer', text: 'Dabba Wala is our weekly South Indian tiffin subscription service — fresh home-style meals delivered to your door in Milton Keynes from £12.50 per meal. Choose from Prasada (pure veg), Svadista (non-veg), or Mixed boxes.' } },
       { '@type': 'Question', name: 'Do you deliver South Indian food to Wolverton and Stony Stratford?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — we deliver to all areas of Milton Keynes including Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley, Westcroft, Central MK, Emerson Valley, Shenley Brook End, Walnut Tree, Monkston, and more.' } },
     ],
   },

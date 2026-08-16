@@ -2,11 +2,11 @@ import SubscriptionsClient from './SubscriptionsClient';
 
 export const metadata = {
   title: { absolute: 'Indian Tiffin Delivery Milton Keynes | Sree Svadista Prasada' },
-  description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
+  description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £75/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
   keywords: ['Indian tiffin service Milton Keynes', 'tiffin delivery Milton Keynes', 'Dabba Wala MK', 'South Indian meal subscription UK', 'weekly Indian food delivery Milton Keynes', 'meal prep delivery MK', 'healthy Indian lunch delivery'],
   openGraph: {
     title: 'Indian Tiffin Delivery Milton Keynes | Dabba Wala | Sree Svadista Prasada',
-    description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
+    description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £75/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
     type: 'website',
     url: 'https://sreesvadistaprasada.com/subscriptions',
     siteName: 'Sree Svadista Prasada',
@@ -16,7 +16,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Indian Tiffin Delivery Milton Keynes | Sree Svadista Prasada',
-    description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £45/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
+    description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £75/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
     images: ['https://images.unsplash.com/photo-1727404679933-99daa2a7573a?w=1200&q=80'],
   },
   alternates: { canonical: 'https://sreesvadistaprasada.com/subscriptions' },

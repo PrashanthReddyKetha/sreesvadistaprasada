@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSP Mobile — Home v2 (McD/KFC Style)</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+/* ─── PAGE ───────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box;}
+body {
+  min-height:100vh;
+  background: #0D0402;
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:flex-start;
+  padding:40px 16px 80px;
+  font-family:'Inter',sans-serif;
+}
+.page-label {
+  color:#F4C430; font-family:'Playfair Display',serif;
+  font-size:12px; letter-spacing:.2em; text-transform:uppercase;
+  margin-bottom:3px; text-align:center;
+}
+.page-sub {
+  color:rgba(255,255,255,.25); font-size:11px;
+  margin-bottom:28px; text-align:center;
+}
+.version-tag {
+  display:inline-block;
+  background:#F4C430; color:#1A0804;
+  font-size:10px; font-weight:800;
+  padding:3px 10px; border-radius:20px;
+  margin-bottom:28px; letter-spacing:.05em;
+}
+
+/* ─── PHONE SHELL ────────────────────────────────────── */
+.phone {
+  width:390px; height:844px;
+  border-radius:50px;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  background:#160806;
+  box-shadow:
+    0 0 0 10px #0D0402,
+    0 0 0 12px #2a1005,
+    0 0 0 14px #0D0402,
+    0 60px 140px rgba(0,0,0,.95),
+    0 20px 50px rgba(128,0,32,.15);
+  position:relative;
+}
+
+/* ─── STATUS BAR ─────────────────────────────────────── */
+.status-bar {
+  height:50px; background:#160806;
+  display:flex; align-items:flex-end;
+  justify-content:space-between;
+  padding:0 26px 10px;
+  flex-shrink:0; position:relative; z-index:20;
+}
+.dynamic-island {
+  position:absolute; top:10px; left:50%; transform:translateX(-50%);
+  width:118px; height:30px; background:#000;
+  border-radius:20px;
+}
+.s-time { color:#fff; font-size:14px; font-weight:700; letter-spacing:-.3px; }
+.s-icons { display:flex; align-items:center; gap:5px; }
+.s-icons svg { display:block; }
+
+/* ─── HEADER ─────────────────────────────────────────── */
+.header {
+  background:#160806;
+  padding:4px 18px 14px;
+  flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.header-row {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:10px;
+}
+.loc-btn {
+  display:flex; align-items:center; gap:6px;
+  background:rgba(244,196,48,.1);
+  border:1px solid rgba(244,196,48,.2);
+  border-radius:22px; padding:6px 12px;
+  color:#F4C430; font-size:12px; font-weight:600;
+}
+.loc-pin { font-size:13px; }
+.loc-caret { font-size:10px; opacity:.6; }
+.header-right { display:flex; gap:9px; }
+.hbtn {
+  width:36px; height:36px;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; position:relative; cursor:pointer;
+}
+.hbadge {
+  position:absolute; top:-3px; right:-3px;
+  width:16px; height:16px; background:#F4C430;
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:8px; font-weight:800; color:#1A0804;
+  border:2px solid #160806;
+}
+.greeting { color:rgba(255,255,255,.45); font-size:11.5px; margin-bottom:1px; }
+.greeting-name {
+  font-family:'Playfair Display',serif;
+  font-size:20px; font-weight:700; color:#fff; line-height:1.1;
+}
+
+/* ─── SEARCH ─────────────────────────────────────────── */
+.search-wrap { background:#160806; padding:0 18px 12px; flex-shrink:0; }
+.search-inner {
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:14px; padding:11px 14px;
+  display:flex; align-items:center; gap:9px;
+}
+.search-icon { font-size:15px; opacity:.5; }
+.search-text { font-size:13px; color:rgba(255,255,255,.3); flex:1; }
+.search-filter {
+  background:rgba(244,196,48,.12);
+  border:1px solid rgba(244,196,48,.25);
+  border-radius:8px; padding:4px 10px;
+  font-size:10px; font-weight:700; color:#F4C430;
+  letter-spacing:.04em;
+}
+
+/* ─── SCROLL BODY ────────────────────────────────────── */
+.scroll-body {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+  scrollbar-width:none; background:#160806;
+}
+.scroll-body::-webkit-scrollbar { display:none; }
+
+/* ─── CATEGORY SCROLL ────────────────────────────────── */
+.cats {
+  padding:14px 0 14px 16px;
+  display:flex; gap:8px;
+  overflow-x:auto; scrollbar-width:none;
+}
+.cats::-webkit-scrollbar { display:none; }
+.cat {
+  flex-shrink:0;
+  padding:8px 16px;
+  border-radius:22px;
+  font-size:12.5px; font-weight:600;
+  border:none; cursor:pointer;
+  white-space:nowrap;
+  font-family:'Inter',sans-serif;
+  transition:all .15s;
+}
+.cat.active { background:#800020; color:#fff; }
+.cat:not(.active) {
+  background:rgba(255,255,255,.07);
+  color:rgba(255,255,255,.55);
+  border:1px solid rgba(255,255,255,.08);
+}
+.cat:last-child { margin-right:16px; }
+
+/* ─── HERO BANNER ────────────────────────────────────── */
+.hero {
+  margin:0 16px 0;
+  border-radius:24px; overflow:hidden;
+  height:216px; position:relative;
+  box-shadow:0 12px 40px rgba(128,0,32,.35);
+}
+.hero img { width:100%; height:100%; object-fit:cover; display:block; }
+.hero-grad {
+  position:absolute; inset:0;
+  background:linear-gradient(170deg, transparent 25%, rgba(10,2,0,.55) 55%, rgba(10,2,0,.92) 100%);
+}
+.hero-content {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:14px 16px;
+}
+.hero-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(244,196,48,1);
+  color:#1A0804; font-size:9px; font-weight:900;
+  letter-spacing:.12em; text-transform:uppercase;
+  padding:4px 9px; border-radius:5px; margin-bottom:7px;
+}
+.hero-title {
+  font-family:'Playfair Display',serif;
+  font-size:24px; font-weight:900; color:#fff;
+  line-height:1.1; margin-bottom:4px;
+}
+.hero-sub { font-size:11.5px; color:rgba(255,255,255,.6); margin-bottom:11px; }
+.hero-row { display:flex; align-items:center; justify-content:space-between; }
+.hero-price { font-size:22px; font-weight:800; color:#F4C430; }
+.hero-cta {
+  background:#800020; color:#fff; border:none;
+  border-radius:24px; padding:10px 18px;
+  font-size:13px; font-weight:800;
+  cursor:pointer; letter-spacing:.01em;
+  box-shadow:0 4px 16px rgba(128,0,32,.6);
+  display:flex; align-items:center; gap:6px;
+}
+.hero-dots {
+  position:absolute; bottom:14px; right:15px;
+  display:flex; gap:4px;
+}
+.dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.3); }
+.dot.on { background:#fff; width:16px; border-radius:3px; }
+
+/* ─── SECTION HEADER ─────────────────────────────────── */
+.sec-head {
+  display:flex; justify-content:space-between;
+  align-items:baseline; padding:0 16px; margin-bottom:13px;
+}
+.sec-title {
+  font-family:'Playfair Display',serif;
+  font-size:17px; font-weight:700; color:#fff;
+}
+.sec-link { font-size:12px; color:#F4C430; font-weight:700; }
+
+/* ─── LARGE 2-COL DISH GRID ──────────────────────────── */
+.dish-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  padding:0 16px;
+}
+.dish-tile {
+  background:#1E0C06;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:20px; overflow:hidden;
+  cursor:pointer;
+  transition:transform .15s;
+  position:relative;
+}
+.dish-tile-img {
+  position:relative; height:130px; overflow:hidden;
+  background:#2a1005;
+}
+.dish-tile-img img {
+  width:100%; height:100%; object-fit:cover; display:block;
+}
+/* Gradient over image */
+.dish-tile-img::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(10,2,0,.6) 0%, transparent 50%);
+}
+/* Veg/non-veg mark */
+.v-mark, .nv-mark {
+  position:absolute; top:8px; left:8px; z-index:2;
+  width:16px; height:16px;
+  background:#1E0C06;
+  border-radius:4px;
+  display:flex; align-items:center; justify-content:center;
+}
+.v-mark { border:1.5px solid #4A7C59; }
+.nv-mark { border:1.5px solid #800020; }
+.v-mark::after { content:''; width:8px; height:8px; background:#4A7C59; border-radius:50%; }
+.nv-mark::after { content:''; width:8px; height:8px; background:#800020; border-radius:50%; }
+/* Price overlay on image */
+.price-overlay {
+  position:absolute; bottom:7px; left:9px; z-index:2;
+  font-size:13px; font-weight:800; color:#F4C430;
+}
+/* Add button on image */
+.tile-add {
+  position:absolute; bottom:7px; right:8px; z-index:2;
+  width:30px; height:30px;
+  background:#800020;
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:20px; font-weight:300;
+  box-shadow:0 3px 12px rgba(128,0,32,.6);
+  cursor:pointer;
+}
+.dish-tile-info { padding:10px 10px 12px; }
+.tile-name {
+  font-family:'Playfair Display',serif;
+  font-size:13px; font-weight:700; color:#fff;
+  line-height:1.3; margin-bottom:3px;
+  display:-webkit-box; -webkit-line-clamp:2;
+  -webkit-box-orient:vertical; overflow:hidden;
+}
+.tile-desc {
+  font-size:10px; color:rgba(255,255,255,.35);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* ─── WORLD SECTION ──────────────────────────────────── */
+.worlds { padding:0 16px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.world {
+  position:relative; height:150px; border-radius:20px;
+  overflow:hidden; cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+.world img { width:100%; height:100%; object-fit:cover; display:block; }
+.world-ov {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  justify-content:flex-end; padding:12px;
+}
+.w-sv .world-ov { background:linear-gradient(to top, rgba(90,10,10,.95) 0%, rgba(90,10,10,.2) 55%, transparent 100%); }
+.w-pr .world-ov { background:linear-gradient(to top, rgba(20,55,30,.95) 0%, rgba(20,55,30,.2) 55%, transparent 100%); }
+.w-tag { font-size:8px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; margin-bottom:4px; }
+.w-sv .w-tag { color:#F4C430; }
+.w-pr .w-tag { color:#E3A857; }
+.w-name {
+  font-family:'Playfair Display',serif;
+  font-size:16px; font-weight:900; color:#fff; line-height:1.05;
+}
+.w-count { font-size:9.5px; color:rgba(255,255,255,.5); margin-top:2px; }
+.w-arrow {
+  position:absolute; top:10px; right:10px;
+  width:24px; height:24px;
+  background:rgba(255,255,255,.15);
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; color:rgba(255,255,255,.7);
+}
+
+/* ─── DABBA WALA ─────────────────────────────────────── */
+.dabba {
+  margin:6px 16px 16px;
+  border-radius:22px; overflow:hidden; position:relative;
+  height:96px;
+  box-shadow:0 8px 28px rgba(0,0,0,.4);
+}
+.dabba-bg {
+  position:absolute; inset:0;
+  background:linear-gradient(100deg, #800020 0%, #5C1010 100%);
+}
+.dabba-pattern {
+  position:absolute; inset:0;
+  background-image:repeating-linear-gradient(
+    45deg,
+    transparent, transparent 20px,
+    rgba(255,255,255,.02) 20px,
+    rgba(255,255,255,.02) 21px
+  );
+}
+.dabba-inner {
+  position:absolute; inset:0;
+  display:flex; align-items:center;
+  padding:0 16px; justify-content:space-between;
+}
+.dabba-left {}
+.dabba-eye {
+  font-size:9px; font-weight:800; letter-spacing:.15em; text-transform:uppercase;
+  color:rgba(255,255,255,.6); margin-bottom:3px;
+}
+.dabba-title {
+  font-family:'Playfair Display',serif;
+  font-size:18px; font-weight:900; color:#fff; line-height:1.1; margin-bottom:2px;
+}
+.dabba-sub { font-size:10.5px; color:rgba(255,255,255,.55); }
+.dabba-btn {
+  background:#F4C430; color:#1A0804;
+  border:none; border-radius:22px;
+  padding:10px 16px; font-size:12px; font-weight:800;
+  cursor:pointer; flex-shrink:0;
+  box-shadow:0 4px 14px rgba(244,196,48,.35);
+}
+
+/* ─── BOTTOM BREATHING ───────────────────────────────── */
+.spacer { height:20px; }
+
+/* ─── BOTTOM NAV ─────────────────────────────────────── */
+.bottom-nav {
+  height:72px;
+  background:#0F0503;
+  border-top:1px solid rgba(255,255,255,.07);
+  display:flex; align-items:center; justify-content:space-around;
+  flex-shrink:0; padding:0 8px 4px;
+}
+.n-btn {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:4px 20px; border:none; background:none; cursor:pointer;
+  position:relative;
+}
+.n-icon {
+  width:26px; height:26px;
+  display:flex; align-items:center; justify-content:center;
+}
+.n-icon svg { display:block; }
+.n-label { font-size:10px; font-weight:600; }
+.n-btn.active .n-label { color:#F4C430; }
+.n-btn:not(.active) .n-label { color:rgba(255,255,255,.3); }
+/* Active indicator dot above icon */
+.n-btn.active::before {
+  content:'';
+  position:absolute; top:-1px;
+  width:20px; height:3px;
+  background:#F4C430; border-radius:0 0 3px 3px;
+}
+
+/* Home indicator */
+.home-ind {
+  height:18px; background:#0F0503;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.home-bar { width:130px; height:4px; background:rgba(255,255,255,.15); border-radius:2px; }
+
+/* ─── SECTION SPACING ────────────────────────────────── */
+.sec-block { padding-top:20px; }
+
+/* ─── CAPTION ────────────────────────────────────────── */
+.caption {
+  margin-top:22px; text-align:center;
+  color:rgba(255,255,255,.2); font-size:11px; letter-spacing:.06em;
+}
+.compare-note {
+  margin-top:10px; text-align:center;
+  color:rgba(244,196,48,.5); font-size:11px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="page-label">Sree Svadista Prasada · Mobile App</div>
+<p class="page-sub">Home Screen · v2 — McD/KFC Style · Dark Mode</p>
+<div class="version-tag">✦ REDESIGN</div>
+
+<div class="phone">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="s-time">9:41</span>
+    <div class="dynamic-island"></div>
+    <div class="s-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="white">
+        <rect x="0" y="8" width="3" height="4" rx="1"/>
+        <rect x="4.5" y="5" width="3" height="7" rx="1"/>
+        <rect x="9" y="2" width="3" height="10" rx="1"/>
+        <rect x="13.5" y="0" width="2.5" height="12" rx="1" opacity=".3"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 10a1.3 1.3 0 1 1 0 2.6A1.3 1.3 0 0 1 8 10z" fill="white"/>
+        <path d="M3.8 6.8a5.9 5.9 0 0 1 8.4 0" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M1 4a10 10 0 0 1 14 0" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
+      </svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none">
+        <rect x="0" y="1" width="22" height="10" rx="3" stroke="white" stroke-width="1.2" opacity=".6"/>
+        <rect x="23" y="3.5" width="3" height="5" rx="1.5" fill="white" opacity=".5"/>
+        <rect x="1.5" y="2.5" width="17" height="7" rx="2" fill="white"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-row">
+      <div class="loc-btn">
+        <span class="loc-pin">📍</span>
+        Milton Keynes
+        <span class="loc-caret">▾</span>
+      </div>
+      <div class="header-right">
+        <div class="hbtn">🔔</div>
+        <div class="hbtn">
+          🛒
+          <div class="hbadge">2</div>
+        </div>
+      </div>
+    </div>
+    <div class="greeting">Good morning ☀️</div>
+    <div class="greeting-name">What are you craving, Prash?</div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <div class="search-inner">
+      <span class="search-icon">🔍</span>
+      <span class="search-text">Search dishes, biryanis, dosas…</span>
+      <span class="search-filter">FILTER</span>
+    </div>
+  </div>
+
+  <!-- SCROLL BODY -->
+  <div class="scroll-body">
+
+    <!-- Category chips -->
+    <div class="cats">
+      <button class="cat active">All</button>
+      <button class="cat">🌅 Breakfast</button>
+      <button class="cat">🍛 Main</button>
+      <button class="cat">🥡 Snacks</button>
+      <button class="cat">🌶️ Svadista</button>
+      <button class="cat">🌿 Prasada</button>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+      <img src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=85" alt="Natu Kodi Biryani">
+      <div class="hero-grad"></div>
+      <div class="hero-content">
+        <div class="hero-badge">⭐ Chef's Pick · Today</div>
+        <div class="hero-title">Natu Kodi<br>Biryani</div>
+        <div class="hero-sub">Slow-cooked · Village recipe · Serves 2</div>
+        <div class="hero-row">
+          <span class="hero-price">£15.99</span>
+          <button class="hero-cta" id="heroCta">Add to Cart +</button>
+        </div>
+      </div>
+      <div class="hero-dots">
+        <div class="dot on"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+
+    <!-- TODAY'S SPECIALS — 2-col grid -->
+    <div class="sec-block">
+      <div class="sec-head">
+        <span class="sec-title">Today's Specials</span>
+        <span class="sec-link">See all →</span>
+      </div>
+      <div class="dish-grid">
+
+        <div class="dish-tile">
+          <div class="dish-tile-img">
+            <img src="https://images.unsplash.com/photo-1694849789325-914b71ab4075?w=400&q=80" alt="Ghee Karam Dosa">
+            <div class="v-mark"></div>
+            <div class="price-overlay">£8.99</div>
+            <div class="tile-add add-btn">+</div>
+          </div>
+          <div class="dish-tile-info">
+            <div class="tile-name">Ghee Karam Dosa</div>
+            <div class="tile-desc">Crispy · Nellore style</div>
+          </div>
+        </div>
+
+        <div class="dish-tile">
+          <div class="dish-tile-img">
+            <img src="https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=400&q=80" alt="Andhra Kodi Pulusu">
+            <div class="nv-mark"></div>
+            <div class="price-overlay">£12.99</div>
+            <div class="tile-add add-btn">+</div>
+          </div>
+          <div class="dish-tile-info">
+            <div class="tile-name">Andhra Kodi Pulusu</div>
+            <div class="tile-desc">Tangy tamarind curry</div>
+          </div>
+        </div>
+
+        <div class="dish-tile">
+          <div class="dish-tile-img">
+            <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80" alt="Masala Dosa">
+            <div class="v-mark"></div>
+            <div class="price-overlay">£8.99</div>
+            <div class="tile-add add-btn">+</div>
+          </div>
+          <div class="dish-tile-info">
+            <div class="tile-name">Masala Dosa</div>
+            <div class="tile-desc">Classic South Indian</div>
+          </div>
+        </div>
+
+        <div class="dish-tile">
+          <div class="dish-tile-img">
+            <img src="https://images.unsplash.com/photo-1742281257707-0c7f7e5ca9c6?w=400&q=80" alt="Pulihora">
+            <div class="v-mark"></div>
+            <div class="price-overlay">£8.99</div>
+            <div class="tile-add add-btn">+</div>
+          </div>
+          <div class="dish-tile-info">
+            <div class="tile-name">Pulihora</div>
+            <div class="tile-desc">Tamarind rice · classic</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CHOOSE YOUR WORLD -->
+    <div class="sec-block">
+      <div class="sec-head">
+        <span class="sec-title">Choose Your World</span>
+      </div>
+      <div class="worlds">
+        <div class="world w-sv">
+          <img src="https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=500&q=80" alt="Sree Svadista">
+          <div class="world-ov">
+            <div class="w-tag">🌶️ Non-Veg · Rustic</div>
+            <div class="w-name">Sree<br>Svadista</div>
+            <div class="w-count">51 dishes</div>
+          </div>
+          <div class="w-arrow">›</div>
+        </div>
+        <div class="world w-pr">
+          <img src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500&q=80" alt="Sree Prasada">
+          <div class="world-ov">
+            <div class="w-tag">🌿 Pure Veg · Divine</div>
+            <div class="w-name">Sree<br>Prasada</div>
+            <div class="w-count">52 dishes</div>
+          </div>
+          <div class="w-arrow">›</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DABBA WALA BANNER -->
+    <div class="sec-block">
+      <div class="dabba">
+        <div class="dabba-bg"></div>
+        <div class="dabba-pattern"></div>
+        <div class="dabba-inner">
+          <div class="dabba-left">
+            <div class="dabba-eye">📦 Meal Subscription</div>
+            <div class="dabba-title">Dabba Wala</div>
+            <div class="dabba-sub">Home delivery · from £75/week</div>
+          </div>
+          <button class="dabba-btn">Subscribe</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+  </div><!-- /scroll-body -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+
+    <button class="n-btn active">
+      <div class="n-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" stroke="#F4C430" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M9 21V13h6v8" stroke="#F4C430" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="n-label">Home</span>
+    </button>
+
+    <button class="n-btn">
+      <div class="n-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="4" width="7" height="7" rx="1.5" stroke="rgba(255,255,255,.3)" stroke-width="1.8"/>
+          <rect x="13" y="4" width="7" height="7" rx="1.5" stroke="rgba(255,255,255,.3)" stroke-width="1.8"/>
+          <rect x="4" y="13" width="7" height="7" rx="1.5" stroke="rgba(255,255,255,.3)" stroke-width="1.8"/>
+          <rect x="13" y="13" width="7" height="7" rx="1.5" stroke="rgba(255,255,255,.3)" stroke-width="1.8"/>
+        </svg>
+      </div>
+      <span class="n-label">Menu</span>
+    </button>
+
+    <button class="n-btn">
+      <div class="n-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="3" width="16" height="18" rx="2" stroke="rgba(255,255,255,.3)" stroke-width="1.8"/>
+          <path d="M8 8h8M8 12h8M8 16h5" stroke="rgba(255,255,255,.3)" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="n-label">Orders</span>
+    </button>
+
+    <button class="n-btn">
+      <div class="n-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,.3)" stroke-width="1.8"/>
+          <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" stroke="rgba(255,255,255,.3)" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="n-label">You</span>
+    </button>
+
+  </nav>
+
+  <!-- Home indicator -->
+  <div class="home-ind"><div class="home-bar"></div></div>
+
+</div><!-- /phone -->
+
+<p class="caption">Home Screen v2 · Dark Mode · 390 × 844 · Scroll inside phone</p>
+<p class="compare-note">← <a href="home-screen.html" style="color:rgba(244,196,48,.5)">View v1</a> for comparison</p>
+
+<script>
+// Category pill active state
+document.querySelectorAll('.cat').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.cat').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+
+// Add to cart feedback
+document.querySelectorAll('.add-btn').forEach(b => {
+  b.addEventListener('click', e => {
+    e.stopPropagation();
+    const orig = b.textContent;
+    b.style.background = '#4A7C59';
+    b.textContent = '✓';
+    setTimeout(() => { b.style.background='#800020'; b.textContent=orig; }, 800);
+    const badge = document.querySelector('.hbadge');
+    if(badge) badge.textContent = parseInt(badge.textContent)+1;
+  });
+});
+document.getElementById('heroCta')?.addEventListener('click', () => {
+  const b = document.getElementById('heroCta');
+  b.style.background='#4A7C59'; b.textContent='✓ Added!';
+  setTimeout(()=>{ b.style.background='#800020'; b.textContent='Add to Cart +'; },900);
+  const badge=document.querySelector('.hbadge');
+  if(badge) badge.textContent=parseInt(badge.textContent)+1;
+});
+
+// Auto-rotate dots
+let di=0;
+const dots=document.querySelectorAll('.hero-dots .dot');
+setInterval(()=>{
+  dots.forEach(d=>d.classList.remove('on'));
+  di=(di+1)%dots.length;
+  dots[di].classList.add('on');
+},3200);
+</script>
+</body>
+</html>

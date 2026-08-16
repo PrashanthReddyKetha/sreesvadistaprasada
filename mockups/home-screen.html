@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSP Mobile — Home Screen Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ─── PAGE BACKGROUND ───────────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 30% 20%, #3d1408 0%, #150604 50%, #1a0c04 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 40px 16px 80px;
+  font-family: 'Inter', sans-serif;
+}
+.page-label {
+  color: #F4C430;
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.page-sub {
+  color: rgba(253,251,247,0.35);
+  font-size: 11px;
+  margin-bottom: 32px;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+/* ─── PHONE SHELL ───────────────────────────────────────────── */
+.phone {
+  width: 390px;
+  height: 844px;
+  border-radius: 54px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #F5F0E8;
+  /* realistic frame */
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.08),
+    0 0 0 10px #0e0503,
+    0 0 0 11px #2a1208,
+    0 0 0 13px #0e0503,
+    0 50px 120px rgba(0,0,0,0.9),
+    0 20px 40px rgba(0,0,0,0.5);
+}
+/* Side buttons */
+.phone::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 140px;
+  width: 4px;
+  height: 36px;
+  background: #2a1208;
+  border-radius: 2px 0 0 2px;
+  box-shadow: 0 46px 0 #2a1208, 0 90px 0 #2a1208;
+}
+.phone::after {
+  content: '';
+  position: absolute;
+  right: -14px;
+  top: 168px;
+  width: 4px;
+  height: 68px;
+  background: #2a1208;
+  border-radius: 0 2px 2px 0;
+}
+
+/* ─── STATUS BAR ────────────────────────────────────────────── */
+.status-bar {
+  height: 50px;
+  background: #800020;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 10px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+/* Dynamic Island */
+.dynamic-island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 116px;
+  height: 30px;
+  background: #0e0503;
+  border-radius: 20px;
+}
+.status-time { color: white; font-size: 14px; font-weight: 700; letter-spacing: -0.3px; }
+.status-icons { display: flex; align-items: center; gap: 5px; }
+.status-icons svg { fill: white; }
+
+/* ─── HEADER ────────────────────────────────────────────────── */
+.header {
+  background: #800020;
+  padding: 8px 18px 16px;
+  flex-shrink: 0;
+}
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.location-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 20px;
+  padding: 5px 10px 5px 8px;
+  color: white;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.loc-dot {
+  width: 7px; height: 7px;
+  background: #F4C430;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.loc-caret { font-size: 9px; opacity: 0.7; margin-left: 2px; }
+.header-actions { display: flex; gap: 10px; }
+.icon-btn {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.badge {
+  position: absolute;
+  top: -3px; right: -3px;
+  width: 15px; height: 15px;
+  background: #F4C430;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 800; color: #2D2422;
+  border: 1.5px solid #800020;
+}
+.greeting-line {
+  font-size: 11px; color: rgba(255,255,255,0.65); margin-bottom: 1px;
+}
+.greeting-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 19px; font-weight: 700; color: white; line-height: 1.15;
+}
+
+/* ─── SEARCH BAR ────────────────────────────────────────────── */
+.search-wrap {
+  background: #800020;
+  padding: 0 18px 14px;
+  flex-shrink: 0;
+}
+.search-inner {
+  background: white;
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+.search-icon { font-size: 14px; color: #B0A090; }
+.search-text { font-size: 12.5px; color: #B0A090; }
+
+/* ─── SCROLLABLE CONTENT ────────────────────────────────────── */
+.scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  background: #F5F0E8;
+}
+.scroll-body::-webkit-scrollbar { display: none; }
+
+/* ─── CATEGORY PILLS ────────────────────────────────────────── */
+.categories-wrap {
+  background: white;
+  padding: 10px 0 10px 16px;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid #EDE8DF;
+}
+.categories-wrap::-webkit-scrollbar { display: none; }
+.cat-pill {
+  flex-shrink: 0;
+  padding: 6px 13px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+}
+.cat-pill.active { background: #800020; color: white; }
+.cat-pill:not(.active) { background: #F0EAE0; color: #5C4B47; }
+.cat-pill:last-child { margin-right: 16px; }
+
+/* ─── HERO BANNER ───────────────────────────────────────────── */
+.hero-banner {
+  margin: 14px 16px 0;
+  border-radius: 22px;
+  overflow: hidden;
+  height: 196px;
+  position: relative;
+  box-shadow: 0 8px 28px rgba(128,0,32,0.18);
+}
+.hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(160deg, transparent 30%, rgba(18,5,2,0.5) 60%, rgba(18,5,2,0.88) 100%);
+}
+.hero-content {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 14px 16px;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #F4C430;
+  color: #2D2422;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin-bottom: 6px;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.15;
+  margin-bottom: 3px;
+}
+.hero-desc { font-size: 11px; color: rgba(255,255,255,0.68); margin-bottom: 10px; }
+.hero-footer { display: flex; align-items: center; justify-content: space-between; }
+.hero-price { font-size: 19px; font-weight: 700; color: #F4C430; }
+.hero-add-btn {
+  background: white;
+  color: #800020;
+  border: none;
+  border-radius: 22px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+/* Banner indicator dots */
+.banner-dots {
+  position: absolute;
+  bottom: 13px;
+  right: 16px;
+  display: flex;
+  gap: 4px;
+}
+.dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.4); }
+.dot.active { background: white; width: 14px; border-radius: 3px; }
+
+/* ─── SECTION ───────────────────────────────────────────────── */
+.sec { padding: 18px 0 6px; }
+.sec-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 16px;
+  margin-bottom: 12px;
+}
+.sec-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #2D2422;
+}
+.sec-link {
+  font-size: 11.5px;
+  color: #800020;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ─── HORIZONTAL DISH CARDS ─────────────────────────────────── */
+.cards-row {
+  display: flex;
+  gap: 11px;
+  padding: 0 16px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cards-row::-webkit-scrollbar { display: none; }
+
+.dish-card {
+  flex-shrink: 0;
+  width: 148px;
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(128,0,32,0.09), 0 1px 4px rgba(0,0,0,0.04);
+}
+.dish-img-wrap {
+  position: relative;
+  height: 98px;
+  overflow: hidden;
+  background: #EDE8DF;
+}
+.dish-img-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s;
+}
+/* Veg/non-veg dot indicator */
+.veg-mark, .nonveg-mark {
+  position: absolute;
+  top: 7px; left: 7px;
+  width: 14px; height: 14px;
+  border-radius: 3px;
+  background: white;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.veg-mark { border: 1.5px solid #4A7C59; }
+.nonveg-mark { border: 1.5px solid #800020; }
+.veg-mark::after {
+  content: ''; width: 7px; height: 7px;
+  background: #4A7C59; border-radius: 50%;
+}
+.nonveg-mark::after {
+  content: ''; width: 7px; height: 7px;
+  background: #800020; border-radius: 50%;
+}
+.add-btn {
+  position: absolute;
+  bottom: 7px; right: 7px;
+  width: 26px; height: 26px;
+  background: #800020;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1;
+  box-shadow: 0 3px 10px rgba(128,0,32,0.45);
+  cursor: pointer;
+}
+.dish-body { padding: 9px 10px 11px; }
+.dish-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #2D2422;
+  line-height: 1.3;
+  margin-bottom: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dish-desc {
+  font-size: 10px;
+  color: #A89888;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dish-price { font-size: 14px; font-weight: 700; color: #800020; }
+
+/* ─── CHOOSE YOUR WORLD ─────────────────────────────────────── */
+.world-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 16px;
+}
+.world-card {
+  position: relative;
+  height: 138px;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+}
+.world-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.world-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  justify-content: flex-end;
+  padding: 12px;
+}
+.world-card.svadista .world-overlay {
+  background: linear-gradient(to top, rgba(100,20,20,0.9) 0%, rgba(100,20,20,0.3) 55%, transparent 100%);
+}
+.world-card.prasada .world-overlay {
+  background: linear-gradient(to top, rgba(30,70,45,0.9) 0%, rgba(30,70,45,0.3) 55%, transparent 100%);
+}
+.world-tag {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+  display: flex; align-items: center; gap: 4px;
+}
+.world-card.svadista .world-tag { color: #F4C430; }
+.world-card.prasada .world-tag { color: #E3A857; }
+.world-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px; font-weight: 700; color: white; line-height: 1.1;
+}
+.world-items-count {
+  font-size: 9px; color: rgba(255,255,255,0.65); margin-top: 2px;
+}
+.world-arrow {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 22px; height: 22px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: white;
+}
+
+/* ─── DABBA WALA BANNER ─────────────────────────────────────── */
+.dabba-wrap { padding: 6px 16px 16px; }
+.dabba-card {
+  background: linear-gradient(125deg, #2D2422 0%, #5C3820 60%, #3d1f10 100%);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+.dabba-card::before {
+  content: ''; position: absolute;
+  right: -30px; top: -30px;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: rgba(244,196,48,0.07);
+}
+.dabba-card::after {
+  content: ''; position: absolute;
+  right: 20px; bottom: -40px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: rgba(244,196,48,0.04);
+}
+.dabba-left { flex: 1; min-width: 0; }
+.dabba-eyebrow {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: #F4C430; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 5px;
+}
+.dabba-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px; font-weight: 700; color: white;
+  margin-bottom: 3px; line-height: 1.15;
+}
+.dabba-sub { font-size: 10px; color: rgba(255,255,255,0.55); }
+.dabba-btn {
+  background: #F4C430;
+  color: #2D2422;
+  border: none; border-radius: 22px;
+  padding: 9px 14px;
+  font-size: 11px; font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 12px;
+  box-shadow: 0 4px 12px rgba(244,196,48,0.3);
+}
+
+/* ─── BOTTOM NAV ────────────────────────────────────────────── */
+.bottom-nav {
+  height: 68px;
+  background: white;
+  border-top: 1px solid #EDE8DF;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-shrink: 0;
+  padding: 0 4px 4px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+}
+.nav-btn {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  padding: 6px 18px;
+  border: none; background: none; cursor: pointer;
+}
+.nav-icon { font-size: 22px; line-height: 1; }
+.nav-label { font-size: 9.5px; font-weight: 600; font-family: 'Inter', sans-serif; }
+.nav-btn.active .nav-label { color: #800020; }
+.nav-btn.active .nav-icon { filter: none; }
+.nav-btn:not(.active) .nav-label { color: #B0A090; }
+
+/* Active tab indicator */
+.nav-btn.active::before {
+  content: '';
+  position: absolute;
+  width: 4px; height: 4px;
+  background: #800020;
+  border-radius: 50%;
+  top: 4px;
+}
+
+/* ─── HOME INDICATOR ────────────────────────────────────────── */
+.home-indicator {
+  height: 18px;
+  background: white;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.home-bar {
+  width: 128px; height: 4px;
+  background: #2D2422;
+  border-radius: 2px;
+  opacity: 0.25;
+}
+
+/* ─── SCREEN CAPTION ────────────────────────────────────────── */
+.caption {
+  margin-top: 24px;
+  text-align: center;
+  color: rgba(253,251,247,0.3);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+</style>
+</head>
+<body>
+
+<div class="page-label">Sree Svadista Prasada · Mobile App</div>
+<p class="page-sub">Home Screen &nbsp;·&nbsp; Redesign Mockup v1 &nbsp;·&nbsp; 390 × 844</p>
+
+<div class="phone">
+
+  <!-- ── STATUS BAR ── -->
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="dynamic-island"></div>
+    <div class="status-icons">
+      <!-- Signal bars -->
+      <svg width="16" height="12" viewBox="0 0 16 12">
+        <rect x="0" y="8" width="3" height="4" rx="1" opacity="1"/>
+        <rect x="4.5" y="5" width="3" height="7" rx="1" opacity="1"/>
+        <rect x="9" y="2" width="3" height="10" rx="1" opacity="1"/>
+        <rect x="13.5" y="0" width="2.5" height="12" rx="1" opacity="0.35"/>
+      </svg>
+      <!-- Wifi -->
+      <svg width="15" height="12" viewBox="0 0 15 12">
+        <path d="M7.5 9.5a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4z" opacity="1"/>
+        <path d="M3.5 6.5a5.7 5.7 0 0 1 8 0" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="1"/>
+        <path d="M1 4a9.5 9.5 0 0 1 13 0" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.45"/>
+      </svg>
+      <!-- Battery -->
+      <svg width="25" height="12" viewBox="0 0 25 12">
+        <rect x="0" y="1" width="21" height="10" rx="3" stroke="white" stroke-width="1.2" fill="none" opacity="0.7"/>
+        <rect x="22" y="3.5" width="2.5" height="5" rx="1.5" fill="white" opacity="0.5"/>
+        <rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="white"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <div class="header-top">
+      <div class="location-btn">
+        <div class="loc-dot"></div>
+        Milton Keynes
+        <span class="loc-caret">▾</span>
+      </div>
+      <div class="header-actions">
+        <div class="icon-btn">🔔</div>
+        <div class="icon-btn">
+          🛒
+          <div class="badge">2</div>
+        </div>
+      </div>
+    </div>
+    <div class="greeting-line">Good morning ☀️</div>
+    <div class="greeting-name">What are you craving, Prash?</div>
+  </div>
+
+  <!-- ── SEARCH ── -->
+  <div class="search-wrap">
+    <div class="search-inner">
+      <span class="search-icon">🔍</span>
+      <span class="search-text">Biryani, dosa, idly, gongura…</span>
+    </div>
+  </div>
+
+  <!-- ── SCROLL BODY ── -->
+  <div class="scroll-body">
+
+    <!-- Category pills -->
+    <div class="categories-wrap">
+      <button class="cat-pill active">All</button>
+      <button class="cat-pill">🌅 Breakfast</button>
+      <button class="cat-pill">🍛 Main Course</button>
+      <button class="cat-pill">🥡 Snacks</button>
+      <button class="cat-pill">🌶️ Svadista</button>
+      <button class="cat-pill">🌿 Prasada</button>
+    </div>
+
+    <!-- Hero banner -->
+    <div class="hero-banner">
+      <img class="hero-img" src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80" alt="Natu Kodi Biryani">
+      <div class="hero-gradient"></div>
+      <div class="hero-content">
+        <div class="hero-badge">⭐ Chef's Pick</div>
+        <div class="hero-title">Natu Kodi<br>Biryani</div>
+        <div class="hero-desc">Slow-cooked village recipe · serves 2</div>
+        <div class="hero-footer">
+          <span class="hero-price">£15.99</span>
+          <button class="hero-add-btn">Add to Cart <span style="font-size:14px">+</span></button>
+        </div>
+      </div>
+      <div class="banner-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+
+    <!-- Today's Specials -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">Today's Specials</span>
+        <span class="sec-link">See all →</span>
+      </div>
+      <div class="cards-row">
+
+        <div class="dish-card">
+          <div class="dish-img-wrap">
+            <img src="https://images.unsplash.com/photo-1694849789325-914b71ab4075?w=400&q=80" alt="Ghee Karam Dosa">
+            <div class="veg-mark"></div>
+            <div class="add-btn">+</div>
+          </div>
+          <div class="dish-body">
+            <div class="dish-name">Ghee Karam Dosa</div>
+            <div class="dish-desc">Crispy · Nellore style</div>
+            <div class="dish-price">£8.99</div>
+          </div>
+        </div>
+
+        <div class="dish-card">
+          <div class="dish-img-wrap">
+            <img src="https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=400&q=80" alt="Andhra Kodi Pulusu">
+            <div class="nonveg-mark"></div>
+            <div class="add-btn">+</div>
+          </div>
+          <div class="dish-body">
+            <div class="dish-name">Andhra Kodi Pulusu</div>
+            <div class="dish-desc">Tangy tamarind curry</div>
+            <div class="dish-price">£12.99</div>
+          </div>
+        </div>
+
+        <div class="dish-card">
+          <div class="dish-img-wrap">
+            <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80" alt="Masala Dosa">
+            <div class="veg-mark"></div>
+            <div class="add-btn">+</div>
+          </div>
+          <div class="dish-body">
+            <div class="dish-name">Masala Dosa</div>
+            <div class="dish-desc">Classic South Indian</div>
+            <div class="dish-price">£8.99</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Choose Your World -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">Choose Your World</span>
+      </div>
+      <div class="world-grid">
+
+        <div class="world-card svadista">
+          <img src="https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=500&q=80" alt="Sree Svadista">
+          <div class="world-overlay">
+            <div class="world-tag">🌶️ Non-Veg · Rustic</div>
+            <div class="world-name">Sree Svadista</div>
+            <div class="world-items-count">51 dishes</div>
+          </div>
+          <div class="world-arrow">›</div>
+        </div>
+
+        <div class="world-card prasada">
+          <img src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500&q=80" alt="Sree Prasada">
+          <div class="world-overlay">
+            <div class="world-tag">🌿 Pure Veg · Divine</div>
+            <div class="world-name">Sree Prasada</div>
+            <div class="world-items-count">52 dishes</div>
+          </div>
+          <div class="world-arrow">›</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Loved & Reordered -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">Loved &amp; Reordered</span>
+        <span class="sec-link">See all →</span>
+      </div>
+      <div class="cards-row">
+
+        <div class="dish-card">
+          <div class="dish-img-wrap">
+            <img src="https://images.unsplash.com/photo-1742281257707-0c7f7e5ca9c6?w=400&q=80" alt="Pulihora">
+            <div class="veg-mark"></div>
+            <div class="add-btn">+</div>
+          </div>
+          <div class="dish-body">
+            <div class="dish-name">Pulihora</div>
+            <div class="dish-desc">Tamarind rice · classic</div>
+            <div class="dish-price">£8.99</div>
+          </div>
+        </div>
+
+        <div class="dish-card">
+          <div class="dish-img-wrap">
+            <img src="https://images.unsplash.com/photo-1572442568216-e4a31af30b69?w=400&q=80" alt="Gutti Vankaya">
+            <div class="veg-mark"></div>
+            <div class="add-btn">+</div>
+          </div>
+          <div class="dish-body">
+            <div class="dish-name">Gutti Vankaya</div>
+            <div class="dish-desc">Stuffed brinjal curry</div>
+            <div class="dish-price">£9.99</div>
+          </div>
+        </div>
+
+        <div class="dish-card">
+          <div class="dish-img-wrap">
+            <img src="https://images.unsplash.com/photo-1628690570327-14e16dca1518?w=400&q=80" alt="Sakkarai Pongal">
+            <div class="veg-mark"></div>
+            <div class="add-btn">+</div>
+          </div>
+          <div class="dish-body">
+            <div class="dish-name">Sakkarai Pongal</div>
+            <div class="dish-desc">Sweet rice · comfort</div>
+            <div class="dish-price">£7.99</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Dabba Wala CTA -->
+    <div class="dabba-wrap">
+      <div class="dabba-card">
+        <div class="dabba-left">
+          <div class="dabba-eyebrow">📦 Meal Subscription</div>
+          <div class="dabba-title">Dabba Wala</div>
+          <div class="dabba-sub">Home delivery · from £75/week</div>
+        </div>
+        <button class="dabba-btn">Subscribe</button>
+      </div>
+    </div>
+
+    <!-- Bottom breathing room -->
+    <div style="height: 12px;"></div>
+
+  </div><!-- /scroll-body -->
+
+  <!-- ── BOTTOM NAV ── -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label" style="color:#800020">Home</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nav-icon" style="filter:grayscale(1) opacity(0.5)">🍽️</span>
+      <span class="nav-label">Menu</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nav-icon" style="filter:grayscale(1) opacity(0.5)">📋</span>
+      <span class="nav-label">Orders</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nav-icon" style="filter:grayscale(1) opacity(0.5)">👤</span>
+      <span class="nav-label">You</span>
+    </button>
+  </nav>
+
+  <!-- Home indicator -->
+  <div class="home-indicator">
+    <div class="home-bar"></div>
+  </div>
+
+</div><!-- /phone -->
+
+<p class="caption">Open in browser · Scroll inside phone frame · iPhone 14 proportions</p>
+
+<script>
+// Interactive: category pill switching
+document.querySelectorAll('.cat-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Interactive: Add to cart feedback
+document.querySelectorAll('.add-btn, .hero-add-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const orig = btn.textContent;
+    btn.style.background = '#4A7C59';
+    btn.textContent = btn.classList.contains('hero-add-btn') ? '✓ Added!' : '✓';
+    setTimeout(() => {
+      btn.style.background = btn.classList.contains('hero-add-btn') ? 'white' : '#800020';
+      btn.textContent = orig;
+    }, 900);
+    // bump cart badge
+    const badge = document.querySelector('.badge');
+    if (badge) badge.textContent = parseInt(badge.textContent) + 1;
+  });
+});
+
+// Auto-rotate banner dots
+let dotIdx = 0;
+const dots = document.querySelectorAll('.banner-dots .dot');
+setInterval(() => {
+  dots.forEach(d => d.classList.remove('active'));
+  dotIdx = (dotIdx + 1) % dots.length;
+  dots[dotIdx].classList.add('active');
+}, 3000);
+</script>
+
+</body>
+</html>
