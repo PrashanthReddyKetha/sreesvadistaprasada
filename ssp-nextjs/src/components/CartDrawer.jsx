@@ -392,7 +392,7 @@ const CartDrawer = () => {
               <div className="px-6 py-2 border-b flex items-center justify-between gap-2"
                 style={{ backgroundColor: '#FFFBEB', borderColor: 'rgba(180,101,11,0.15)' }}>
                 <span className="text-[11px] font-medium" style={{ color: '#92400E' }}>
-                  🛵 Collect & save <strong>10%</strong> — switch above to apply
+                  🛵 Collect & save <strong>10%</strong>{smallOrderFee > 0 && <> + <strong>no small order fee</strong></>} — switch above to apply
                 </span>
                 <button onClick={() => setDeliveryType('takeaway')}
                   className="text-[11px] font-bold px-2 py-0.5 rounded-md flex-shrink-0"
@@ -415,7 +415,7 @@ const CartDrawer = () => {
               <div className="px-6 py-2 border-b text-xs"
                 style={{ backgroundColor: '#FFFBEB', borderColor: 'rgba(128,0,32,0.08)', color: '#92400E' }}>
                 <AlertCircle size={11} className="inline mr-1" />
-                <strong>£1.50 small order fee</strong> on orders under £20 — add {fmt(20 - effectiveSubtotal)} more to waive it.
+                <strong>£1.50 small order fee</strong> on delivery orders under £20 — add {fmt(20 - effectiveSubtotal)} more to waive it, or collect for free.
               </div>
             )}
 
