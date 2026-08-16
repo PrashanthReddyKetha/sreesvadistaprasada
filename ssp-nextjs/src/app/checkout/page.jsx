@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, Truck, CheckCircle, MapPin, User, Mail, Phone, FileText,
   Plus, Minus, Trash2, ArrowLeft, X, Zap, Lock, Eye, EyeOff,
-  LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard
+  LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard, AlertCircle
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -565,18 +565,20 @@ const CheckoutInner = () => {
   const validPricing = serverPricing?.order_type === deliveryType ? serverPricing : null;
 
   // Derived display values — prefer server pricing, fall back to client estimate
+  const meetsMinimum = effectiveSubtotal >= MINIMUM_ORDER;
   const takeawayDiscount = validPricing?.takeaway_discount
-    ?? (deliveryType === 'takeaway' && effectiveSubtotal >= MINIMUM_ORDER ? Math.round(effectiveSubtotal * 0.10 * 100) / 100 : 0);
+    ?? (deliveryType === 'takeaway' && meetsMinimum ? Math.round(effectiveSubtotal * 0.10 * 100) / 100 : 0);
   const deliveryFee = validPricing?.delivery_fee
     ?? (deliveryType === 'takeaway' ? 0 : zoneInfo?.delivery_fee ?? 0);
   const smallOrderFee = validPricing?.small_order_fee
-    ?? (deliveryType === 'delivery' && zoneInfo && effectiveSubtotal > 0 && effectiveSubtotal <= 19.99 ? 1.50 : 0);
+    ?? (deliveryType === 'delivery' && zoneInfo && meetsMinimum && effectiveSubtotal <= 19.99 ? 1.50 : 0);
   const grandTotal = validPricing?.grand_total
     ?? Math.round((effectiveSubtotal - takeawayDiscount + deliveryFee + smallOrderFee) * 100) / 100;
   const freeDeliveryAt = validPricing?.free_delivery_at ?? zoneInfo?.free_delivery_over ?? null;
 
   const handleOrder = async () => {
     setError('');
+    if (!meetsMinimum) { setError(`Minimum order is ${fmt(MINIMUM_ORDER)} — please add more items.`); return; }
     const required = deliveryType === 'takeaway'
       ? ['name', 'email', 'phone']
       : ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
@@ -1002,6 +1004,25 @@ const CheckoutInner = () => {
           <div className="lg:col-span-2">
             <div className="lg:sticky lg:top-6 space-y-4">
 
+              {/* Minimum order bar — shown when below £15 */}
+              {!meetsMinimum && (
+                <div className="p-4 rounded-xl" style={{ backgroundColor: '#FFF7ED' }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <AlertCircle size={14} style={{ color: '#C2410C' }} />
+                      <span className="text-sm text-gray-600">
+                        Add <strong style={{ color: '#C2410C' }}>{fmt(MINIMUM_ORDER - effectiveSubtotal)}</strong> more to place an order
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-400">Min. {fmt(MINIMUM_ORDER)}</span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden bg-gray-200">
+                    <div className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min((effectiveSubtotal / MINIMUM_ORDER) * 100, 100)}%`, backgroundColor: '#C2410C' }} />
+                  </div>
+                </div>
+              )}
+
               {/* Delivery nudge — only show for delivery with known zone */}
               {deliveryType === 'delivery' && freeDeliveryAt && (
                 <DeliveryBar total={effectiveSubtotal} freeOver={freeDeliveryAt} onAddMore={() => setShowBrowse(true)} />
@@ -1021,6 +1042,16 @@ const CheckoutInner = () => {
                 grandTotal={grandTotal}
                 deliveryType={deliveryType}
               />
+
+              {/* Small order fee nudge — delivery, above minimum, under £20 */}
+              {deliveryType === 'delivery' && meetsMinimum && smallOrderFee > 0 && (
+                <div className="px-4 py-3 rounded-xl text-sm flex items-start gap-2" style={{ backgroundColor: '#FFFBEB', color: '#92400E' }}>
+                  <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+                  <span>
+                    <strong>£1.50 small order fee</strong> on delivery orders under £20 — add <strong>{fmt(20 - effectiveSubtotal)}</strong> more to waive it, or switch to collection for free.
+                  </span>
+                </div>
+              )}
 
               {/* Card payment */}
               {canCheckout && (
@@ -1064,12 +1095,14 @@ const CheckoutInner = () => {
 
               {/* Pay button */}
               {canCheckout && (
-                <button onClick={handleOrder} disabled={submitting}
+                <button onClick={handleOrder} disabled={submitting || !meetsMinimum}
                   className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-60"
-                  style={{ background: 'linear-gradient(135deg, #800020, #5C0018)' }}>
+                  style={{ background: meetsMinimum ? 'linear-gradient(135deg, #800020, #5C0018)' : '#9CA3AF', cursor: meetsMinimum ? 'pointer' : 'not-allowed' }}>
                   {submitting
                     ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
-                    : <>{deliveryType === 'takeaway' ? 'Pay & collect' : 'Pay'} {fmt(grandTotal)}</>
+                    : !meetsMinimum
+                      ? <>Add {fmt(MINIMUM_ORDER - effectiveSubtotal)} more to order</>
+                      : <>{deliveryType === 'takeaway' ? 'Pay & collect' : 'Pay'} {fmt(grandTotal)}</>
                   }
                 </button>
               )}
