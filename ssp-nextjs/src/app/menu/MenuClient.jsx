@@ -6,6 +6,7 @@ import { buildItemUrl } from '@/lib/itemUrl';
 import { Flame, ShoppingCart, ArrowRight, Search, Bell } from 'lucide-react';
 import { useNotifyMe } from '@/context/NotifyMeContext';
 import { useCart } from '@/context/CartContext';
+import { isOrderable } from '@/config/softLaunch';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
@@ -154,7 +155,7 @@ const Menu = ({ initialItems = [] }) => {
                       <p className="text-xs text-gray-500 line-clamp-1 mb-2 flex-1">{dish.description}</p>
                       <div className="flex justify-between items-center">
                         <span className="text-base font-bold" style={{ color: '#800020' }}>£{dish.price.toFixed(2)}</span>
-                        {dish.category === 'breakfast' ? (
+                        {isOrderable(dish.category) ? (
                           <button onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` }); }} className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>
                             <ShoppingCart size={11} /> Add
                           </button>

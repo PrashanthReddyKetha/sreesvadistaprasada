@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { buildItemUrl } from '@/lib/itemUrl';
-import { ShoppingBag, ShoppingCart, Search, X, Bell } from 'lucide-react';
-import { useNotifyMe } from '@/context/NotifyMeContext';
+import { ShoppingBag, ShoppingCart, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
@@ -16,7 +15,6 @@ const StreetFood = ({ initialItems = [] }) => {
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [search, setSearch] = useState('');
   const { addToCart } = useCart();
-  const { openNotifyMe } = useNotifyMe();
 
   useEffect(() => {
     api.get('/menu?category=streetFood&available=true')
@@ -101,10 +99,10 @@ const StreetFood = ({ initialItems = [] }) => {
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3 flex-1">{dish.description}</p>
                       )}
                       <button
-                        onClick={e => { e.preventDefault(); e.stopPropagation(); openNotifyMe(dish.name, dish.category || 'street-food'); }}
-                        className="w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all hover:opacity-90 active:scale-95"
-                        style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.45)', backgroundColor: 'rgba(139,105,20,0.06)' }}>
-                        <Bell size={12} /> Coming Soon · Notify Me
+                        onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: dish.id, name: dish.name, price: dish.price, image: dish.image, category: dish.category }); }}
+                        className="w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
+                        style={{ backgroundColor: '#1D4ED8' }}>
+                        <ShoppingCart size={13} /> Add to Basket
                       </button>
                     </div>
                   </div>

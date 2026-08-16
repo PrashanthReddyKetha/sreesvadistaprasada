@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { buildItemUrl } from '@/lib/itemUrl';
-import { ShoppingCart, Droplets, Search, X, Bell } from 'lucide-react';
-import { useNotifyMe } from '@/context/NotifyMeContext';
+import { ShoppingCart, Droplets, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
@@ -15,7 +14,7 @@ const Drinks = ({ initialItems = [] }) => {
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [search, setSearch] = useState('');
-  const { openNotifyMe } = useNotifyMe();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     api.get('/menu?category=drinks&available=true')
@@ -101,10 +100,10 @@ const Drinks = ({ initialItems = [] }) => {
                       )}
                       <div className="w-full space-y-1.5">
                         <button
-                          onClick={e => { e.preventDefault(); e.stopPropagation(); openNotifyMe(drink.name, drink.category || 'drinks'); }}
-                          className="w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all hover:opacity-90 active:scale-95"
-                          style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.45)', backgroundColor: 'rgba(139,105,20,0.06)' }}>
-                          <Bell size={12} /> Coming Soon · Notify Me
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: drink.id, name: drink.name, price: drink.price, image: drink.image, category: drink.category }); }}
+                          className="w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
+                          style={{ backgroundColor: '#7E22CE' }}>
+                          <ShoppingCart size={13} /> Add to Basket
                         </button>
                       </div>
                     </div>

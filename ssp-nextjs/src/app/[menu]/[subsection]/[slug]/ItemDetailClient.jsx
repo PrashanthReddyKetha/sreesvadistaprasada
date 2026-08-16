@@ -12,6 +12,7 @@ import { trackViewItem, trackNotifyMeSignup } from '@/lib/analytics';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useNotifyMe } from '@/context/NotifyMeContext';
+import { isOrderable } from '@/config/softLaunch';
 import api from '@/api';
 import { buildItemUrl } from '@/lib/itemUrl';
 
@@ -120,7 +121,7 @@ const MiniCard = ({ item }) => {
         <p className="text-xs font-semibold text-gray-800 line-clamp-1">{item.name}</p>
         <div className="flex items-center justify-between mt-1.5">
           <span className="text-sm font-bold" style={{ color:'#800020' }}>£{item.price?.toFixed(2)}</span>
-          {item.category === 'breakfast' ? (
+          {isOrderable(item.category) ? (
             <button onClick={e => { e.preventDefault(); addToCart({ ...item, price:`£${item.price.toFixed(2)}` }); }}
               className="w-6 h-6 rounded-full flex items-center justify-center text-white"
               style={{ backgroundColor:'#800020' }}>
@@ -356,7 +357,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
                 </button>
               </div>
 
-              {item.category === 'breakfast' ? (
+              {isOrderable(item.category) ? (
                 <>
                   <div className="flex items-center gap-3">
                     <p className="text-sm font-semibold" style={{ color:'#5C4B47' }}>Quantity</p>
@@ -384,7 +385,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
                 <>
                   <div className="rounded-xl p-4 text-center" style={{ backgroundColor:'rgba(139,105,20,0.06)', border:'1px dashed rgba(139,105,20,0.5)' }}>
                       <p className="text-sm font-bold mb-1" style={{ color:'#8B6914' }}>🕐 Launching Soon</p>
-                      <p className="text-xs text-gray-500">Currently serving Breakfast only — this dish is coming very soon!</p>
+                      <p className="text-xs text-gray-500">This dish is coming very soon!</p>
                     </div>
                     <button onClick={() => openNotifyMe(item.name, item.category)}
                       className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold border transition-all hover:opacity-90 active:scale-95"
@@ -627,7 +628,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
                 <p className="text-xs" style={{ color:'rgba(244,196,48,0.7)' }}>Save 5% together</p>
               </div>
             </div>
-            {item.category === 'breakfast' ? (
+            {isOrderable(item.category) ? (
               <button onClick={() => {
                 addToCart({ ...item, price:`£${item.price.toFixed(2)}` });
                 if (goesWith[0]) addToCart({ ...goesWith[0], price:`£${goesWith[0].price.toFixed(2)}` });

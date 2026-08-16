@@ -1,10 +1,13 @@
 /**
  * Soft-launch configuration.
  * When the full menu is ready, remove this file and all imports of it.
- * Single place to flip: add categories to ORDERABLE_CATEGORIES as they go live.
+ * Single place to flip: add/remove categories from ORDERABLE_CATEGORIES as they go live.
+ *
+ * Pickles & Podis (Hot, Sweet & Pickles / /snacks) are intentionally excluded —
+ * that section shows a dedicated "coming soon" page instead of Add to Cart.
  */
 
-const ORDERABLE_CATEGORIES = new Set(['breakfast'])
+const ORDERABLE_CATEGORIES = new Set(['breakfast', 'nonveg', 'veg', 'drinks', 'streetfood', 'ragispecials'])
 
 /** Returns true if the given menu category can be ordered right now */
 export const isOrderable = (category?: string | null): boolean =>
