@@ -583,10 +583,6 @@ async def sync_menu_may_2026():
         if result.modified_count:
             print(f"  Renamed: {old_name} → {new_name}")
 
-    # Unhide items returning to the menu
-    for name in ["Plain Dosa (2 pcs)", "Upma"]:
-        await db.menu_items.update_one({"name": name}, {"$set": {"available": True}})
-
     # Cross-page veg starters → also appear on Street Food page
     cross_page = [
         "Veg Manchurian", "Gobi Manchurian", "Crispy Bhindi", "Crispy Corn",
@@ -639,7 +635,11 @@ async def update_item_categories():
 
 
 async def cleanup_menu_april_2026():
-    """Full sync of prices, categories, subcategories and extra_categories from MENU_ITEMS."""
+    """Full sync of prices, categories, subcategories and extra_categories from MENU_ITEMS.
+
+    Deliberately does NOT touch `available` — that field is admin-controlled at
+    runtime (hide/show in the admin panel) and must survive backend restarts.
+    """
     seed_by_name = {item["name"]: item for item in MENU_ITEMS}
     for name, seed_item in seed_by_name.items():
         await db.menu_items.update_one(
@@ -652,7 +652,6 @@ async def cleanup_menu_april_2026():
                 "subcategory":      seed_item["subcategory"],
                 "spice_level":      seed_item["spice_level"],
                 "is_veg":           seed_item["is_veg"],
-                "available":        seed_item["available"],
                 "extra_categories": seed_item.get("extra_categories", []),
             }}
         )
