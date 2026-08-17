@@ -15,6 +15,16 @@ const nextConfig = {
   },
   // Allow JSX in .jsx files imported from pages/components
   transpilePackages: [],
+  experimental: {
+    // Force back/forward and re-visit navigations to always re-fetch page data
+    // instead of reusing the Router Cache. Without this, admin availability
+    // changes (e.g. hiding a menu item) can keep showing stale items to anyone
+    // who navigates back to a menu page they'd already visited this session.
+    staleTimes: {
+      dynamic: 0,
+      static: 0,
+    },
+  },
 }
 
 module.exports = nextConfig
