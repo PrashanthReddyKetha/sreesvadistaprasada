@@ -1,7 +1,4 @@
-// Short TTL: this is purely to dedupe rapid duplicate calls (e.g. quick tab
-// switches), not a source of truth. Availability changes made in the admin
-// panel must show up quickly everywhere, so keep this window small.
-const TTL = 30 * 1000; // 30 sec
+const TTL = 5 * 60 * 1000; // 5 min
 
 export function getCached(key) {
   try {
