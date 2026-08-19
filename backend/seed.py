@@ -224,7 +224,8 @@ MENU_ITEMS = [
     {"name": "Onion Mirchi Bhajji", "price": 5.99, "category": "veg", "subcategory": "Starters and Evening Delights", "spice_level": 3, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["veg_starter"], "available": True, "extra_categories": _SF,
      "description": "Thick-sliced onions and green chillies dipped in a spiced gram flour batter and fried until golden. Crunchy, fiery and perfect with tea.",
      "seo_meta_description": "Onion Mirchi Bhajji delivery Milton Keynes — onions and green chillies in spiced batter, fried crispy. Andhra street food classic. Order now."},
-    {"name": "Punugulu", "price": 5.99, "category": "veg", "subcategory": "Starters and Evening Delights", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["veg_starter"], "available": True, "extra_categories": _SF,
+    {"name": "Punugulu", "price": 5.99, "category": "veg", "subcategory": "Starters and Evening Delights", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["veg_starter"], "available": True,
+     "extra_categories": [{"category": "streetFood", "subcategory": None}, {"category": "breakfast", "subcategory": "Poori & Others"}],
      "description": "Bite-sized idli batter fritters deep-fried until puffed and golden. Tossed with curry leaves and chilli powder.",
      "seo_meta_description": "Punugulu delivery Milton Keynes — puffed idli batter fritters with curry leaves and chilli. Andhra street food. Order online now."},
     {"name": "Cut Mirchi", "price": 5.99, "category": "veg", "subcategory": "Starters and Evening Delights", "spice_level": 4, "is_veg": True, "featured": False, "tag": "Spicy", "allergens": [], "image": IMG["veg_starter"], "available": True, "extra_categories": _SF,
@@ -646,14 +647,8 @@ async def sync_menu_may_2026():
             {"$set": {"extra_categories": [{"category": "streetFood", "subcategory": None}]}}
         )
 
-    # Punugulu also appears on Street Food AND Breakfast → Poori & Others
-    await db.menu_items.update_one(
-        {"name": "Punugulu"},
-        {"$set": {"extra_categories": [
-            {"category": "streetFood", "subcategory": None},
-            {"category": "breakfast", "subcategory": "Poori & Others"},
-        ]}}
-    )
+    # Punugulu's extra_categories (streetFood + breakfast/Poori & Others) is defined
+    # directly on its MENU_ITEMS entry and kept in sync by cleanup_menu_april_2026().
 
     # Veg Fried Rice appears in both Indo Chinese and Biriyanis & Rice tabs
     await db.menu_items.update_one(
