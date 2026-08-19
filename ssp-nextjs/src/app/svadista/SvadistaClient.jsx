@@ -29,7 +29,8 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window === 'undefined') return initialTab;
-    return sessionStorage.getItem(SK) || initialTab;
+    const stored = sessionStorage.getItem(SK);
+    return (stored && TABS.includes(stored)) ? stored : initialTab;
   });
   const [search, setSearch] = useState('');
   const tabRowRef = useRef(null);

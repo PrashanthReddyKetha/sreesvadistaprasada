@@ -27,7 +27,7 @@ const CATEGORY_CONFIG = {
     image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800',
     gradient: ['rgba(0,0,0,0)', 'rgba(100,30,30,0.5)', 'rgba(100,30,30,0.92)'],
     accent: '#FCA5A5',
-    tabs: ['All', 'Starters', 'Egg Specials', 'Curries', 'Biriyani', 'Indo - Chinese', 'Rice Bowls'],
+    tabs: ['All', 'Starters', 'Egg Specials', 'Curries', 'Biriyani', 'Indo - Chinese', 'Rice Bowls', 'Ragi Specials', 'Protein & Healthy Bowls'],
   },
   Prasada: {
     label: 'Sree Prasada',
@@ -35,7 +35,7 @@ const CATEGORY_CONFIG = {
     image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800',
     gradient: ['rgba(0,0,0,0)', 'rgba(40,80,50,0.5)', 'rgba(40,80,50,0.92)'],
     accent: '#86EFAC',
-    tabs: ['All', 'Starters and Evening Delights', 'Indo Chinese', 'Curries & Daal', 'Naivedyam', 'Biriyanis & Rice'],
+    tabs: ['All', 'Starters and Evening Delights', 'Indo Chinese', 'Curries', 'Naivedyam', 'Biriyanis & Rice', 'Ragi Specials', 'Protein & Healthy Bowls'],
   },
   Breakfast: {
     label: 'Breakfast',
@@ -43,7 +43,7 @@ const CATEGORY_CONFIG = {
     image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800',
     gradient: ['rgba(0,0,0,0)', 'rgba(120,70,20,0.5)', 'rgba(120,70,20,0.9)'],
     accent: COLORS.gold,
-    tabs: ['All', 'Idli & Vada', 'Dosas', 'Poori & Others'],
+    tabs: ['All', 'Idli & Vada', 'Dosas', 'Poori & Others', 'English Breakfast'],
   },
   Snacks: {
     label: 'Snacks & Pickles',
@@ -138,7 +138,8 @@ export default function CategoryScreen() {
   const filtered = items.filter((item) => {
     if (activeTab === 'All') return true;
     if (config.tabField === 'category') return item.category === activeTab;
-    return item.subcategory === activeTab;
+    return item.subcategory === activeTab ||
+      (item.extra_categories || []).some(ec => ec.category === config.apiCategory && ec.subcategory === activeTab);
   });
 
   const getQty = (itemId) => {
