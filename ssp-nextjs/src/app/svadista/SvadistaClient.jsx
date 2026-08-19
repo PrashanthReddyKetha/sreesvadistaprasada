@@ -9,7 +9,7 @@ import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 
-const TABS = ['Starters', 'Curries', 'Biriyani', 'Rice Bowls', 'Egg Specials', 'Indo - Chinese', 'All'];
+const TABS = ['Starters', 'Curries', 'Biriyani', 'Rice Bowls', 'Egg Specials', 'Indo - Chinese', 'Ragi Specials', 'Protein & Healthy Bowls', 'All'];
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
@@ -70,7 +70,10 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
 
   const byTab = activeTab === 'All'
     ? [...items].sort((a, b) => a.name.localeCompare(b.name))
-    : [...items].filter(i => i.subcategory === activeTab).sort((a, b) => a.name.localeCompare(b.name));
+    : [...items].filter(i =>
+        i.subcategory === activeTab ||
+        (i.extra_categories || []).some(ec => ec.category === 'nonVeg' && ec.subcategory === activeTab)
+      ).sort((a, b) => a.name.localeCompare(b.name));
 
   const filtered = search.trim()
     ? byTab.filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()))

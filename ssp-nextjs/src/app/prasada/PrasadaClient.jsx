@@ -9,15 +9,17 @@ import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 
-const TABS = ['Bites & Starters', 'Curries & Daal', 'Biriyanis & Rice', 'Rice Bowls', 'Indo Chinese', '🪔 Naivedyam', 'All'];
+const TABS = ['Bites & Starters', 'Curries', 'Biriyanis & Rice', 'Rice Bowls', 'Indo Chinese', '🪔 Naivedyam', 'Ragi Specials', 'Protein & Healthy Bowls', 'All'];
 
 const SECTION_MESSAGES = {
   'Bites & Starters': { icon: '🌿', text: 'Light bites and crispy evening delights — the perfect way to begin.' },
   'Indo Chinese': { icon: '🥢', text: 'Desi-Chinese fusion with a South Indian soul — bold, tangy, utterly addictive.' },
-  'Curries & Daal': { icon: '🫕', text: 'Slow-cooked gravies and lentils, simmered in generations-old spice blends.' },
+  'Curries': { icon: '🫕', text: 'Slow-cooked gravies and lentils, simmered in generations-old spice blends.' },
   '🪔 Naivedyam': { icon: '🪔', text: 'Sacred rice offerings, prepared with devotion.' },
   'Biriyanis & Rice': { icon: '🌾', text: 'Fragrant long-grain rice layered with spices, herbs, and wholesome vegetables.' },
   'Rice Bowls': { icon: '🍱', text: 'Complete meals in a bowl — rice, dal, pickle and more.' },
+  'Ragi Specials': { icon: '🌾', text: 'Wholesome finger millet dishes — nutritious, traditional and deeply rooted in Andhra life.' },
+  'Protein & Healthy Bowls': { icon: '🥗', text: 'Balanced bowls built for energy — grains, protein and fresh vegetables in every bite.' },
 };
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
