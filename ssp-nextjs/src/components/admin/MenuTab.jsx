@@ -130,6 +130,7 @@ export default function MenuTab() {
       name: item.name, description: item.description, price: item.price,
       category: item.category,
       extraCats: (item.extra_categories || []).map(e => e.category),
+      origExtraCats: item.extra_categories || [],
       subcategory: item.subcategory || '',
       spice_level: item.spice_level, is_veg: item.is_veg, available: item.available,
       featured: item.featured, image: item.image || '', tag: item.tag || '',
@@ -160,7 +161,13 @@ export default function MenuTab() {
   const save = async (id) => {
     setSaving(true);
     try {
-      await api.put(`/menu/${id}`, { ...editForm, price: parseFloat(editForm.price), spice_level: parseInt(editForm.spice_level), extra_categories: (editForm.extraCats || []).map(c => ({ category: c })) });
+      // Preserve each category's existing subcategory (if any) instead of wiping it —
+      // the picker only lets admins toggle categories on/off, not set a subcategory.
+      const extra_categories = (editForm.extraCats || []).map(c => {
+        const orig = (editForm.origExtraCats || []).find(e => e.category === c);
+        return { category: c, subcategory: orig ? orig.subcategory : null };
+      });
+      await api.put(`/menu/${id}`, { ...editForm, price: parseFloat(editForm.price), spice_level: parseInt(editForm.spice_level), extra_categories });
       clearMenuCache(); setMsg('Saved!'); setEditingId(null); await load();
       setTimeout(() => setMsg(''), 2000);
     } catch { setMsg('Save failed.'); }
