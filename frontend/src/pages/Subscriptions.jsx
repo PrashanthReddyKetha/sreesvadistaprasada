@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star, CreditCard, Lock } from 'lucide-react';
+import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star, CreditCard, Lock, Truck, MapPin, Users, Calendar } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useAuth } from '../context/AuthContext';
@@ -93,7 +93,7 @@ const STORAGE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 const PLANS = [
   { id: 'weekly',  name: 'Try a Week',  price: 75,  perMeal: 15,  meals: 5,  badge: 'Start here',   badgeStyle: { backgroundColor: C.greenLight, color: C.greenText } },
-  { id: 'monthly', name: 'Monthly saver', price: 250, perMeal: 12.5, meals: 20, badge: 'Best value',  badgeStyle: { backgroundColor: C.amberLight, color: C.amberText } },
+  { id: 'monthly', name: 'Monthly saver', price: 250, perMeal: 12.5, meals: 20, badge: 'Best value',  badgeStyle: { backgroundColor: C.amberLight, color: C.amberText }, save: 'Save £50 vs weekly' },
 ];
 
 const BOXES = [
@@ -318,6 +318,134 @@ function SocialProofBlock({ boxId }) {
         <StarRating count={s.rating} reviewCount={s.reviewCount} />
       </div>
       <ReviewCarousel boxId={boxId} />
+    </div>
+  );
+}
+
+/* ── landing page blocks ─────────────────────── */
+function getOrderDeadline(weekCfg) {
+  // Sunday 17:00 before the recommended start Monday
+  const d = new Date(weekCfg.weeks[0].monday);
+  d.setDate(d.getDate() - 1);
+  d.setHours(17, 0, 0, 0);
+  return d;
+}
+
+function DeadlineCountdown({ weekCfg }) {
+  const deadline = useMemo(() => getOrderDeadline(weekCfg), [weekCfg]);
+  const [left, setLeft] = useState(() => deadline - Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setLeft(deadline - Date.now()), 60000);
+    return () => clearInterval(t);
+  }, [deadline]);
+  if (left <= 0) return null;
+  const days = Math.floor(left / 86400000);
+  const hours = Math.floor((left % 86400000) / 3600000);
+  const mins = Math.floor((left % 3600000) / 60000);
+  const startLabel = fmtShort(isoDate(weekCfg.weeks[0].monday));
+  return (
+    <div className="rounded-lg px-4 py-3 mb-4 flex items-center gap-3 flex-wrap" style={{ backgroundColor: C.amberLight, border: `0.5px solid ${C.darkGold}` }}>
+      <Clock size={15} style={{ color: C.amberText }} className="shrink-0" />
+      <p className="text-sm font-medium" style={{ color: C.amberText }}>
+        Order by <strong>Sunday 5pm</strong> to get meals from Monday {startLabel} — closes in{' '}
+        <strong>{days > 0 ? `${days}d ` : ''}{hours}h {mins}m</strong>
+      </p>
+    </div>
+  );
+}
+
+function LandingMenuPeek({ weekCfg }) {
+  const [dishes, setDishes] = useState(null);
+  useEffect(() => {
+    const week = isoDate(weekCfg.weeks[0].monday);
+    api.get(`/menu/weekly-preview?week=${week}&box_type=svadista`)
+      .then(res => {
+        const days = Object.values(res.data?.days || {}).slice(0, 5);
+        const names = days.map(d => {
+          if (d.is_placeholder || !d.items?.length) return null;
+          const it = d.items[0];
+          return typeof it === 'object' ? it.name : it;
+        });
+        if (names.some(Boolean)) setDishes(names);
+      })
+      .catch(() => {});
+  }, [weekCfg]);
+  return (
+    <section className="py-10 md:py-14 px-4 md:px-8" style={{ backgroundColor: C.surface }}>
+      <div className="max-w-5xl mx-auto">
+        <p className="text-sm uppercase tracking-[0.25em] mb-2 text-center" style={{ color: C.darkGold }}>This week in the dabba</p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-2" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>A different meal every day</h2>
+        <p className="text-sm text-center mb-8" style={{ color: C.muted }}>Mon–Fri, a rotating South Indian menu — never the same lunch twice in a week.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {WEEKDAY_LABELS.map((day, i) => (
+            <div key={day} className={`rounded-xl overflow-hidden bg-white ${i === 4 ? 'col-span-2 sm:col-span-1' : ''}`} style={{ border: '0.5px solid #e0d9d0' }}>
+              <div className="relative w-full" style={{ aspectRatio: '4/3' }}>
+                <img src={DAY_FOOD_IMGS[i]} alt={dishes?.[i] || `South Indian meal — ${day}`} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+              </div>
+              <div className="px-3 py-2">
+                <p className="text-[10px] font-bold tracking-wider" style={{ color: C.darkGold }}>{day}</p>
+                <p className="text-xs font-semibold truncate" style={{ color: C.dark }}>{dishes?.[i] || "Chef's choice"}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-center mt-4" style={{ color: C.muted }}>You'll see the full week's menu before you pay — nothing is a surprise.</p>
+      </div>
+    </section>
+  );
+}
+
+const LANDING_FAQS = [
+  { q: "What if I'm not home when the meal arrives?", a: 'You choose at checkout — we can call you on arrival, leave it at your door, with a neighbour, or in your safe place.' },
+  { q: 'Can I pause or skip a week?', a: 'Yes. Going on holiday or need a break? Just message us and we pause your deliveries — no fuss, no charge.' },
+  { q: 'How does the food stay hot?', a: 'Every meal is cooked that morning, packed and sealed hot, and delivered between 12–2pm — it arrives ready to eat.' },
+  { q: 'Is there a contract or auto-renewal?', a: 'No. Plans never auto-renew and there is nothing to cancel — you are always in control.' },
+  { q: 'Can you handle dietary preferences?', a: 'Yes — no onion/garlic, less or extra spice, Jain, gluten-free where possible and more. You set your preferences during sign-up.' },
+  { q: 'Where do you deliver?', a: 'Across all Milton Keynes postcodes (MK1–MK19) — home, office, anywhere that suits you.' },
+];
+
+function LandingFaq() {
+  return (
+    <section className="py-10 md:py-14 px-4 md:px-8" style={{ backgroundColor: C.surface }}>
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Questions, answered</h2>
+        <div className="space-y-3">
+          {LANDING_FAQS.map((f, i) => (
+            <details key={i} className="rounded-xl bg-white px-5 py-4 group" style={{ border: '0.5px solid #e0d9d0' }}>
+              <summary className="text-sm font-semibold cursor-pointer list-none flex items-center justify-between gap-3" style={{ color: C.dark }}>
+                {f.q}
+                <ChevronRight size={15} className="shrink-0 transition-transform group-open:rotate-90" style={{ color: C.primary }} />
+              </summary>
+              <p className="text-sm mt-3 leading-relaxed" style={{ color: C.muted }}>{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'FAQPage',
+        mainEntity: LANDING_FAQS.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+      }) }} />
+    </section>
+  );
+}
+
+function StickyMobileCta() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 480);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  if (!show) return null;
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden px-4 py-3" style={{ backgroundColor: C.primary, boxShadow: '0 -4px 16px rgba(0,0,0,0.25)' }}>
+      <a href="#plans" className="flex items-center justify-between gap-3">
+        <span className="text-xs text-white/90 font-medium">From £12.50 a meal · No contract</span>
+        <span className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-sm shrink-0" style={{ backgroundColor: C.gold, color: C.dark }}>
+          See plans <ArrowRight size={14} />
+        </span>
+      </a>
     </div>
   );
 }
@@ -779,9 +907,102 @@ const SubscriptionsInner = () => {
             <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service</p>
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Home-Cooked Indian Tiffin Service &amp; Meal Subscriptions in Milton Keynes</h1>
             <p className="text-sm text-gray-200">Fresh South Indian meals delivered Mon–Fri. No cooking required.</p>
+            <p className="text-sm font-semibold mt-1.5" style={{ color: '#F4C430' }}>From £12.50 a meal · No contract, no auto-renewal</p>
+            <div className="flex items-center gap-5 mt-5 flex-wrap">
+              <a href="#plans" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm transition-colors duration-150" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
+                See plans &amp; pricing <ArrowRight size={15} />
+              </a>
+            </div>
           </div>
         </div>
       </section>
+
+      {/* Quick trust strip */}
+      {pageState === 'wizard' && step === 1 && (
+        <section className="py-5 px-4 md:px-8" style={{ backgroundColor: C.surface, borderBottom: '0.5px solid rgba(128,0,32,0.1)' }}>
+          <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            {[
+              { icon: Star, text: '4.9/5 average rating' },
+              { icon: Users, text: '100+ active subscribers' },
+              { icon: MapPin, text: 'Delivering across MK1–MK19' },
+              { icon: Shield, text: 'No contracts — cancel anytime' },
+            ].map((row, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <row.icon size={15} style={{ color: C.primary }} />
+                <span className="text-xs font-semibold" style={{ color: C.dark }}>{row.text}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Why Dabba Wala — freshly cooked, not pre-cooked */}
+      {pageState === 'wizard' && step === 1 && (
+        <section className="py-10 md:py-16 px-4 md:px-8" style={{ backgroundColor: C.primary }}>
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="relative rounded-xl overflow-hidden order-1 md:order-none" style={{ aspectRatio: '4/3', boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}>
+              <img src="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&q=85&w=800"
+                alt="Fresh South Indian curry being cooked the same morning it's delivered" className="absolute inset-0 w-full h-full object-cover" />
+              <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[11px] font-semibold text-white" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
+                Cooked this morning, not last week
+              </span>
+            </div>
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>Why Dabba Wala</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Not a meal-prep box. A hot meal, cooked today.
+              </h2>
+              <p className="text-sm text-gray-200 mb-6">
+                Most Milton Keynes meal services batch-cook and reheat. We don't. Every dabba is cooked fresh that morning in our own kitchen and delivered hot — to your home, your office, anywhere in MK.
+              </p>
+              <p className="text-sm italic mb-6" style={{ color: '#F4C430' }}>
+                Cooked by our own family kitchen in Milton Keynes — the same hands, every single day.
+              </p>
+              <div className="space-y-4">
+                {[
+                  { icon: Flame, text: 'Freshly cooked every morning — never frozen, never reheated' },
+                  { icon: Clock, text: 'Made to order for that day, not batch-prepped for the week' },
+                  { icon: Truck, text: 'Delivered hot, straight to your door, office or anywhere in MK' },
+                ].map((row, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border" style={{ borderColor: '#F4C430' }}>
+                      <row.icon size={16} style={{ color: '#F4C430' }} />
+                    </div>
+                    <p className="text-sm text-white">{row.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* This week's menu peek */}
+      {pageState === 'wizard' && step === 1 && <LandingMenuPeek weekCfg={weekCfg} />}
+
+      {/* How it works */}
+      {pageState === 'wizard' && step === 1 && (
+        <section className="py-10 md:py-14 px-4 md:px-8" style={{ backgroundColor: C.cream }}>
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>How it works</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {[
+                { icon: Package, title: 'Pick your dabba', desc: 'Prasada, Svadista, or a bit of both. Weekly trial or monthly saver.' },
+                { icon: Calendar, title: 'Tell us your week', desc: 'Pick a start date, any dietary preferences, and where to deliver.' },
+                { icon: Truck, title: 'Open it warm', desc: 'Cooked that morning and delivered hot, Mon–Fri, straight to you.' },
+              ].map((row, i) => (
+                <div key={i} className="text-center">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: C.surface, border: `2px solid ${C.primary}` }}>
+                    <row.icon size={20} style={{ color: C.primary }} />
+                  </div>
+                  <h3 className="font-bold mb-1" style={{ color: C.dark }}>{row.title}</h3>
+                  <p className="text-sm" style={{ color: C.muted }}>{row.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Resume banner */}
       {savedProgress && pageState === 'wizard' && step === 1 && (
@@ -815,7 +1036,7 @@ const SubscriptionsInner = () => {
         </div>
       )}
 
-      <div ref={wizardTopRef} />
+      <div id="plans" ref={wizardTopRef} style={{ scrollMarginTop: 80 }} />
       {step === 1 && (
         <div className="text-center py-10 px-4 md:px-8" style={{ backgroundColor: C.cream }}>
           <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: C.darkGold }}>Your daily home kitchen</p>
@@ -837,6 +1058,8 @@ const SubscriptionsInner = () => {
             <div>
               <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Choose your plan</h2>
               <p className="text-sm mb-6" style={{ color: C.muted }}>Home-cooked South Indian meals, freshly made every morning, delivered to your door.</p>
+
+              <DeadlineCountdown weekCfg={weekCfg} />
 
               {/* Encouraging message */}
               {(!user || !lapsedSub) && (
@@ -860,6 +1083,7 @@ const SubscriptionsInner = () => {
                     <p className="mb-1" style={{ fontSize: 24, fontWeight: 500, color: C.primary }}>£{plan.price}</p>
                     <p className="text-sm" style={{ color: C.muted }}>{plan.meals} meals · Mon–Fri · Serves 1</p>
                     <p className="text-xs" style={{ color: C.muted }}>£{plan.perMeal} per meal · Lunch delivery 12–2pm</p>
+                    {plan.save && <p className="text-xs font-bold mt-1.5" style={{ color: C.greenText }}>{plan.save}</p>}
                     {selectedPlan === plan.id && <div className="absolute top-4 right-4"><Check size={16} style={{ color: C.primary }} /></div>}
                   </button>
                 ))}
@@ -1565,6 +1789,10 @@ const SubscriptionsInner = () => {
 
         </div>
       </section>
+
+      {/* FAQ + sticky CTA — landing extras on step 1 */}
+      {pageState === 'wizard' && step === 1 && <LandingFaq />}
+      {pageState === 'wizard' && step === 1 && <StickyMobileCta />}
     </div>
   );
 };
