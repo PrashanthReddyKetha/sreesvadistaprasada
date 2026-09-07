@@ -58,6 +58,32 @@ export default function OrderClient() {
   const [search, setSearch] = useState('');
   const [activeSection, setActiveSection] = useState('breakfast');
   const sectionRefs = useRef({});
+  const stickyRef = useRef(null);
+  const [stickyH, setStickyH] = useState(300);
+  const spyPaused = useRef(0);
+
+  // Measure the sticky block so section jumps and scroll-spy line up exactly
+  useEffect(() => {
+    const measure = () => stickyRef.current && setStickyH(stickyRef.current.offsetHeight);
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  });
+
+  // Scroll-spy — highlight the category currently at the top of the viewport
+  useEffect(() => {
+    const onScroll = () => {
+      if (Date.now() < spyPaused.current) return;
+      const probe = stickyH + 140; // px below the top of the viewport
+      let current = null;
+      for (const [id, el] of Object.entries(sectionRefs.current)) {
+        if (el && el.getBoundingClientRect().top <= probe) current = id;
+      }
+      if (current) setActiveSection(current);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [stickyH]);
 
   useEffect(() => {
     const cached = getCached('all');
@@ -75,7 +101,12 @@ export default function OrderClient() {
 
   const scrollTo = (id) => {
     setActiveSection(id);
-    sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    spyPaused.current = Date.now() + 900; // don't let the spy fight the smooth scroll
+    const el = sectionRefs.current[id];
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - stickyH - 110;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
   };
 
   const q = search.trim().toLowerCase();
@@ -113,9 +144,9 @@ export default function OrderClient() {
       </section>
 
       {/* ── Sticky order controls ── */}
-      <div className="sticky z-30 top-[calc(32px+4rem)] md:top-[calc(32px+5rem)]"
-        style={{ backgroundColor: C.ivory, borderBottom: `1px solid ${C.line}` }}>
-        <div className="max-w-3xl mx-auto px-4 pt-3 pb-2">
+      <div ref={stickyRef} className="sticky z-30 top-[calc(32px+4rem)] md:top-[calc(32px+5rem)]"
+        style={{ backgroundColor: C.ivory, borderBottom: `1px solid ${C.line}`, boxShadow: '0 4px 12px rgba(45,36,34,0.06)' }}>
+        <div className="max-w-3xl mx-auto px-4 pt-3 pb-3">
           {/* Collection / Delivery toggle */}
           <div className="flex rounded-xl p-1 gap-1" style={{ backgroundColor: '#F3EDE2' }}>
             {[['takeaway', '🛵 Collection · save 10%'], ['delivery', '🚚 Delivery']].map(([val, label]) => (
@@ -178,9 +209,8 @@ export default function OrderClient() {
           <p className="py-10 text-center text-sm" style={{ color: C.muted }}>No dishes match your search.</p>
         )}
         {bySection.map(sec => (
-          <section key={sec.id} ref={el => { sectionRefs.current[sec.id] = el; }}
-            style={{ scrollMarginTop: 'calc(32px + 4rem + 260px)' }}>
-            <h2 className="pt-6 pb-1 text-lg font-semibold" style={{ fontFamily: "'Playfair Display', serif", color: C.burgundy }}>
+          <section key={sec.id} ref={el => { sectionRefs.current[sec.id] = el; }}>
+            <h2 className="pt-8 pb-2 text-lg font-semibold" style={{ fontFamily: "'Playfair Display', serif", color: C.burgundy }}>
               {sec.name}
             </h2>
             {sec.items.map(d => {

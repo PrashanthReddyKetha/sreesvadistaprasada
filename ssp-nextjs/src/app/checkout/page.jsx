@@ -16,6 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
 import SlotPicker from '@/components/SlotPicker';
+import { getCached, setCached } from '@/api/menuCache';
 import { trackPurchase } from '@/lib/analytics';
 import { isOrderable } from '@/config/softLaunch';
 
@@ -185,7 +186,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
               <div className="flex justify-between text-sm">
                 <span className="flex items-center gap-1.5 text-gray-500"><Truck size={13} /> Delivery</span>
                 {!feeKnown
-                  ? <span className="text-xs text-gray-400 italic">Enter postcode below</span>
+                  ? <span className="text-xs text-gray-400 italic">Enter postcode above</span>
                   : deliveryFee === 0
                     ? <span className="font-semibold" style={{ color: '#166534' }}>Free</span>
                     : <span className="text-gray-600">{fmt(deliveryFee)}</span>
@@ -198,7 +199,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
             </div>
             {!feeKnown && deliveryType === 'delivery' && (
               <p className="text-[11px] text-gray-400">
-                Delivery fee and any small-order fee are added once we know your postcode.
+                Delivery fee and any small-order fee are added once you enter your postcode above.
               </p>
             )}
           </div>
@@ -234,6 +235,87 @@ function GuestPrompt({ onGuest, onSignIn }) {
         style={{ borderColor: '#E5E7EB', color: '#5C4B47' }}>
         Continue as Guest
       </button>
+    </div>
+  );
+}
+
+/* ── "Goes well with" — pairs_with upsell from items already in the basket ── */
+function PairsRow({ cartItems, addToCart }) {
+  const [menu, setMenu] = useState([]);
+  useEffect(() => {
+    const cached = getCached('all');
+    if (cached) { setMenu(cached); return; }
+    api.get('/menu?available=true')
+      .then(r => { setMenu(r.data); setCached('all', r.data); })
+      .catch(() => {});
+  }, []);
+
+  const inCart = new Set(cartItems.map(i => i.id));
+  const wanted = [];
+  const seen = new Set();
+  for (const ci of cartItems) {
+    const full = menu.find(m => m.id === ci.id);
+    for (const pid of (full?.pairs_with || [])) {
+      if (!inCart.has(pid) && !seen.has(pid)) { seen.add(pid); wanted.push(pid); }
+    }
+  }
+  const picks = wanted.map(pid => menu.find(m => m.id === pid && m.available)).filter(Boolean).slice(0, 4);
+  if (!picks.length) return null;
+
+  return (
+    <div className="rounded-2xl p-4" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(128,0,32,0.12)' }}>
+      <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: '#B8860B' }}>
+        Goes well with
+      </p>
+      <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+        {picks.map(m => (
+          <div key={m.id} className="flex-none w-32 rounded-xl overflow-hidden bg-white" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
+            {m.image
+              ? <Image src={m.image} alt={m.name} width={128} height={80} className="w-32 h-20 object-cover" />
+              : <div className="w-32 h-20" style={{ backgroundColor: 'rgba(128,0,32,0.06)' }} />}
+            <div className="p-2">
+              <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: '#2D2422' }}>{m.name}</p>
+              <div className="flex items-center justify-between mt-1.5">
+                <span className="text-[11px] font-black" style={{ color: '#800020' }}>£{Number(m.price).toFixed(2)}</span>
+                <button
+                  onClick={() => addToCart({ id: m.id, name: m.name, price: m.price, image: m.image, category: m.category })}
+                  className="px-2 py-1 rounded-full text-[10px] font-black"
+                  style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
+                  + ADD
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── UK phone input — fixed +44 prefix, user types the rest ──────────────── */
+function PhoneField({ value, onChange, locked, required: req }) {
+  // Stored value is the national part (e.g. "7700 900123"); +44 is implicit
+  const display = String(value || '').replace(/^\+44\s?/, '').replace(/^0/, '');
+  return (
+    <div>
+      <label className="text-xs font-semibold block mb-1" style={{ color: '#5C4B47' }}>
+        Phone {req && <span className="text-red-400">*</span>}
+      </label>
+      <div className="flex items-center rounded-xl border-2 overflow-hidden transition-colors focus-within:border-[#800020]"
+        style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: locked ? '#F9FAFB' : 'white' }}>
+        <span className="px-3 py-3 text-sm font-bold select-none" style={{ backgroundColor: 'rgba(128,0,32,0.06)', color: '#800020' }}>
+          🇬🇧 +44
+        </span>
+        <input
+          type="tel" inputMode="numeric" disabled={locked}
+          value={display}
+          onChange={e => onChange(e.target.value.replace(/[^\d\s]/g, '').replace(/^0/, ''))}
+          placeholder="7700 900123"
+          className="flex-1 px-3 py-3 text-sm outline-none bg-transparent"
+          style={{ color: '#2D2422' }}
+        />
+        {locked && <Lock size={12} className="mr-3 text-gray-300" />}
+      </div>
     </div>
   );
 }
@@ -796,7 +878,7 @@ const CheckoutInner = () => {
 
         const name  = ctx.form.name?.trim()  || ev.payerName  || '';
         const email = ctx.form.email?.trim() || ev.payerEmail || '';
-        const phone = ctx.form.phone?.trim() || ev.payerPhone || '';
+        const phone = ctx.form.phone?.trim() ? normPhone(ctx.form.phone) : (ev.payerPhone || '');
         const items = [
           ...ctx.cartItems.map(i => ({ menu_item_id: i.id, name: i.name, price: price(i.price), quantity: i.quantity })),
           ...(ctx.freeItem ? [{ menu_item_id: ctx.freeItem.id, name: ctx.freeItem.name, price: ctx.freeItemDiscount, quantity: 1 }] : []),
@@ -914,7 +996,7 @@ const CheckoutInner = () => {
       const res = await api.post('/orders', {
         customer_name:  form.name,
         customer_email: form.email,
-        customer_phone: form.phone,
+        customer_phone: normPhone(form.phone),
         items,
         delivery_type: deliveryType,
         delivery_address: deliveryType === 'delivery' ? {
@@ -1245,12 +1327,16 @@ const CheckoutInner = () => {
 
             {/* Guest mode — still offer sign-in */}
             {!user && guestMode && (
-              <div className="flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl text-xs"
-                style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(128,0,32,0.12)', color: '#5C4B47' }}>
-                <span>Checking out as a <b>guest</b> — you can still earn loyalty points with an account.</span>
+              <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl"
+                style={{ backgroundColor: 'rgba(244,196,48,0.12)', border: '1px solid rgba(244,196,48,0.5)' }}>
+                <p className="text-xs leading-relaxed" style={{ color: '#5C4B47' }}>
+                  🍛 <b style={{ color: '#800020' }}>Psst… ordering as a stranger?</b> In our kitchen, regulars get treated like family —
+                  every 5th order earns a <b style={{ color: '#8B6914' }}>FREE dish</b> of your choice. This order could be your first step.
+                </p>
                 <button onClick={() => setAuthOpen(true)}
-                  className="font-bold underline shrink-0" style={{ color: '#800020' }}>
-                  Sign in / Sign up
+                  className="shrink-0 px-3 py-2 rounded-lg text-xs font-black text-white"
+                  style={{ backgroundColor: '#800020' }}>
+                  Count me in
                 </button>
               </div>
             )}
@@ -1285,8 +1371,8 @@ const CheckoutInner = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Field label="Full Name" icon={User} value={form.name} onChange={set('name')}
                     placeholder="Your name" locked={!!user?.name && form.name === user.name} required />
-                  <Field label="Phone" icon={Phone} type="tel" value={form.phone} onChange={set('phone')}
-                    placeholder="+44..." locked={!!user?.phone && form.phone === user.phone} required />
+                  <PhoneField value={form.phone} onChange={set('phone')}
+                    locked={!!user?.phone && form.phone === user.phone} required />
                 </div>
                 {!user && (
                   <GuestPhoneVerify
@@ -1424,6 +1510,9 @@ const CheckoutInner = () => {
                 deliveryType={deliveryType}
                 feeKnown={deliveryType === 'takeaway' || !!validPricing}
               />
+
+              {/* Goes well with — pairs_with upsell */}
+              <PairsRow cartItems={cartItems} addToCart={addToCart} />
 
               {/* Small order fee nudge — delivery, above minimum, under £20 */}
               {deliveryType === 'delivery' && meetsMinimum && smallOrderFee > 0 && (
