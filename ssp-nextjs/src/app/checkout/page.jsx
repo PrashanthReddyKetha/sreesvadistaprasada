@@ -8,6 +8,8 @@ import {
   LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard, AlertCircle
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { auth as fbAuth } from '@/firebase';
 import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -24,6 +26,14 @@ const MINIMUM_ORDER = 15.00;
 const MIN_DELIVERY_FEE = 2.49; // Zone 1 floor — used before postcode is known
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
 const fmt   = (n)   => `£${Number(n).toFixed(2)}`;
+// Normalise a UK mobile for comparison/OTP: "07700 900123" → "+447700900123"
+const normPhone = (raw) => {
+  const clean = String(raw || '').replace(/\s/g, '');
+  if (clean.startsWith('+')) return clean;
+  if (clean.startsWith('0')) return `+44${clean.slice(1)}`;
+  return clean ? `+44${clean}` : '';
+};
+
 // "2026-09-07T18:15" → "6:15 pm"
 const slotLabel = (iso) => {
   if (!iso || iso.length < 16) return '';
@@ -97,7 +107,7 @@ function DeliveryBar({ total, freeOver, onAddMore }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery' }) {
+function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true }) {
   const [collapsed, setCollapsed] = useState(false);
   const grandTotal = grandTotalProp ?? (cartTotal - takeawayDiscount + (deliveryFee || 0));
 
@@ -174,16 +184,23 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
             {deliveryType === 'delivery' && (
               <div className="flex justify-between text-sm">
                 <span className="flex items-center gap-1.5 text-gray-500"><Truck size={13} /> Delivery</span>
-                {deliveryFee === 0
-                  ? <span className="font-semibold" style={{ color: '#166534' }}>Free</span>
-                  : <span className="text-gray-600">{fmt(deliveryFee)}</span>
+                {!feeKnown
+                  ? <span className="text-xs text-gray-400 italic">Enter postcode below</span>
+                  : deliveryFee === 0
+                    ? <span className="font-semibold" style={{ color: '#166534' }}>Free</span>
+                    : <span className="text-gray-600">{fmt(deliveryFee)}</span>
                 }
               </div>
             )}
             <div className="flex justify-between font-bold text-base pt-2 border-t" style={{ borderColor: 'rgba(128,0,32,0.12)', color: '#800020' }}>
-              <span style={{ color: '#2D2422' }}>Total</span>
+              <span style={{ color: '#2D2422' }}>{!feeKnown && deliveryType === 'delivery' ? 'Total before delivery' : 'Total'}</span>
               <span>{fmt(grandTotal)}</span>
             </div>
+            {!feeKnown && deliveryType === 'delivery' && (
+              <p className="text-[11px] text-gray-400">
+                Delivery fee and any small-order fee are added once we know your postcode.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -217,6 +234,97 @@ function GuestPrompt({ onGuest, onSignIn }) {
         style={{ borderColor: '#E5E7EB', color: '#5C4B47' }}>
         Continue as Guest
       </button>
+    </div>
+  );
+}
+
+/* ── Guest phone verification (Firebase OTP — same flow as NotifyMeDrawer) ── */
+function GuestPhoneVerify({ phone, verifiedPhone, onVerified }) {
+  const [step, setStep] = useState('idle'); // idle | otp
+  // All hooks must run before any early return
+  const unavailable = !fbAuth;
+  const [otp, setOtp] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const recaptchaRef = useRef(null);
+  const verifierRef = useRef(null);
+  const confirmRef = useRef(null);
+
+  const target = normPhone(phone);
+  const isVerified = !!target && verifiedPhone === target;
+  const canSend = target.length >= 12; // +44 + 10 digits
+
+  const sendOtp = async () => {
+    if (!fbAuth) { setErr('Verification unavailable right now — please try again shortly.'); return; }
+    setErr(''); setBusy(true);
+    try {
+      if (!verifierRef.current && recaptchaRef.current) {
+        verifierRef.current = new RecaptchaVerifier(fbAuth, recaptchaRef.current, { size: 'invisible' });
+      }
+      confirmRef.current = await signInWithPhoneNumber(fbAuth, target, verifierRef.current);
+      setStep('otp');
+    } catch {
+      setErr('Could not send the code — please check your number and try again.');
+      verifierRef.current = null;
+    } finally { setBusy(false); }
+  };
+
+  const confirmOtp = async () => {
+    setErr(''); setBusy(true);
+    try {
+      await confirmRef.current.confirm(otp);
+      onVerified(target);
+      setStep('idle'); setOtp('');
+    } catch {
+      setErr('Wrong code — please check and try again.');
+    } finally { setBusy(false); }
+  };
+
+  // Firebase not configured — never block guests from ordering
+  if (unavailable) return null;
+
+  if (isVerified) return (
+    <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#166534' }}>
+      <CheckCircle size={13} /> Mobile verified — we&apos;ll text your order updates here.
+    </div>
+  );
+
+  return (
+    <div className="rounded-xl p-3 space-y-2" style={{ backgroundColor: 'rgba(244,196,48,0.08)', border: '1px solid rgba(244,196,48,0.4)' }}>
+      {step === 'idle' ? (
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-xs" style={{ color: '#5C4B47' }}>
+            <b>Verify your mobile</b> so we can text you when your order is ready.
+          </p>
+          <button onClick={sendOtp} disabled={busy || !canSend}
+            className="px-4 py-2 rounded-lg text-xs font-bold text-white disabled:opacity-50"
+            style={{ backgroundColor: '#800020' }}>
+            {busy ? 'Sending…' : 'Text me a code'}
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 flex-wrap">
+          <input
+            type="text" inputMode="numeric" maxLength={6} autoFocus
+            value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+            onKeyDown={e => e.key === 'Enter' && otp.length === 6 && confirmOtp()}
+            placeholder="6-digit code"
+            className="flex-1 min-w-[120px] px-3 py-2 rounded-lg text-sm font-bold tracking-[0.3em] border-2 outline-none"
+            style={{ borderColor: 'rgba(128,0,32,0.25)', backgroundColor: 'white', color: '#2D2422' }}
+          />
+          <button onClick={confirmOtp} disabled={busy || otp.length < 6}
+            className="px-4 py-2 rounded-lg text-xs font-bold text-white disabled:opacity-50"
+            style={{ backgroundColor: '#166534' }}>
+            {busy ? 'Checking…' : 'Confirm'}
+          </button>
+          <button onClick={() => { setStep('idle'); setOtp(''); setErr(''); verifierRef.current = null; }}
+            className="text-xs underline" style={{ color: '#5C4B47' }}>
+            Resend
+          </button>
+        </div>
+      )}
+      {err && <p className="text-xs" style={{ color: '#C62828' }}>{err}</p>}
+      <div ref={recaptchaRef} />
     </div>
   );
 }
@@ -433,6 +541,8 @@ const CheckoutInner = () => {
   const [freeItem, setFreeItem] = useState(null);
   const [serverPricing, setServerPricing] = useState(null);
   const [calcError, setCalcError] = useState('');
+  const [unavailableItems, setUnavailableItems] = useState([]); // stale cart items no longer on the menu
+  const [verifiedPhone, setVerifiedPhone] = useState('');       // guest OTP-verified number
   const [postOrderLoyalty, setPostOrderLoyalty] = useState(null);
   const [cardBrand, setCardBrand] = useState(null);
   const [billingPostcode, setBillingPostcode] = useState('');
@@ -557,6 +667,7 @@ const CheckoutInner = () => {
       });
       setServerPricing(r.data);
       setCalcError('');
+      setUnavailableItems([]);
       // Keep zone pill in sync with whatever postcode is in the address form
       if (r.data.order_type === 'delivery' && r.data.zone) {
         setZoneInfo({
@@ -575,6 +686,16 @@ const CheckoutInner = () => {
       const detail = e.response?.status === 400 || e.response?.status === 404
         ? e.response?.data?.detail : '';
       setCalcError(typeof detail === 'string' ? detail : '');
+      // A stale cart item (deleted/hidden dish) blocks pricing entirely —
+      // find exactly which items are gone so one tap can clear them
+      if (e.response?.status === 404) {
+        try {
+          const menu = await api.get('/menu?available=true');
+          const liveIds = new Set(menu.data.map(m => m.id));
+          const gone = cartItems.filter(i => !liveIds.has(i.id));
+          if (gone.length) setUnavailableItems(gone);
+        } catch {}
+      }
       // A slot problem shouldn't keep a stale selection around
       if (typeof detail === 'string' && detail.toLowerCase().includes('collection time')) {
         setPickupSlot(null);
@@ -737,6 +858,10 @@ const CheckoutInner = () => {
       : ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
     if (required.some(k => !form[k].trim())) { setError('Please fill in all required fields.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('Please enter a valid email address.'); return; }
+    if (!user && fbAuth && verifiedPhone !== normPhone(form.phone)) {
+      setError('Please verify your mobile number first — we text you when your order is ready.');
+      return;
+    }
     if (deliveryType === 'delivery' && pcError) { setError("Sorry, your postcode is outside our delivery area. Please switch to collection or use a Milton Keynes postcode."); return; }
     if (!validPricing) { setError("We couldn't confirm your total — please check your postcode and try again."); return; }
     if (!stripe || !elements) { setError('Payment not ready. Please wait a moment.'); return; }
@@ -1080,9 +1205,22 @@ const CheckoutInner = () => {
 
               {/* Server-side pricing / slot problem */}
               {calcError && (
-                <div className="text-xs font-semibold px-3 py-2 rounded-lg"
+                <div className="text-xs font-semibold px-3 py-2.5 rounded-lg space-y-2"
                   style={{ backgroundColor: '#FEF2F2', color: '#8B3A3A' }}>
-                  {calcError}
+                  <p>{calcError}</p>
+                  {unavailableItems.length > 0 && (
+                    <>
+                      <p className="font-normal">
+                        No longer available: <b>{unavailableItems.map(i => i.name).join(', ')}</b>
+                      </p>
+                      <button
+                        onClick={() => { unavailableItems.forEach(i => removeFromCart(i.id)); setUnavailableItems([]); setCalcError(''); }}
+                        className="px-3 py-1.5 rounded-lg font-bold text-white"
+                        style={{ backgroundColor: '#8B3A3A' }}>
+                        Remove {unavailableItems.length > 1 ? 'them' : 'it'} &amp; continue
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -1103,6 +1241,18 @@ const CheckoutInner = () => {
                 onGuest={() => setGuestMode(true)}
                 onSignIn={() => setAuthOpen(true)}
               />
+            )}
+
+            {/* Guest mode — still offer sign-in */}
+            {!user && guestMode && (
+              <div className="flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl text-xs"
+                style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(128,0,32,0.12)', color: '#5C4B47' }}>
+                <span>Checking out as a <b>guest</b> — you can still earn loyalty points with an account.</span>
+                <button onClick={() => setAuthOpen(true)}
+                  className="font-bold underline shrink-0" style={{ color: '#800020' }}>
+                  Sign in / Sign up
+                </button>
+              </div>
             )}
 
             {/* Delivery details */}
@@ -1138,6 +1288,13 @@ const CheckoutInner = () => {
                   <Field label="Phone" icon={Phone} type="tel" value={form.phone} onChange={set('phone')}
                     placeholder="+44..." locked={!!user?.phone && form.phone === user.phone} required />
                 </div>
+                {!user && (
+                  <GuestPhoneVerify
+                    phone={form.phone}
+                    verifiedPhone={verifiedPhone}
+                    onVerified={setVerifiedPhone}
+                  />
+                )}
                 <Field label="Email" icon={Mail} type="email" value={form.email} onChange={set('email')}
                   placeholder="you@example.com" locked={!!user?.email && form.email === user.email}
                   hint={user ? 'Order confirmation will be sent here' : ''} required />
@@ -1265,6 +1422,7 @@ const CheckoutInner = () => {
                 deliveryFee={deliveryFee}
                 grandTotal={grandTotal}
                 deliveryType={deliveryType}
+                feeKnown={deliveryType === 'takeaway' || !!validPricing}
               />
 
               {/* Small order fee nudge — delivery, above minimum, under £20 */}

@@ -81,26 +81,46 @@ export default function OrderClient() {
   const q = search.trim().toLowerCase();
   const bySection = SECTIONS.map(sec => ({
     ...sec,
-    items: dishes.filter(d =>
-      d.category === sec.id &&
-      isOrderable(d.category) &&
-      (!q || d.name.toLowerCase().includes(q) || (d.description || '').toLowerCase().includes(q))
-    ),
+    items: dishes
+      .filter(d =>
+        d.category === sec.id &&
+        isOrderable(d.category) &&
+        (!q || d.name.toLowerCase().includes(q) || (d.description || '').toLowerCase().includes(q))
+      )
+      .sort((a, b) => a.name.localeCompare(b.name)),
   })).filter(sec => sec.items.length > 0);
 
   const handleAdd = (d) => addToCart({ id: d.id, name: d.name, price: d.price, image: d.image, category: d.category });
 
   return (
     <div className="min-h-screen pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: C.ivory }}>
+      {/* ── Hero banner ── */}
+      <section className="relative overflow-hidden" style={{ height: 170 }}>
+        <img
+          src="https://images.unsplash.com/photo-1742281258189-3b933879867a?crop=entropy&cs=srgb&fm=jpg&q=85&w=1600"
+          alt="Fresh Andhra food"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.94) 0%, rgba(128,0,32,0.75) 55%, rgba(128,0,32,0.45) 100%)' }} />
+        <div className="relative h-full max-w-3xl mx-auto px-4 flex flex-col justify-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Order Now
+          </h1>
+          <p className="text-sm mt-1 max-w-md" style={{ color: '#F4E9D0' }}>
+            Fresh Andhra food, cooked to order — collect in ~40 minutes and save 10%, or get it delivered across Milton Keynes.
+          </p>
+        </div>
+      </section>
+
       {/* ── Sticky order controls ── */}
       <div className="sticky z-30 top-[calc(32px+4rem)] md:top-[calc(32px+5rem)]"
         style={{ backgroundColor: C.ivory, borderBottom: `1px solid ${C.line}` }}>
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-2">
           {/* Collection / Delivery toggle */}
           <div className="flex rounded-xl p-1 gap-1" style={{ backgroundColor: '#F3EDE2' }}>
-            {[['takeaway', 'Collection'], ['delivery', 'Delivery']].map(([val, label]) => (
+            {[['takeaway', '🛵 Collection · save 10%'], ['delivery', '🚚 Delivery']].map(([val, label]) => (
               <button key={val} onClick={() => setDeliveryType(val)}
-                className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-colors"
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-colors"
                 style={{
                   backgroundColor: deliveryType === val ? C.burgundy : 'transparent',
                   color: deliveryType === val ? '#fff' : C.muted,
@@ -112,12 +132,26 @@ export default function OrderClient() {
 
           <div className="mt-3">
             {deliveryType === 'takeaway' ? (
-              <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} />
+              <>
+                <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} />
+                <p className="text-[11px] mt-1.5" style={{ color: C.veg }}>
+                  🎉 10% off every collection order — no delivery fee. Collect from our Greenleys kitchen, MK12 6LF.
+                </p>
+              </>
             ) : (
               <p className="text-xs py-1" style={{ color: C.muted }}>
-                Delivering across MK1–MK19 · fee and timing confirmed at checkout with your postcode.
+                🚚 Delivering across MK1–MK19 · fee &amp; free-delivery threshold confirmed at checkout with your postcode. Minimum order £15.
               </p>
             )}
+          </div>
+
+          {/* Search — stays fixed with the categories */}
+          <div className="flex items-center gap-2 rounded-full px-4 py-2 mt-3"
+            style={{ backgroundColor: '#fff', border: `1.5px solid ${C.line}` }}>
+            <Search size={15} style={{ color: C.muted }} />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search dishes…"
+              className="flex-1 bg-transparent outline-none text-sm" style={{ color: C.ink }} />
           </div>
 
           {/* Category chips */}
@@ -137,17 +171,6 @@ export default function OrderClient() {
         </div>
       </div>
 
-      {/* ── Search ── */}
-      <div className="max-w-3xl mx-auto px-4 pt-4">
-        <div className="flex items-center gap-2 rounded-full px-4 py-2.5"
-          style={{ backgroundColor: '#fff', border: `1.5px solid ${C.line}` }}>
-          <Search size={16} style={{ color: C.muted }} />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search dishes…"
-            className="flex-1 bg-transparent outline-none text-sm" style={{ color: C.ink }} />
-        </div>
-      </div>
-
       {/* ── Menu list ── */}
       <div className="max-w-3xl mx-auto px-4 pb-40">
         {loading && <p className="py-10 text-center text-sm" style={{ color: C.muted }}>Loading menu…</p>}
@@ -156,7 +179,7 @@ export default function OrderClient() {
         )}
         {bySection.map(sec => (
           <section key={sec.id} ref={el => { sectionRefs.current[sec.id] = el; }}
-            style={{ scrollMarginTop: 'calc(32px + 4rem + 180px)' }}>
+            style={{ scrollMarginTop: 'calc(32px + 4rem + 260px)' }}>
             <h2 className="pt-6 pb-1 text-lg font-semibold" style={{ fontFamily: "'Playfair Display', serif", color: C.burgundy }}>
               {sec.name}
             </h2>

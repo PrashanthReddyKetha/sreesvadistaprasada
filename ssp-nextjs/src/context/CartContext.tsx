@@ -80,6 +80,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [deliveryType, setDeliveryTypeRaw] = useState<string>('delivery');
   const [zoneInfo, setZoneInfoRaw]         = useState<ZoneInfo | null>(null);
   const [pickupSlot, setPickupSlotRaw]     = useState<PickupSlot | null>(null);
+  const [hydrated, setHydrated]            = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Hydrate from storage once on mount
@@ -97,12 +98,15 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       const ps = sessionStorage.getItem(SLOT_KEY);
       if (ps) setPickupSlotRaw(JSON.parse(ps));
     } catch {}
+    setHydrated(true);
   }, []);
 
-  // Persist cart to localStorage
+  // Persist cart to localStorage — but never before hydration, or the initial
+  // empty state overwrites the saved cart
   useEffect(() => {
+    if (!hydrated) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems)); } catch {}
-  }, [cartItems]);
+  }, [cartItems, hydrated]);
 
   // Setters that update state AND storage simultaneously
   const setPickupSlot = useCallback((slot: PickupSlot | null) => {
