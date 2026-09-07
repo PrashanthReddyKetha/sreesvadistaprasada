@@ -180,7 +180,7 @@ const Header = () => {
               {/* Cart & Account */}
               <div className="flex items-center gap-2 ml-3 pl-3 border-l" style={{ borderColor: 'rgba(244, 196, 48, 0.3)' }}>
                 <Link
-                  href="/menu"
+                  href="/order"
                   className="px-4 py-2 text-sm font-semibold text-white rounded-full transition-transform duration-200 hover:scale-[1.03]"
                   style={{ backgroundColor: '#800020' }}
                   data-testid="header-order-now"
@@ -309,7 +309,7 @@ const Header = () => {
             ))}
 
             <Link
-              href="/menu"
+              href="/order"
               onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'instant' }); }}
               className="block w-full mt-4 py-3 text-center text-sm font-semibold text-white rounded-md"
               style={{ backgroundColor: '#800020' }}

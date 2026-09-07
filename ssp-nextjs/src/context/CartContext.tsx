@@ -18,6 +18,12 @@ interface Toast {
   price?: number | string;
 }
 
+export interface PickupSlot {
+  iso: string;    // "2026-09-07T18:15" (London time)
+  label: string;  // "6:15 pm"
+  date: string;   // "2026-09-07"
+}
+
 export interface ZoneInfo {
   postcode: string;
   delivery_fee: number;
@@ -42,12 +48,16 @@ interface CartContextType {
   setDeliveryType: (type: string) => void;
   zoneInfo: ZoneInfo | null;
   setZoneInfo: (info: ZoneInfo | null) => void;
+  // Collection slot (takeaway only) — null = ASAP
+  pickupSlot: PickupSlot | null;
+  setPickupSlot: (slot: PickupSlot | null) => void;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
 const STORAGE_KEY = 'ssp_cart';
 const DT_KEY      = 'ssp_delivery_type';
 const ZONE_KEY    = 'ssp_delivery_zone';
+const SLOT_KEY    = 'ssp_pickup_slot';
 
 const loadCart = (): CartItem[] => {
   if (typeof window === 'undefined') return [];
@@ -69,6 +79,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cartOpen, setCartOpen]            = useState(false);
   const [deliveryType, setDeliveryTypeRaw] = useState<string>('delivery');
   const [zoneInfo, setZoneInfoRaw]         = useState<ZoneInfo | null>(null);
+  const [pickupSlot, setPickupSlotRaw]     = useState<PickupSlot | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Hydrate from storage once on mount
@@ -82,6 +93,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       const zi = localStorage.getItem(ZONE_KEY);
       if (zi) setZoneInfoRaw(JSON.parse(zi));
     } catch {}
+    try {
+      const ps = sessionStorage.getItem(SLOT_KEY);
+      if (ps) setPickupSlotRaw(JSON.parse(ps));
+    } catch {}
   }, []);
 
   // Persist cart to localStorage
@@ -90,10 +105,19 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   }, [cartItems]);
 
   // Setters that update state AND storage simultaneously
+  const setPickupSlot = useCallback((slot: PickupSlot | null) => {
+    setPickupSlotRaw(slot);
+    try {
+      if (slot) sessionStorage.setItem(SLOT_KEY, JSON.stringify(slot));
+      else sessionStorage.removeItem(SLOT_KEY);
+    } catch {}
+  }, []);
+
   const setDeliveryType = useCallback((type: string) => {
     setDeliveryTypeRaw(type);
     try { sessionStorage.setItem(DT_KEY, type); } catch {}
-  }, []);
+    if (type !== 'takeaway') setPickupSlot(null);
+  }, [setPickupSlot]);
 
   const setZoneInfo = useCallback((info: ZoneInfo | null) => {
     setZoneInfoRaw(info);
@@ -157,8 +181,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const clearCart = useCallback(() => {
     setCartItems([]);
+    setPickupSlot(null);
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
-  }, []);
+  }, [setPickupSlot]);
 
   return (
     <CartContext.Provider value={{
@@ -167,6 +192,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       toast, cartOpen, setCartOpen,
       deliveryType, setDeliveryType,
       zoneInfo, setZoneInfo,
+      pickupSlot, setPickupSlot,
     }}>
       {children}
     </CartContext.Provider>

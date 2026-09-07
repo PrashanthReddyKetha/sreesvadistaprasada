@@ -8,11 +8,12 @@ import {
   LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard, AlertCircle
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
+import SlotPicker from '@/components/SlotPicker';
 import { trackPurchase } from '@/lib/analytics';
 import { isOrderable } from '@/config/softLaunch';
 
@@ -23,6 +24,12 @@ const MINIMUM_ORDER = 15.00;
 const MIN_DELIVERY_FEE = 2.49; // Zone 1 floor — used before postcode is known
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
 const fmt   = (n)   => `£${Number(n).toFixed(2)}`;
+// "2026-09-07T18:15" → "6:15 pm"
+const slotLabel = (iso) => {
+  if (!iso || iso.length < 16) return '';
+  const hh = parseInt(iso.slice(11, 13), 10);
+  return `${hh % 12 || 12}:${iso.slice(14, 16)} ${hh < 12 ? 'am' : 'pm'}`;
+};
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange, locked, hint, required: req }) {
@@ -413,7 +420,8 @@ const CheckoutInner = () => {
   const elements = useElements();
   const router = useRouter();
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, addToCart,
-          deliveryType, setDeliveryType, zoneInfo, setZoneInfo } = useCart();
+          deliveryType, setDeliveryType, zoneInfo, setZoneInfo,
+          pickupSlot, setPickupSlot } = useCart();
   const { user, login, setAuthOpen } = useAuth();
 
   const [guestMode, setGuestMode] = useState(false);
@@ -424,9 +432,11 @@ const CheckoutInner = () => {
 
   const [freeItem, setFreeItem] = useState(null);
   const [serverPricing, setServerPricing] = useState(null);
+  const [calcError, setCalcError] = useState('');
   const [postOrderLoyalty, setPostOrderLoyalty] = useState(null);
   const [cardBrand, setCardBrand] = useState(null);
   const [billingPostcode, setBillingPostcode] = useState('');
+  const [paymentRequest, setPaymentRequest] = useState(null); // Apple Pay / Google Pay
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '',
@@ -543,8 +553,10 @@ const CheckoutInner = () => {
         order_type: deliveryType,
         postcode: form.postcode,
         free_item_id: freeItem?.id,
+        scheduled_slot: deliveryType === 'takeaway' ? pickupSlot?.iso : undefined,
       });
       setServerPricing(r.data);
+      setCalcError('');
       // Keep zone pill in sync with whatever postcode is in the address form
       if (r.data.order_type === 'delivery' && r.data.zone) {
         setZoneInfo({
@@ -560,11 +572,18 @@ const CheckoutInner = () => {
       // have a trustworthy total — never fall back to a client-guessed price for
       // what gets charged. handleOrder refuses to charge while this is null.
       setServerPricing(null);
+      const detail = e.response?.status === 400 || e.response?.status === 404
+        ? e.response?.data?.detail : '';
+      setCalcError(typeof detail === 'string' ? detail : '');
+      // A slot problem shouldn't keep a stale selection around
+      if (typeof detail === 'string' && detail.toLowerCase().includes('collection time')) {
+        setPickupSlot(null);
+      }
       if (deliveryType === 'delivery' && e.response?.status === 400) {
         setZoneInfo(null);
       }
     }
-  }, [cartItems, deliveryType, form.postcode, freeItem]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cartItems, deliveryType, form.postcode, freeItem, pickupSlot?.iso]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { recalculate(); }, [recalculate]);
 
@@ -592,6 +611,124 @@ const CheckoutInner = () => {
     ? Math.round(((potentialDeliveryFee ?? MIN_DELIVERY_FEE) + (effectiveSubtotal <= 19.99 ? 1.50 : 0) + effectiveSubtotal * 0.10) * 100) / 100
     : null;
 
+  /* ── Apple Pay / Google Pay (Stripe Payment Request) ─────────────────── */
+  // Wallet handler reads live state through a ref so the listener never goes stale
+  const walletCtx = useRef({});
+  useEffect(() => {
+    walletCtx.current = { form, cartItems, freeItem, freeItemDiscount, deliveryType, pickupSlot, validPricing, meetsMinimum, pcError, user };
+  });
+
+  useEffect(() => {
+    if (!stripe || paymentRequest) return;
+    const pr = stripe.paymentRequest({
+      country: 'GB',
+      currency: 'gbp',
+      total: { label: 'Sree Svadista Prasada', amount: 100 },
+      requestPayerName: true,
+      requestPayerEmail: true,
+      requestPayerPhone: true,
+    });
+    pr.canMakePayment().then(result => { if (result) setPaymentRequest(pr); });
+
+    pr.on('paymentmethod', async (ev) => {
+      const ctx = walletCtx.current;
+      const fail = (msg) => { ev.complete('fail'); setError(msg); };
+      if (!ctx.validPricing || !ctx.meetsMinimum) return fail("We couldn't confirm your total — please check your basket and try again.");
+      if (ctx.deliveryType === 'delivery') {
+        if (ctx.pcError) return fail('Your postcode is outside our delivery area — switch to collection or use an MK postcode.');
+        if (['line1', 'city', 'postcode'].some(k => !ctx.form[k]?.trim())) return fail('Please fill in your delivery address before paying.');
+      }
+      setError('');
+      setSubmitting(true);
+      let capturedPI = null;
+      try {
+        // Re-check the slot at the last moment
+        if (ctx.deliveryType === 'takeaway' && ctx.pickupSlot?.iso) {
+          try {
+            await api.post('/orders/calculate', {
+              items: ctx.cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity })),
+              order_type: ctx.deliveryType,
+              postcode: ctx.form.postcode,
+              free_item_id: ctx.freeItem?.id,
+              scheduled_slot: ctx.pickupSlot.iso,
+            });
+          } catch (slotErr) {
+            setPickupSlot(null);
+            const d = slotErr.response?.data?.detail;
+            return fail(typeof d === 'string' ? d : 'Your collection time is no longer available — please pick another.');
+          }
+        }
+
+        const intentRes = await api.post('/payments/create-intent', { amount: ctx.validPricing.grand_total });
+        const { client_secret, payment_intent_id } = intentRes.data;
+        capturedPI = payment_intent_id;
+
+        const { error: confirmErr, paymentIntent } = await stripe.confirmCardPayment(
+          client_secret, { payment_method: ev.paymentMethod.id }, { handleActions: false }
+        );
+        if (confirmErr) return fail(confirmErr.message || 'Payment failed. Please try again.');
+        ev.complete('success');
+        if (paymentIntent.status === 'requires_action') {
+          const { error: actionErr } = await stripe.confirmCardPayment(client_secret);
+          if (actionErr) { setError(actionErr.message || 'Payment failed. Please try again.'); return; }
+        }
+
+        const name  = ctx.form.name?.trim()  || ev.payerName  || '';
+        const email = ctx.form.email?.trim() || ev.payerEmail || '';
+        const phone = ctx.form.phone?.trim() || ev.payerPhone || '';
+        const items = [
+          ...ctx.cartItems.map(i => ({ menu_item_id: i.id, name: i.name, price: price(i.price), quantity: i.quantity })),
+          ...(ctx.freeItem ? [{ menu_item_id: ctx.freeItem.id, name: ctx.freeItem.name, price: ctx.freeItemDiscount, quantity: 1 }] : []),
+        ];
+        const res = await api.post('/orders', {
+          customer_name: name, customer_email: email, customer_phone: phone,
+          items,
+          delivery_type: ctx.deliveryType,
+          delivery_address: ctx.deliveryType === 'delivery' ? {
+            line1: ctx.form.line1, line2: ctx.form.line2 || undefined,
+            city: ctx.form.city, postcode: ctx.form.postcode,
+          } : undefined,
+          notes: ctx.form.notes || undefined,
+          scheduled_slot: ctx.deliveryType === 'takeaway' ? ctx.pickupSlot?.iso : undefined,
+          payment_intent_id,
+          is_loyalty_redemption: !!ctx.freeItem,
+          loyalty_free_item_id: ctx.freeItem?.id,
+          loyalty_free_item_name: ctx.freeItem?.name,
+          loyalty_free_item_original_price: ctx.freeItemDiscount,
+        });
+
+        if (ctx.user) api.get('/loyalty/status').then(r => setPostOrderLoyalty(r.data)).catch(() => {});
+        try { sessionStorage.removeItem('ssp_checkout_state'); } catch {}
+        const orderId = res.data?.order_number || res.data?.id?.slice(-6).toUpperCase() || '';
+        const slotFinal = res.data?.scheduled_slot_final || null;
+        trackPurchase(orderId, ctx.cartItems, ctx.validPricing.grand_total, ctx.validPricing.delivery_fee);
+        setSuccess({
+          orderId,
+          isRedemption: !!ctx.freeItem,
+          isTakeaway: ctx.deliveryType === 'takeaway',
+          slotFinal,
+          slotBumped: !!(ctx.pickupSlot?.iso && slotFinal && slotFinal !== ctx.pickupSlot.iso),
+        });
+        clearCart();
+      } catch (e) {
+        if (capturedPI && e.response) {
+          setError(`Your card was charged ${fmt(walletCtx.current.validPricing?.grand_total ?? 0)} (ref: ${capturedPI.slice(-8).toUpperCase()}) but the order could not be confirmed. Please WhatsApp or call us immediately quoting this reference so we can fix it.`);
+        } else {
+          setError(e.response?.data?.detail || 'Something went wrong. Please try again.');
+        }
+      } finally { setSubmitting(false); }
+    });
+  }, [stripe]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep the wallet sheet total in sync with server pricing
+  useEffect(() => {
+    if (paymentRequest && validPricing?.grand_total) {
+      paymentRequest.update({
+        total: { label: 'Sree Svadista Prasada', amount: Math.round(validPricing.grand_total * 100) },
+      });
+    }
+  }, [paymentRequest, validPricing?.grand_total]);
+
   const handleOrder = async () => {
     setError('');
     if (!meetsMinimum) { setError(`Minimum order is ${fmt(MINIMUM_ORDER)} — please add more items.`); return; }
@@ -609,6 +746,25 @@ const CheckoutInner = () => {
     let paymentSucceeded = false;
     let capturedPI = null;
     try {
+      // Final slot check the moment before charging — a slot can fill or pass
+      // while the customer types card details
+      if (deliveryType === 'takeaway' && pickupSlot?.iso) {
+        try {
+          await api.post('/orders/calculate', {
+            items: cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity })),
+            order_type: deliveryType,
+            postcode: form.postcode,
+            free_item_id: freeItem?.id,
+            scheduled_slot: pickupSlot.iso,
+          });
+        } catch (slotErr) {
+          const detail = slotErr.response?.data?.detail;
+          setError(typeof detail === 'string' ? detail : 'Your collection time is no longer available — please pick another.');
+          setPickupSlot(null);
+          return;
+        }
+      }
+
       // Server-verified total only — never fall back to a client-guessed amount
       const chargeAmount = validPricing.grand_total;
       const intentRes = await api.post('/payments/create-intent', { amount: chargeAmount });
@@ -643,6 +799,7 @@ const CheckoutInner = () => {
           postcode: form.postcode,
         } : undefined,
         notes: form.notes || undefined,
+        scheduled_slot: deliveryType === 'takeaway' ? pickupSlot?.iso : undefined,
         payment_intent_id,
         is_loyalty_redemption: !!freeItem,
         loyalty_free_item_id: freeItem?.id,
@@ -656,9 +813,16 @@ const CheckoutInner = () => {
       }
 
       try { sessionStorage.removeItem('ssp_checkout_state'); } catch {}
-      const orderId = res.data?.id?.slice(-6).toUpperCase() || '';
+      const orderId = res.data?.order_number || res.data?.id?.slice(-6).toUpperCase() || '';
+      const slotFinal = res.data?.scheduled_slot_final || null;
       trackPurchase(orderId, cartItems, validPricing.grand_total, validPricing.delivery_fee);
-      setSuccess({ orderId, isRedemption: !!freeItem });
+      setSuccess({
+        orderId,
+        isRedemption: !!freeItem,
+        isTakeaway: deliveryType === 'takeaway',
+        slotFinal,
+        slotBumped: !!(pickupSlot?.iso && slotFinal && slotFinal !== pickupSlot.iso),
+      });
       clearCart();
     } catch (e) {
       if (paymentSucceeded && capturedPI) {
@@ -738,8 +902,21 @@ const CheckoutInner = () => {
             Your order has been received and is being prepared. We&apos;ll send a confirmation to{' '}
             <strong>{form.email}</strong>.
           </p>
+          {success.isTakeaway && success.slotFinal && (
+            <div className="rounded-xl px-4 py-3 mb-4 text-sm font-bold"
+              style={{ backgroundColor: '#FBF3DC', color: '#854D0E' }}>
+              \ud83d\udd70\ufe0f Collect at {slotLabel(success.slotFinal)}
+              {success.slotBumped && (
+                <p className="text-xs font-medium mt-1">
+                  Your requested time had just filled up, so we&apos;ve moved you to the next available slot.
+                </p>
+              )}
+            </div>
+          )}
           <p className="text-sm text-gray-400 mb-6">
-            {deliveryType === 'takeaway' ? "We'll call you when it's ready to collect." : 'Estimated time: 30\u201345 minutes'}
+            {deliveryType === 'takeaway'
+              ? (success.slotFinal ? 'We\u2019ll text you when it\u2019s ready \u2014 just give your order number at the door.' : 'Ready in about 40 minutes \u2014 we\u2019ll text you when it\u2019s ready to collect.')
+              : 'Estimated time: 40\u201350 minutes'}
           </p>
           <LoyaltyBanner />
           <div className="flex flex-col sm:flex-row gap-3">
@@ -891,6 +1068,21 @@ const CheckoutInner = () => {
                       : <><strong>10%</strong> + no delivery fee</>
                     } — switch above to apply
                   </span>
+                </div>
+              )}
+
+              {/* Collection time picker */}
+              {deliveryType === 'takeaway' && (
+                <div className="px-3 py-3 rounded-lg" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(128,0,32,0.08)' }}>
+                  <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} compact />
+                </div>
+              )}
+
+              {/* Server-side pricing / slot problem */}
+              {calcError && (
+                <div className="text-xs font-semibold px-3 py-2 rounded-lg"
+                  style={{ backgroundColor: '#FEF2F2', color: '#8B3A3A' }}>
+                  {calcError}
                 </div>
               )}
 
@@ -1093,6 +1285,22 @@ const CheckoutInner = () => {
                     <span className="font-bold text-sm" style={{ color: '#800020' }}>Payment</span>
                     <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-400"><Lock size={10} /> Stripe</span>
                   </div>
+                  {/* Apple Pay / Google Pay — shows only on devices with a wallet set up */}
+                  {paymentRequest && validPricing && meetsMinimum && (
+                    <div className="space-y-2">
+                      <PaymentRequestButtonElement
+                        options={{
+                          paymentRequest,
+                          style: { paymentRequestButton: { type: 'buy', theme: 'dark', height: '44px' } },
+                        }}
+                      />
+                      <div className="flex items-center gap-3 py-1">
+                        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(128,0,32,0.12)' }} />
+                        <span className="text-[11px] text-gray-400 font-semibold">or pay with card</span>
+                        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(128,0,32,0.12)' }} />
+                      </div>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     {/* Card number - full width */}
                     <div className="px-3 py-3 rounded-xl border-2 flex items-center gap-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>

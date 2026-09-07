@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { trackWhatsAppClick } from '@/lib/analytics';
 
@@ -9,7 +10,10 @@ const WhatsAppButton = () => {
   const { cartCount } = useCart();
   // Detect if TakeawayNudge bar is visible (mobile + cart has items + on menu page)
   // Using window.location since this is client-only
-  const onMenuPath = typeof window !== 'undefined' && MENU_PATHS.some(p => window.location.pathname.startsWith(p));
+  const path = usePathname() || '';
+  // /order has its own sticky cart bar along the bottom — the bubble would cover it
+  if (path.startsWith('/order') && cartCount > 0) return null;
+  const onMenuPath = MENU_PATHS.some(p => path.startsWith(p));
   const nudgeVisible = cartCount > 0 && onMenuPath;
 
   return (
