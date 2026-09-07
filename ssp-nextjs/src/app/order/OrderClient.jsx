@@ -56,9 +56,13 @@ export default function OrderClient() {
   const [dishes, setDishes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  // While searching, collapse the sticky controls so results stay visible above the keyboard
+  const searchMode = searchFocused || search.trim().length > 0;
   const [activeSection, setActiveSection] = useState('breakfast');
   const sectionRefs = useRef({});
   const stickyRef = useRef(null);
+  const heroRef = useRef(null);
   const [stickyH, setStickyH] = useState(300);
   const spyPaused = useRef(0);
 
@@ -69,6 +73,24 @@ export default function OrderClient() {
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
   });
+
+  // Entering search mode (or typing) parks the collapsed bar under the header
+  // AFTER the layout shrinks, so results start right below it
+  useEffect(() => {
+    if (!searchMode) return;
+    // Delay past the browser's own "scroll focused input into view" adjustment,
+    // which would otherwise override this
+    const t = setTimeout(() => {
+      // Anchor on the static hero — a stuck position:sticky element reports a
+      // scroll-dependent offsetTop, which is useless here
+      const hero = heroRef.current;
+      if (!hero) return;
+      const heroBottom = hero.getBoundingClientRect().bottom + window.scrollY;
+      const top = heroBottom - (window.innerWidth >= 768 ? 112 : 96);
+      window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [searchMode, search]);
 
   // Scroll-spy — highlight the category currently at the top of the viewport
   useEffect(() => {
@@ -126,7 +148,7 @@ export default function OrderClient() {
   return (
     <div className="min-h-screen pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: C.ivory }}>
       {/* ── Hero banner ── */}
-      <section className="relative overflow-hidden" style={{ height: 170 }}>
+      <section ref={heroRef} className="relative overflow-hidden" style={{ height: 170 }}>
         <img
           src="https://images.unsplash.com/photo-1742281258189-3b933879867a?crop=entropy&cs=srgb&fm=jpg&q=85&w=1600"
           alt="Fresh Andhra food"
@@ -148,7 +170,7 @@ export default function OrderClient() {
         style={{ backgroundColor: C.ivory, borderBottom: `1px solid ${C.line}`, boxShadow: '0 4px 12px rgba(45,36,34,0.06)' }}>
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-3">
           {/* Collection / Delivery toggle */}
-          <div className="flex rounded-xl p-1 gap-1" style={{ backgroundColor: '#F3EDE2' }}>
+          <div className={searchMode ? 'hidden' : 'flex rounded-xl p-1 gap-1'} style={{ backgroundColor: '#F3EDE2' }}>
             {[['takeaway', '🛵 Collection · save 10%'], ['delivery', '🚚 Delivery']].map(([val, label]) => (
               <button key={val} onClick={() => setDeliveryType(val)}
                 className="flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-colors"
@@ -161,7 +183,7 @@ export default function OrderClient() {
             ))}
           </div>
 
-          <div className="mt-3">
+          <div className={searchMode ? 'hidden' : 'mt-3'}>
             {deliveryType === 'takeaway' ? (
               <>
                 <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} />
@@ -177,16 +199,29 @@ export default function OrderClient() {
           </div>
 
           {/* Search — stays fixed with the categories */}
-          <div className="flex items-center gap-2 rounded-full px-4 py-2 mt-3"
-            style={{ backgroundColor: '#fff', border: `1.5px solid ${C.line}` }}>
-            <Search size={15} style={{ color: C.muted }} />
-            <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search dishes…"
-              className="flex-1 bg-transparent outline-none text-sm" style={{ color: C.ink }} />
+          <div className={`flex items-center gap-2 ${searchMode ? '' : 'mt-3'}`}>
+            <div className="flex flex-1 items-center gap-2 rounded-full px-4 py-2"
+              style={{ backgroundColor: '#fff', border: `1.5px solid ${searchMode ? C.saffron : C.line}` }}>
+              <Search size={15} style={{ color: C.muted }} />
+              <input value={search} onChange={e => setSearch(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                placeholder="Search dishes…"
+                className="flex-1 bg-transparent outline-none text-sm" style={{ color: C.ink }} />
+            </div>
+            {searchMode && (
+              <button
+                onMouseDown={e => e.preventDefault() /* keep focus handling clean */}
+                onClick={() => { setSearch(''); setSearchFocused(false); document.activeElement?.blur?.(); }}
+                className="flex-none text-sm font-bold px-2 py-2"
+                style={{ color: C.burgundy }}>
+                Cancel
+              </button>
+            )}
           </div>
 
           {/* Category chips */}
-          <div className="flex gap-2 overflow-x-auto mt-3 pb-1" style={{ scrollbarWidth: 'none' }}>
+          <div className={searchMode ? 'hidden' : 'flex gap-2 overflow-x-auto mt-3 pb-1'} style={{ scrollbarWidth: 'none' }}>
             {SECTIONS.map(sec => (
               <button key={sec.id} onClick={() => scrollTo(sec.id)}
                 className="flex-none text-xs font-bold px-3.5 py-1.5 rounded-full"
