@@ -227,6 +227,14 @@ const Header = () => {
 
             {/* Mobile Controls */}
             <div className="flex items-center gap-1 lg:hidden">
+              <Link
+                href="/order"
+                className="px-3 py-1.5 mr-0.5 text-xs font-bold text-white rounded-full whitespace-nowrap"
+                style={{ backgroundColor: '#800020' }}
+                data-testid="mobile-header-order-now"
+              >
+                Order Now
+              </Link>
               <button
                 className="relative p-2 rounded-full"
                 data-testid="mobile-cart-button"

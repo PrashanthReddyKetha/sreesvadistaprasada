@@ -77,7 +77,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cartItems, setCartItems]          = useState<CartItem[]>([]);
   const [toast, setToast]                  = useState<Toast | null>(null);
   const [cartOpen, setCartOpen]            = useState(false);
-  const [deliveryType, setDeliveryTypeRaw] = useState<string>('delivery');
+  // Collection is the default — customers only switch to delivery deliberately
+  const [deliveryType, setDeliveryTypeRaw] = useState<string>('takeaway');
   const [zoneInfo, setZoneInfoRaw]         = useState<ZoneInfo | null>(null);
   const [pickupSlot, setPickupSlotRaw]     = useState<PickupSlot | null>(null);
   const [hydrated, setHydrated]            = useState(false);

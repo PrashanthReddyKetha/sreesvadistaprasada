@@ -6,9 +6,9 @@ export const heroSlides = [
     image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
     title: "Welcome Home.",
     subtitle: "The authentic taste you missed, carried forward with love.",
-    description: "Now serving Milton Keynes — Edinburgh & Glasgow coming soon.",
-    cta: "Explore Our Kitchen",
-    link: "/menu"
+    description: "Order in a few taps — collect in ~40 minutes and save 10%, or get it delivered.",
+    cta: "Order Now",
+    link: "/order"
   },
   {
     id: 2,

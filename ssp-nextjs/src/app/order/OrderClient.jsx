@@ -56,9 +56,11 @@ export default function OrderClient() {
   const [dishes, setDishes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
-  // While searching, collapse the sticky controls so results stay visible above the keyboard
-  const searchMode = searchFocused || search.trim().length > 0;
+  // While searching, collapse the sticky controls so results stay visible above the keyboard.
+  // Expands back on Cancel, on blur with no text, or on any scroll once the keyboard is closed.
+  const [searchMode, setSearchMode] = useState(false);
+  const searchInputRef = useRef(null);
+  const [sheetItem, setSheetItem] = useState(null); // dish shown in the bottom sheet
   const [activeSection, setActiveSection] = useState('breakfast');
   const sectionRefs = useRef({});
   const stickyRef = useRef(null);
@@ -73,6 +75,12 @@ export default function OrderClient() {
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
   });
+
+  // Lock page scroll while the item sheet is open
+  useEffect(() => {
+    document.body.style.overflow = sheetItem ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [sheetItem]);
 
   // Entering search mode (or typing) parks the collapsed bar under the header
   // AFTER the layout shrinks, so results start right below it
@@ -95,6 +103,10 @@ export default function OrderClient() {
   // Scroll-spy — highlight the category currently at the top of the viewport
   useEffect(() => {
     const onScroll = () => {
+      // Keyboard closed + user scrolling → bring the full controls back
+      if (searchMode && document.activeElement !== searchInputRef.current) {
+        setSearchMode(false);
+      }
       if (Date.now() < spyPaused.current) return;
       const probe = stickyH + 140; // px below the top of the viewport
       let current = null;
@@ -105,7 +117,7 @@ export default function OrderClient() {
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [stickyH]);
+  }, [stickyH, searchMode]);
 
   useEffect(() => {
     const cached = getCached('all');
@@ -203,16 +215,16 @@ export default function OrderClient() {
             <div className="flex flex-1 items-center gap-2 rounded-full px-4 py-2"
               style={{ backgroundColor: '#fff', border: `1.5px solid ${searchMode ? C.saffron : C.line}` }}>
               <Search size={15} style={{ color: C.muted }} />
-              <input value={search} onChange={e => setSearch(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
+              <input ref={searchInputRef} value={search} onChange={e => setSearch(e.target.value)}
+                onFocus={() => setSearchMode(true)}
+                onBlur={() => { if (!search.trim()) setSearchMode(false); }}
                 placeholder="Search dishes…"
                 className="flex-1 bg-transparent outline-none text-sm" style={{ color: C.ink }} />
             </div>
             {searchMode && (
               <button
                 onMouseDown={e => e.preventDefault() /* keep focus handling clean */}
-                onClick={() => { setSearch(''); setSearchFocused(false); document.activeElement?.blur?.(); }}
+                onClick={() => { setSearch(''); setSearchMode(false); searchInputRef.current?.blur?.(); }}
                 className="flex-none text-sm font-bold px-2 py-2"
                 style={{ color: C.burgundy }}>
                 Cancel
@@ -262,15 +274,15 @@ export default function OrderClient() {
                       {d.name.slice(0, 1)}
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <Link href={buildItemUrl(d)} className="flex items-center gap-1.5 font-bold text-sm" style={{ color: C.ink }}>
+                  <button onClick={() => setSheetItem(d)} className="flex-1 min-w-0 text-left">
+                    <span className="flex items-center gap-1.5 font-bold text-sm" style={{ color: C.ink }}>
                       <VegDot isVeg={d.is_veg} />
                       <span className="truncate">{d.name}</span>
                       {d.spice_level > 1 && <Flame size={11} style={{ color: C.nonveg }} className="shrink-0" />}
-                    </Link>
-                    <p className="text-[11px] truncate" style={{ color: C.muted }}>{d.description}</p>
-                    <p className="text-[13px] font-black mt-0.5" style={{ color: C.ink }}>£{Number(d.price).toFixed(2)}</p>
-                  </div>
+                    </span>
+                    <span className="block text-[11px] truncate" style={{ color: C.muted }}>{d.description}</span>
+                    <span className="block text-[13px] font-black mt-0.5" style={{ color: C.ink }}>£{Number(d.price).toFixed(2)}</span>
+                  </button>
                   {qty > 0 ? (
                     <Stepper qty={qty} onChange={(n) => updateQuantity(d.id, n)} />
                   ) : (
@@ -286,6 +298,73 @@ export default function OrderClient() {
           </section>
         ))}
       </div>
+
+      {/* ── Item detail bottom sheet — instant, keeps your place in the list ── */}
+      {sheetItem && (() => {
+        const d = sheetItem;
+        const qty = qtyOf(d.id);
+        return (
+          <>
+            <div className="fixed inset-0 z-[60] bg-black/40" onClick={() => setSheetItem(null)} />
+            <div className="fixed bottom-0 left-0 right-0 z-[70] animate-slide-up rounded-t-3xl overflow-hidden"
+              style={{ backgroundColor: C.ivory, boxShadow: '0 -10px 40px rgba(45,36,34,0.35)', maxHeight: '85vh' }}>
+              <div className="overflow-y-auto" style={{ maxHeight: '85vh' }}>
+                {d.image && (
+                  <div className="relative w-full" style={{ height: 190 }}>
+                    <Image src={d.image} alt={d.name} fill sizes="100vw" className="object-cover" />
+                  </div>
+                )}
+                <button onClick={() => setSheetItem(null)} aria-label="Close"
+                  className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center text-lg font-bold"
+                  style={{ backgroundColor: 'rgba(253,251,247,0.95)', color: C.burgundy }}>
+                  ✕
+                </button>
+                <div className="p-5 max-w-3xl mx-auto">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="flex items-center gap-2 text-xl font-semibold" style={{ fontFamily: "'Playfair Display', serif", color: C.burgundy }}>
+                      <VegDot isVeg={d.is_veg} /> {d.name}
+                      {d.spice_level > 1 && <Flame size={14} style={{ color: C.nonveg }} />}
+                    </h3>
+                    <span className="text-lg font-black shrink-0" style={{ color: C.burgundy }}>£{Number(d.price).toFixed(2)}</span>
+                  </div>
+                  <p className="text-sm mt-2 leading-relaxed" style={{ color: C.muted }}>{d.description}</p>
+                  {(d.allergens || []).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {d.allergens.map(a => (
+                        <span key={a} className="text-[10px] font-bold px-2 py-0.5 rounded-full capitalize"
+                          style={{ backgroundColor: '#FBF3DC', color: C.gold, border: '1px solid #EBD9A8' }}>
+                          {a}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3 mt-5">
+                    {qty > 0 ? (
+                      <>
+                        <Stepper qty={qty} onChange={(n) => updateQuantity(d.id, n)} />
+                        <button onClick={() => setSheetItem(null)}
+                          className="flex-1 py-3.5 rounded-xl text-sm font-black text-white"
+                          style={{ backgroundColor: C.burgundy }}>
+                          Done — {qty} in basket
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={() => handleAdd(d)}
+                        className="flex-1 py-3.5 rounded-xl text-sm font-black"
+                        style={{ backgroundColor: C.saffron, color: C.ink }}>
+                        Add to basket — £{Number(d.price).toFixed(2)}
+                      </button>
+                    )}
+                  </div>
+                  <Link href={buildItemUrl(d)} className="block text-center text-xs font-semibold mt-4 underline" style={{ color: C.muted }}>
+                    View full details, reviews &amp; FAQs
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       {/* ── Sticky cart bar ── */}
       {cartCount > 0 && (

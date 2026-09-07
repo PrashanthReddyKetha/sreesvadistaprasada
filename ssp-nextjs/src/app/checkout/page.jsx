@@ -108,7 +108,7 @@ function DeliveryBar({ total, freeOver, onAddMore }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true }) {
+function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true, feeSaved = 0, feeSavedIsEstimate = false }) {
   const [collapsed, setCollapsed] = useState(false);
   const grandTotal = grandTotalProp ?? (cartTotal - takeawayDiscount + (deliveryFee || 0));
 
@@ -174,6 +174,12 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
             {takeawayDiscount > 0 && (
               <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
                 <span>Takeaway 10% off</span><span>-{fmt(takeawayDiscount)}</span>
+              </div>
+            )}
+            {deliveryType === 'takeaway' && feeSaved > 0 && (
+              <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
+                <span>Delivery fee saved</span>
+                <span>-{fmt(feeSaved)}{feeSavedIsEstimate ? '+' : ''}</span>
               </div>
             )}
             {deliveryType === 'delivery' && smallOrderFee > 0 && (
@@ -1219,8 +1225,8 @@ const CheckoutInner = () => {
               </p>
               <div className="flex gap-2">
                 {[
-                  { id: 'delivery', label: '🚚 Delivery' },
                   { id: 'takeaway', label: collectSaving && !collectSavingIsEstimate ? `🛵 Collect & save ${fmt(collectSaving)}` : '🛵 Collect & save 10%' },
+                  { id: 'delivery', label: '🚚 Delivery' },
                 ].map(opt => (
                   <button key={opt.id} onClick={() => setDeliveryType(opt.id)}
                     className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
@@ -1327,17 +1333,25 @@ const CheckoutInner = () => {
 
             {/* Guest mode — still offer sign-in */}
             {!user && guestMode && (
-              <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl"
+              <div className="px-4 py-3 rounded-xl space-y-2.5"
                 style={{ backgroundColor: 'rgba(244,196,48,0.12)', border: '1px solid rgba(244,196,48,0.5)' }}>
                 <p className="text-xs leading-relaxed" style={{ color: '#5C4B47' }}>
-                  🍛 <b style={{ color: '#800020' }}>Psst… ordering as a stranger?</b> In our kitchen, regulars get treated like family —
-                  every 5th order earns a <b style={{ color: '#8B6914' }}>FREE dish</b> of your choice. This order could be your first step.
+                  🍛 <b style={{ color: '#800020' }}>Amma&apos;s rule: no one leaves without a little extra.</b>{' '}
+                  With an account, every 5th order brings a <b style={{ color: '#8B6914' }}>FREE dish</b> of your choice —
+                  and this order counts as your first.
                 </p>
-                <button onClick={() => setAuthOpen(true)}
-                  className="shrink-0 px-3 py-2 rounded-lg text-xs font-black text-white"
-                  style={{ backgroundColor: '#800020' }}>
-                  Count me in
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={() => setAuthOpen(true)}
+                    className="flex-1 py-2 rounded-lg text-xs font-black text-white"
+                    style={{ backgroundColor: '#800020' }}>
+                    Sign in
+                  </button>
+                  <button onClick={() => setAuthOpen(true)}
+                    className="flex-1 py-2 rounded-lg text-xs font-black"
+                    style={{ border: '1.5px solid #800020', color: '#800020', backgroundColor: 'white' }}>
+                    Sign up
+                  </button>
+                </div>
               </div>
             )}
 
@@ -1509,6 +1523,8 @@ const CheckoutInner = () => {
                 grandTotal={grandTotal}
                 deliveryType={deliveryType}
                 feeKnown={deliveryType === 'takeaway' || !!validPricing}
+                feeSaved={potentialDeliveryFee ?? MIN_DELIVERY_FEE}
+                feeSavedIsEstimate={collectSavingIsEstimate}
               />
 
               {/* Goes well with — pairs_with upsell */}

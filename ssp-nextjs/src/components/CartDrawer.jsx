@@ -90,6 +90,20 @@ function UpsellRow({ cartItems, onAdd }) {
   useEffect(() => {
     api.get('/menu?available=true').then(r => {
       const cartIds = new Set(cartItems.map(i => i.id));
+      // Same source as checkout's "Goes well with": the menu's pairs_with links
+      const pairIds = [];
+      const seen = new Set();
+      for (const ci of cartItems) {
+        const full = r.data.find(m => m.id === ci.id);
+        for (const pid of (full?.pairs_with || [])) {
+          if (!cartIds.has(pid) && !seen.has(pid)) { seen.add(pid); pairIds.push(pid); }
+        }
+      }
+      const paired = pairIds
+        .map(pid => r.data.find(m => m.id === pid && isOrderable(m.category)))
+        .filter(Boolean);
+      if (paired.length >= 2) { setSuggestions(paired.slice(0, 4)); return; }
+      // Fallback: category-complement heuristic when items have no pairings
       const cartCategories = [...new Set(cartItems.map(i => i.category).filter(Boolean))];
       const candidates = r.data
         .filter(i => !cartIds.has(i.id) && isOrderable(i.category))
