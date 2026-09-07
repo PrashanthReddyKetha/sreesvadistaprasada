@@ -26,20 +26,18 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Product',
   name: 'Dabba Wala — Weekly South Indian Meal Subscription',
-  description: 'Weekly home-cooked South Indian meal plan delivered to your door in Milton Keynes, Edinburgh and Glasgow. Fresh Andhra and Telugu cooking — rice, dal, curry, pickle and papad every day.',
+  description: 'Weekly home-cooked South Indian meal plan delivered to your door in Milton Keynes. Fresh Andhra and Telugu cooking — rice, dal, curry, pickle and papad every day.',
   brand: { '@type': 'Brand', name: 'Sree Svadista Prasada' },
   offers: {
     '@type': 'Offer',
     priceCurrency: 'GBP',
-    price: '7.00',
+    price: '75.00',
     priceValidUntil: '2027-12-31',
     availability: 'https://schema.org/InStock',
     url: 'https://sreesvadistaprasada.com/subscriptions',
   },
   areaServed: [
     { '@type': 'City', name: 'Milton Keynes' },
-    { '@type': 'City', name: 'Edinburgh' },
-    { '@type': 'City', name: 'Glasgow' },
   ],
 };
 
@@ -58,10 +56,7 @@ export default function Page() {
           Fresh Andhra and Telugu dishes delivered to your door every week across
           Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley,
           Westcroft, Emerson Valley and all MK postcodes (MK1–MK19).
-          Also delivering across Edinburgh — Leith, Marchmont, Newington, Bruntsfield,
-          Tollcross, Morningside, Southside Edinburgh (EH1–EH17) — and Glasgow —
-          Pollokshields, Shawlands, Govanhill, Southside Glasgow, Finnieston,
-          West End, Partick (G1–G46).
+          Edinburgh and Glasgow subscriptions are coming soon — join the waitlist.
         </p>
         <h2>Subscription Plans</h2>
         <ul>
@@ -87,8 +82,7 @@ export default function Page() {
         <p>
           Milton Keynes: Wolverton, Stony Stratford, Greenleys, Newport Pagnell,
           Bletchley, Westcroft, Central MK, Emerson Valley, Shenley Brook End (MK1–MK19).
-          Edinburgh: Leith, Marchmont, Newington, Bruntsfield, Tollcross, Morningside (EH1–EH17).
-          Glasgow: Pollokshields, Shawlands, Govanhill, Southside, Finnieston, West End (G1–G46).
+          Edinburgh and Glasgow are coming soon.
           Pickles, podis and snacks ship UK-wide.
         </p>
       </section>

@@ -381,4 +381,9 @@ async def customer_reply(
     )
     await db.enquiry_messages.insert_one(msg.model_dump())
 
+    notify_admin(
+        f"Customer replied · {sender_name}",
+        f"<p><b>{sender_name}</b> replied on their {enq_type} enquiry.</p><p>{payload.text}</p>",
+    )
+
     return msg.model_dump()

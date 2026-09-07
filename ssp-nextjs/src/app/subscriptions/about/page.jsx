@@ -34,7 +34,7 @@ const faqSchema = {
       name: 'What areas does the Dabba Wala deliver to?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Hot daily dabbas are delivered across all Milton Keynes postcodes MK1 to MK19, including Bletchley, Newport Pagnell, Central MK, Stony Stratford, Wolverton and Greenleys. Subscription deliveries also available to Edinburgh (Leith, Newington, Marchmont) and Glasgow (Pollokshields, Shawlands, Finnieston).',
+        text: 'Hot daily dabbas are delivered across all Milton Keynes postcodes MK1 to MK19, including Bletchley, Newport Pagnell, Central MK, Stony Stratford, Wolverton and Greenleys. Edinburgh and Glasgow subscriptions are coming soon — join the waitlist to be first in line.',
       },
     },
     {
@@ -42,7 +42,7 @@ const faqSchema = {
       name: 'Can I pause or cancel my subscription?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. You can pause or cancel your Dabba Wala subscription at any time. No lock-in, no cancellation fees.',
+        text: 'You can skip individual delivery days from your Dashboard, and cancel within 48 hours of signing up for a full refund. Plans are a fixed term and don\'t auto-renew, so there\'s no ongoing subscription to cancel — no lock-in, no recurring fees.',
       },
     },
     {
@@ -131,8 +131,8 @@ export default function SubscriptionsAboutPage() {
         </h2>
         <div className="space-y-3 mb-10">
           {[
-            ['What areas do you deliver to?', 'Hot daily dabbas across all MK postcodes MK1–MK19 including Wolverton, Stony Stratford, Greenleys, Newport Pagnell and Bletchley. Weekly subscription delivery also to Edinburgh (Leith, Newington, Marchmont) and Glasgow (Pollokshields, Shawlands, Finnieston).'],
-            ['Can I pause or cancel?', 'Yes. Pause or cancel anytime. No lock-in, no fees.'],
+            ['What areas do you deliver to?', 'Hot daily dabbas across all MK postcodes MK1–MK19 including Wolverton, Stony Stratford, Greenleys, Newport Pagnell and Bletchley. Edinburgh and Glasgow are coming soon — join the waitlist.'],
+            ['Can I pause or cancel?', 'Skip individual days anytime, or cancel within 48 hours of signing up for a full refund. Fixed-term plans, no auto-renewal, no lock-in.'],
             ['Is the food halal?', 'Yes. All meat in Svadista and Mixed Dabbas uses halal-certified suppliers.'],
             ['Can I customise my dabba?', 'Yes. Contact us on WhatsApp with any dietary requirements or preferences and we will plan accordingly.'],
             ['How is the dabba delivered?', 'Delivered hot in insulated packaging to your door. You do not need to be home — leave delivery instructions at checkout.'],

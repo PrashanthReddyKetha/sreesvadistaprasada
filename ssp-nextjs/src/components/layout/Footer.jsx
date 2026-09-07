@@ -95,7 +95,7 @@ const Footer = () => {
               Taste for your heart · memories on a plate
             </span>
             <p className="text-sm leading-relaxed mb-4" style={{ color: '#A09890' }}>
-              Grandmother's recipes, slow tadkas, and the patient kind of love that fills a house with aroma. Cooked in Milton Keynes. Carried to Edinburgh &amp; Glasgow. Sent across the UK in small, careful jars.
+              Grandmother's recipes, slow tadkas, and the patient kind of love that fills a house with aroma. Cooked in Milton Keynes, with Edinburgh &amp; Glasgow coming soon. Sent across the UK in small, careful jars.
             </p>
             <p className="text-sm italic" style={{ color: '#F4C430' }}>
               "Cooked with care. Served with love."
@@ -113,7 +113,12 @@ const Footer = () => {
                 { name: 'Full Menu', path: '/menu' },
                 { name: 'Prasada (Pure Veg)', path: '/prasada' },
                 { name: 'Svadista (Non-Veg)', path: '/svadista' },
+                { name: 'Breakfast', path: '/breakfast' },
+                { name: 'Street Food', path: '/street-food' },
+                { name: 'Ragi Specials', path: '/ragi-specials' },
+                { name: 'Drinks', path: '/drinks' },
                 { name: 'Subscriptions', path: '/subscriptions' },
+                { name: 'Blog', path: '/blog' },
                 { name: 'Gallery', path: '/gallery' },
                 { name: 'FAQ', path: '/faq' },
               ].map((link) => (
@@ -206,14 +211,14 @@ const Footer = () => {
                   <span itemProp="addressLocality">Greenleys</span>,{' '}
                   <span itemProp="addressRegion">Milton Keynes</span>{' '}
                   <span itemProp="postalCode">MK12 6LF</span><br />
-                  <span style={{ color: '#A09890' }}>Also serving Edinburgh &amp; Glasgow</span>
+                  <span style={{ color: '#A09890' }}>Edinburgh &amp; Glasgow coming soon</span>
                 </address>
               </div>
               <div className="flex items-center gap-3">
                 <Phone size={16} className="flex-shrink-0" style={{ color: '#F4C430' }} />
                 <a
                   href="tel:+447307119962"
-                  className="text-sm transition-colors duration-200 hover:text-white md:pointer-events-none md:cursor-default"
+                  className="text-sm transition-colors duration-200 hover:text-white"
                   style={{ color: '#A09890' }}
                 >
                   +44 73 0711 9962
@@ -274,7 +279,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-6 flex flex-col md:flex-row justify-between items-center gap-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <p className="text-xs" style={{ color: '#A09890' }}>
-            &copy; 2026 Sree Svadista Prasada. All rights reserved.
+            &copy; {new Date().getFullYear()} Sree Svadista Prasada. All rights reserved.
           </p>
           <div className="flex gap-6">
             <Link href="/contact" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>Contact Us</Link>

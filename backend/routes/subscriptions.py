@@ -1,7 +1,15 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from typing import Optional, List
 from datetime import datetime, timedelta
+from collections import defaultdict
+import asyncio
+import os
+import time
+import stripe
 from database import db
+
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
+
 from models import Subscription, SubscriptionCreate, SubscriptionStatusUpdate, SubscriptionStatus
 from auth import get_current_user, get_optional_user, require_admin
 from notifications import (
@@ -22,15 +30,45 @@ PLAN_DAYS = {
     "monthly": 30,  # Mon + 30 = approx 1 calendar month
 }
 
+# ── Rate limiter for public subscription creation ──────────────────────────────
+_sub_rate_store: dict = defaultdict(list)
+SUB_RATE_WINDOW = 3600   # 1 hour
+SUB_RATE_MAX    = 5      # max 5 attempts per hour per IP
+
+def _check_sub_rate(request: Request):
+    ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    cutoff = now - SUB_RATE_WINDOW
+    _sub_rate_store[ip] = [t for t in _sub_rate_store[ip] if t > cutoff]
+    if len(_sub_rate_store[ip]) >= SUB_RATE_MAX:
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait before trying again.")
+    _sub_rate_store[ip].append(now)
+
 
 @router.post("", response_model=Subscription)
 async def create_subscription(
+    request: Request,
     payload: SubscriptionCreate,
     current_user: Optional[dict] = Depends(get_optional_user),
+    _: None = Depends(_check_sub_rate),
 ):
     price = PLAN_PRICES.get(payload.plan.lower(), 75.0)
     days  = PLAN_DAYS.get(payload.plan.lower(), 4)
-    user_id = current_user["sub"] if current_user else payload.user_id
+    user_id = current_user["sub"] if current_user else None
+
+    # Verify payment with Stripe before creating the subscription — same rule as orders.
+    # Never trust the client for price; an unverified subscription is a free one.
+    if not payload.payment_intent_id:
+        raise HTTPException(400, "Payment is required to start a subscription")
+    try:
+        loop = asyncio.get_event_loop()
+        pi = await loop.run_in_executor(None, lambda: stripe.PaymentIntent.retrieve(payload.payment_intent_id))
+    except stripe.StripeError:
+        raise HTTPException(400, "Invalid payment — please try again")
+    if pi.status != "succeeded":
+        raise HTTPException(400, "Payment was not completed — please try again")
+    if pi.amount != round(price * 100):
+        raise HTTPException(400, "Payment amount does not match plan price")
 
     # Calculate end_date and cancellation window
     try:

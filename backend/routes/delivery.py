@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from models import PostcodeCheckRequest, DeliveryZoneResponse
+from routes.orders import get_zone_from_postcode, ZONE_DELIVERY_FEE, ZONE_FREE_DELIVERY_THRESHOLD, MINIMUM_ORDER
 
 router = APIRouter(prefix="/delivery", tags=["delivery"])
 
@@ -25,33 +26,22 @@ REST_OF_UK = {
 }
 
 
-def match_zone(postcode: str):
-    clean = postcode.upper().replace(" ", "")
-    for zone in ZONES:
-        for prefix in zone["prefixes"]:
-            if clean.startswith(prefix):
-                # For "G", make sure next char is a digit to avoid GU, GL, etc.
-                after = clean[len(prefix):]
-                if prefix == "G" and (not after or not after[0].isdigit()):
-                    continue
-                return zone
-    return None
-
-
 @router.post("/check", response_model=DeliveryZoneResponse)
 async def check_postcode(payload: PostcodeCheckRequest):
-    zone = match_zone(payload.postcode)
+    # Same district whitelist orders.py uses for checkout, so this checker
+    # never promises delivery that the order engine will then refuse.
+    mk_zone = get_zone_from_postcode(payload.postcode)
 
-    if zone:
+    if mk_zone is not None:
         return DeliveryZoneResponse(
             serviceable=True,
-            city=zone["city"],
-            delivery_fee=zone["delivery_fee"],
-            free_over=zone["free_over"],
-            min_order=zone["min_order"],
-            estimated_time=zone["estimated_time"],
-            service_type=zone["service_type"],
-            message=f"We deliver to {zone['city']}! Full menu available.",
+            city="Milton Keynes",
+            delivery_fee=ZONE_DELIVERY_FEE[mk_zone],
+            free_over=ZONE_FREE_DELIVERY_THRESHOLD[mk_zone],
+            min_order=MINIMUM_ORDER,
+            estimated_time="30–60 mins",
+            service_type="full",
+            message="We deliver to Milton Keynes! Full menu available.",
         )
 
     return DeliveryZoneResponse(

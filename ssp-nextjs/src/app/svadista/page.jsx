@@ -55,7 +55,7 @@ const SVADISTA_FAQ = {
     {
       '@type': 'Question',
       name: 'Do you deliver non-veg Indian food to Edinburgh and Glasgow?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Yes! In addition to Milton Keynes, we deliver across Edinburgh (Leith, Marchmont, Newington, Bruntsfield) and Glasgow (Pollokshields, Shawlands, Govanhill, Finnieston). Check your postcode at checkout.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'Not yet — we currently deliver across Milton Keynes only. Edinburgh and Glasgow are coming soon; join the waitlist to be notified when we launch there.' },
     },
     {
       '@type': 'Question',
@@ -76,9 +76,7 @@ export default async function SvadistaPage() {
         and Telugu non-vegetarian cooking — Gongura Chicken, Natu Kodi Biryani,
         Mutton Curry, Egg Specials and Indo-Chinese dishes. Delivered across Milton
         Keynes (Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley,
-        Westcroft, Central MK), Edinburgh (Leith, Marchmont, Newington, Bruntsfield,
-        Morningside, Southside Edinburgh) and Glasgow (Pollokshields, Shawlands,
-        Govanhill, Finnieston, West End, Partick).
+        Westcroft, Central MK). Edinburgh and Glasgow delivery is coming soon.
       </p>
       <SvadistaClient initialItems={initialItems} initialTab="Starters" />
     </>

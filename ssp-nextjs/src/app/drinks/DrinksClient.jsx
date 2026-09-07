@@ -7,6 +7,7 @@ import { ShoppingCart, Droplets, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
+import { trackMenuCategoryView } from '@/lib/analytics';
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
@@ -15,6 +16,7 @@ const Drinks = ({ initialItems = [] }) => {
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [search, setSearch] = useState('');
   const { addToCart } = useCart();
+  useEffect(() => { trackMenuCategoryView('drinks'); }, []);
 
   useEffect(() => {
     api.get('/menu?category=drinks&available=true')

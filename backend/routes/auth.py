@@ -3,16 +3,19 @@ from typing import List
 import os
 import json
 import logging
+import secrets
 import time
+from datetime import datetime, timedelta
 from collections import defaultdict
 from database import db
 from models import (
     UserCreate, UserLogin, UserUpdate, User, UserInDB, TokenResponse,
     GoogleAuthRequest, GoogleCompleteRequest,
     PushTokenUpdate, SavedAddress, SavedAddressCreate,
+    PasswordResetRequest, PasswordResetConfirm,
 )
 from auth import hash_password, verify_password, create_access_token, get_current_user, require_admin
-from notifications import send_email, email_welcome, create_notification
+from notifications import send_email, email_welcome, email_password_reset, create_notification, SITE_URL
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +159,46 @@ async def login(request: Request, payload: UserLogin):
 
     token = create_access_token(user.id, user.role.value)
     return TokenResponse(access_token=token, user=User(**user.model_dump()))
+
+
+# ── Password reset ─────────────────────────────────────────────────────────────
+
+RESET_TOKEN_TTL_HOURS = 1
+
+@router.post("/forgot-password")
+async def forgot_password(request: Request, payload: PasswordResetRequest, _: None = Depends(_check_rate_limit)):
+    doc = await db.users.find_one({"email": payload.email.lower().strip()}, {"_id": 0})
+    # Always return the same response whether or not the account exists —
+    # otherwise this endpoint becomes a user-enumeration oracle.
+    if doc and doc.get("password_hash"):
+        token = secrets.token_urlsafe(32)
+        await db.password_resets.insert_one({
+            "token": token,
+            "user_id": doc["id"],
+            "expires_at": (datetime.utcnow() + timedelta(hours=RESET_TOKEN_TTL_HOURS)).isoformat(),
+            "used": False,
+            "created_at": datetime.utcnow().isoformat(),
+        })
+        reset_url = f"{SITE_URL}/reset-password?token={token}"
+        subj, html = email_password_reset(doc.get("name", "there"), reset_url)
+        send_email(doc["email"], subj, html)
+    return {"message": "If an account exists for that email, we've sent a password reset link."}
+
+
+@router.post("/reset-password")
+async def reset_password(request: Request, payload: PasswordResetConfirm, _: None = Depends(_check_rate_limit)):
+    record = await db.password_resets.find_one({"token": payload.token}, {"_id": 0})
+    if not record or record.get("used"):
+        raise HTTPException(status_code=400, detail="This reset link is invalid or has already been used.")
+    if record.get("expires_at", "") < datetime.utcnow().isoformat():
+        raise HTTPException(status_code=400, detail="This reset link has expired. Please request a new one.")
+
+    await db.users.update_one(
+        {"id": record["user_id"]},
+        {"$set": {"password_hash": hash_password(payload.new_password)}},
+    )
+    await db.password_resets.update_one({"token": payload.token}, {"$set": {"used": True}})
+    return {"message": "Password updated. You can now sign in with your new password."}
 
 
 # ── Register (mobile — no phone/Firebase required) ────────────────────────────
@@ -384,7 +427,7 @@ async def google_auth_mobile(payload: GoogleAuthRequest):
 # ── Email / Phone availability checks ─────────────────────────────────────────
 
 @router.get("/check-email")
-async def check_email(email: str):
+async def check_email(email: str, request: Request, _: None = Depends(_check_rate_limit)):
     doc = await db.users.find_one({"email": email.lower().strip()}, {"_id": 0, "google_id": 1, "password_hash": 1})
     if not doc:
         return {"exists": False}
@@ -396,7 +439,7 @@ async def check_email(email: str):
 
 
 @router.get("/check-phone")
-async def check_phone(phone: str):
+async def check_phone(phone: str, request: Request, _: None = Depends(_check_rate_limit)):
     doc = await db.users.find_one({"phone": phone.strip()}, {"_id": 0, "id": 1})
     return {"exists": bool(doc)}
 

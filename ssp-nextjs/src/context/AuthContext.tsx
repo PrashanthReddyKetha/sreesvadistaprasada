@@ -37,6 +37,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (stored) setUser(JSON.parse(stored));
     } catch { /* ignore */ }
     setInitialized(true);
+
+    const handleUnauthorized = () => setUser(null);
+    window.addEventListener('ssp:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('ssp:unauthorized', handleUnauthorized);
   }, []);
 
   const login = (userData: User, token: string) => {

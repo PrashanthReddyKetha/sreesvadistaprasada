@@ -106,15 +106,18 @@ export function trackBeginCheckout(cartItems, cartTotal, coupon = '') {
   });
 }
 
-/** Fired when payment is confirmed and order is placed */
-export function trackPurchase(orderId, cartItems, cartTotal, deliveryFee = 0, coupon = '') {
+/** Fired when payment is confirmed and order is placed.
+ *  `grandTotal` must be the actual amount charged (after delivery fee, small-order
+ *  fee, takeaway discount and free-item discount) — the same figure Stripe charged —
+ *  so purchase value reconciles against real revenue instead of a raw subtotal. */
+export function trackPurchase(orderId, cartItems, grandTotal, deliveryFee = 0, coupon = '') {
   push({ ecommerce: null });
   push({
     event: 'purchase',
     ecommerce: {
       transaction_id: orderId,
       currency:       'GBP',
-      value:          cartTotal + deliveryFee,
+      value:          grandTotal,
       shipping:       deliveryFee,
       coupon,
       items: cartItems.map(i => itemPayload(i, i.quantity)),

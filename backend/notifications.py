@@ -70,6 +70,14 @@ ADMIN_ALERT_EMAIL = (
     or "info@sreesvadistaprasada.com"
 )
 SITE_URL = os.environ.get("SITE_URL", "https://sreesvadistaprasada.com").rstrip("/")
+# Set GOOGLE_REVIEW_URL once the Google Business Profile exists, to the exact
+# "https://search.google.com/local/writereview?placeid=..." link from the GBP
+# dashboard — that's the format Google actually recognises for review requests.
+# The maps search fallback below still gets a happy customer to the listing.
+GOOGLE_REVIEW_URL = os.environ.get(
+    "GOOGLE_REVIEW_URL",
+    "https://www.google.com/maps/search/?api=1&query=Sree+Svadista+Prasada+Milton+Keynes",
+)
 
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
@@ -159,24 +167,32 @@ async def _send_sms_now(to: str, body: str) -> None:
 
 
 # ── Public fire-and-forget API ───────────────────────────────────────────────
+# asyncio only holds a weak reference to a task — without a strong reference
+# somewhere, the event loop can garbage-collect it mid-flight and the
+# email/SMS silently never sends. Keep one here and let each task remove
+# itself on completion.
+_background_tasks: set = set()
+
+def _fire(coro) -> None:
+    try:
+        task = asyncio.create_task(coro)
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
+    except RuntimeError:
+        # No running loop — best effort synchronous run
+        asyncio.run(coro)
+
 
 def send_email(to: str, subject: str, html: str) -> None:
     if not to:
         return
-    try:
-        asyncio.create_task(_send_email_now(to, subject, html))
-    except RuntimeError:
-        # No running loop — best effort synchronous run
-        asyncio.run(_send_email_now(to, subject, html))
+    _fire(_send_email_now(to, subject, html))
 
 
 def send_sms(to: str, body: str) -> None:
     if not to:
         return
-    try:
-        asyncio.create_task(_send_sms_now(to, body))
-    except RuntimeError:
-        asyncio.run(_send_sms_now(to, body))
+    _fire(_send_sms_now(to, body))
 
 
 def notify_admin(subject: str, html: str) -> None:
@@ -206,6 +222,18 @@ async def send_push_notification(token: str, title: str, body: str, data: Option
 
 # ── Templated helpers (keep route files tidy) ────────────────────────────────
 
+def email_password_reset(name: str, reset_url: str) -> tuple[str, str]:
+    html = _wrap(
+        "Reset your password",
+        f"<p>Hi {name},</p>"
+        "<p>We received a request to reset your Sree Svadista Prasada password. "
+        "This link expires in 1 hour.</p>"
+        "<p>If you didn't request this, you can safely ignore this email — your password won't change.</p>",
+        "Reset Password", reset_url,
+    )
+    return "Reset your password", html
+
+
 def email_welcome(name: str) -> tuple[str, str]:
     html = _wrap(
         f"Welcome, {name}!",
@@ -215,6 +243,10 @@ def email_welcome(name: str) -> tuple[str, str]:
         "Open My Dashboard", f"{SITE_URL}/dashboard",
     )
     return "Welcome to Sree Svadista Prasada", html
+
+
+def _order_disp(order: dict) -> str:
+    return order.get("order_number") or order.get("id", "")[:8].upper()
 
 
 def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
@@ -227,39 +259,63 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
     addr_line = ", ".join(filter(None, [
         addr.get("line1"), addr.get("line2"), addr.get("city"), addr.get("postcode")
     ]))
+    disp = _order_disp(order)
+    is_takeaway = order.get("delivery_type") == "takeaway"
+    slot = order.get("scheduled_slot_final") or ""
+    slot_line = ""
+    if is_takeaway and len(slot) >= 16:
+        hh, mm = int(slot[11:13]), slot[14:16]
+        slot_line = (
+            f'<p style="color:#5C4B47;font-size:13px"><b>Collection time:</b> '
+            f'{hh % 12 or 12}:{mm} {"am" if hh < 12 else "pm"}</p>'
+        )
+    dest_line = (
+        slot_line + '<p style="color:#5C4B47;font-size:13px"><b>Collection from:</b> Greenleys kitchen, Milton Keynes</p>'
+        if is_takeaway else
+        f'<p style="color:#5C4B47;font-size:13px"><b>Deliver to:</b> {addr_line}</p>'
+    )
+    intro = (
+        "We'll text you as soon as it's ready for collection.</p>" if is_takeaway
+        else "We'll text you as soon as it's confirmed and on the way.</p>"
+    )
     html = _wrap(
         "Order received",
-        f"<p>Hi {name}, we've received your order <b>#{order.get('id','')[:8].upper()}</b>. "
-        "We'll text you as soon as it's confirmed and on the way.</p>"
+        f"<p>Hi {name}, we've received your order <b>#{disp}</b>. " + intro +
         f'<table style="width:100%;font-size:14px;border-top:1px solid rgba(0,0,0,0.1);margin-top:10px">{items_rows}</table>'
         f'<p style="margin-top:12px"><b>Subtotal:</b> £{order.get("subtotal",0):.2f}<br>'
         f'<b>Delivery:</b> £{order.get("delivery_fee",0):.2f}<br>'
         f'<b>Total:</b> £{order.get("total",0):.2f}</p>'
-        f'<p style="color:#5C4B47;font-size:13px"><b>Deliver to:</b> {addr_line}</p>',
+        + dest_line,
         "Track My Order", f"{SITE_URL}/dashboard",
     )
-    return f"Order confirmed · #{order.get('id','')[:8].upper()}", html
+    return f"Order confirmed · #{disp}", html
 
 
 def email_order_status(order: dict, name: str, status: str) -> tuple[str, str]:
+    is_takeaway = order.get("delivery_type") == "takeaway"
     pretty = {
         "confirmed": "Your order is confirmed",
         "preparing": "We're preparing your order",
+        "ready": "Your order is ready for collection",
         "out_for_delivery": "Your order is on the way",
-        "delivered": "Your order was delivered",
+        "delivered": "Your order was collected" if is_takeaway else "Your order was delivered",
         "cancelled": "Your order was cancelled",
     }.get(status, "Order update")
     extra = {
+        "ready": "<p>Come and collect it while it's hot — just give your order number at the door.</p>",
         "out_for_delivery": "<p>Our delivery partner is heading to you now. Please keep your phone handy.</p>",
-        "delivered": "<p>We hope you enjoyed it! Please take a moment to leave a rating — your feedback shapes our menu.</p>",
+        "delivered": "<p>We hope you enjoyed it! If you have a moment, a Google review helps other South Indian food lovers in Milton Keynes find us.</p>",
         "cancelled": "<p>If this was unexpected, please reply to this email and we'll look into it.</p>",
     }.get(status, "")
+    cta_text, cta_url = ("Leave a Google Review", GOOGLE_REVIEW_URL) if status == "delivered" else ("Open Dashboard", f"{SITE_URL}/dashboard")
+    disp = _order_disp(order)
+    status_word = "ready for collection" if status == "ready" else status.replace("_", " ")
     html = _wrap(
         pretty,
-        f"<p>Hi {name},</p><p>Order <b>#{order.get('id','')[:8].upper()}</b> is now <b>{status.replace('_',' ')}</b>.</p>{extra}",
-        "Open Dashboard", f"{SITE_URL}/dashboard",
+        f"<p>Hi {name},</p><p>Order <b>#{disp}</b> is now <b>{status_word}</b>.</p>{extra}",
+        cta_text, cta_url,
     )
-    return f"{pretty} · #{order.get('id','')[:8].upper()}", html
+    return f"{pretty} · #{disp}", html
 
 
 def email_subscription_confirmation(sub: dict, name: str) -> tuple[str, str]:
@@ -321,7 +377,7 @@ def email_subscription_cancelled(name: str, sub: dict) -> tuple[str, str]:
         f"<p>Hi {name}, your <b>{sub.get('plan','').title()}</b> plan has been cancelled. "
         "You won't be charged again and no further boxes will be delivered.</p>"
         "<p>We'd love to know what we could do better — just reply to this email.</p>",
-        "Start a New Plan", f"{SITE_URL}/dabbawala",
+        "Start a New Plan", f"{SITE_URL}/subscriptions",
     )
     return "Subscription cancelled", html
 
@@ -332,7 +388,7 @@ def email_subscription_expired(name: str, sub: dict) -> tuple[str, str]:
         f"<p>Hi {name}, your <b>{sub.get('plan','').title()}</b> Dabba Wala plan wrapped up on "
         f"<b>{sub.get('end_date','—')}</b>. We hope the week tasted like home.</p>"
         "<p>Renew now and we'll keep the same box type, address, and preferences.</p>",
-        "Renew My Plan", f"{SITE_URL}/dabbawala",
+        "Renew My Plan", f"{SITE_URL}/subscriptions",
     )
     return "Your Dabba Wala ended — renew?", html
 
@@ -342,7 +398,7 @@ def email_renewal_reminder(name: str, sub: dict) -> tuple[str, str]:
         "Your Dabba Wala ends soon",
         f"<p>Hi {name}, a quick reminder that your <b>{sub.get('plan','').title()}</b> plan "
         f"ends on <b>{sub.get('end_date','—')}</b>. Renew now to avoid a break in your weekly meals.</p>",
-        "Renew My Plan", f"{SITE_URL}/dabbawala",
+        "Renew My Plan", f"{SITE_URL}/subscriptions",
     )
     return "Renew your Dabba Wala", html
 

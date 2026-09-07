@@ -14,6 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
 import { trackPurchase } from '@/lib/analytics';
+import { isOrderable } from '@/config/softLaunch';
 
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
@@ -289,7 +290,10 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
   const remaining = freeDeliveryAt ? Math.max(0, freeDeliveryAt - cartTotal) : 0;
 
   useEffect(() => {
-    api.get('/menu?available=true').then(r => setAllItems(r.data)).catch(() => {}).finally(() => setLoading(false));
+    api.get('/menu?available=true')
+      .then(r => setAllItems(r.data.filter(i => isOrderable(i.category))))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const categories = ['all', ...Object.keys(CATEGORY_LABELS).filter(c => allItems.some(i => i.category === c))];
@@ -533,12 +537,12 @@ const CheckoutInner = () => {
       return;
     }
     try {
-      const items = cartItems.map(i => ({ price: price(i.price), quantity: i.quantity }));
+      const items = cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity }));
       const r = await api.post('/orders/calculate', {
         items,
         order_type: deliveryType,
         postcode: form.postcode,
-        free_item_price: freeItemDiscount,
+        free_item_id: freeItem?.id,
       });
       setServerPricing(r.data);
       // Keep zone pill in sync with whatever postcode is in the address form
@@ -552,13 +556,15 @@ const CheckoutInner = () => {
         });
       }
     } catch (e) {
-      if (e.response?.status === 400) {
-        setServerPricing(null);
-        // Invalid postcode for delivery — clear zone pill so user knows it failed
-        if (deliveryType === 'delivery') setZoneInfo(null);
+      // Any failure here (bad postcode, validation error, network) means we do not
+      // have a trustworthy total — never fall back to a client-guessed price for
+      // what gets charged. handleOrder refuses to charge while this is null.
+      setServerPricing(null);
+      if (deliveryType === 'delivery' && e.response?.status === 400) {
+        setZoneInfo(null);
       }
     }
-  }, [cartItems, deliveryType, form.postcode, freeItemDiscount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cartItems, deliveryType, form.postcode, freeItem]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { recalculate(); }, [recalculate]);
 
@@ -595,6 +601,7 @@ const CheckoutInner = () => {
     if (required.some(k => !form[k].trim())) { setError('Please fill in all required fields.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('Please enter a valid email address.'); return; }
     if (deliveryType === 'delivery' && pcError) { setError("Sorry, your postcode is outside our delivery area. Please switch to collection or use a Milton Keynes postcode."); return; }
+    if (!validPricing) { setError("We couldn't confirm your total — please check your postcode and try again."); return; }
     if (!stripe || !elements) { setError('Payment not ready. Please wait a moment.'); return; }
     const cardNumberElement = elements.getElement(CardNumberElement);
     if (!cardNumberElement) { setError('Card details are missing.'); return; }
@@ -602,8 +609,8 @@ const CheckoutInner = () => {
     let paymentSucceeded = false;
     let capturedPI = null;
     try {
-      // Always use server-calculated total — never trust client amount
-      const chargeAmount = validPricing?.grand_total ?? grandTotal;
+      // Server-verified total only — never fall back to a client-guessed amount
+      const chargeAmount = validPricing.grand_total;
       const intentRes = await api.post('/payments/create-intent', { amount: chargeAmount });
       const { client_secret, payment_intent_id } = intentRes.data;
       capturedPI = payment_intent_id;
@@ -650,8 +657,7 @@ const CheckoutInner = () => {
 
       try { sessionStorage.removeItem('ssp_checkout_state'); } catch {}
       const orderId = res.data?.id?.slice(-6).toUpperCase() || '';
-      const deliveryFee = (validPricing?.delivery_fee ?? 0);
-      trackPurchase(orderId, cartItems, validPricing?.subtotal ?? cartTotal, deliveryFee);
+      trackPurchase(orderId, cartItems, validPricing.grand_total, validPricing.delivery_fee);
       setSuccess({ orderId, isRedemption: !!freeItem });
       clearCart();
     } catch (e) {
@@ -1121,7 +1127,7 @@ const CheckoutInner = () => {
 
               {/* Pay button */}
               {canCheckout && (
-                <button onClick={handleOrder} disabled={submitting || !meetsMinimum}
+                <button onClick={handleOrder} disabled={submitting || !meetsMinimum || !validPricing}
                   className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-60"
                   style={{ background: meetsMinimum ? 'linear-gradient(135deg, #800020, #5C0018)' : '#9CA3AF', cursor: meetsMinimum ? 'pointer' : 'not-allowed' }}>
                   {submitting

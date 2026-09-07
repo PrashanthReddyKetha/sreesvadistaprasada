@@ -21,24 +21,17 @@ const jsonLd = {
   '@graph': [
     {
       '@type': 'Restaurant',
-      '@id': 'https://www.sreesvadistaprasada.com/#restaurant',
+      '@id': 'https://sreesvadistaprasada.com/#restaurant',
       name: 'Sree Svadista Prasada',
       description: 'Authentic South Indian home-style cooking — grandmother\'s recipes, slow tadkas, and the patient kind of love that fills a house with aroma.',
-      url: 'https://www.sreesvadistaprasada.com',
+      url: 'https://sreesvadistaprasada.com',
       telephone: '+447307119962',
       email: 'info@sreesvadistaprasada.com',
-      image: 'https://www.sreesvadistaprasada.com/logo.png',
-      logo: 'https://www.sreesvadistaprasada.com/logo.png',
+      image: 'https://sreesvadistaprasada.com/logo.png',
+      logo: 'https://sreesvadistaprasada.com/logo.png',
       priceRange: '££',
       servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan', 'Halal'],
       knowsAbout: ['Gongura', 'Andhra cuisine', 'Telugu food', 'Dabba Wala', 'Ragi', 'Pulihora', 'Avakaya', 'Chicken 65', 'Gutti Vankaya'],
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: '4.8',
-        reviewCount: '94',
-        bestRating: '5',
-        worstRating: '1',
-      },
       hasMap: 'https://maps.google.com/?q=Milton+Keynes',
       address: {
         '@type': 'PostalAddress',
@@ -48,44 +41,42 @@ const jsonLd = {
         postalCode: 'MK12 6LF',
         addressCountry: 'GB',
       },
+      // TODO: add real `geo: { '@type': 'GeoCoordinates', latitude, longitude }` for
+      // 24 Oxman Ln, MK12 6LF — pull the exact figure from Google Business Profile
+      // rather than guessing; wrong coordinates hurt local ranking more than none.
       areaServed: [
         { '@type': 'City', name: 'Milton Keynes' },
-        { '@type': 'City', name: 'Edinburgh' },
-        { '@type': 'City', name: 'Glasgow' },
       ],
       sameAs: [
         'https://www.instagram.com/sreesvadistaprasada/',
         'https://www.facebook.com/sreesvadistaprasada',
       ],
+      hasMenu: 'https://sreesvadistaprasada.com/menu',
       hasOfferCatalog: {
         '@type': 'OfferCatalog',
         name: 'South Indian Menu',
         itemListElement: [
-          { '@type': 'Offer', itemOffered: { '@type': 'MenuItem', name: 'Prasada — Pure Vegetarian Menu', url: 'https://www.sreesvadistaprasada.com/prasada' } },
-          { '@type': 'Offer', itemOffered: { '@type': 'MenuItem', name: 'Svadista — Non-Vegetarian Menu', url: 'https://www.sreesvadistaprasada.com/svadista' } },
-          { '@type': 'Offer', itemOffered: { '@type': 'MenuItem', name: 'Dabba Wala Weekly Subscription', url: 'https://www.sreesvadistaprasada.com/subscriptions' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Menu', name: 'Prasada — Pure Vegetarian Menu', url: 'https://sreesvadistaprasada.com/prasada' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Menu', name: 'Svadista — Non-Vegetarian Menu', url: 'https://sreesvadistaprasada.com/svadista' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Dabba Wala Weekly Subscription', url: 'https://sreesvadistaprasada.com/subscriptions' } },
         ],
       },
       openingHoursSpecification: [
         { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '11:00', closes: '22:00' },
-        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday', 'Sunday'], opens: '08:00', closes: '22:00' },
+        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday', 'Sunday'], opens: '10:00', closes: '23:00' },
       ],
-      speakable: {
-        '@type': 'SpeakableSpecification',
-        cssSelector: ['.hero-description', '.about-tagline'],
-      },
     },
     {
       '@type': 'WebSite',
-      '@id': 'https://www.sreesvadistaprasada.com/#website',
-      url: 'https://www.sreesvadistaprasada.com',
+      '@id': 'https://sreesvadistaprasada.com/#website',
+      url: 'https://sreesvadistaprasada.com',
       name: 'Sree Svadista Prasada',
-      publisher: { '@id': 'https://www.sreesvadistaprasada.com/#restaurant' },
+      publisher: { '@id': 'https://sreesvadistaprasada.com/#restaurant' },
       potentialAction: {
         '@type': 'SearchAction',
         target: {
           '@type': 'EntryPoint',
-          urlTemplate: 'https://www.sreesvadistaprasada.com/breakfast?search={search_term_string}',
+          urlTemplate: 'https://sreesvadistaprasada.com/breakfast?search={search_term_string}',
         },
         'query-input': 'required name=search_term_string',
       },

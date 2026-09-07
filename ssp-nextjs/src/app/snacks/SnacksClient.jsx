@@ -1,8 +1,9 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Clock, MessageCircle, Bell, Package, Sparkles } from 'lucide-react';
 import { useNotifyMe } from '@/context/NotifyMeContext';
 import { WA_BULK } from '@/config/softLaunch';
+import { trackMenuCategoryView } from '@/lib/analytics';
 
 const HIGHLIGHTS = [
   { icon: '🌶️', title: 'Real Andhra Recipes', text: 'Handmade Gongura, Avakaya, Nalla Karam & more — no shortcuts, no preservatives.' },
@@ -12,6 +13,7 @@ const HIGHLIGHTS = [
 
 const Snacks = () => {
   const { openNotifyMe } = useNotifyMe();
+  useEffect(() => { trackMenuCategoryView('snacks'); }, []);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>

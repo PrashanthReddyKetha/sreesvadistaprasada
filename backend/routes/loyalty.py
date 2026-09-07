@@ -132,7 +132,7 @@ async def redeem_loyalty_reward(body: LoyaltyRedeemRequest, current_user: dict =
 
     free_item_id = body.free_item_id
 
-    free_item = await db.menu.find_one({"id": free_item_id, "available": True}, {"_id": 0})
+    free_item = await db.menu_items.find_one({"id": free_item_id, "available": True}, {"_id": 0})
     if not free_item:
         raise HTTPException(404, "Item not available")
 

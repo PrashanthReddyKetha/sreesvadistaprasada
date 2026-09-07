@@ -4,6 +4,61 @@ All changes listed in reverse chronological order. Each entry: `[YYYY-MM-DD] sco
 
 ---
 
+## 2026-08-28 — 360 audit remediation (pre-launch, ssp-nextjs + backend)
+
+Full-site 360 audit (59 findings) run against `frontend/`, `ssp-nextjs/`, `backend/`; fixes applied against `backend/` and the live `ssp-nextjs/` frontend only. Stripe payment unblocking intentionally left untouched (pre-launch hold) — everything else addressed below. `frontend/` (CRA) was left as-is; `ssp-nextjs` is the confirmed-live app.
+
+**Critical — ordering/payment was effectively dead**
+- `[2026-08-28]` backend/routes/orders.py, loyalty.py, daily_specials.py — `db.menu` → `db.menu_items` (6 call sites) — the collection name in use since commit `7520bfe` was never written to, so every order/calculate/redeem/live-price call 404'd
+- `[2026-08-28]` ssp-nextjs/src/app/checkout/page.jsx — `/orders/calculate` payload fixed to `{menu_item_id, quantity}` (was sending `{price, quantity}`, always 422ing); pricing errors now clear `serverPricing` instead of leaving stale data; `handleOrder` refuses to charge unless server-verified pricing exists (was silently falling back to client-computed total — the "card charged, order not created" failure mode)
+- `[2026-08-28]` backend/routes/subscriptions.py — subscription creation now verifies a Stripe PaymentIntent against `PLAN_PRICES` before insert (was completely unauthenticated — free subscriptions could be created via direct API call); added a 5/hr per-IP rate limiter
+- `[2026-08-28]` backend/routes/orders.py — loyalty free-item discount now looked up server-side from `menu_items` instead of trusting `payload.loyalty_free_item_original_price` from the client; unauthenticated order creation no longer accepts a client-supplied `user_id` (was letting a guest attribute an order — and someone else's pending reward — to any account)
+- `[2026-08-28]` backend/models.py, routes/orders.py — `OrderItem.quantity` and `OrderCalculateItem.quantity` bounded `ge=1, le=50` (was unbounded — negative quantities could reduce the charged total)
+- `[2026-08-28]` ssp-nextjs — removed all fabricated ratings/reviews: hardcoded `aggregateRating` (4.8/94) in homepage + Milton Keynes JSON-LD, the auto-incrementing fake review counter (`getLiveReviewCount`) and 30 invented testimonials on Subscriptions, and the 3 fabricated homepage testimonials (Home/HomeClient.jsx) — DMCC Act 2024 / Google structured-data policy exposure on a site with zero real orders yet
+- `[2026-08-28]` ssp-nextjs — Edinburgh/Glasgow delivery claims (including inside FAQPage/Restaurant JSON-LD) corrected to "coming soon" across faq, svadista, menu, subscriptions, subscriptions/about, Footer, mockData.js — was contradicting the backend's MK-only delivery area and the /edinburgh, /glasgow pages themselves
+- `[2026-08-28]` ssp-nextjs/src/app/menu/MenuClient.jsx — `useState(initialItems)` (was discarding the server-fetched prop with `useState([])`) — the flagship `/menu` page was shipping zero dishes to crawlers
+
+**High**
+- `[2026-08-28]` ssp-nextjs/src/components/layout/Header.jsx — "launching soon" notification bar replaced with an order-now message; added "Order Now" CTA to desktop nav and mobile menu (previously no ordering CTA existed in the header at all)
+- `[2026-08-28]` ssp-nextjs/src/app/HomeClient.jsx — removed unredeemable `HOME15` / "10% off first order" promo (no coupon field exists anywhere in checkout or the subscription wizard)
+- `[2026-08-28]` ssp-nextjs/src/app/[menu]/[subsection]/[slug]/ItemDetailClient.jsx — removed false "Save 5% together" combo pricing claim (items were added at full price regardless)
+- `[2026-08-28]` ssp-nextjs/src/components/CartDrawer.jsx — loyalty redemption payload fixed (`item_id` → `free_item_id`, matching backend); failed redemption calls now properly abort instead of silently proceeding
+- `[2026-08-28]` backend/routes/delivery.py — `/delivery/check` now shares `orders.py`'s exact MK postcode-district whitelist (was matching any `MK*` prefix, promising delivery the order engine would then refuse)
+- `[2026-08-28]` backend/routes/enquiries.py, reviews.py — `notify_admin` added on customer thread replies and on ≤2-star reviews (previously silent)
+- `[2026-08-28]` ssp-nextjs/src/app/contact/ContactClient.jsx, Footer.jsx, page.jsx, milton-keynes/page.jsx, data/mockData.js — NAP consistency: address, email domain (`@sreesvadista.co.uk` → `@sreesvadistaprasada.com`), and weekend opening hours (08:00–22:00 vs 10am–11pm conflict) unified across contact page, footer, and structured data
+- `[2026-08-28]` ssp-nextjs/src/app/sitemap.ts — fixed 404'ing `/prasada/starters-and-evening-delights` entry (→ `/prasada/bites-starters`); added `/blog`, all 3 blog posts, and the orphaned `/gongura` page
+- `[2026-08-28]` ssp-nextjs/src/app/robots.ts — `/admin`, `/dashboard`, `/checkout` disallowed; added noindex `layout.jsx` (+ page titles) for all three since they're client components and couldn't otherwise export `metadata`
+- `[2026-08-28]` ssp-nextjs/src/app/checkout/page.jsx, components/CartDrawer.jsx — "Add More Items" modal and loyalty free-item picker now filter through `isOrderable()` (were letting pickles/podis — explicitly soft-launch-gated elsewhere — be added to cart)
+- `[2026-08-28]` ssp-nextjs/src/app/dashboard/page.jsx — added "Order Again" reorder button on delivered/cancelled orders (previously no repeat-purchase path existed)
+- `[2026-08-28]` ssp-nextjs/src/api/index.ts, context/AuthContext.tsx — added 45s request timeout (Render cold starts) and a 401 interceptor that clears the stale token + logs the user out instead of leaving them silently "signed in" with an empty dashboard
+
+**Medium**
+- `[2026-08-28]` ssp-nextjs/src/components/layout/Header.jsx — brand-name `<h1>` in the header changed to `<p>` (was duplicating the page's real `<h1>` on every route)
+- `[2026-08-28]` ssp-nextjs/next.config.js — added www→apex redirect; deduplicated all JSON-LD `@id`s onto the apex domain (was split across www/apex, diluting ranking signals)
+- `[2026-08-28]` ssp-nextjs/src/app/page.jsx — removed `speakable` JSON-LD block pointing at CSS selectors that don't exist; `hasOfferCatalog` item types corrected (`MenuItem` → `Menu`/`Product`); flagged real `geo` coordinates as a TODO rather than guessing them
+- `[2026-08-28]` ssp-nextjs/src/app/subscriptions/page.jsx — `Product` offer price corrected from a stray `£7.00` to `£75.00` (matches the real weekly plan price)
+- `[2026-08-28]` ssp-nextjs/src/app/terms/TermsClient.jsx, subscriptions/about/page.jsx, data/mockData.js — Dabba Wala terms rewritten to match the actual backend model (one-time payment per fixed-term plan, no auto-renewal, 48h refund window) — was describing recurring billing that doesn't exist in the code
+- `[2026-08-28]` ssp-nextjs/src/app/subscriptions/SubscriptionsClient.jsx — success screen no longer shows "Invalid Date"/"NaN days away" on page reload (plan/box/start-date are now persisted through the reload, not just a bare success flag)
+- `[2026-08-28]` ssp-nextjs/src/app/dashboard/page.jsx, admin/page.jsx — fixed ", , " rendering for collection/takeaway orders (delivery address fields were undefined); `o.notes` used instead of the never-set `o.special_instructions`
+- `[2026-08-28]` ssp-nextjs/src/components/AuthModal.jsx — fixed `/privacy` 404 link (→ `/privacy-policy`)
+- `[2026-08-28]` ssp-nextjs/src/components/CartDrawer.jsx — upsell row now actually uses the previously-unused `COMPLEMENTS`/`scoreComplement` scoring logic (was hardcoding `category=breakfast` for every cart)
+- `[2026-08-28]` backend/notifications.py — `send_email`/`send_sms` fire-and-forget tasks now hold a strong reference (were bare `asyncio.create_task` calls, garbage-collectable mid-flight under load)
+- `[2026-08-28]` backend/routes/auth.py — rate limit added to `/auth/check-email`, `/auth/check-phone` (were unauthenticated, unlimited user-enumeration endpoints)
+- `[2026-08-28]` **New: password reset.** backend/routes/auth.py, models.py, notifications.py — `POST /auth/forgot-password` + `POST /auth/reset-password`, single-use tokens with 1hr expiry, no user-enumeration leak; ssp-nextjs/src/components/AuthModal.jsx — "Forgot password?" flow; new `ssp-nextjs/src/app/reset-password/` page. Previously no password-reset path existed at all.
+- `[2026-08-28]` ssp-nextjs/src/app/admin/page.jsx — orders/subscriptions/enquiries now poll every 30s; status-update failures surface the backend's actual error instead of failing silently
+- `[2026-08-28]` ssp-nextjs/src/app/dashboard/page.jsx — the 6 parallel dashboard fetches switched from `Promise.all` to `Promise.allSettled` (one failing call no longer blanks out data the others fetched successfully); added a 20s poll and a retry UI for total failure
+- `[2026-08-28]` ssp-nextjs/src/components/dashboard/EnquiriesTab.jsx — a failed thread fetch now shows a real error instead of "No replies yet"
+- `[2026-08-28]` **New: Google review CTA.** backend/notifications.py (delivered-order email), ssp-nextjs/src/app/dashboard/page.jsx (delivered orders) — no review ask existed anywhere pre-fix; using a Maps-search fallback link pending a real Google Business Profile Place ID
+- `[2026-08-28]` backend/notifications.py, routes/admin_dabba_wala.py — fixed dead `/dabbawala` links in renewal/expiry emails (→ `/subscriptions`)
+- `[2026-08-28]` ssp-nextjs/src/lib/analytics.js, checkout/page.jsx — `trackPurchase` now reports the actual charged total (was `subtotal + deliveryFee`, ignoring discounts and the small-order fee); wired up the previously-defined-but-never-called `trackEnquirySubmit` (contact, catering forms) and `trackMenuCategoryView` (all 7 menu category pages)
+- `[2026-08-28]` ssp-nextjs/src/data/mockData.js — added missing FAQ entries for dosa, idli, vada, tiffin, podi, naivedyam, biryani, and nut-free allergen info (feeds both the FAQ page and its FAQPage schema)
+- `[2026-08-28]` ssp-nextjs/src/components/layout/Footer.jsx — hardcoded `© 2026` replaced with `new Date().getFullYear()`; phone link `pointer-events-none` on desktop removed; footer nav expanded to include Breakfast, Street Food, Ragi Specials, Drinks, Blog (previously unlinked)
+- `[2026-08-28]` ssp-nextjs/src/app/blog/page.jsx — linked the orphaned `/gongura` page from the blog index (was reachable only via sitemap, zero inbound links)
+
+Not done this pass (flagged, not silently skipped): Stripe key rename in checkout/subscriptions (pre-launch hold, by request); Firebase hard-dependency on web registration; owned imagery/favicon (needs real assets); blog post depth; abandoned-cart recovery; merging the two parallel review systems; the `frontend/` (CRA) vs `ssp-nextjs` duplication — recommend deleting the CRA app now that `ssp-nextjs` is confirmed live.
+
+---
+
 ## 2026-07-08 — commit `f499117`
 
 - `[2026-07-08]` audit: completed full cart→payment→tracking→admin audit (67 findings) — commit `f499117`

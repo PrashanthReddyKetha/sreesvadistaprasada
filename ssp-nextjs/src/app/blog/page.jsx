@@ -43,6 +43,15 @@ const POSTS = [
     readTime: '7 min read',
     image: 'https://images.unsplash.com/photo-1743615467363-250466982515?w=600&q=80',
   },
+  {
+    slug: 'gongura',
+    href: '/gongura',
+    title: 'What Is Gongura? The Andhra Sorrel Leaf Guide',
+    excerpt: 'The tangy sorrel leaf that defines Andhra Pradesh cooking — rich in iron and folate, and the star ingredient behind Gongura Chicken and Gongura Mutton.',
+    category: 'Food Guide',
+    readTime: '5 min read',
+    image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?w=600&q=80',
+  },
 ];
 
 export default function BlogPage() {
@@ -76,13 +85,13 @@ export default function BlogPage() {
                     <span className="text-xs text-gray-400">{post.readTime}</span>
                   </div>
                   <h2 className="text-xl font-bold text-gray-800 mb-2 leading-snug" style={{ fontFamily: 'var(--font-playfair), serif' }}>
-                    <Link href={`/blog/${post.slug}`} className="hover:text-amber-700 transition-colors">
+                    <Link href={post.href || `/blog/${post.slug}`} className="hover:text-amber-700 transition-colors">
                       {post.title}
                     </Link>
                   </h2>
                   <p className="text-gray-500 text-sm leading-relaxed">{post.excerpt}</p>
                 </div>
-                <Link href={`/blog/${post.slug}`} className="inline-flex items-center gap-2 text-amber-700 font-semibold text-sm mt-4 hover:text-amber-900 transition-colors">
+                <Link href={post.href || `/blog/${post.slug}`} className="inline-flex items-center gap-2 text-amber-700 font-semibold text-sm mt-4 hover:text-amber-900 transition-colors">
                   Read article →
                 </Link>
               </div>

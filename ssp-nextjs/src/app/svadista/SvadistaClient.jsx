@@ -8,6 +8,7 @@ import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
+import { trackMenuCategoryView } from '@/lib/analytics';
 
 const TABS = ['Starters', 'Curries', 'Biriyani', 'Rice Bowls', 'Egg Specials', 'Indo - Chinese', 'Ragi Specials', 'Protein & Healthy Bowls', 'All'];
 
@@ -33,6 +34,7 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
     return (stored && TABS.includes(stored)) ? stored : initialTab;
   });
   const [search, setSearch] = useState('');
+  useEffect(() => { trackMenuCategoryView('svadista'); }, []);
   const tabRowRef = useRef(null);
   const tabMounted = useRef(false);
 

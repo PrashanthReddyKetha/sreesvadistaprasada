@@ -579,7 +579,8 @@ const Home = () => {
                     <span className="text-2xl font-bold" style={{ color: '#800020' }}>{chefSpecial.price}</span>
                     {isOrderable(chefSpecialItem?.category) ? (
                       <button
-                        onClick={(e) => { e.preventDefault(); addToCart(chefSpecial); }}
+                        onClick={(e) => { e.preventDefault(); if (chefSpecialItem) addToCart(chefSpecialItem); }}
+                        disabled={!chefSpecialItem}
                         className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md"
                         style={{ backgroundColor: '#800020' }}
                         data-testid="chef-special-add-btn"
@@ -758,12 +759,11 @@ const Home = () => {
 
             <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>A little welcome gift</p>
             <h2 className="text-4xl sm:text-5xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-              15% OFF
+              Dabba Wala
             </h2>
-            <p className="text-lg mb-1" style={{ color: '#800020' }}>
-              Your first month of daily dabbas
+            <p className="text-lg mb-6" style={{ color: '#800020' }}>
+              Home-cooked South Indian meals, delivered daily to your door
             </p>
-            <p className="text-sm text-gray-600 mb-6">Use code: <span className="font-bold" style={{ color: '#800020' }}>HOME15</span></p>
             <Link href="/subscriptions">
               <button
                 className="px-8 py-3 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg"
@@ -859,41 +859,6 @@ const Home = () => {
               />
               <div className="absolute inset-0 rounded-lg" style={{ border: '1px solid rgba(244, 196, 48, 0.2)' }} />
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================ */}
-      {/* TESTIMONIALS */}
-      {/* ============================================ */}
-      <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#800020' }} data-testid="testimonials-section">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#F4C430' }}>
-            Notes from the family we're feeding
-          </p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-12" style={{ fontFamily: "'Playfair Display', serif" }}>
-            Finally, a Taste of Home
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { name: 'Priya S.', location: 'Edinburgh', text: 'The pulihora reminded me of my grandmother\'s cooking. I cried happy tears. Finally, authentic Andhra food in the UK!' },
-              { name: 'Rajesh K.', location: 'Milton Keynes', text: 'The prasada is so pure and divine. Perfect for our weekly poojas. My mother-in-law gave it her stamp of approval!' },
-              { name: 'Anitha R.', location: 'Glasgow', text: 'As a student, the weekly dabba is a lifesaver. Tastes exactly like home food. Amma would be proud.' },
-            ].map((t, i) => (
-              <div key={i} className="p-6 md:p-8 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} data-testid={`testimonial-${i}`}>
-                <div className="flex gap-1 mb-4 justify-center">
-                  {Array(5).fill(0).map((_, j) => (
-                    <Star key={j} size={16} className="fill-[#F4C430] text-[#F4C430]" />
-                  ))}
-                </div>
-                <p className="text-sm text-gray-200 leading-relaxed mb-6 italic">
-                  "{t.text}"
-                </p>
-                <p className="text-white font-semibold text-sm">{t.name}</p>
-                <p className="text-xs text-gray-400">{t.location}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>

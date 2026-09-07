@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShoppingBag, Calendar, User, LogOut, Package, Clock, CheckCircle, XCircle, ChefHat, RefreshCw, ChevronDown, ChevronUp, Edit2, Save, X, LayoutDashboard, MessageSquare, Bell, CheckCheck, Leaf, Flame, Shield, Star, Gift } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import api from '@/api';
 import SubActiveCard, { BOX_META, DishCards, daysUntil } from '@/components/dashboard/SubActiveCard';
 import EnquiriesTab from '@/components/dashboard/EnquiriesTab';
@@ -62,35 +63,47 @@ function DashboardInner() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [reviews, setReviews] = useState([]);
   const [loyaltyPending, setLoyaltyPending] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   /* redirect if not logged in */
   useEffect(() => {
     if (initialized && !user) router.push('/', { replace: true });
   }, [user, router, initialized]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent) => {
     if (!user) return;
-    setLoading(true);
-    try {
-      const [oRes, sRes, eRes, nRes, rRes, lRes] = await Promise.all([
-        api.get('/orders'),
-        api.get('/subscriptions'),
-        api.get('/enquiries/my'),
-        api.get('/enquiries/notifications/unread-count'),
-        api.get('/reviews/mine'),
-        api.get('/loyalty/status').catch(() => ({ data: {} })),
-      ]);
-      setOrders(oRes.data);
-      setSubs(sRes.data);
-      setEnquiries(eRes.data);
-      setUnreadCount(nRes.data.count || 0);
-      setReviews(rRes.data || []);
-      setLoyaltyPending(lRes.data?.pending_reward ?? false);
-    } catch { /* token may have expired */ }
-    finally { setLoading(false); }
+    if (!silent) setLoading(true);
+    const [oRes, sRes, eRes, nRes, rRes, lRes] = await Promise.allSettled([
+      api.get('/orders'),
+      api.get('/subscriptions'),
+      api.get('/enquiries/my'),
+      api.get('/enquiries/notifications/unread-count'),
+      api.get('/reviews/mine'),
+      api.get('/loyalty/status'),
+    ]);
+    // Each call is independent — one failing (or a cold-starting backend)
+    // shouldn't blank out data the others already fetched successfully.
+    if (oRes.status === 'fulfilled') setOrders(oRes.value.data);
+    if (sRes.status === 'fulfilled') setSubs(sRes.value.data);
+    if (eRes.status === 'fulfilled') setEnquiries(eRes.value.data);
+    if (nRes.status === 'fulfilled') setUnreadCount(nRes.value.data.count || 0);
+    if (rRes.status === 'fulfilled') setReviews(rRes.value.data || []);
+    if (lRes.status === 'fulfilled') setLoyaltyPending(lRes.value.data?.pending_reward ?? false);
+
+    const allFailed = [oRes, sRes, eRes, nRes, rRes, lRes].every(r => r.status === 'rejected');
+    setLoadError(allFailed ? "We couldn't load your account. Please check your connection and try again." : '');
+    setLoading(false);
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Keep order/subscription status current without a manual refresh —
+  // matters most while an order is "Preparing" or "Out for delivery".
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => load(true), 20000);
+    return () => clearInterval(interval);
+  }, [user, load]);
 
   if (!user) return null;
 
@@ -169,6 +182,13 @@ function DashboardInner() {
         {loading ? (
           <div className="flex items-center justify-center h-48 gap-3" style={{ color: '#7A5C50' }}>
             <RefreshCw size={20} className="animate-spin" /> Loading your data…
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center h-48 gap-3 text-center" style={{ color: '#7A5C50' }}>
+            <p className="text-sm">{loadError}</p>
+            <button onClick={() => load()} className="text-sm font-semibold px-4 py-2 rounded-xl" style={{ border: '1px solid #800020', color: '#800020' }}>
+              Try again
+            </button>
           </div>
         ) : (
           <>
@@ -320,6 +340,17 @@ function OrdersTab({ orders, reload, expandedOrder, setExpandedOrder }) {
 
 function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling }) {
   const canCancel = ['pending', 'confirmed'].includes(o.status);
+  const { addToCart, setCartOpen } = useCart();
+
+  const handleReorder = (e) => {
+    e.stopPropagation();
+    (o.items || []).forEach(item => {
+      for (let i = 0; i < (item.quantity || 1); i++) {
+        addToCart({ id: item.menu_item_id, name: item.name, price: item.price });
+      }
+    });
+    setCartOpen(true);
+  };
   const stepMap = { pending: 0, confirmed: 1, preparing: 2, out_for_delivery: 3, delivered: 4, cancelled: -1 };
   const step = stepMap[o.status] ?? 0;
   const steps = ['Order Placed', 'Confirmed', 'Preparing', 'Out for Delivery', 'Delivered'];
@@ -410,31 +441,57 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
 
           {/* Delivery address */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#7A5C50' }}>Delivery To</p>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#7A5C50' }}>
+              {o.delivery_type === 'takeaway' ? 'Collection' : 'Delivery To'}
+            </p>
             <p className="text-sm" style={{ color: '#3D2B1F' }}>
-              {o.delivery_address?.line1}, {o.delivery_address?.city}, {o.delivery_address?.postcode}
+              {o.delivery_type === 'takeaway'
+                ? 'Collection from our Greenleys kitchen'
+                : [o.delivery_address?.line1, o.delivery_address?.city, o.delivery_address?.postcode].filter(Boolean).join(', ')}
             </p>
           </div>
 
           {/* Special instructions */}
-          {o.special_instructions && (
+          {o.notes && (
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#7A5C50' }}>Notes</p>
-              <p className="text-sm italic" style={{ color: '#5C4B47' }}>{o.special_instructions}</p>
+              <p className="text-sm italic" style={{ color: '#5C4B47' }}>{o.notes}</p>
             </div>
           )}
 
-          {/* Cancel */}
-          {canCancel && (
-            <button
-              onClick={onCancel}
-              disabled={cancelling}
-              className="text-sm font-semibold px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
-              style={{ border: '1px solid #991B1B', color: '#991B1B', backgroundColor: 'transparent' }}
-            >
-              {cancelling ? 'Cancelling…' : 'Cancel Order'}
-            </button>
-          )}
+          {/* Reorder / Review / Cancel */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {(o.status === 'delivered' || o.status === 'cancelled') && (
+              <button
+                onClick={handleReorder}
+                className="text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+                style={{ border: '1px solid #800020', color: '#800020', backgroundColor: 'transparent' }}
+              >
+                Order Again
+              </button>
+            )}
+            {o.status === 'delivered' && (
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Sree+Svadista+Prasada+Milton+Keynes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+                style={{ border: '1px solid #F4C430', color: '#8B6914', backgroundColor: 'transparent' }}
+              >
+                ⭐ Leave a Google Review
+              </a>
+            )}
+            {canCancel && (
+              <button
+                onClick={onCancel}
+                disabled={cancelling}
+                className="text-sm font-semibold px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                style={{ border: '1px solid #991B1B', color: '#991B1B', backgroundColor: 'transparent' }}
+              >
+                {cancelling ? 'Cancelling…' : 'Cancel Order'}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

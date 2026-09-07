@@ -5,7 +5,7 @@ export const revalidate = 3600;
 
 export const metadata = {
   title: 'Full South Indian Menu — 170+ Dishes',
-  description: 'Browse 170+ authentic South Indian dishes: Gongura Chicken, Natu Kodi Biryani, dosas, Pulihora, Ragi Specials, handmade pickles and podis. Order online for delivery in Milton Keynes (Wolverton, Stony Stratford), Edinburgh (Leith, Newington) and Glasgow (Pollokshields, Shawlands).',
+  description: 'Browse 170+ authentic South Indian dishes: Gongura Chicken, Natu Kodi Biryani, dosas, Pulihora, Ragi Specials, handmade pickles and podis. Order online for delivery across Milton Keynes (Wolverton, Stony Stratford, Bletchley) — Edinburgh and Glasgow coming soon.',
 };
 
 const jsonLd = {
@@ -48,10 +48,9 @@ export default async function FullMenuPage() {
         <p>
           From slow-cooked Gongura Chicken and Natu Kodi Biryani to temple-style
           Pulihora and crispy dosas — every dish made fresh to order. Browse by
-          category or order online for delivery in Milton Keynes (Wolverton, Stony
-          Stratford, Greenleys, Newport Pagnell, Bletchley, Westcroft, Central MK),
-          Edinburgh (Leith, Marchmont, Newington, Bruntsfield, Morningside, Tollcross)
-          and Glasgow (Pollokshields, Shawlands, Govanhill, Finnieston, West End, Partick).
+          category or order online for delivery across Milton Keynes (Wolverton, Stony
+          Stratford, Greenleys, Newport Pagnell, Bletchley, Westcroft, Central MK).
+          Edinburgh and Glasgow delivery is coming soon — join the waitlist.
         </p>
         <nav aria-label="Menu categories">
           <Link href="/prasada">Prasada — Pure Vegetarian</Link>{' · '}

@@ -267,6 +267,14 @@ async def submit_review(
                 "created_at": now,
             })
 
+    if payload.rating <= 2:
+        user = await db.users.find_one({"id": current_user["sub"]}, {"name": 1, "email": 1})
+        notify_admin(
+            f"⚠️ {payload.rating}-star review · {(user or {}).get('name', 'Customer')}",
+            f"<p><b>{(user or {}).get('name', 'Customer')}</b> ({(user or {}).get('email', '—')}) "
+            f"left a {payload.rating}-star review.</p><p>{payload.text or '(no comment)'}</p>",
+        )
+
     return {"ok": True}
 
 

@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 import { trackViewCart, trackBeginCheckout } from '@/lib/analytics';
+import { isOrderable } from '@/config/softLaunch';
 
 const MINIMUM_ORDER = 15.00;
 const MIN_DELIVERY_FEE = 2.49; // Zone 1 (nearest MK postcodes) — floor used before postcode is known
@@ -87,11 +88,16 @@ function scoreComplement(item, cartCategories) {
 function UpsellRow({ cartItems, onAdd }) {
   const [suggestions, setSuggestions] = useState([]);
   useEffect(() => {
-    api.get('/menu?available=true&category=breakfast').then(r => {
+    api.get('/menu?available=true').then(r => {
       const cartIds = new Set(cartItems.map(i => i.id));
+      const cartCategories = [...new Set(cartItems.map(i => i.category).filter(Boolean))];
       const candidates = r.data
-        .filter(i => !cartIds.has(i.id))
-        .slice(0, 4);
+        .filter(i => !cartIds.has(i.id) && isOrderable(i.category))
+        .map(i => ({ item: i, score: scoreComplement(i, cartCategories) }))
+        .filter(({ score }) => score < 99)
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 4)
+        .map(({ item }) => item);
       setSuggestions(candidates);
     }).catch(() => {});
   }, [cartItems]);
@@ -130,7 +136,10 @@ function FreeItemPicker({ onSelect, onSkip }) {
   const [search, setSearch]   = useState('');
 
   useEffect(() => {
-    api.get('/menu?available=true').then(r => setItems(r.data)).catch(() => {}).finally(() => setLoading(false));
+    api.get('/menu?available=true')
+      .then(r => setItems(r.data.filter(i => isOrderable(i.category))))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const shown = items.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
@@ -302,8 +311,13 @@ const CartDrawer = () => {
   const needsPostcode = deliveryType === 'delivery' && !zoneInfo;
 
   const handleSelectFreeItem = async (item) => {
-    try { await api.post('/loyalty/redeem', { item_id: item.id }); }
-    catch (e) { if (e.response?.status === 400 || e.response?.status === 403) return; }
+    try {
+      await api.post('/loyalty/redeem', { free_item_id: item.id });
+    } catch {
+      // Any failure here means the item isn't a valid free pick right now —
+      // don't proceed as if it were.
+      return;
+    }
     setFreeItem(item);
     setShowPicker(false);
   };

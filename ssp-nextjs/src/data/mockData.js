@@ -6,7 +6,7 @@ export const heroSlides = [
     image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
     title: "Welcome Home.",
     subtitle: "The authentic taste you missed, carried forward with love.",
-    description: "Now serving Milton Keynes, Edinburgh & Glasgow.",
+    description: "Now serving Milton Keynes — Edinburgh & Glasgow coming soon.",
     cta: "Explore Our Kitchen",
     link: "/menu"
   },
@@ -372,30 +372,6 @@ export const subscriptionPlans = [
   }
 ];
 
-export const testimonials = [
-  {
-    id: 1,
-    name: "Priya Sharma",
-    location: "Edinburgh",
-    text: "Finally found authentic Andhra food in the UK! The pulihora reminds me of my grandmother's cooking. I cried happy tears.",
-    rating: 5
-  },
-  {
-    id: 2,
-    name: "Rajesh Kumar",
-    location: "Glasgow",
-    text: "The prasada is so pure and divine. Perfect for our weekly poojas. My mother-in-law gave it her stamp of approval!",
-    rating: 5
-  },
-  {
-    id: 3,
-    name: "Anitha Reddy",
-    location: "Milton Keynes",
-    text: "As a student in MK, the weekly subscription is a lifesaver. Tastes exactly like home food. Amma would be proud.",
-    rating: 5
-  }
-];
-
 export const chefSpecial = {
   name: "Nellore Ghee Karam Dosa",
   tagline: "Crispy, fiery, and finished with hand-churned ghee — this is the dosa Nellore is famous for.",
@@ -418,8 +394,8 @@ export const images = {
 
 export const deliveryAreas = [
   { city: 'Milton Keynes', postcodes: 'MK1–MK19', status: 'Full Menu + Subscriptions', deliveryFee: 'Free over £30', minOrder: '£15', timing: '30-60 mins' },
-  { city: 'Edinburgh', postcodes: 'EH1–EH17', status: 'Full Menu + Subscriptions', deliveryFee: 'Free over £30', minOrder: '£15', timing: '45-75 mins' },
-  { city: 'Glasgow', postcodes: 'G1–G15', status: 'Full Menu + Subscriptions', deliveryFee: 'Free over £30', minOrder: '£15', timing: '45-75 mins' },
+  { city: 'Edinburgh', postcodes: 'EH1–EH17', status: 'Coming Soon', deliveryFee: '—', minOrder: '—', timing: '—' },
+  { city: 'Glasgow', postcodes: 'G1–G15', status: 'Coming Soon', deliveryFee: '—', minOrder: '—', timing: '—' },
   { city: 'Rest of UK', postcodes: 'All postcodes', status: 'Snacks, Pickles & Podis Only', deliveryFee: 'Free over £25', minOrder: '£10', timing: '2-3 business days' },
 ];
 
@@ -427,18 +403,18 @@ export const faqData = [
   {
     category: 'Ordering & Delivery',
     items: [
-      { q: 'Where do you deliver?', a: 'We deliver full meals and subscriptions in Milton Keynes, Edinburgh, and Glasgow. Snacks, pickles, and podis ship UK-wide.' },
-      { q: 'What are the delivery charges?', a: 'Delivery is free for orders over £30 in MK, Edinburgh & Glasgow. Below £30, a flat £3.99 delivery fee applies. UK-wide snack shipping is free over £25.' },
-      { q: 'What is the minimum order?', a: '£15 for meal delivery in MK/Edinburgh/Glasgow. £10 for UK-wide snack orders.' },
-      { q: 'How long does delivery take?', a: '30-60 minutes in Milton Keynes, 45-75 minutes in Edinburgh/Glasgow. UK-wide snack orders arrive in 2-3 business days.' },
-      { q: 'What are your delivery hours?', a: 'Mon-Fri: 11am-10pm, Sat-Sun: 10am-11pm. Breakfast delivery available from 8am on weekends.' },
+      { q: 'Where do you deliver?', a: 'We deliver full meals and subscriptions across Milton Keynes. Snacks, pickles, and podis ship UK-wide. Edinburgh and Glasgow are coming soon — join the waitlist.' },
+      { q: 'What are the delivery charges?', a: 'Delivery is free for orders over £30 in Milton Keynes. Below £30, a flat delivery fee applies depending on your zone. UK-wide snack shipping is free over £25.' },
+      { q: 'What is the minimum order?', a: '£15 for meal delivery in Milton Keynes. £10 for UK-wide snack orders.' },
+      { q: 'How long does delivery take?', a: '30-60 minutes in Milton Keynes. UK-wide snack orders arrive in 2-3 business days.' },
+      { q: 'What are your delivery hours?', a: 'Mon-Fri: 11am-10pm, Sat-Sun: 10am-11pm.' },
     ]
   },
   {
     category: 'Subscriptions (Dabba Wala)',
     items: [
       { q: 'How does the Dabba Wala subscription work?', a: 'Choose your plan (Weekly/Monthly/Family), select your box type (Prasada/Svadista/Mixed), set any dietary preferences, and pick your start date. Freshly cooked meals are delivered to your door on your chosen days.' },
-      { q: 'Can I pause or cancel my subscription?', a: 'Yes! You can pause, resume, or cancel anytime with 24 hours notice. No penalty.' },
+      { q: 'Can I pause or cancel my subscription?', a: 'You can cancel within 48 hours of signing up for a full refund, as long as your first meal hasn\'t started prep. You can also skip individual delivery days from your Dashboard with reasonable notice. Plans don\'t auto-renew, so there\'s nothing to cancel once your plan ends.' },
       { q: 'What comes in a typical dabba (tiffin)?', a: 'Each meal includes rice/roti, a main curry, dal or sambar, a side dish, pickle/chutney, and papad. Portions are generous for one adult.' },
       { q: 'Can I switch between Prasada and Svadista boxes?', a: 'Absolutely. With the Mixed Box option, we alternate between veg and non-veg meals. You can also switch your box type at any time.' },
     ]
@@ -463,8 +439,8 @@ export const faqData = [
   {
     category: 'Payment & General',
     items: [
-      { q: 'What payment methods do you accept?', a: 'We accept all major credit/debit cards, Apple Pay, Google Pay, and bank transfers. Cash on delivery available in Milton Keynes.' },
-      { q: 'How do I contact you?', a: 'Call us at +44 73 0711 9962, WhatsApp the same number, or email hello@sreesvadista.co.uk. You can also use the contact form on our website.' },
+      { q: 'What payment methods do you accept?', a: 'We accept all major credit/debit cards, Apple Pay, and Google Pay via secure online checkout.' },
+      { q: 'How do I contact you?', a: 'Call us at +44 73 0711 9962, WhatsApp the same number, or email info@sreesvadistaprasada.com. You can also use the contact form on our website.' },
     ]
   },
   {
@@ -504,7 +480,7 @@ export const faqData = [
       },
       {
         q: 'What is a Dabba Wala?',
-        a: 'Dabba Wala (also spelled Dabbawala) refers to the legendary Mumbai tiffin delivery network, where carriers collect home-cooked food in metal tiffin boxes (dabbas) and deliver them to offices across the city with near-zero error rates — a system studied by Harvard Business School. Our Dabba Wala subscription honours this tradition: weekly or monthly subscriptions of freshly cooked South Indian home-style meals delivered to your door in Milton Keynes, Edinburgh, and Glasgow.',
+        a: 'Dabba Wala (also spelled Dabbawala) refers to the legendary Mumbai tiffin delivery network, where carriers collect home-cooked food in metal tiffin boxes (dabbas) and deliver them to offices across the city with near-zero error rates — a system studied by Harvard Business School. Our Dabba Wala subscription honours this tradition: weekly or monthly subscriptions of freshly cooked South Indian home-style meals delivered to your door across Milton Keynes, with Edinburgh and Glasgow coming soon.',
       },
       {
         q: 'Is South Indian food gluten-free?',
@@ -529,6 +505,38 @@ export const faqData = [
       {
         q: 'What is the difference between South Indian and North Indian food?',
         a: 'South Indian food is rice-based, uses coconut, tamarind, curry leaves, and mustard seeds, and features lighter, tangier flavour profiles. North Indian food is predominantly wheat-based (chapati, naan, paratha), uses cream, butter, and tomato-based gravies (butter chicken, korma, paneer makhani), and has a richer, sweeter, Mughal-influenced character. South Indian breakfasts — idli, dosa, vada, upma — are entirely different from North Indian parathas. Spice blends also differ: South India uses pepper, Guntur chillies, and tempering techniques that create fundamentally different flavour outcomes.',
+      },
+      {
+        q: 'What is a dosa?',
+        a: 'A dosa is a thin, crisp South Indian crepe made from a fermented batter of rice and urad dal (split black gram), cooked on a hot griddle until golden and lacy. It is naturally gluten-free and vegan in its plain form. The classic Masala Dosa is filled with spiced potato masala and served with coconut chutney and sambar. Variants include Rava Dosa (semolina, crispier and lighter), Pesarattu (green gram, an Andhra speciality), and our Ragi Ghee Karam Dosa, finished with hand-churned ghee and fiery red chutney.',
+      },
+      {
+        q: 'What is idli?',
+        a: 'Idli is a soft, steamed cake made from the same fermented rice-and-urad-dal batter as dosa, but steamed rather than griddled. It is naturally gluten-free, vegan, low-fat, and easy to digest — a staple South Indian breakfast eaten with sambar and coconut chutney. Fermentation gives idli a mild tang and makes its nutrients more bioavailable, which is part of why it is considered one of the healthiest ways to start the day in South Indian cuisine.',
+      },
+      {
+        q: 'What is vada?',
+        a: 'Vada (medu vada) is a savoury South Indian fritter made from ground urad dal batter, shaped into a ring and deep-fried until golden and crisp outside, fluffy inside. Traditionally served with sambar and coconut chutney as part of a breakfast platter alongside idli and dosa, it is naturally vegan and a good source of plant protein. Masala Vada, made from chana dal instead of urad dal, is a coarser, spicier variant popular as an evening snack.',
+      },
+      {
+        q: 'What is a tiffin?',
+        a: 'In South Indian usage, "tiffin" refers to a light meal — traditionally breakfast or a mid-day snack — and also to the stacked metal lunchbox (tiffin carrier) it is often packed in. A typical South Indian tiffin includes idli, dosa, vada, upma, or pongal alongside chutney and sambar. Our Dabba Wala subscription is a modern take on the tiffin tradition — full home-style meals delivered daily in reusable containers.',
+      },
+      {
+        q: 'What is podi?',
+        a: 'Podi is a dry, roasted spice-and-lentil powder — sometimes called "gunpowder" — mixed with sesame oil or ghee and eaten with idli, dosa, or plain rice. Recipes vary by household and typically combine roasted urad dal, chana dal, dried red chillies, curry leaves, and sesame seeds, ground to a coarse powder. It is naturally vegan (or vegetarian with ghee), shelf-stable, and one of the easiest ways to add authentic South Indian flavour to any meal. Our handmade podis ship UK-wide.',
+      },
+      {
+        q: 'What is naivedyam?',
+        a: 'Naivedyam is food prepared specifically as an offering to a deity before being shared as prasada (blessed food). In South Indian temple tradition, naivedyam is cooked without onion or garlic, using pure ingredients and dedicated utensils, in a spirit of cleanliness and devotion. Our Prasada kitchen\'s Naivedyam section follows this same tradition — sattvic, pure-vegetarian dishes suitable for pujas and religious occasions.',
+      },
+      {
+        q: 'What is biryani?',
+        a: 'Biryani is a layered rice dish made by par-cooking fragrant basmati rice and a spiced meat or vegetable base separately, then slow-cooking them together (dum) so the rice absorbs the aromatics without becoming mushy. South Indian biryani, particularly Andhra-style Natu Kodi Biryani, uses bolder spicing and country chicken compared to the milder, Mughal-influenced biryanis of North India. It is typically served with raita and a boiled egg or salan (gravy).',
+      },
+      {
+        q: 'Do you have nut-free options?',
+        a: 'Many of our dishes are nut-free, but South Indian cooking uses peanuts, cashews, and coconut widely — including in some curry bases, chutneys, and podis — so cross-contact in a shared kitchen is possible. Every dish on our menu lists its allergens, including tree nuts and peanuts, so you can check before ordering. If you have a nut allergy, please also add a note at checkout and we\'ll take extra care.',
       },
     ]
   }

@@ -8,6 +8,7 @@ import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
+import { trackMenuCategoryView } from '@/lib/analytics';
 
 const TABS = ['Bites & Starters', 'Curries', 'Biriyanis & Rice', 'Rice Bowls', 'Indo Chinese', '🪔 Naivedyam', 'Ragi Specials', 'Protein & Healthy Bowls', 'All'];
 
@@ -46,6 +47,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
   const [search, setSearch] = useState('');
   const tabRowRef = useRef(null);
   const tabMounted = useRef(false);
+  useEffect(() => { trackMenuCategoryView('prasada'); }, []);
 
   useEffect(() => {
     const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';

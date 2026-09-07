@@ -90,8 +90,8 @@ const Header = () => {
           </Link>
         ) : (
           <>
-            <span className="hidden sm:inline">Swagatam MK 🙏 &nbsp;·&nbsp; Get ready — authentic Andhra flavours like you&apos;ve never tasted before, launching soon 🌶️</span>
-            <span className="sm:hidden">Swagatam MK 🙏 · Flavours like never before — launching soon 🌶️</span>
+            <span className="hidden sm:inline">Swagatam MK 🙏 &nbsp;·&nbsp; Authentic Andhra flavours, cooked fresh and delivered across Milton Keynes — order now 🌶️</span>
+            <span className="sm:hidden">Swagatam MK 🙏 · Fresh Andhra flavours, delivered — order now 🌶️</span>
           </>
         )}
       </div>
@@ -112,12 +112,12 @@ const Header = () => {
             <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-2.5 group" data-testid="logo-link">
               <LogoMark size={73} className="w-14 h-14 md:w-[73px] md:h-[73px] object-contain flex-shrink-0" />
               <div className="flex flex-col justify-center gap-[3px]">
-                <h1
+                <p
                   className="text-[17px] md:text-2xl font-bold tracking-tight leading-none"
                   style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
                 >
                   Sree Svadista Prasada
-                </h1>
+                </p>
                 <span className="text-[9px] md:text-xs italic leading-none" style={{ fontFamily: "'Playfair Display', serif", color: '#8B6914' }}>
                   Taste for your heart · memories on a plate
                 </span>
@@ -179,6 +179,14 @@ const Header = () => {
 
               {/* Cart & Account */}
               <div className="flex items-center gap-2 ml-3 pl-3 border-l" style={{ borderColor: 'rgba(244, 196, 48, 0.3)' }}>
+                <Link
+                  href="/menu"
+                  className="px-4 py-2 text-sm font-semibold text-white rounded-full transition-transform duration-200 hover:scale-[1.03]"
+                  style={{ backgroundColor: '#800020' }}
+                  data-testid="header-order-now"
+                >
+                  Order Now
+                </Link>
                 <button
                   className="relative p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5"
                   data-testid="cart-button"
@@ -299,6 +307,16 @@ const Header = () => {
                 )}
               </div>
             ))}
+
+            <Link
+              href="/menu"
+              onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              className="block w-full mt-4 py-3 text-center text-sm font-semibold text-white rounded-md"
+              style={{ backgroundColor: '#800020' }}
+              data-testid="mobile-order-now"
+            >
+              Order Now
+            </Link>
 
             {user ? (
               <div className="mt-4 flex items-center justify-between px-3 py-3 rounded-md" style={{ border: '1px solid rgba(128,0,32,0.2)' }}>

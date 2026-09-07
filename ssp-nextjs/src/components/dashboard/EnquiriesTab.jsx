@@ -33,6 +33,7 @@ export default function EnquiriesTab({ enquiries, reload }) {
   const [selected, setSelected]     = useState(null);
   const [messages, setMessages]     = useState([]);
   const [msgLoading, setMsgLoading] = useState(false);
+  const [msgError, setMsgError] = useState(false);
   const [replyText, setReplyText]   = useState('');
   const [sending, setSending]       = useState(false);
   const pollRef                     = useRef(null);
@@ -44,11 +45,14 @@ export default function EnquiriesTab({ enquiries, reload }) {
     setSelected({ type, enq });
     setMessages([]);
     setReplyText('');
+    setMsgError(false);
     setMsgLoading(true);
     try {
       const res = await api.get(`/enquiries/${type}/${enq.id}/messages`);
       setMessages(res.data);
       reload();
+    } catch {
+      setMsgError(true);
     } finally { setMsgLoading(false); }
   }, [reload]);
 
@@ -185,6 +189,10 @@ export default function EnquiriesTab({ enquiries, reload }) {
         style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)', maxHeight:'320px' }}>
         {msgLoading ? (
           <div className="flex justify-center py-8"><RefreshCw size={18} className="animate-spin text-gray-400" /></div>
+        ) : msgError ? (
+          <p className="text-center text-sm py-8" style={{ color:'#991B1B' }}>
+            Couldn't load this conversation — please try again.
+          </p>
         ) : messages.length === 0 ? (
           <p className="text-center text-sm py-8" style={{ color:'#7A5C50' }}>
             No replies yet — we'll respond as soon as possible.

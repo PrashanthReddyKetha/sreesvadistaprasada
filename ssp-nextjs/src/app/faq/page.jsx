@@ -31,12 +31,12 @@ const extraQAs = [
     a: 'We deliver across Milton Keynes including Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley, Westcroft, Central MK, Emerson Valley, Shenley Brook End, Walnut Tree, Monkston, Brinklow, Furzton and surrounding MK postcodes (MK1–MK19). Not sure? WhatsApp us your postcode.',
   },
   {
-    q: 'Which areas of Edinburgh do you deliver to?',
-    a: 'We deliver across Edinburgh including Leith, Marchmont, Newington, Bruntsfield, Tollcross, Morningside, Southside Edinburgh, Haymarket, Old Town, New Town, Portobello, Gorgie, Dalry and surrounding EH postcodes (EH1–EH17).',
+    q: 'Do you deliver to Edinburgh?',
+    a: 'Not yet — we currently deliver across Milton Keynes only. Edinburgh is coming soon; join the waitlist and we\'ll let you know the moment we launch there.',
   },
   {
-    q: 'Which areas of Glasgow do you deliver to?',
-    a: 'We deliver across Glasgow including Pollokshields, Shawlands, Govanhill, Southside Glasgow, Finnieston, West End, Partick, Merchant City, Dennistoun, Maryhill, Byres Road area and surrounding G postcodes (G1–G46).',
+    q: 'Do you deliver to Glasgow?',
+    a: 'Not yet — we currently deliver across Milton Keynes only. Glasgow is coming soon; join the waitlist and we\'ll let you know the moment we launch there.',
   },
   {
     q: 'Is your meat halal?',

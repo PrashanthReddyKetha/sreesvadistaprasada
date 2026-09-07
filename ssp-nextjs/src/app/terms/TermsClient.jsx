@@ -109,10 +109,11 @@ const TermsAndServices = () => (
 
       <Section title="8. Dabba Wala — Meal Subscription Service">
         <ul className="list-disc ml-5 space-y-1">
-          <li>The Dabba Wala subscription is a recurring meal plan delivering home-cooked South Indian meals on your chosen schedule.</li>
-          <li>Subscriptions are billed in advance (weekly or monthly) as selected at sign-up.</li>
-          <li>You may <strong>pause or cancel</strong> your subscription at any time via your Dashboard with at least <strong>48 hours' notice</strong> before the next billing date. No refund is given for the current billing period already paid.</li>
-          <li>We reserve the right to modify the subscription menu with reasonable notice. If we make substantial changes, you may cancel without penalty.</li>
+          <li>The Dabba Wala plan is a fixed-term meal plan (weekly or monthly) delivering home-cooked South Indian meals on your chosen schedule, paid in full at sign-up.</li>
+          <li>Plans do not auto-renew. When your plan ends, you can start a new one from your Dashboard — there is nothing to cancel to stop future billing.</li>
+          <li>You may <strong>cancel</strong> your plan within <strong>48 hours</strong> of sign-up for a full refund, as long as your first meal has not yet entered preparation. After that, or after 48 hours, the plan runs to its end date and is non-refundable.</li>
+          <li>You may skip individual delivery days from your Dashboard with reasonable notice.</li>
+          <li>We reserve the right to modify the subscription menu with reasonable notice.</li>
           <li>Subscriptions are personal and non-transferable.</li>
         </ul>
       </Section>

@@ -103,17 +103,6 @@ const BOXES = [
   { id: 'svadista', name: 'Svadista box', icon: Flame, iconBg: '#FAECE7',   iconColor: C.primary, border: C.primary, desc: 'Non-vegetarian. Bold village flavours. Hearty and real.',    mostChosen: true  },
 ];
 
-// Review counts: start small, auto-grow by a fixed amount each week from launch date
-const REVIEW_COUNT_START_DATE = new Date('2026-04-14T00:00:00');
-function getLiveReviewCount(base, weeklyGrowth) {
-  const weeksLive = Math.max(0, Math.floor((Date.now() - REVIEW_COUNT_START_DATE) / (7 * 24 * 60 * 60 * 1000)));
-  return base + weeksLive * weeklyGrowth;
-}
-const BOX_SOCIAL = {
-  prasada:  { count: '30+', window: 'last 2 weeks', rating: 5, get reviewCount() { return getLiveReviewCount(8, 3); } },
-  svadista: { count: '75+', window: 'last 3 weeks', rating: 5, get reviewCount() { return getLiveReviewCount(14, 5); } },
-};
-
 const PREFS = [
   { id: 'no-onion',    label: 'No onion / garlic' },
   { id: 'less-spice',  label: 'Less spicy' },
@@ -227,44 +216,6 @@ const DAY_FOOD_IMGS = [
   'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=240&q=75',
 ];
 
-/* Social proof */
-const BOX_REVIEWS = {
-  prasada: [
-    { name: 'Ananya M.', text: 'The flavours took me right back to my grandmother\'s kitchen in Chennai.' },
-    { name: 'Priya K.', text: 'Every day feels like a home-cooked meal — incredibly fresh and wholesome.' },
-    { name: 'Kavitha R.', text: 'Ordered for one week and renewed for a month. Cannot imagine weekdays without it.' },
-    { name: 'Sunita P.', text: 'Pure vegetarian done perfectly. The rasam on Wednesdays is divine.' },
-    { name: 'Deepa S.', text: 'As a busy mum, this has been a lifesaver. My kids love every single meal.' },
-    { name: 'Meera J.', text: 'Temple-style cooking that somehow manages to feel personal every time.' },
-    { name: 'Lakshmi V.', text: 'The freshness is unreal for a delivery service. Like a freshly cooked meal.' },
-    { name: 'Radha N.', text: 'Light enough for everyday eating but full of the right flavours and warmth.' },
-    { name: 'Usha B.', text: 'I requested no garlic and they honoured it every single day without fail.' },
-    { name: 'Geetha T.', text: 'I have tried other meal plans but nothing comes close to this quality.' },
-    { name: 'Padma C.', text: 'The rice is always perfectly cooked — never mushy, never undercooked.' },
-    { name: 'Vasantha L.', text: 'A genuine taste of South India. I look forward to every lunch delivery.' },
-    { name: 'Nirmala A.', text: 'Wonderful value for the quality. You can tell every dish is made with care.' },
-    { name: 'Hema D.', text: 'My colleagues at work are jealous every time I open my dabba.' },
-    { name: 'Santha W.', text: 'Consistent, fresh and absolutely delicious every single day of the week.' },
-  ],
-  svadista: [
-    { name: 'Ravi K.', text: 'The chicken curry on Tuesdays alone is worth the subscription. Brilliant.' },
-    { name: 'Suresh M.', text: 'Bold, spicy and exactly how my mum used to cook back in Andhra.' },
-    { name: 'Ajay P.', text: 'First week I thought it was good. Second week I thought it was exceptional.' },
-    { name: 'Kiran T.', text: 'The gravy-to-rice ratio is perfect. I have never been disappointed once.' },
-    { name: 'Vijay N.', text: 'Requested extra spice and they absolutely delivered — proper village-style heat.' },
-    { name: 'Arun S.', text: 'I live alone and this has completely changed my work-week lunches.' },
-    { name: 'Mahesh B.', text: 'The mutton on Fridays is slow-cooked to perfection. Just incredible.' },
-    { name: 'Sanjay R.', text: 'Authentic South Indian non-veg cooking is rare to find. This is the real deal.' },
-    { name: 'Rohit G.', text: 'Hearty, full-flavoured meals that actually keep me going through the afternoon.' },
-    { name: 'Pavan C.', text: 'Three months in and I still get excited when my dabba arrives each day.' },
-    { name: 'Dinesh V.', text: 'The consistency is the best part — every meal is as good as the last.' },
-    { name: 'Naresh L.', text: 'My friends now order here based on my recommendation. Worth every penny.' },
-    { name: 'Prasad A.', text: 'Reminds me of eating at the local dhabas back home in Hyderabad.' },
-    { name: 'Kishore J.', text: 'The packaging keeps it perfectly warm even an hour after delivery.' },
-    { name: 'Venkat W.', text: 'Switched from another meal service after the first trial. No looking back.' },
-  ],
-};
-
 /* ── localStorage ─────────────────────────────────────── */
 function loadSaved() {
   try {
@@ -286,49 +237,6 @@ const InfoBox = ({ bg, border, color, children }) => (
     {children}
   </div>
 );
-
-function ReviewCarousel({ boxId }) {
-  const reviews = BOX_REVIEWS[boxId] || BOX_REVIEWS.prasada;
-  const [idx, setIdx] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setIdx(i => (i + 1) % reviews.length), 3800);
-    return () => clearInterval(t);
-  }, [reviews.length]);
-  const r = reviews[idx];
-  return (
-    <div className="rounded-xl px-4 py-3 text-left transition-all" style={{ backgroundColor: 'rgba(128,0,32,0.04)', border: '0.5px solid rgba(128,0,32,0.1)', minHeight: 62 }}>
-      <p className="text-xs leading-relaxed mb-1" style={{ color: C.dark }}>"{r.text}"</p>
-      <p className="text-[10px] font-semibold" style={{ color: C.muted }}>— {r.name}</p>
-    </div>
-  );
-}
-
-function StarRating({ count, reviewCount }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex gap-0.5">
-        {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="#F4C430" stroke="none" />)}
-      </div>
-      <span className="text-[11px] font-semibold" style={{ color: C.darkGold }}>{reviewCount.toLocaleString()} ratings</span>
-    </div>
-  );
-}
-
-function SocialProofBlock({ boxId }) {
-  const s = BOX_SOCIAL[boxId];
-  if (!s) return null;
-  return (
-    <div className="mt-4 rounded-xl p-4 space-y-2.5" style={{ backgroundColor: C.surface, border: '0.5px solid rgba(128,0,32,0.08)' }}>
-      <div className="flex items-center justify-between">
-        <p className="text-[11px] font-semibold" style={{ color: C.muted }}>
-          <span className="text-sm font-bold" style={{ color: C.primary }}>{s.count}</span> subscribed in the {s.window}
-        </p>
-        <StarRating count={s.rating} reviewCount={s.reviewCount} />
-      </div>
-      <ReviewCarousel boxId={boxId} />
-    </div>
-  );
-}
 
 /* ── landing page blocks ─────────────────────────────── */
 function getOrderDeadline(weekCfg) {
@@ -745,7 +653,9 @@ const SubscriptionsInner = () => {
         payment_intent_id,
       });
       clearProg();
-      localStorage.setItem('ssp_subscription_success', 'true');
+      localStorage.setItem('ssp_subscription_success', JSON.stringify({
+        plan: selectedPlan, box: selectedBox, startWeek: selectedStartWeek,
+      }));
       trackSubscriptionPurchase(selectedPlan, selectedBox, planData?.price || 75, planData?.meals || 0, planData?.perMeal || 0);
       setSubmitStatus('success');
     } catch (e) {
@@ -763,6 +673,12 @@ const SubscriptionsInner = () => {
   useEffect(() => {
     const savedSuccess = localStorage.getItem('ssp_subscription_success');
     if (savedSuccess) {
+      try {
+        const { plan, box, startWeek } = JSON.parse(savedSuccess);
+        if (plan) setSelectedPlan(plan);
+        if (box) setSelectedBox(box);
+        if (startWeek) setSelectedStartWeek(startWeek);
+      } catch { /* legacy 'true' flag from before this stored real data — nothing to restore */ }
       setSubmitStatus('success');
       localStorage.removeItem('ssp_subscription_success');
     }
@@ -937,8 +853,8 @@ const SubscriptionsInner = () => {
         <section className="py-5 px-4 md:px-8" style={{ backgroundColor: C.surface, borderBottom: '0.5px solid rgba(128,0,32,0.1)' }}>
           <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
             {[
-              { icon: Star, text: '4.9/5 average rating' },
-              { icon: Users, text: '100+ active subscribers' },
+              { icon: Star, text: 'Freshly cooked every day' },
+              { icon: Users, text: 'Family-run Andhra kitchen' },
               { icon: MapPin, text: 'Delivering across MK1–MK19' },
               { icon: Shield, text: 'No contracts — cancel anytime' },
             ].map((row, i) => (
@@ -1099,8 +1015,6 @@ const SubscriptionsInner = () => {
                 </InfoBox>
               </div>
 
-              {/* Social proof strip — steps 1–3 */}
-              <SocialProofBlock boxId="svadista" />
               <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
             </div>
           )}
@@ -1120,7 +1034,6 @@ const SubscriptionsInner = () => {
               <div className="flex flex-col gap-5">
                 {BOXES.map(box => {
                   const BoxIcon = box.icon;
-                  const social = BOX_SOCIAL[box.id];
                   const isSelected = selectedBox === box.id;
                   return (
                     <div key={box.id} className="rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg"
@@ -1142,12 +1055,6 @@ const SubscriptionsInner = () => {
                         <div className="flex-1 min-w-0">
                           <p className="font-bold mb-0.5" style={{ fontSize: 16, color: C.dark }}>{box.name}</p>
                           <p className="text-sm" style={{ color: C.muted }}>{box.desc}</p>
-                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                            <StarRating count={social.rating} reviewCount={social.reviewCount} />
-                            <span className="text-[10px]" style={{ color: C.muted }}>
-                              <span className="font-bold" style={{ color: C.primary }}>{social.count}</span> subscribed in the {social.window}
-                            </span>
-                          </div>
                         </div>
                         {isSelected ? (
                           <div className="ml-2 shrink-0 w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: box.border }}>
@@ -1157,10 +1064,6 @@ const SubscriptionsInner = () => {
                           <div className="ml-2 shrink-0 w-6 h-6 rounded-full" style={{ border: '2px solid #d5cec4' }} />
                         )}
                       </button>
-                      {/* Review teaser */}
-                      <div className="px-5 pb-4" style={{ backgroundColor: 'transparent', borderTop: `0.5px solid ${isSelected ? box.border + '20' : 'rgba(128,0,32,0.06)'}` }}>
-                        <ReviewCarousel boxId={box.id} />
-                      </div>
                     </div>
                   );
                 })}

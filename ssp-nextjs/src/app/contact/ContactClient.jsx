@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Instagram, ArrowRight } from 'lucide-react';
 import api from '@/api';
 import { useAuth } from '@/context/AuthContext';
+import { trackEnquirySubmit } from '@/lib/analytics';
 
 const Contact = () => {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ const Contact = () => {
     try {
       await api.post('/enquiries/contact', { ...formData, user_id: user?.id || null });
       setStatus('success');
+      trackEnquirySubmit('contact');
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
     } catch {
       setStatus('error');
@@ -57,12 +59,11 @@ const Contact = () => {
                     <MapPin size={18} style={{ color: '#800020' }} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Our Locations</h3>
+                    <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Our Kitchen</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      <strong style={{ color: '#800020' }}>Milton Keynes</strong> (Main Kitchen)<br />
-                      Central Milton Keynes, MK9<br /><br />
-                      Edinburgh, EH1<br />
-                      Glasgow, G1
+                      <strong style={{ color: '#800020' }}>Milton Keynes</strong><br />
+                      24 Oxman Ln, Greenleys, MK12 6LF<br /><br />
+                      <span className="text-xs italic" style={{ color: '#8B6914' }}>Edinburgh &amp; Glasgow coming soon</span>
                     </p>
                   </div>
                 </div>
@@ -88,8 +89,8 @@ const Contact = () => {
                   <div>
                     <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Email Us</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      General: <a href="mailto:hello@sreesvadista.co.uk" className="hover:underline" style={{ color: '#800020' }}>hello@sreesvadista.co.uk</a><br />
-                      Catering: <a href="mailto:catering@sreesvadista.co.uk" className="hover:underline" style={{ color: '#800020' }}>catering@sreesvadista.co.uk</a>
+                      General: <a href="mailto:info@sreesvadistaprasada.com" className="hover:underline" style={{ color: '#800020' }}>info@sreesvadistaprasada.com</a><br />
+                      Catering: <a href="mailto:info@sreesvadistaprasada.com" className="hover:underline" style={{ color: '#800020' }}>info@sreesvadistaprasada.com</a>
                     </p>
                   </div>
                 </div>

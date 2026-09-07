@@ -2,7 +2,7 @@ import ContactClient from './ContactClient';
 
 export const metadata = {
   title: { absolute: 'Contact Us | Indian Takeaway Milton Keynes | Sree Svadista Prasada' },
-  description: 'Contact our Indian takeaway Milton Keynes — order enquiries, catering, Dabba Wala subscriptions. WhatsApp +44 73 0711 9962. Delivering across MK, Edinburgh & Glasgow.',
+  description: 'Contact our Indian takeaway Milton Keynes — order enquiries, catering, Dabba Wala subscriptions. WhatsApp +44 73 0711 9962.',
   openGraph: {
     title: 'Contact Us | Indian Takeaway Milton Keynes | Sree Svadista Prasada',
     description: 'Contact our Indian takeaway Milton Keynes — order enquiries, catering, Dabba Wala subscriptions. WhatsApp +44 73 0711 9962.',

@@ -274,7 +274,7 @@ async def send_renewal_reminder(sub_id: str, current_user: dict = Depends(requir
     if doc.get("customer_phone"):
         send_sms(
             doc["customer_phone"],
-            f"Sree Svadista Prasada: your Dabba Wala ends {doc.get('end_date','soon')}. Renew at sreesvadistaprasada.com/dabbawala",
+            f"Sree Svadista Prasada: your Dabba Wala ends {doc.get('end_date','soon')}. Renew at sreesvadistaprasada.com/subscriptions",
         )
         sent = True
     entry = audit_entry(current_user, "renewal_reminder_sent", None, datetime.utcnow().isoformat())

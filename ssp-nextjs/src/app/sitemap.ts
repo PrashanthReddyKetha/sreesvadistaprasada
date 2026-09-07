@@ -23,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/menu`,           priority: 0.9,  changeFrequency: 'daily',   lastModified: now },
     // Menu section pages
     { url: `${BASE_URL}/prasada`,                              priority: 0.9, changeFrequency: 'daily',  lastModified: now },
-    { url: `${BASE_URL}/prasada/starters-and-evening-delights`, priority: 0.85, changeFrequency: 'weekly', lastModified: now },
+    { url: `${BASE_URL}/prasada/bites-starters`,               priority: 0.85, changeFrequency: 'weekly', lastModified: now },
     { url: `${BASE_URL}/prasada/indo-chinese`,                 priority: 0.85, changeFrequency: 'weekly', lastModified: now },
     { url: `${BASE_URL}/prasada/curries-daal`,                 priority: 0.85, changeFrequency: 'weekly', lastModified: now },
     { url: `${BASE_URL}/prasada/naivedyam`,                    priority: 0.85, changeFrequency: 'weekly', lastModified: now },
@@ -64,6 +64,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/milton-keynes`,  priority: 0.9,  changeFrequency: 'monthly', lastModified: now },
     { url: `${BASE_URL}/edinburgh`,      priority: 0.9,  changeFrequency: 'monthly', lastModified: now },
     { url: `${BASE_URL}/glasgow`,        priority: 0.9,  changeFrequency: 'monthly', lastModified: now },
+    // Blog + long-form content
+    { url: `${BASE_URL}/blog`,                                       priority: 0.7, changeFrequency: 'weekly',  lastModified: now },
+    { url: `${BASE_URL}/blog/what-is-dabba-wala`,                    priority: 0.65, changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/blog/south-indian-vs-north-indian-food`,     priority: 0.65, changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/blog/ragi-health-benefits`,                  priority: 0.65, changeFrequency: 'monthly', lastModified: now },
+    { url: `${BASE_URL}/gongura`,                                    priority: 0.7, changeFrequency: 'monthly', lastModified: now },
   ]
 
   const items = await getMenuItems()

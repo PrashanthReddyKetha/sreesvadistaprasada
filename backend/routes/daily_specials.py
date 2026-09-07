@@ -17,7 +17,7 @@ async def list_active_specials():
     # Overlay live price + image from the linked menu item so edits always reflect
     item_ids = [d["menu_item_id"] for d in docs if d.get("menu_item_id")]
     if item_ids:
-        live = await db.menu.find(
+        live = await db.menu_items.find(
             {"id": {"$in": item_ids}},
             {"_id": 0, "id": 1, "price": 1, "image": 1},
         ).to_list(len(item_ids))

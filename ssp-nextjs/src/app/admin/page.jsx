@@ -238,13 +238,21 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
                       </div>
                       {/* Delivery */}
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Delivery Address</p>
-                        <p className="text-sm text-gray-700">{o.delivery_address?.line1}</p>
-                        {o.delivery_address?.line2 && <p className="text-sm text-gray-700">{o.delivery_address.line2}</p>}
-                        <p className="text-sm text-gray-700">{o.delivery_address?.city}</p>
-                        <p className="text-sm font-semibold text-gray-700">{o.delivery_address?.postcode}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+                          {o.delivery_type === 'takeaway' ? 'Collection' : 'Delivery Address'}
+                        </p>
+                        {o.delivery_type === 'takeaway' ? (
+                          <p className="text-sm text-gray-700">Collection from Greenleys kitchen</p>
+                        ) : (
+                          <>
+                            <p className="text-sm text-gray-700">{o.delivery_address?.line1}</p>
+                            {o.delivery_address?.line2 && <p className="text-sm text-gray-700">{o.delivery_address.line2}</p>}
+                            <p className="text-sm text-gray-700">{o.delivery_address?.city}</p>
+                            <p className="text-sm font-semibold text-gray-700">{o.delivery_address?.postcode}</p>
+                          </>
+                        )}
                         {o.customer_phone && <p className="text-xs text-gray-400 mt-2">📞 {o.customer_phone}</p>}
-                        {o.special_instructions && <p className="text-xs italic text-gray-500 mt-1">"{o.special_instructions}"</p>}
+                        {o.notes && <p className="text-xs italic text-gray-500 mt-1">"{o.notes}"</p>}
                       </div>
                       {/* Actions */}
                       <div>
@@ -836,7 +844,14 @@ const Admin = () => {
     finally { setLoading(false); setRefreshing(false); }
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    fetchAll();
+    // Orders (and everything else) can change from a customer's side at any
+    // time — poll so a new order doesn't sit unseen until someone happens to
+    // refresh the tab.
+    const interval = setInterval(fetchAll, 30000);
+    return () => clearInterval(interval);
+  }, [fetchAll]);
 
   const handleStatusUpdate = async (type, id, status) => {
     try {
@@ -845,7 +860,9 @@ const Admin = () => {
       if (type==='contact')       await api.put(`/enquiries/contact/${id}/status?status=${status}`);
       if (type==='catering')      await api.put(`/enquiries/catering/${id}/status?status=${status}`);
       await fetchAll();
-    } catch { /* silent */ }
+    } catch (e) {
+      alert(e.response?.data?.detail || 'Could not update status. Please try again.');
+    }
   };
 
   if (!user) return (

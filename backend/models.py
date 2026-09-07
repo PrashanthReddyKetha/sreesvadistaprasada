@@ -16,6 +16,7 @@ class OrderStatus(str, Enum):
     pending = "pending"
     confirmed = "confirmed"
     preparing = "preparing"
+    ready = "ready"
     out_for_delivery = "out_for_delivery"
     delivered = "delivered"
     cancelled = "cancelled"
@@ -76,6 +77,15 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
 
 
 class UserUpdate(BaseModel):
@@ -211,7 +221,7 @@ class OrderItem(BaseModel):
     menu_item_id: str
     name: str
     price: float
-    quantity: int
+    quantity: int = Field(ge=1, le=50)
 
 
 class OrderCreate(BaseModel):
@@ -225,6 +235,9 @@ class OrderCreate(BaseModel):
     payment_intent_id: Optional[str] = None
     # Delivery type
     delivery_type: str = "delivery"   # "delivery" | "takeaway"
+    # Requested collection slot (takeaway only) — "YYYY-MM-DDTHH:MM" London time, None = ASAP.
+    # Client-supplied by design; fully re-validated server-side.
+    scheduled_slot: Optional[str] = None
     # Loyalty redemption
     is_loyalty_redemption: bool = False
     loyalty_free_item_id: Optional[str] = None
@@ -252,6 +265,10 @@ class Order(OrderCreate):
     # Loyalty tracking
     is_loyalty_qualifying: bool = True
     loyalty_order_number: Optional[int] = None
+    # Short customer-facing number (SP1047) — set server-side only, never from the client
+    order_number: Optional[str] = None
+    # Slot actually assigned by the server (may differ from scheduled_slot if bumped)
+    scheduled_slot_final: Optional[str] = None
 
 
 # --- Subscriptions ---
@@ -272,6 +289,7 @@ class SubscriptionCreate(BaseModel):
     safe_place_description: Optional[str] = None
     is_guest: bool = False
     user_id: Optional[str] = None
+    payment_intent_id: Optional[str] = None
 
 
 class SubscriptionStatusUpdate(BaseModel):

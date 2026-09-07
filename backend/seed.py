@@ -836,6 +836,10 @@ async def create_indexes():
     await db.users.create_index("email", unique=True)
     await db.orders.create_index("id", unique=True)
     await db.orders.create_index("payment_intent_id", unique=True, sparse=True)
+    await db.orders.create_index("order_number", sparse=True)
+    # One succeeded PaymentIntent must never mint more than one subscription
+    await db.subscriptions.create_index("payment_intent_id", unique=True, sparse=True)
+    await db.password_resets.create_index("token")
     await db.daily_specials.create_index("id", unique=True)
 
 

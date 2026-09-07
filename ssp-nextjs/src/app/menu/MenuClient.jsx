@@ -25,7 +25,7 @@ const categories = [
 ];
 
 const Menu = ({ initialItems = [] }) => {
-  const [allDishes, setAllDishes] = useState([]);
+  const [allDishes, setAllDishes] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');

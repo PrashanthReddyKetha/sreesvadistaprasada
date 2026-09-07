@@ -602,7 +602,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
         {/* ── Combo Deal ── */}
         {goesWith.length > 0 && (
           <div className="rounded-2xl p-6 mb-10" style={{ background:'linear-gradient(135deg, #800020 0%, #5C0015 100%)' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color:'rgba(244,196,48,0.8)' }}>Combo Deal</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color:'rgba(244,196,48,0.8)' }}>Pairs Well</p>
             <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily:"'Playfair Display',serif" }}>
               Pair it perfectly
             </h3>
@@ -623,9 +623,8 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
                 </div>
               </div>
               <div className="ml-auto text-right">
-                <p className="text-white/60 text-xs line-through">£{(item.price + (goesWith[0]?.price||0)).toFixed(2)}</p>
-                <p className="text-2xl font-bold" style={{ color:'#F4C430' }}>£{((item.price + (goesWith[0]?.price||0)) * 0.95).toFixed(2)}</p>
-                <p className="text-xs" style={{ color:'rgba(244,196,48,0.7)' }}>Save 5% together</p>
+                <p className="text-2xl font-bold" style={{ color:'#F4C430' }}>£{(item.price + (goesWith[0]?.price||0)).toFixed(2)}</p>
+                <p className="text-xs" style={{ color:'rgba(244,196,48,0.7)' }}>Together</p>
               </div>
             </div>
             {isOrderable(item.category) ? (

@@ -15,6 +15,19 @@ const nextConfig = {
   },
   // Allow JSX in .jsx files imported from pages/components
   transpilePackages: [],
+  // Canonical host is the apex domain (matches sitemap.ts, robots.ts and every
+  // canonical/OG tag) — redirect www so Google consolidates ranking signals
+  // onto one URL instead of splitting them across two hosts.
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.sreesvadistaprasada.com' }],
+        destination: 'https://sreesvadistaprasada.com/:path*',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

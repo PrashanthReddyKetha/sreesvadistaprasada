@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 import asyncio
 import math
 import os
 import re
 import stripe
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pymongo import ReturnDocument
 from database import db
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
@@ -45,11 +46,41 @@ TAKEAWAY_DISCOUNT_PCT = 0.10
 ALLOWED_TRANSITIONS = {
     "pending":          {"confirmed", "cancelled"},
     "confirmed":        {"preparing", "cancelled"},
-    "preparing":        {"out_for_delivery", "cancelled"},
+    "preparing":        {"ready", "out_for_delivery", "cancelled"},
+    "ready":            {"out_for_delivery", "delivered", "cancelled"},
     "out_for_delivery": {"delivered", "cancelled"},
     "delivered":        set(),
     "cancelled":        set(),
 }
+
+
+# ── Short order numbers ───────────────────────────────────────────────────────
+
+async def next_order_number() -> str:
+    """Atomic global counter → SP1001, SP1002, ..."""
+    doc = await db.counters.find_one_and_update(
+        {"_id": "order_number"},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    return f"SP{1000 + doc['seq']}"
+
+
+def display_order_number(order: dict) -> str:
+    """Customer-facing order number; legacy orders fall back to the id prefix."""
+    return order.get("order_number") or order["id"][:8].upper()
+
+
+def slot_label(slot_iso: Optional[str]) -> Optional[str]:
+    """'2026-09-07T18:15' → '6:15 pm'."""
+    if not slot_iso or len(slot_iso) < 16:
+        return None
+    try:
+        hh, mm = int(slot_iso[11:13]), slot_iso[14:16]
+    except ValueError:
+        return None
+    return f"{hh % 12 or 12}:{mm} {'am' if hh < 12 else 'pm'}"
 
 
 # ── Pricing helpers ───────────────────────────────────────────────────────────
@@ -261,13 +292,14 @@ async def check_delivery_postcode(postcode: str):
 
 class OrderCalculateItem(BaseModel):
     menu_item_id: str
-    quantity: int = 1
+    quantity: int = Field(default=1, ge=1, le=50)
 
 class OrderCalculateRequest(BaseModel):
     items: List[OrderCalculateItem] = []
     order_type: str = "delivery"
     postcode: str = ""
     free_item_id: Optional[str] = None
+    scheduled_slot: Optional[str] = None  # takeaway collection slot, validated below
 
 
 @router.post("/calculate")
@@ -278,16 +310,32 @@ async def preview_calculate(body: OrderCalculateRequest):
     the server-verified total used at order creation.
     Does NOT create an order or charge anything.
     """
+    from routes.pickup_slots import get_slot_settings, slot_in_grid, slot_remaining
+    slot_settings = await get_slot_settings()
+    if slot_settings.get("paused"):
+        raise HTTPException(status_code=400, detail=(
+            slot_settings.get("paused_message")
+            or "We're not taking orders right now — please check back soon."
+        ))
+
     items_data = []
     for i in body.items:
-        doc = await db.menu.find_one({"id": i.menu_item_id, "available": True}, {"price": 1, "_id": 0})
-        if not doc:
-            raise HTTPException(status_code=404, detail=f"Item '{i.menu_item_id}' is not available")
+        doc = await db.menu_items.find_one({"id": i.menu_item_id}, {"price": 1, "name": 1, "available": 1, "_id": 0})
+        if not doc or not doc.get("available"):
+            name = (doc or {}).get("name") or "An item in your basket"
+            raise HTTPException(status_code=404, detail=f"{name} has just sold out — please remove it from your basket to continue.")
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
+
+    if body.scheduled_slot and body.order_type == "takeaway":
+        if not slot_in_grid(slot_settings, body.scheduled_slot):
+            raise HTTPException(status_code=400, detail="That collection time has just passed — please pick another.")
+        remaining = await slot_remaining(slot_settings, body.scheduled_slot)
+        if remaining is not None and remaining <= 0:
+            raise HTTPException(status_code=400, detail="That collection time has just filled up — please pick another.")
 
     free_item_price = 0.0
     if body.free_item_id:
-        free_doc = await db.menu.find_one({"id": body.free_item_id, "available": True}, {"price": 1, "_id": 0})
+        free_doc = await db.menu_items.find_one({"id": body.free_item_id, "available": True}, {"price": 1, "_id": 0})
         if free_doc:
             free_item_price = float(free_doc["price"])
 
@@ -310,9 +358,12 @@ async def create_order(
     payload: OrderCreate,
     current_user: Optional[dict] = Depends(get_optional_user),
 ):
-    user_id = current_user["sub"] if current_user else payload.user_id
+    # Guest checkouts never get to pick whose account the order lands on —
+    # only a verified JWT can attribute an order to a user.
+    user_id = current_user["sub"] if current_user else None
 
     # Validate loyalty redemption before pricing
+    free_item_price = 0.0
     if payload.is_loyalty_redemption:
         if not user_id:
             raise HTTPException(400, "Must be logged in to redeem a loyalty reward")
@@ -320,14 +371,16 @@ async def create_order(
         if not user or not user.get("loyalty_pending_reward"):
             raise HTTPException(400, "No loyalty reward available")
         if payload.loyalty_free_item_id:
-            item = await db.menu.find_one({"id": payload.loyalty_free_item_id, "available": True})
+            item = await db.menu_items.find_one({"id": payload.loyalty_free_item_id, "available": True}, {"_id": 0})
             if not item:
                 raise HTTPException(404, "Free item not available")
+            # Discount comes from the DB, never the client-supplied price
+            free_item_price = float(item["price"])
 
     # Server-side pricing — look up each item price from the DB, never trust the client
     items_data = []
     for i in payload.items:
-        doc = await db.menu.find_one({"id": i.menu_item_id, "available": True}, {"price": 1, "_id": 0})
+        doc = await db.menu_items.find_one({"id": i.menu_item_id, "available": True}, {"price": 1, "_id": 0})
         if not doc:
             raise HTTPException(404, detail=f"Item '{i.menu_item_id}' is not available")
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
@@ -336,7 +389,7 @@ async def create_order(
             items=items_data,
             order_type=payload.delivery_type,
             postcode=payload.delivery_address.postcode if payload.delivery_address else "",
-            free_item_price=payload.loyalty_free_item_original_price,
+            free_item_price=free_item_price,
         )
     except ValueError as e:
         raise HTTPException(400, detail=str(e))
@@ -355,6 +408,24 @@ async def create_order(
     if pi.amount != expected_pence:
         raise HTTPException(400, "Payment amount does not match order total")
 
+    # Assign the collection slot. Payment has already succeeded, so a full or
+    # passed slot must NEVER reject the order — bump forward, else fall back to ASAP.
+    scheduled_final = None
+    slot_was_bumped = False
+    if payload.delivery_type == "takeaway" and payload.scheduled_slot:
+        from routes.pickup_slots import get_slot_settings, slot_in_grid, try_reserve_slot, generate_slots, LONDON
+        slot_settings = await get_slot_settings()
+        now_ldn = datetime.now(LONDON)
+        if slot_in_grid(slot_settings, payload.scheduled_slot, now_ldn) and await try_reserve_slot(slot_settings, payload.scheduled_slot):
+            scheduled_final = payload.scheduled_slot
+        else:
+            for cand in generate_slots(slot_settings, now_ldn.date(), now_ldn):
+                if cand["iso"] > payload.scheduled_slot and await try_reserve_slot(slot_settings, cand["iso"]):
+                    scheduled_final = cand["iso"]
+                    slot_was_bumped = True
+                    break
+            # No same-day slot left → ASAP (scheduled_final stays None)
+
     # Redemption orders don't count toward loyalty
     is_qualifying = not payload.is_loyalty_redemption
 
@@ -369,6 +440,9 @@ async def create_order(
         user_id=user_id,
         is_loyalty_qualifying=is_qualifying,
     )
+    # Server-authoritative: assigned here, never accepted from the client
+    order.order_number = await next_order_number()
+    order.scheduled_slot_final = scheduled_final
     await db.orders.insert_one(order.model_dump())
 
     # If redeeming, clear pending reward and increment redeemed counter
@@ -386,11 +460,15 @@ async def create_order(
 
     subj, html = email_order_confirmation(order.model_dump(), payload.customer_name)
     send_email(payload.customer_email, subj, html)
-    short_id = order.id[:8].upper()
-    send_sms(
-        payload.customer_phone,
-        f"Sree Svadista Prasada: order #{short_id} received — £{order.total:.2f}. We'll text you when it's on the way.",
-    )
+    short_id = order.order_number
+    if payload.delivery_type == "takeaway":
+        when = f"Collect at {slot_label(scheduled_final)}." if scheduled_final else "We'll text you when it's ready to collect."
+        if slot_was_bumped:
+            when = f"Your requested time was full — new collection time {slot_label(scheduled_final)}."
+        sms_body = f"Sree Svadista Prasada: order #{short_id} received — £{order.total:.2f}. {when}"
+    else:
+        sms_body = f"Sree Svadista Prasada: order #{short_id} received — £{order.total:.2f}. We'll text you when it's on the way."
+    send_sms(payload.customer_phone, sms_body)
     notify_admin(
         f"New order · £{order.total:.2f} · {payload.customer_name}",
         f"<p>New order <b>#{short_id}</b> from {payload.customer_name} "
@@ -457,15 +535,26 @@ async def update_order_status(
         subj, html = email_order_status(doc, name, payload.status.value)
         if doc.get("customer_email"):
             send_email(doc["customer_email"], subj, html)
+        disp = display_order_number(doc)
+        is_takeaway = doc.get("delivery_type") == "takeaway"
+        delivered_sms = (
+            f"Order #{disp} collected — enjoy! Rate it on your dashboard."
+            if is_takeaway else
+            f"Order #{disp} delivered — enjoy! Rate it on your dashboard."
+        )
         sms_copy = {
-            "confirmed": f"Order #{order_id[:8].upper()} confirmed. We'll start prepping shortly.",
-            "preparing": f"Order #{order_id[:8].upper()} is being prepared now.",
-            "out_for_delivery": f"Order #{order_id[:8].upper()} is on the way. Please keep your phone handy.",
-            "delivered": f"Order #{order_id[:8].upper()} delivered — enjoy! Rate it on your dashboard.",
-            "cancelled": f"Order #{order_id[:8].upper()} was cancelled. Reply to your confirmation email if this is wrong.",
+            "confirmed": f"Order #{disp} confirmed. We'll start prepping shortly.",
+            "preparing": f"Order #{disp} is being prepared now.",
+            "ready": f"Order #{disp} is READY for collection. See you soon!",
+            "out_for_delivery": f"Order #{disp} is on the way. Please keep your phone handy.",
+            "delivered": delivered_sms,
+            "cancelled": f"Order #{disp} was cancelled. Reply to your confirmation email if this is wrong.",
         }.get(payload.status.value)
         if sms_copy and doc.get("customer_phone"):
             send_sms(doc["customer_phone"], f"Sree Svadista Prasada: {sms_copy}")
+        if payload.status.value == "cancelled" and doc.get("scheduled_slot_final"):
+            from routes.pickup_slots import release_slot
+            await release_slot(doc["scheduled_slot_final"])
         if payload.status.value == "delivered":
             from routes.reviews import ensure_order_review_stub
             await ensure_order_review_stub(doc)
@@ -483,16 +572,18 @@ async def update_order_status(
             notif_titles = {
                 "confirmed": "Order confirmed! 🎉",
                 "preparing": "Chefs are cooking your order 🍳",
+                "ready": "Ready for collection! 🛍️",
                 "out_for_delivery": "Your order is on the way! 🛵",
-                "delivered": "Order delivered — enjoy! 🏠",
+                "delivered": "Order collected — enjoy! 🛍️" if is_takeaway else "Order delivered — enjoy! 🏠",
                 "cancelled": "Order cancelled",
             }
             notif_bodies = {
-                "confirmed": f"Order #{order_id[:8].upper()} confirmed. We'll start prepping shortly.",
-                "preparing": f"Your order #{order_id[:8].upper()} is being prepared right now.",
+                "confirmed": f"Order #{disp} confirmed. We'll start prepping shortly.",
+                "preparing": f"Your order #{disp} is being prepared right now.",
+                "ready": f"Order #{disp} is ready — come and collect it while it's hot!",
                 "out_for_delivery": "Your order is heading to you. Should arrive in 10–15 mins.",
-                "delivered": "Your order has arrived. Please rate your experience in the dashboard.",
-                "cancelled": f"Order #{order_id[:8].upper()} has been cancelled.",
+                "delivered": "Enjoy your meal! Please rate your experience in the dashboard.",
+                "cancelled": f"Order #{disp} has been cancelled.",
             }
             if payload.status.value in notif_titles:
                 await create_notification(
@@ -510,16 +601,18 @@ async def update_order_status(
                 push_titles = {
                     "confirmed": "Order confirmed 🎉",
                     "preparing": "Chefs are cooking 🍳",
+                    "ready": "Ready for collection! 🛍️",
                     "out_for_delivery": "On the way! 🛵",
-                    "delivered": "Delivered! 🏠",
+                    "delivered": "Collected! 🛍️" if is_takeaway else "Delivered! 🏠",
                     "cancelled": "Order cancelled",
                 }
                 push_bodies = {
-                    "confirmed": f"Order #{order_id[:6].upper()} confirmed. We'll start prepping shortly.",
-                    "preparing": f"Your order #{order_id[:6].upper()} is being prepared right now.",
+                    "confirmed": f"Order #{disp} confirmed. We'll start prepping shortly.",
+                    "preparing": f"Your order #{disp} is being prepared right now.",
+                    "ready": f"Order #{disp} is ready — come and collect it while it's hot!",
                     "out_for_delivery": "Your order is heading to you. Should arrive in 10–15 mins.",
-                    "delivered": "Your order has arrived. Enjoy your meal!",
-                    "cancelled": f"Order #{order_id[:6].upper()} has been cancelled.",
+                    "delivered": "Enjoy your meal!",
+                    "cancelled": f"Order #{disp} has been cancelled.",
                 }
                 if payload.status.value in push_titles:
                     await send_push_notification(
@@ -550,12 +643,15 @@ async def cancel_order(order_id: str, current_user: dict = Depends(get_current_u
         {"id": order_id},
         {"$set": {"status": OrderStatus.cancelled.value, "updated_at": datetime.utcnow().isoformat()}},
     )
+    if doc.get("scheduled_slot_final"):
+        from routes.pickup_slots import release_slot
+        await release_slot(doc["scheduled_slot_final"])
 
     # Notify customer of self-cancellation
     cust_email = doc.get("customer_email")
     cust_phone = doc.get("customer_phone")
     cust_name  = doc.get("customer_name") or "Customer"
-    short_id   = order_id[:8].upper()
+    short_id   = display_order_number(doc)
     if cust_email:
         send_email(
             cust_email,

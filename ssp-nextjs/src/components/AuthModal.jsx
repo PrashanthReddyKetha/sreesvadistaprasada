@@ -165,6 +165,12 @@ const AuthModal = () => {
   const [showLoginPw, setShowLoginPw] = useState(false);
   const [loginError, setLoginError] = useState('');
 
+  // Forgot password
+  const [forgotEmail, setForgotEmail]     = useState('');
+  const [forgotSent, setForgotSent]       = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError]     = useState('');
+
   // Register step 1
   const [name, setName]   = useState('');
   const [email, setEmail] = useState('');
@@ -242,6 +248,7 @@ const AuthModal = () => {
   const reset = () => {
     setTab('login'); setStep(1); setLoading(false); setOtpLoading(false); setCountdown(0);
     setLoginEmail(''); setLoginPw(''); setLoginError('');
+    setForgotEmail(''); setForgotSent(false); setForgotError(''); setForgotLoading(false);
     setName(''); setEmail(''); setPhone(''); setPw(''); setTerms(false); setOtp(''); setRegError('');
     setEmailStatus(null); setPhoneStatus(null); setNameError(''); setPhoneError(''); setPwError('');
     setGoogleCred(null); setGoogleEmail(''); setGoogleName(''); setGooglePhone('');
@@ -318,6 +325,17 @@ const AuthModal = () => {
     } catch (err) {
       setLoginError(err.response?.data?.detail || 'Invalid email or password.');
     } finally { setLoading(false); }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setForgotError(''); setForgotLoading(true);
+    try {
+      await api.post('/auth/forgot-password', { email: forgotEmail });
+      setForgotSent(true);
+    } catch (err) {
+      setForgotError(err.response?.data?.detail || 'Something went wrong. Please try again.');
+    } finally { setForgotLoading(false); }
   };
 
   const handleSendOtp = async (e) => {
@@ -447,11 +465,15 @@ const AuthModal = () => {
   const isRegister = tab === 'register';
   const title = googleStep
     ? (googleStep === 'phone' ? `Swagatam, ${googleName.split(' ')[0]}` : 'One last check')
+    : tab === 'forgot'
+      ? 'Reset your password'
     : isRegister
       ? (step === 1 ? 'Pull up a chair' : 'One last check')
       : 'Swagatam — welcome home';
   const subtitle = googleStep
     ? (googleStep === 'phone' ? 'Leave your number so we can bring a hot meal to the right door.' : `We just sent a code to ${googlePhone}.`)
+    : tab === 'forgot'
+      ? "We'll email you a link to get back in."
     : isRegister
       ? (step === 1 ? 'A warm plate is always waiting here.' : `We just sent a code to ${phone}.`)
       : 'Sign in — your orders and subscription are right where you left them.';
@@ -476,7 +498,7 @@ const AuthModal = () => {
           </h2>
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>{subtitle}</p>
 
-          {!googleStep && (
+          {!googleStep && tab !== 'forgot' && (
             <div className="flex gap-1 mt-4 bg-white/10 rounded-xl p-1">
               {[['login','Sign In'],['register','Register']].map(([t,l]) => (
                 <button key={t} onClick={() => { setTab(t); setStep(1); setLoginError(''); setRegError(''); setEmailStatus(null); }}
@@ -530,6 +552,12 @@ const AuthModal = () => {
                 }
               />
 
+              <button type="button"
+                onClick={() => { setTab('forgot'); setForgotEmail(loginEmail); setForgotSent(false); setForgotError(''); }}
+                className="text-xs font-semibold hover:underline -mt-2" style={{ color: '#800020' }}>
+                Forgot password?
+              </button>
+
               <button type="submit" disabled={loading}
                 className="w-full py-3.5 text-sm font-bold text-white rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-lg disabled:opacity-60"
                 style={{ backgroundColor: '#800020' }}>
@@ -545,6 +573,42 @@ const AuthModal = () => {
                   className="font-semibold hover:underline" style={{ color: '#800020' }}>Come on in</button>
               </p>
             </form>
+          )}
+
+          {/* ── FORGOT PASSWORD ───────────────────────────────────── */}
+          {tab === 'forgot' && !googleStep && (
+            forgotSent ? (
+              <div className="text-center py-4 space-y-4">
+                <p className="text-sm" style={{ color: '#3D2B1F' }}>
+                  If an account exists for <strong>{forgotEmail}</strong>, we've sent a password reset link. Check your inbox.
+                </p>
+                <button type="button" onClick={() => { setTab('login'); setForgotSent(false); }}
+                  className="text-sm font-semibold hover:underline" style={{ color: '#800020' }}>
+                  Back to Sign In
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-4" autoComplete="on">
+                <p className="text-sm text-gray-500">Enter your email and we'll send you a link to reset your password.</p>
+                {forgotError && (
+                  <div className="p-3 rounded-xl text-sm flex items-start gap-2" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>
+                    <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />{forgotError}
+                  </div>
+                )}
+                <Field label="Email address" icon={Mail} type="email" name="email"
+                  autoComplete="email" placeholder="you@example.com"
+                  value={forgotEmail} onChange={setForgotEmail} required />
+                <button type="submit" disabled={forgotLoading}
+                  className="w-full py-3.5 text-sm font-bold text-white rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-lg disabled:opacity-60"
+                  style={{ backgroundColor: '#800020' }}>
+                  {forgotLoading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Sending…</> : 'Send Reset Link'}
+                </button>
+                <p className="text-center text-xs text-gray-400 pt-1">
+                  <button type="button" onClick={() => setTab('login')}
+                    className="font-semibold hover:underline" style={{ color: '#800020' }}>Back to Sign In</button>
+                </p>
+              </form>
+            )
           )}
 
           {/* ── REGISTER STEP 1 ───────────────────────────────────── */}
@@ -633,7 +697,7 @@ const AuthModal = () => {
                   I agree to the{' '}
                   <a href="/terms" target="_blank" className="font-semibold hover:underline" style={{ color: '#800020' }}>Terms of Service</a>
                   {' '}and{' '}
-                  <a href="/privacy" target="_blank" className="font-semibold hover:underline" style={{ color: '#800020' }}>Privacy Policy</a>.
+                  <a href="/privacy-policy" target="_blank" className="font-semibold hover:underline" style={{ color: '#800020' }}>Privacy Policy</a>.
                   Your data is never sold or shared.
                 </span>
               </label>

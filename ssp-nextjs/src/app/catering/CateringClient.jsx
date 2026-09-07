@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Users, Briefcase, Heart, Calendar, ArrowRight, Phone, Star, Sparkles } from 'lucide-react';
 import api from '@/api';
+import { trackEnquirySubmit } from '@/lib/analytics';
 
 const Catering = () => {
   const [formData, setFormData] = useState({
@@ -24,6 +25,7 @@ const Catering = () => {
         additional_details: formData.message,
       });
       setStatus('success');
+      trackEnquirySubmit('catering');
       setFormData({ name: '', email: '', phone: '', eventType: '', eventDate: '', guests: '', foodType: '', message: '' });
     } catch {
       setStatus('error');
