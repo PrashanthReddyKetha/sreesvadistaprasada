@@ -14,6 +14,8 @@ import DabbaWalaTab from '@/components/admin/DabbaWalaTab';
 import MenuTab from '@/components/admin/MenuTab';
 import DailySpecialsTab from '@/components/admin/DailySpecialsTab';
 import AdminLoyaltyTab from '@/components/admin/AdminLoyaltyTab';
+import KitchenTab from '@/components/admin/KitchenTab';
+import SlotSettingsTab from '@/components/admin/SlotSettingsTab';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -23,6 +25,7 @@ const STATUS_COLORS = {
   pending:   { bg:'#FFF8E1', text:'#8B6914', border:'#F4C430' },
   confirmed: { bg:'#E8F5E9', text:'#2E7D32', border:'#4CAF50' },
   preparing: { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
+  ready:     { bg:'#E8F5E9', text:'#2E6B4F', border:'#2E6B4F' },
   out_for_delivery: { bg:'#E3F2FD', text:'#1565C0', border:'#2196F3' },
   delivered: { bg:'#F3E5F5', text:'#6A1B9A', border:'#9C27B0' },
   cancelled: { bg:'#FFEBEE', text:'#C62828', border:'#EF5350' },
@@ -58,12 +61,17 @@ const ORDER_FLOW = {
   pending:   { next:'confirmed', label:'Confirm Order',    color:'#2E7D32' },
   confirmed: { next:'preparing', label:'Start Preparing',  color:'#1565C0' },
   preparing: { next:'out_for_delivery', label:'Out for Delivery',   color:'#1565C0' },
+  ready:     { next:'delivered', label:'Mark Collected',   color:'#2E6B4F' },
   out_for_delivery: { next:'delivered', label:'Mark Delivered',   color:'#6A1B9A' },
 };
+// Collection orders go preparing → ready → collected instead of out_for_delivery
+const flowFor = (order) => order.status === 'preparing' && order.delivery_type === 'takeaway'
+  ? { next:'ready', label:'Mark Ready', color:'#2E6B4F' }
+  : ORDER_FLOW[order.status];
 
 const OrderActions = ({ order, onUpdate }) => {
   const [busy, setBusy] = useState(null);
-  const flow = ORDER_FLOW[order.status];
+  const flow = flowFor(order);
 
   const handle = async (status) => {
     setBusy(status);
@@ -81,7 +89,7 @@ const OrderActions = ({ order, onUpdate }) => {
           {flow.label}
         </button>
       )}
-      {['pending','confirmed','preparing','out_for_delivery'].includes(order.status) && (
+      {['pending','confirmed','preparing','ready','out_for_delivery'].includes(order.status) && (
         <button onClick={() => handle('cancelled')} disabled={!!busy}
           className="px-2 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
           style={{ border:'1px solid #EF5350', color:'#C62828', backgroundColor:'transparent' }}>
@@ -169,7 +177,7 @@ const Overview = ({ orders, subscriptions, users, contacts, catering, newsletter
 const OrdersTab = ({ orders, onStatusUpdate }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState('all');
-  const statuses = ['all','pending','confirmed','preparing','delivered','cancelled'];
+  const statuses = ['all','pending','confirmed','preparing','ready','out_for_delivery','delivered','cancelled'];
   const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
 
   return (
@@ -204,7 +212,12 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
                   onClick={() => setExpandedId(expandedId === o.id ? null : o.id)}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <span className="font-semibold text-sm text-gray-900">#{o.id?.slice(-6).toUpperCase()}</span>
+                      <span className="font-semibold text-sm text-gray-900">#{o.order_number || o.id?.slice(-6).toUpperCase()}</span>
+                      {o.scheduled_slot_final && (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ backgroundColor:'#FBF3DC', color:'#B8860B' }}>
+                          COLLECT {(() => { const h = parseInt(o.scheduled_slot_final.slice(11,13),10); return `${h%12||12}:${o.scheduled_slot_final.slice(14,16)} ${h<12?'am':'pm'}`; })()}
+                        </span>
+                      )}
                       <span className="text-sm text-gray-600">{o.customer_name}</span>
                       <span className="text-xs text-gray-400">{o.customer_email}</span>
                     </div>
@@ -807,6 +820,7 @@ const ReviewsTab = () => {
 
 // ─── Main Admin Page ──────────────────────────────────────────────────────────
 const TABS = [
+  { id:'kitchen',       label:'Kitchen',       icon:Utensils     },
   { id:'overview',      label:'Overview',      icon:TrendingUp   },
   { id:'orders',        label:'Orders',        icon:ShoppingBag  },
   { id:'dabba',         label:'Dabba Wala',    icon:Calendar     },
@@ -818,11 +832,12 @@ const TABS = [
   { id:'loyalty',       label:'Loyalty',       icon:Gift         },
   { id:'reviews',       label:'Reviews',       icon:Star         },
   { id:'newsletter',    label:'Newsletter',    icon:Mail         },
+  { id:'slots',         label:'Collection Times', icon:Clock     },
 ];
 
 const Admin = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('kitchen');
   const [data, setData] = useState({ orders:[], subscriptions:[], users:[], contacts:[], catering:[], newsletter:[] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -945,6 +960,8 @@ const Admin = () => {
             </div>
           ) : (
             <>
+              {activeTab==='kitchen'       && <KitchenTab />}
+              {activeTab==='slots'         && <SlotSettingsTab />}
               {activeTab==='overview'      && <Overview {...data} />}
               {activeTab==='orders'        && <OrdersTab orders={data.orders} onStatusUpdate={handleStatusUpdate} />}
               {activeTab==='dabba'         && <DabbaWalaTab />}

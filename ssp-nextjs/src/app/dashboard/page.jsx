@@ -16,6 +16,7 @@ const STATUS_COLORS = {
   pending:    { bg: '#FEF9C3', text: '#854D0E', label: 'Pending' },
   confirmed:  { bg: '#DBEAFE', text: '#1E40AF', label: 'Confirmed' },
   preparing:  { bg: '#FEF3C7', text: '#92400E', label: 'Preparing' },
+  ready:      { bg: '#DCFCE7', text: '#166534', label: 'Ready to Collect' },
   out_for_delivery: { bg: '#DBEAFE', text: '#1E40AF', label: 'Out for Delivery' },
   delivered:  { bg: '#DCFCE7', text: '#166534', label: 'Delivered' },
   cancelled:  { bg: '#FEE2E2', text: '#991B1B', label: 'Cancelled' },
@@ -108,7 +109,7 @@ function DashboardInner() {
   if (!user) return null;
 
   const pending   = orders.filter(o => o.status === 'pending').length;
-  const active    = orders.filter(o => ['confirmed','preparing','out_for_delivery'].includes(o.status)).length;
+  const active    = orders.filter(o => ['confirmed','preparing','ready','out_for_delivery'].includes(o.status)).length;
   const delivered = orders.filter(o => o.status === 'delivered').length;
   const ordersSpent = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0);
   const subsSpent = subs.filter(s => s.status !== 'cancelled').reduce((s, sub) => s + (sub.price || 0), 0);
@@ -351,9 +352,12 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
     });
     setCartOpen(true);
   };
-  const stepMap = { pending: 0, confirmed: 1, preparing: 2, out_for_delivery: 3, delivered: 4, cancelled: -1 };
+  const takeaway = o.delivery_type === 'takeaway';
+  const stepMap = { pending: 0, confirmed: 1, preparing: 2, ready: 3, out_for_delivery: 3, delivered: 4, cancelled: -1 };
   const step = stepMap[o.status] ?? 0;
-  const steps = ['Order Placed', 'Confirmed', 'Preparing', 'Out for Delivery', 'Delivered'];
+  const steps = takeaway
+    ? ['Order Placed', 'Confirmed', 'Preparing', 'Ready to Collect', 'Collected']
+    : ['Order Placed', 'Confirmed', 'Preparing', 'Out for Delivery', 'Delivered'];
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(244,196,48,0.2)' }}>
@@ -368,9 +372,15 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
           </div>
           <div>
             <p className="text-sm font-semibold" style={{ color: '#3D2B1F' }}>
-              Order #{o.id?.slice(-6).toUpperCase()}
+              Order #{o.order_number || o.id?.slice(-6).toUpperCase()}
             </p>
-            <p className="text-xs" style={{ color: '#7A5C50' }}>{fmt(o.created_at)} · {o.items?.length} item{o.items?.length !== 1 ? 's' : ''}</p>
+            <p className="text-xs" style={{ color: '#7A5C50' }}>
+              {fmt(o.created_at)} · {o.items?.length} item{o.items?.length !== 1 ? 's' : ''}
+              {o.scheduled_slot_final && (() => {
+                const h = parseInt(o.scheduled_slot_final.slice(11, 13), 10);
+                return ` · Collect ${h % 12 || 12}:${o.scheduled_slot_final.slice(14, 16)} ${h < 12 ? 'am' : 'pm'}`;
+              })()}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
