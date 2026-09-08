@@ -125,7 +125,11 @@ export default function OrderClient() {
       const heroBottom = heroRef.current
         ? heroRef.current.getBoundingClientRect().bottom + window.scrollY
         : 200;
-      setControlsCollapsed(window.scrollY > heroBottom + 60);
+      // Hysteresis: collapse past the hero, but only expand again near the top —
+      // symmetric thresholds oscillate because collapsing changes the layout height
+      setControlsCollapsed(prev => prev
+        ? window.scrollY > Math.max(heroBottom - 160, 40)
+        : window.scrollY > heroBottom + 60);
       if (Date.now() < spyPaused.current) return;
       const probe = stickyH + 140; // px below the top of the viewport
       let current = null;
@@ -200,21 +204,6 @@ export default function OrderClient() {
       <div ref={stickyRef} className="sticky z-30 top-[calc(32px+4rem)] md:top-[calc(32px+5rem)]"
         style={{ backgroundColor: C.ivory, borderBottom: `1px solid ${C.line}`, boxShadow: '0 4px 12px rgba(45,36,34,0.06)' }}>
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-3">
-          {/* Collapsed summary — tap to scroll up and change mode/time */}
-          {controlsCollapsed && !searchMode && (
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="w-full flex items-center justify-between rounded-xl px-4 py-2 mb-2 text-[13px] font-bold"
-              style={{ backgroundColor: '#F3EDE2', color: C.ink }}>
-              <span>
-                {deliveryType === 'takeaway'
-                  ? `🛵 Collection · ${pickupSlot ? pickupSlot.label : 'ASAP (~40 min)'}`
-                  : '🚚 Delivery'}
-              </span>
-              <span className="font-black" style={{ color: C.burgundy }}>Change ▴</span>
-            </button>
-          )}
-
           {/* Collection / Delivery toggle */}
           <div className={searchMode || controlsCollapsed ? 'hidden' : 'flex rounded-xl p-1 gap-1'} style={{ backgroundColor: '#F3EDE2' }}>
             {[['takeaway', '🛵 Collection · save 10%'], ['delivery', '🚚 Delivery']].map(([val, label]) => (
@@ -229,20 +218,31 @@ export default function OrderClient() {
             ))}
           </div>
 
-          <div className={searchMode || controlsCollapsed ? 'hidden' : 'mt-3'}>
-            {deliveryType === 'takeaway' ? (
-              <>
-                <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} />
-                <p className="text-[11px] mt-1.5" style={{ color: C.veg }}>
-                  🎉 10% off every collection order — no delivery fee. Collect from our Greenleys kitchen, MK12 6LF.
-                </p>
-              </>
+          {deliveryType === 'takeaway' && (
+            <div className={searchMode || controlsCollapsed ? 'hidden' : 'mt-3'}>
+              <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} />
+            </div>
+          )}
+
+          {/* Mode info line — stays pinned with the search bar even when the
+              toggle and slot picker collapse away */}
+          {!searchMode && (
+            deliveryType === 'takeaway' ? (
+              <p className="text-[11px] mt-1.5" style={{ color: C.veg }}>
+                🎉 10% off every collection order — no delivery fee. Collect from our Greenleys kitchen, MK12 6LF.
+                {controlsCollapsed && (
+                  <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="ml-1.5 font-black underline" style={{ color: C.burgundy }}>
+                    {pickupSlot ? pickupSlot.label : 'ASAP'} ▴
+                  </button>
+                )}
+              </p>
             ) : (
-              <p className="text-xs py-1" style={{ color: C.muted }}>
+              <p className="text-xs mt-1.5" style={{ color: C.muted }}>
                 🚚 Delivering across MK1–MK19 · fee &amp; free-delivery threshold confirmed at checkout with your postcode. Minimum order £15.
               </p>
-            )}
-          </div>
+            )
+          )}
 
           {/* Search — stays fixed with the categories */}
           <div className={`flex items-center gap-2 ${searchMode ? '' : 'mt-3'}`}>
@@ -284,7 +284,9 @@ export default function OrderClient() {
       </div>
 
       {/* ── Menu list ── */}
-      <div className="max-w-3xl mx-auto px-4 pb-40">
+      {/* overflow-anchor off: the sticky block above changes height when it
+          collapses, and browser scroll anchoring would fight it (flicker) */}
+      <div className="max-w-3xl mx-auto px-4 pb-40" style={{ overflowAnchor: 'none' }}>
         {loading && <p className="py-10 text-center text-sm" style={{ color: C.muted }}>Loading menu…</p>}
         {!loading && bySection.length === 0 && (
           <p className="py-10 text-center text-sm" style={{ color: C.muted }}>No dishes match your search.</p>
