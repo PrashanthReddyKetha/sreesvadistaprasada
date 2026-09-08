@@ -25,6 +25,16 @@ const categories = [
 // Pickles & podis have their own coming-soon page — keep them off the full menu
 const HIDDEN_CATEGORIES = new Set(['pickles', 'podis']);
 
+// Section order + destination pages for the structured "All Dishes" view
+const SECTIONS = [
+  { id: 'breakfast',    name: 'Breakfast',      href: '/breakfast',     accent: '#8B6914' },
+  { id: 'nonVeg',       name: 'Non-Veg',        href: '/svadista',      accent: '#8B3A3A' },
+  { id: 'veg',          name: 'Vegetarian',     href: '/prasada',       accent: '#4A7C59' },
+  { id: 'streetFood',   name: 'Street Food',    href: '/street-food',   accent: '#B45309' },
+  { id: 'ragiSpecials', name: 'Ragi Specials',  href: '/ragi-specials', accent: '#6B4423' },
+  { id: 'drinks',       name: 'Drinks',         href: '/drinks',        accent: '#1565C0' },
+];
+
 const Menu = ({ initialItems = [] }) => {
   const [allDishes, setAllDishes] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
@@ -49,6 +59,7 @@ const Menu = ({ initialItems = [] }) => {
   }, []);
 
   const searching = searchQuery.trim().length > 0;
+  const byName = (a, b) => a.name.localeCompare(b.name);
   const filtered = allDishes
     .filter(dish => !HIDDEN_CATEGORIES.has(dish.category))
     .filter(dish => {
@@ -63,7 +74,61 @@ const Menu = ({ initialItems = [] }) => {
       !searching ||
       dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       dish.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    )
+    .sort(byName);
+
+  // Structured view for "All Dishes": one titled section per category
+  const showSections = !searching && activeCategory === 'all';
+  const grouped = showSections
+    ? SECTIONS.map(sec => ({ ...sec, items: filtered.filter(d => d.category === sec.id) }))
+        .filter(sec => sec.items.length > 0)
+    : [];
+
+  const renderCard = (dish) => (
+    <Link key={dish.id} href={buildItemUrl(dish)} onClick={e => e.target.closest('button') && e.preventDefault()} data-testid={`menu-dish-${dish.id}`}>
+      <div className="rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }}>
+        {dish.image && (
+          <div className="relative h-40 overflow-hidden">
+            <Image fill src={dish.image} alt={dish.name} className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+            <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-sm border-2 flex items-center justify-center bg-white/90"
+              style={{ borderColor: dish.is_veg ? '#22c55e' : '#ef4444' }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dish.is_veg ? '#22c55e' : '#ef4444' }} />
+            </div>
+          </div>
+        )}
+        <div className="p-4 flex flex-col h-[180px]">
+          <div className="flex items-center gap-1.5 mb-1">
+            <h3 className="text-sm font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
+            {dish.spice_level > 0 && (
+              <div className="flex gap-0.5 shrink-0">
+                {Array(dish.spice_level).fill(0).map((_, i) => (
+                  <Flame key={i} size={10} className="text-red-500 fill-red-500" />
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 line-clamp-1 mb-2 flex-1">{dish.description}</p>
+          <div className="flex justify-between items-center">
+            <span className="text-base font-bold" style={{ color: '#800020' }}>{'£'}{dish.price.toFixed(2)}</span>
+            {isOrderable(dish.category) ? (
+              <button onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` }); }} className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>
+                <ShoppingCart size={11} /> Add
+              </button>
+            ) : (
+              <button
+                onClick={e => { e.preventDefault(); e.stopPropagation(); openNotifyMe(dish.name, dish.category); }}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-sm border transition-all hover:opacity-90"
+                style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.45)', backgroundColor: 'rgba(139,105,20,0.06)' }}
+                data-testid={`menu-soon-${dish.id}`}>
+                <Bell size={11} /> Notify
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
@@ -81,7 +146,7 @@ const Menu = ({ initialItems = [] }) => {
               Our Full Menu
             </h1>
             <p className="text-lg text-gray-200 leading-relaxed max-w-md">
-              Explore everything — from bold Svadista curries to divine Prasada offerings, breakfast tiffins to grandmother's pickles.
+              Explore everything — from bold Svadista curries to divine Prasada offerings, breakfast tiffins and street food.
             </p>
           </div>
         </div>
@@ -127,7 +192,9 @@ const Menu = ({ initialItems = [] }) => {
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <p className="text-sm" style={{ color: '#5C4B47' }}>{filtered.length} items</p>
+            <p className="text-sm" style={{ color: '#5C4B47' }}>
+              {searching ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''} for “${searchQuery}”` : `${filtered.length} items`}
+            </p>
             <div className="flex gap-4">
               <Link href="/svadista" className="text-xs font-semibold transition-colors duration-200 hover:underline" style={{ color: '#8B3A3A' }}>Svadista Menu</Link>
               <Link href="/prasada" className="text-xs font-semibold transition-colors duration-200 hover:underline" style={{ color: '#4A7C59' }}>Prasada Menu</Link>
@@ -137,53 +204,27 @@ const Menu = ({ initialItems = [] }) => {
 
           {loading ? (
             <MenuLoader color="#800020" />
+          ) : showSections ? (
+            <div className="space-y-14">
+              {grouped.map(sec => (
+                <section key={sec.id}>
+                  <div className="flex items-baseline justify-between mb-5 pb-2" style={{ borderBottom: `2px solid ${sec.accent}22` }}>
+                    <h2 className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: sec.accent }}>
+                      {sec.name} <span className="text-sm font-normal text-gray-400 ml-1">({sec.items.length})</span>
+                    </h2>
+                    <Link href={sec.href} className="text-xs font-semibold hover:underline whitespace-nowrap" style={{ color: sec.accent }}>
+                      Explore {sec.name} {'→'}
+                    </Link>
+                  </div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {sec.items.map(dish => renderCard(dish))}
+                  </div>
+                </section>
+              ))}
+            </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filtered.map((dish) => (
-                <Link key={dish.id} href={buildItemUrl(dish)} onClick={e => e.target.closest('button') && e.preventDefault()} data-testid={`menu-dish-${dish.id}`}>
-                  <div className="rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }}>
-                    {dish.image && (
-                      <div className="relative h-40 overflow-hidden">
-                        <Image fill src={dish.image} alt={dish.name} className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
-                        <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-sm border-2 flex items-center justify-center bg-white/90"
-                          style={{ borderColor: dish.is_veg ? '#22c55e' : '#ef4444' }}>
-                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dish.is_veg ? '#22c55e' : '#ef4444' }} />
-                        </div>
-                      </div>
-                    )}
-                    <div className="p-4 flex flex-col h-[180px]">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <h3 className="text-sm font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
-                        {dish.spice_level > 0 && (
-                          <div className="flex gap-0.5 shrink-0">
-                            {Array(dish.spice_level).fill(0).map((_, i) => (
-                              <Flame key={i} size={10} className="text-red-500 fill-red-500" />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 line-clamp-1 mb-2 flex-1">{dish.description}</p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-base font-bold" style={{ color: '#800020' }}>£{dish.price.toFixed(2)}</span>
-                        {isOrderable(dish.category) ? (
-                          <button onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` }); }} className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>
-                            <ShoppingCart size={11} /> Add
-                          </button>
-                        ) : (
-                          <button
-                            onClick={e => { e.preventDefault(); e.stopPropagation(); openNotifyMe(dish.name, dish.category); }}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-sm border transition-all hover:opacity-90"
-                            style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.45)', backgroundColor: 'rgba(139,105,20,0.06)' }}
-                            data-testid={`menu-soon-${dish.id}`}>
-                            <Bell size={11} /> Notify
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+              {filtered.map(dish => renderCard(dish))}
             </div>
           )}
           {!loading && filtered.length === 0 && <p className="text-center text-gray-500 py-12">No items found.</p>}
