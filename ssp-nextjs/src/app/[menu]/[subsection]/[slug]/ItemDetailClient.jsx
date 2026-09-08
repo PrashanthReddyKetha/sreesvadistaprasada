@@ -52,7 +52,6 @@ const ALLERGEN_COLORS = {
 
 const CATEGORY_FAQS = {
   nonVeg: [
-    { q:'Is the meat halal?', a:'Yes, all our meat is sourced from halal-certified suppliers.' },
     { q:'Can I request a different spice level?', a:"Absolutely — add a note in Special Instructions at checkout and we'll adjust it for you." },
     { q:'What sides go best with this?', a:'Our homemade pickles and podis pair beautifully. Check the "Goes Best With" section below.' },
   ],

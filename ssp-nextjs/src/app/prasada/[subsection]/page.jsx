@@ -32,7 +32,7 @@ export async function generateMetadata({ params }) {
   if (!tab) return {};
   return {
     title: `${tab} — Prasada Vegetarian Menu | Sree Svadista Prasada`,
-    description: `Order authentic South Indian vegetarian ${tab.toLowerCase()} dishes. Pure veg, freshly cooked in Milton Keynes, delivered to Edinburgh & Glasgow.`,
+    description: `Order authentic South Indian vegetarian ${tab.toLowerCase()} dishes. Pure veg, freshly cooked in Milton Keynes — Edinburgh & Glasgow coming soon.`,
   };
 }
 

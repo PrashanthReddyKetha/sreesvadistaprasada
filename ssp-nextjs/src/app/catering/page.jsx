@@ -26,7 +26,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FoodService',
   name: 'Sree Svadista Prasada — South Indian Catering',
-  description: 'Authentic South Indian catering in Milton Keynes for weddings, temple events, corporate functions and community gatherings. Also serving Edinburgh and Glasgow.',
+  description: 'Authentic South Indian catering in Milton Keynes for weddings, temple events, corporate functions and community gatherings. Edinburgh and Glasgow coming soon.',
   provider: {
     '@type': 'Restaurant',
     name: 'Sree Svadista Prasada',
@@ -35,8 +35,6 @@ const jsonLd = {
   },
   areaServed: [
     { '@type': 'City', name: 'Milton Keynes' },
-    { '@type': 'City', name: 'Edinburgh' },
-    { '@type': 'City', name: 'Glasgow' },
   ],
   serviceType: 'Catering',
 };

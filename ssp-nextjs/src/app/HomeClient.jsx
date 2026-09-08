@@ -550,10 +550,10 @@ const Home = () => {
               </h2>
 
               <div className="relative rounded-lg overflow-hidden group" style={{ boxShadow: '0 8px 32px rgba(128, 0, 32, 0.08)' }}>
-                <Link href={chefSpecialItem ? buildItemUrl(chefSpecialItem) : '/prasada'} className="block">
+                <Link href={chefSpecialItem ? buildItemUrl(chefSpecialItem) : '/breakfast'} className="block">
                 <div className="relative h-64 md:h-80 overflow-hidden">
                   <img
-                    src={chefSpecial.image}
+                    src={chefSpecialItem?.image || chefSpecial.image}
                     alt={chefSpecial.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
@@ -614,7 +614,7 @@ const Home = () => {
 
               <div className="grid grid-cols-2 gap-4 md:gap-5">
                 {mealMoments.map((moment) => {
-                  const isAvailable = moment.id === 1; // only Breakfast is live
+                  const isAvailable = true; // all four moments order live from /order
                   return isAvailable ? (
                     <Link key={moment.id} href={moment.link} className="group text-center" data-testid={`meal-moment-${moment.id}`}>
                       <div className="relative w-full aspect-square rounded-full overflow-hidden mb-3 transition-all duration-300 group-hover:shadow-lg"
@@ -657,7 +657,7 @@ const Home = () => {
                 Where Shall We Bring the Warmth?
               </h2>
               <p className="text-sm text-gray-600 leading-relaxed mb-6">
-                Drop your postcode and we'll tell you what's on the way. Hot meals and daily dabbas in Milton Keynes, Edinburgh &amp; Glasgow. Pickles and podis — we post those anywhere you call home.
+                Drop your postcode and we'll tell you what's on the way. Hot meals and daily dabbas in Milton Keynes — Edinburgh &amp; Glasgow coming soon. Pickles and podis — we post those anywhere you call home.
               </p>
               <form onSubmit={checkPostcode} className="flex gap-2 mb-4" data-testid="postcode-form">
                 <div className="relative flex-1">
@@ -695,8 +695,8 @@ const Home = () => {
               <div className="space-y-3">
                 {[
                   { city: 'Milton Keynes', postcodes: 'MK1–MK19', deliveryFee: 'Free over £30', timing: '45–60 min' },
-                  { city: 'Edinburgh', postcodes: 'EH1–EH17', deliveryFee: 'Free over £30', timing: '45–60 min' },
-                  { city: 'Glasgow', postcodes: 'G1–G46', deliveryFee: 'Free over £30', timing: '45–60 min' },
+                  { city: 'Edinburgh', postcodes: 'EH1–EH17', deliveryFee: 'Coming soon', timing: '—' },
+                  { city: 'Glasgow', postcodes: 'G1–G46', deliveryFee: 'Coming soon', timing: '—' },
                   { city: 'Rest of UK', postcodes: 'Snacks & Pickles only', deliveryFee: 'Free over £25', timing: '2–3 days' },
                 ].map((area) => (
                   <div key={area.city} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: area.city === 'Milton Keynes' ? 'rgba(128,0,32,0.04)' : '#fafafa' }} data-testid={`delivery-area-${area.city.toLowerCase().replace(/\s/g, '-')}`}>

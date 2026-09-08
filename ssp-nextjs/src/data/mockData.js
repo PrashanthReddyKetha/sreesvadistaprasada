@@ -110,25 +110,25 @@ export const mealMoments = [
     id: 1,
     name: 'Breakfast',
     image: 'https://images.unsplash.com/photo-1694849789325-914b71ab4075?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
-    link: '/breakfast'
+    link: '/order?cat=breakfast'
   },
   {
     id: 2,
-    name: 'Main Course',
+    name: 'Veg Mains',
     image: 'https://images.unsplash.com/photo-1742281257707-0c7f7e5ca9c6?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
-    link: '/menu'
+    link: '/order?cat=veg'
   },
   {
     id: 3,
-    name: 'Snacks',
-    image: 'https://images.unsplash.com/photo-1572442568216-e4a31af30b69?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
-    link: '/snacks'
+    name: 'Non-Veg Mains',
+    image: 'https://images.unsplash.com/photo-1628690570327-14e16dca1518?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
+    link: '/order?cat=nonVeg'
   },
   {
     id: 4,
-    name: 'Specials',
-    image: 'https://images.unsplash.com/photo-1628690570327-14e16dca1518?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
-    link: '/svadista'
+    name: 'Evening Delights',
+    image: 'https://images.unsplash.com/photo-1572442568216-e4a31af30b69?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
+    link: '/order?cat=streetFood'
   }
 ];
 
@@ -379,7 +379,7 @@ export const chefSpecial = {
   price: "£8.99",
   link: "/breakfast",
   category: "breakfast",
-  image: "https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&q=85&w=800"
+  image: "https://firebasestorage.googleapis.com/v0/b/sreesvadistaprasada.firebasestorage.app/o/nellore%20ghee%20karam%20dosa.jpg?alt=media&token=2c6b53e2-0474-4345-82c0-ef7c5a9c0e35"
 };
 
 export const images = {

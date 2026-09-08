@@ -96,7 +96,7 @@ const jsonLd = [
         name: 'Where can I eat gongura dishes in the UK?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Sree Svadista Prasada serves authentic Gongura Chicken Curry and Gongura Mutton Curry in Milton Keynes, Edinburgh, and Glasgow — one of the very few restaurants in the UK offering authentic Andhra gongura preparations.',
+          text: 'Sree Svadista Prasada serves authentic Gongura Chicken Curry and Gongura Mutton Curry in Milton Keynes (Edinburgh and Glasgow coming soon) — one of the very few restaurants in the UK offering authentic Andhra gongura preparations.',
         },
       },
     ],
@@ -217,10 +217,10 @@ export default function GonguraPage() {
             flavour — not substituted with tamarind or other souring agents.
           </p>
           <p>
-            We serve across{' '}
-            <Link href="/milton-keynes" className="text-amber-700 font-semibold hover:underline">Milton Keynes</Link>,{' '}
+            We serve{' '}
+            <Link href="/milton-keynes" className="text-amber-700 font-semibold hover:underline">Milton Keynes</Link> — with{' '}
             <Link href="/edinburgh" className="text-amber-700 font-semibold hover:underline">Edinburgh</Link>, and{' '}
-            <Link href="/glasgow" className="text-amber-700 font-semibold hover:underline">Glasgow</Link>.
+            <Link href="/glasgow" className="text-amber-700 font-semibold hover:underline">Glasgow</Link> coming soon.
           </p>
 
           {/* FAQ */}
@@ -255,8 +255,8 @@ export default function GonguraPage() {
           <div className="mt-12 bg-green-800 text-white rounded-2xl p-8 not-prose text-center">
             <h3 className="text-2xl font-bold mb-2">Try Authentic Gongura Dishes</h3>
             <p className="text-green-200 mb-6">
-              Order Gongura Chicken or Gongura Mutton — delivered in Milton Keynes,
-              Edinburgh &amp; Glasgow.
+              Order Gongura Chicken or Gongura Mutton — delivered across Milton Keynes.
+              Edinburgh &amp; Glasgow coming soon.
             </p>
             <Link
               href="/svadista"

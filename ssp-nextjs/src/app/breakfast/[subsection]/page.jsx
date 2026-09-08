@@ -29,7 +29,7 @@ export async function generateMetadata({ params }) {
   if (!tab) return {};
   return {
     title: `${tab} — Breakfast Menu | Sree Svadista Prasada`,
-    description: `Authentic South Indian ${tab.toLowerCase()} made fresh every morning. Order online for delivery in Milton Keynes, Edinburgh & Glasgow.`,
+    description: `Authentic South Indian ${tab.toLowerCase()} made fresh every morning. Order online for delivery in Milton Keynes — Edinburgh & Glasgow coming soon.`,
   };
 }
 

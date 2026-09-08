@@ -78,8 +78,11 @@ const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
         (i.extra_categories || []).some(ec => ec.category === 'breakfast' && ec.subcategory === activeTab)
       ).sort((a, b) => a.name.localeCompare(b.name));
 
+  // Searching spans every subsection on this page, not just the active tab
   const filtered = search.trim()
-    ? byTab.filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()))
+    ? [...items]
+        .filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()))
+        .sort((a, b) => a.name.localeCompare(b.name))
     : byTab;
 
   return (
@@ -199,7 +202,9 @@ const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
             </div>
           )}
           {!loading && filtered.length === 0 && (
-            <div className="text-center py-20 text-gray-400">{search ? `No results for "${search}"` : 'No items in this category yet.'}</div>
+            <div className="text-center py-20 text-gray-400">{search ? (
+              <>No results for &quot;{search}&quot; here — <a href={`/menu?q=${encodeURIComponent(search)}`} className="underline font-semibold" style={{ color: '#800020' }}>search the full menu instead →</a></>
+            ) : 'No items in this category yet.'}</div>
           )}
         </div>
       </section>

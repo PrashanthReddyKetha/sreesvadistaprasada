@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Flame, ShoppingBag, ChevronRight, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { isOrderable } from '@/config/softLaunch';
@@ -49,6 +49,7 @@ function Stepper({ qty, onChange }) {
 
 export default function OrderClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     cartItems, cartCount, cartTotal, addToCart, updateQuantity,
     deliveryType, setDeliveryType, pickupSlot, setPickupSlot,
@@ -75,6 +76,17 @@ export default function OrderClient() {
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
   });
+
+  // Deep link: /order?cat=veg jumps straight to that category once the menu loads
+  const deepLinked = useRef(false);
+  useEffect(() => {
+    if (deepLinked.current || loading || !dishes.length) return;
+    const cat = searchParams?.get('cat');
+    if (cat && SECTIONS.some(s => s.id === cat)) {
+      deepLinked.current = true;
+      setTimeout(() => scrollTo(cat), 250);
+    }
+  }, [loading, dishes.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Lock page scroll while the item sheet is open
   useEffect(() => {

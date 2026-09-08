@@ -357,7 +357,7 @@ function StickyMobileCta() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden px-4 py-3" style={{ backgroundColor: C.primary, boxShadow: '0 -4px 16px rgba(0,0,0,0.25)' }}>
       <a href="#plans" className="flex items-center justify-between gap-3">
-        <span className="text-xs text-white/90 font-medium">From £12.50 a meal · No contract</span>
+        <span className="text-xs text-white/90 font-medium">From £12.50 a meal on the monthly plan · Fixed term, no auto-renewal</span>
         <span className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-sm shrink-0" style={{ backgroundColor: C.gold, color: C.dark }}>
           See plans <ArrowRight size={14} />
         </span>
@@ -824,17 +824,17 @@ const SubscriptionsInner = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
       {/* Hero */}
-      <section className="relative overflow-hidden" style={{ height: 'min(42vh, 340px)' }}>
+      <section className="relative overflow-hidden" style={{ minHeight: 'min(42vh, 340px)' }}>
         <Image fill priority src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
           alt="Dabba Wala" className="absolute inset-0 object-cover" sizes="100vw" />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)` }} />
-        <div className="relative h-full w-full px-4 md:px-8 flex items-end md:items-center pb-8 md:pb-0" style={{ paddingTop: 'calc(32px + 68px)' }}>
+        <div className="relative h-full w-full px-4 md:px-8 flex items-center pt-[calc(32px+4rem+1.25rem)] md:pt-[calc(32px+5rem+1.5rem)] pb-8">
           <div className="max-w-7xl mx-auto w-full">
             <div className="max-w-xl">
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service</p>
               <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Your Daily Dose of Home</h1>
               <p className="text-sm text-gray-200">Fresh South Indian meals delivered Mon–Fri. No cooking required.</p>
-              <p className="text-sm font-semibold mt-1.5" style={{ color: '#F4C430' }}>From £12.50 a meal · No contract, no auto-renewal</p>
+              <p className="text-sm font-semibold mt-1.5" style={{ color: '#F4C430' }}>From £12.50 a meal on the monthly plan (£15 on weekly) · Fixed term — no auto-renewal, no hidden fees</p>
               <div className="flex items-center gap-5 mt-5 flex-wrap">
                 <a href="#plans" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm transition-colors duration-150" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
                   See plans &amp; pricing <ArrowRight size={15} />
@@ -856,7 +856,7 @@ const SubscriptionsInner = () => {
               { icon: Star, text: 'Freshly cooked every day' },
               { icon: Users, text: 'Family-run Andhra kitchen' },
               { icon: MapPin, text: 'Delivering across MK1–MK19' },
-              { icon: Shield, text: 'No contracts — cancel anytime' },
+              { icon: Shield, text: 'Fixed term — no auto-renewal' },
             ].map((row, i) => (
               <div key={i} className="flex items-center gap-2">
                 <row.icon size={15} style={{ color: C.primary }} />

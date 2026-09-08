@@ -26,7 +26,7 @@ const jsonLd = [
     url: `${BASE_URL}/glasgow`,
     telephone: '+447307119962',
     email: 'info@sreesvadistaprasada.com',
-    servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan', 'Halal'],
+    servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan'],
     address: { '@type': 'PostalAddress', addressLocality: 'Glasgow', addressRegion: 'Scotland', addressCountry: 'GB' },
     areaServed: { '@type': 'City', name: 'Glasgow' },
     sameAs: ['https://sreesvadistaprasada.com'],

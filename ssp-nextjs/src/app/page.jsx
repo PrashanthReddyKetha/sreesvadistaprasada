@@ -30,7 +30,7 @@ const jsonLd = {
       image: 'https://sreesvadistaprasada.com/logo.png',
       logo: 'https://sreesvadistaprasada.com/logo.png',
       priceRange: '££',
-      servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan', 'Halal'],
+      servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan'],
       knowsAbout: ['Gongura', 'Andhra cuisine', 'Telugu food', 'Dabba Wala', 'Ragi', 'Pulihora', 'Avakaya', 'Chicken 65', 'Gutti Vankaya'],
       hasMap: 'https://maps.google.com/?q=Milton+Keynes',
       address: {

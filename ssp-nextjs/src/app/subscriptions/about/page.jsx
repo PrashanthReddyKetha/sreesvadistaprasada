@@ -45,14 +45,6 @@ const faqSchema = {
         text: 'You can skip individual delivery days from your Dashboard, and cancel within 48 hours of signing up for a full refund. Plans are a fixed term and don\'t auto-renew, so there\'s no ongoing subscription to cancel — no lock-in, no recurring fees.',
       },
     },
-    {
-      '@type': 'Question',
-      name: 'Is the Dabba Wala halal?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes. All meat in our Svadista and Mixed Dabbas is sourced from halal-certified suppliers.',
-      },
-    },
   ],
 };
 
@@ -111,7 +103,7 @@ export default function SubscriptionsAboutPage() {
             },
             {
               name: 'Svadista Dabba — Non-Vegetarian',
-              desc: 'Rice, chicken or mutton curry, pickle, omelette and papad. Halal-certified meat every time. Bold Andhra flavour, every day.',
+              desc: 'Rice, chicken or mutton curry, pickle, omelette and papad. Bold Andhra flavour, every day.',
             },
             {
               name: 'Mixed Dabba — Weekly Rotation',
@@ -133,7 +125,6 @@ export default function SubscriptionsAboutPage() {
           {[
             ['What areas do you deliver to?', 'Hot daily dabbas across all MK postcodes MK1–MK19 including Wolverton, Stony Stratford, Greenleys, Newport Pagnell and Bletchley. Edinburgh and Glasgow are coming soon — join the waitlist.'],
             ['Can I pause or cancel?', 'Skip individual days anytime, or cancel within 48 hours of signing up for a full refund. Fixed-term plans, no auto-renewal, no lock-in.'],
-            ['Is the food halal?', 'Yes. All meat in Svadista and Mixed Dabbas uses halal-certified suppliers.'],
             ['Can I customise my dabba?', 'Yes. Contact us on WhatsApp with any dietary requirements or preferences and we will plan accordingly.'],
             ['How is the dabba delivered?', 'Delivered hot in insulated packaging to your door. You do not need to be home — leave delivery instructions at checkout.'],
           ].map(([q, a]) => (

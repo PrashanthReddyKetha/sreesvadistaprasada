@@ -15,7 +15,7 @@ const jsonLd = {
   url: 'https://sreesvadistaprasada.com/menu',
   hasMenuSection: [
     { '@type': 'MenuSection', name: 'Prasada', description: 'Pure vegetarian South Indian dishes', url: 'https://sreesvadistaprasada.com/prasada' },
-    { '@type': 'MenuSection', name: 'Svadista', description: 'Halal non-vegetarian South Indian dishes', url: 'https://sreesvadistaprasada.com/svadista' },
+    { '@type': 'MenuSection', name: 'Svadista', description: 'Non-vegetarian South Indian dishes', url: 'https://sreesvadistaprasada.com/svadista' },
     { '@type': 'MenuSection', name: 'Breakfast', description: 'South Indian breakfast — idli, vada, dosas, poori', url: 'https://sreesvadistaprasada.com/breakfast' },
     { '@type': 'MenuSection', name: 'Street Food', description: 'South Indian street food and chaat', url: 'https://sreesvadistaprasada.com/street-food' },
     { '@type': 'MenuSection', name: 'Ragi Specials', description: 'Ragi-based health foods unique to our menu', url: 'https://sreesvadistaprasada.com/ragi-specials' },
@@ -54,7 +54,7 @@ export default async function FullMenuPage() {
         </p>
         <nav aria-label="Menu categories">
           <Link href="/prasada">Prasada — Pure Vegetarian</Link>{' · '}
-          <Link href="/svadista">Svadista — Halal Non-Vegetarian</Link>{' · '}
+          <Link href="/svadista">Svadista — Non-Vegetarian</Link>{' · '}
           <Link href="/breakfast">Breakfast &amp; Tiffins</Link>{' · '}
           <Link href="/street-food">Street Food</Link>{' · '}
           <Link href="/ragi-specials">Ragi Specials</Link>{' · '}

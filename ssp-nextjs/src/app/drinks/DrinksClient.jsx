@@ -115,7 +115,9 @@ const Drinks = ({ initialItems = [] }) => {
             </div>
           )}
           {!loading && filtered.length === 0 && (
-            <div className="text-center py-20 text-gray-400">{search ? `No results for "${search}"` : 'No beverages yet.'}</div>
+            <div className="text-center py-20 text-gray-400">{search ? (
+              <>No results for &quot;{search}&quot; here — <a href={`/menu?q=${encodeURIComponent(search)}`} className="underline font-semibold" style={{ color: '#800020' }}>search the full menu instead →</a></>
+            ) : 'No beverages yet.'}</div>
           )}
         </div>
       </section>

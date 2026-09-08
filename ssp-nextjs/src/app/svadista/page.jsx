@@ -39,11 +39,6 @@ const SVADISTA_FAQ = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'Is the chicken on the Svadista menu halal?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Yes. All meat on the Svadista menu is sourced from certified halal suppliers.' },
-    },
-    {
-      '@type': 'Question',
       name: 'What are the most popular non-veg dishes?',
       acceptedAnswer: { '@type': 'Answer', text: 'Our most loved dishes are Natu Kodi Biryani (slow-cooked country chicken in basmati), Gongura Chicken (tangy sorrel leaf curry), Rayalaseema Mutton Curry, and Chicken 65. Every recipe is authentic Andhra home-style cooking.' },
     },
@@ -72,7 +67,7 @@ export default async function SvadistaPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SVADISTA_FAQ) }} />
       <h1 className="sr-only">Non-Veg Indian Food Milton Keynes — Andhra Curries, Biryani & More</h1>
       <p className="sr-only">
-        All our meat is sourced from halal-certified suppliers. Bold, rustic Andhra
+        Bold, rustic Andhra
         and Telugu non-vegetarian cooking — Gongura Chicken, Natu Kodi Biryani,
         Mutton Curry, Egg Specials and Indo-Chinese dishes. Delivered across Milton
         Keynes (Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley,

@@ -61,7 +61,7 @@ export default function Page() {
         <h2>Subscription Plans</h2>
         <ul>
           <li>Prasada Weekly — Pure vegetarian South Indian meals, 5 days/week</li>
-          <li>Svadista Weekly — Halal non-vegetarian South Indian meals, 5 days/week</li>
+          <li>Svadista Weekly — Non-vegetarian South Indian meals, 5 days/week</li>
           <li>Mixed Weekly — Combination of Prasada and Svadista</li>
           <li>Monthly Plan — Full month of daily dabbas at a discounted rate</li>
         </ul>

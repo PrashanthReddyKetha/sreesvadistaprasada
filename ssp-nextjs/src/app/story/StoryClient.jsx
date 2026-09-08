@@ -184,7 +184,7 @@ const OurStory = () => {
             looking for pure prasada for your pooja, we're here for you.
           </p>
           <p className="text-base text-gray-600 leading-relaxed mb-8">
-            Now serving <strong className="font-bold" style={{ color: '#800020' }}>Milton Keynes</strong>, Edinburgh, and Glasgow with dine-in, delivery,
+            Now serving <strong className="font-bold" style={{ color: '#800020' }}>Milton Keynes</strong> — Edinburgh and Glasgow coming soon — with delivery, collection,
             weekly & monthly meal subscriptions (Dabba Wala service), and full catering for functions, poojas, and corporate events.
           </p>
 

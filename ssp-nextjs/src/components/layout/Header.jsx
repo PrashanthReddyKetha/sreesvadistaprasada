@@ -206,12 +206,18 @@ const Header = () => {
                 </button>
                 {user ? (
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {user.role === 'admin' && (
+                    {user.role === 'admin' ? (
                       <Link href="/admin" className="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-[#800020]/10 whitespace-nowrap" style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.3)' }}>
                         Admin
                       </Link>
+                    ) : (
+                      /* Fixed label — never the user's name, so the header width never shifts */
+                      <Link href="/dashboard" className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-[#800020]/10 whitespace-nowrap" style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.3)' }} title={user.name}>
+                        <User size={13} /> My Dabba
+                      </Link>
                     )}
-                    <Link href="/dashboard" className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" style={{ color: '#800020' }} data-testid="dashboard-button" aria-label="My Account" title={user.name}>
+                    {/* Bare icon only where the pill is hidden (small screens) or for admins */}
+                    <Link href="/dashboard" className={`p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5 ${user.role === 'admin' ? '' : 'md:hidden'}`} style={{ color: '#800020' }} data-testid="dashboard-button" aria-label="My Account" title={user.name}>
                       <User size={20} />
                     </Link>
                   </div>

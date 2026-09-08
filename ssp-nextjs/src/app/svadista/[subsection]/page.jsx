@@ -31,7 +31,7 @@ export async function generateMetadata({ params }) {
   if (!tab) return {};
   return {
     title: `${tab} — Svadista Non-Veg Menu | Sree Svadista Prasada`,
-    description: `Order authentic South Indian ${tab.toLowerCase()} dishes. Non-vegetarian specialities freshly cooked in Milton Keynes, delivered to Edinburgh & Glasgow.`,
+    description: `Order authentic South Indian ${tab.toLowerCase()} dishes. Non-vegetarian specialities freshly cooked in Milton Keynes — Edinburgh & Glasgow coming soon.`,
   };
 }
 

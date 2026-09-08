@@ -1,10 +1,10 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'About Svadista — Halal Non-Veg South Indian Food, Milton Keynes',
+  title: 'About Svadista — Non-Veg South Indian Food, Milton Keynes',
   description:
     'The story behind Svadista: Gongura Chicken, Gongura Mutton, Whole Grilled Chicken, ' +
-    'halal-certified Andhra and Telugu non-vegetarian cooking freshly made and ' +
+    'authentic Andhra and Telugu non-vegetarian cooking freshly made and ' +
     'delivered across Milton Keynes. The only Gongura kitchen in MK.',
   alternates: { canonical: 'https://sreesvadistaprasada.com/svadista/about' },
 };
@@ -21,17 +21,17 @@ export default function SvadistaAboutPage() {
         </nav>
 
         <h1 className="text-4xl sm:text-5xl font-bold mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-          Svadista — Halal Non-Vegetarian South Indian Food
+          Svadista — Non-Vegetarian South Indian Food
         </h1>
         <p className="text-lg mb-10" style={{ color: '#5C4B47' }}>
-          Freshly made daily. Halal-certified. Delivered across Milton Keynes.
+          Freshly made daily. Delivered across Milton Keynes.
         </p>
 
         <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-          Halal-Certified South Indian Food in Milton Keynes
+          Authentic Non-Veg South Indian Food in Milton Keynes
         </h2>
         <p className="leading-relaxed mb-4" style={{ color: '#2D2422' }}>
-          All meat served at Sree Svadista Prasada is sourced from halal-certified suppliers. Svadista is the only halal Andhra and Telugu non-vegetarian kitchen in Milton Keynes — offering authentic South Indian food with full halal certification. Every dish. Every day. No exceptions.
+          All meat served at Sree Svadista Prasada is carefully sourced from trusted suppliers. Svadista brings bold, authentic Andhra and Telugu non-vegetarian cooking to Milton Keynes — made fresh every day, the way it is made back home.
         </p>
 
         <h2 className="text-2xl font-bold mt-10 mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>

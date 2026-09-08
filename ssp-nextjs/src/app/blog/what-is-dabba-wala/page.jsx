@@ -129,7 +129,7 @@ export default function DabbaWalaArticle() {
           </p>
           <ul>
             <li><strong>Prasada box</strong> — pure vegetarian, same-day cooked, temple-kitchen standards</li>
-            <li><strong>Svadista box</strong> — halal non-vegetarian, Andhra-style curries and rice dishes</li>
+            <li><strong>Svadista box</strong> — non-vegetarian, Andhra-style curries and rice dishes</li>
             <li><strong>Mixed box</strong> — alternating veg and non-veg across your subscription period</li>
           </ul>
           <p>

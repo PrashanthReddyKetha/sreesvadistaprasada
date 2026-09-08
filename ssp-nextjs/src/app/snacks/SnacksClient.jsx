@@ -18,7 +18,7 @@ const Snacks = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(58vh, 500px)' }}>
+      <section className="pt-[calc(32px+4rem+1.5rem)] md:pt-[calc(32px+5rem+2rem)] pb-10 relative overflow-hidden" style={{ minHeight: 'min(58vh, 500px)' }}>
         <img
           src="https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
           alt="Traditional handmade Andhra pickles and podis"

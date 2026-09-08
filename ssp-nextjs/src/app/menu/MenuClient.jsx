@@ -20,9 +20,10 @@ const categories = [
   { id: 'ragiSpecials', name: 'Ragi Specials' },
   { id: 'drinks', name: 'Drinks' },
   { id: 'naivedyam', name: '🪔 Naivedyam' },
-  { id: 'pickles', name: 'Pickles' },
-  { id: 'podis', name: 'Podis' },
 ];
+
+// Pickles & podis have their own coming-soon page — keep them off the full menu
+const HIDDEN_CATEGORIES = new Set(['pickles', 'podis']);
 
 const Menu = ({ initialItems = [] }) => {
   const [allDishes, setAllDishes] = useState(initialItems);
@@ -40,16 +41,26 @@ const Menu = ({ initialItems = [] }) => {
       .then(res => { setAllDishes(res.data); setCached(key, res.data); })
       .catch(err => console.error('Failed to load menu:', err))
       .finally(() => setLoading(false));
+    // Arriving from another page's search: /menu?q=dosa
+    try {
+      const q = new URLSearchParams(window.location.search).get('q');
+      if (q) { setSearchQuery(q); setActiveCategory('all'); }
+    } catch {}
   }, []);
 
+  const searching = searchQuery.trim().length > 0;
   const filtered = allDishes
+    .filter(dish => !HIDDEN_CATEGORIES.has(dish.category))
     .filter(dish => {
+      // A search always spans the whole menu — the category chips don't
+      // constrain it, so "dosa" is never hidden behind the wrong filter
+      if (searching) return true;
       if (activeCategory === 'all') return true;
       if (activeCategory === 'naivedyam') return dish.subcategory === 'Naivedyam';
       return dish.category === activeCategory;
     })
     .filter(dish =>
-      !searchQuery.trim() ||
+      !searching ||
       dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       dish.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -87,7 +98,7 @@ const Menu = ({ initialItems = [] }) => {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); if (e.target.value.trim()) setActiveCategory('all'); }}
                 placeholder="Search dishes..."
                 className="w-full pl-9 pr-4 py-2 rounded-full border border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors"
                 data-testid="menu-search"

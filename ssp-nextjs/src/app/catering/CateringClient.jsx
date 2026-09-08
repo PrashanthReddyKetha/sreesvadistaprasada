@@ -83,7 +83,7 @@ const Catering = () => {
                   </li>
                 ))}
               </ul>
-              <p className="text-xs text-gray-500 leading-relaxed">Available in Milton Keynes, Edinburgh & Glasgow. Both pure veg and mixed menus.</p>
+              <p className="text-xs text-gray-500 leading-relaxed">Available in Milton Keynes — Edinburgh & Glasgow coming soon. Both pure veg and mixed menus.</p>
             </div>
 
             {/* Corporate Dabba */}
