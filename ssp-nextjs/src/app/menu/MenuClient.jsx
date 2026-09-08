@@ -30,6 +30,7 @@ const SECTIONS = [
   { id: 'breakfast',    name: 'Breakfast',      href: '/breakfast',     accent: '#8B6914' },
   { id: 'nonVeg',       name: 'Non-Veg',        href: '/svadista',      accent: '#8B3A3A' },
   { id: 'veg',          name: 'Vegetarian',     href: '/prasada',       accent: '#4A7C59' },
+  { id: 'naivedyam',    name: '🪔 Naivedyam',   href: '/prasada/naivedyam', accent: '#B8860B' },
   { id: 'streetFood',   name: 'Street Food',    href: '/street-food',   accent: '#B45309' },
   { id: 'ragiSpecials', name: 'Ragi Specials',  href: '/ragi-specials', accent: '#6B4423' },
   { id: 'drinks',       name: 'Drinks',         href: '/drinks',        accent: '#1565C0' },
@@ -79,8 +80,13 @@ const Menu = ({ initialItems = [] }) => {
 
   // Structured view for "All Dishes": one titled section per category
   const showSections = !searching && activeCategory === 'all';
+  // Naivedyam is a veg subcategory — it gets its own section and is kept out
+  // of the Vegetarian one so nothing appears twice
+  const inSection = (d, sec) => sec.id === 'naivedyam'
+    ? d.subcategory === 'Naivedyam'
+    : d.category === sec.id && !(sec.id === 'veg' && d.subcategory === 'Naivedyam');
   const grouped = showSections
-    ? SECTIONS.map(sec => ({ ...sec, items: filtered.filter(d => d.category === sec.id) }))
+    ? SECTIONS.map(sec => ({ ...sec, items: filtered.filter(d => inSection(d, sec)) }))
         .filter(sec => sec.items.length > 0)
     : [];
 
