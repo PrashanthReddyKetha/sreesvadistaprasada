@@ -62,6 +62,9 @@ export default function OrderClient() {
   const [searchMode, setSearchMode] = useState(false);
   const searchInputRef = useRef(null);
   const [sheetItem, setSheetItem] = useState(null); // dish shown in the bottom sheet
+  // Once the list is being browsed, the toggle + slot picker collapse to a slim
+  // summary row so more dishes fit on screen; tapping it scrolls back up to expand
+  const [controlsCollapsed, setControlsCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('breakfast');
   const sectionRefs = useRef({});
   const stickyRef = useRef(null);
@@ -119,6 +122,10 @@ export default function OrderClient() {
       if (searchMode && document.activeElement !== searchInputRef.current) {
         setSearchMode(false);
       }
+      const heroBottom = heroRef.current
+        ? heroRef.current.getBoundingClientRect().bottom + window.scrollY
+        : 200;
+      setControlsCollapsed(window.scrollY > heroBottom + 60);
       if (Date.now() < spyPaused.current) return;
       const probe = stickyH + 140; // px below the top of the viewport
       let current = null;
@@ -193,8 +200,23 @@ export default function OrderClient() {
       <div ref={stickyRef} className="sticky z-30 top-[calc(32px+4rem)] md:top-[calc(32px+5rem)]"
         style={{ backgroundColor: C.ivory, borderBottom: `1px solid ${C.line}`, boxShadow: '0 4px 12px rgba(45,36,34,0.06)' }}>
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-3">
+          {/* Collapsed summary — tap to scroll up and change mode/time */}
+          {controlsCollapsed && !searchMode && (
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="w-full flex items-center justify-between rounded-xl px-4 py-2 mb-2 text-[13px] font-bold"
+              style={{ backgroundColor: '#F3EDE2', color: C.ink }}>
+              <span>
+                {deliveryType === 'takeaway'
+                  ? `🛵 Collection · ${pickupSlot ? pickupSlot.label : 'ASAP (~40 min)'}`
+                  : '🚚 Delivery'}
+              </span>
+              <span className="font-black" style={{ color: C.burgundy }}>Change ▴</span>
+            </button>
+          )}
+
           {/* Collection / Delivery toggle */}
-          <div className={searchMode ? 'hidden' : 'flex rounded-xl p-1 gap-1'} style={{ backgroundColor: '#F3EDE2' }}>
+          <div className={searchMode || controlsCollapsed ? 'hidden' : 'flex rounded-xl p-1 gap-1'} style={{ backgroundColor: '#F3EDE2' }}>
             {[['takeaway', '🛵 Collection · save 10%'], ['delivery', '🚚 Delivery']].map(([val, label]) => (
               <button key={val} onClick={() => setDeliveryType(val)}
                 className="flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-colors"
@@ -207,7 +229,7 @@ export default function OrderClient() {
             ))}
           </div>
 
-          <div className={searchMode ? 'hidden' : 'mt-3'}>
+          <div className={searchMode || controlsCollapsed ? 'hidden' : 'mt-3'}>
             {deliveryType === 'takeaway' ? (
               <>
                 <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} />
@@ -318,20 +340,28 @@ export default function OrderClient() {
         return (
           <>
             <div className="fixed inset-0 z-[60] bg-black/40" onClick={() => setSheetItem(null)} />
-            <div className="fixed bottom-0 left-0 right-0 z-[70] animate-slide-up rounded-t-3xl overflow-hidden"
+            <div className="fixed bottom-0 left-0 right-0 z-[70] animate-slide-up rounded-t-3xl overflow-hidden
+                md:bottom-auto md:left-1/2 md:right-auto md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2
+                md:rounded-3xl md:w-[880px] md:max-w-[92vw] md:flex md:animate-none"
               style={{ backgroundColor: C.ivory, boxShadow: '0 -10px 40px rgba(45,36,34,0.35)', maxHeight: '85vh' }}>
-              <div className="overflow-y-auto" style={{ maxHeight: '85vh' }}>
+              {/* Desktop: tall image panel on the left so photos aren't cropped to a strip */}
+              {d.image && (
+                <div className="hidden md:block relative md:w-[45%] md:self-stretch" style={{ minHeight: 460 }}>
+                  <Image src={d.image} alt={d.name} fill sizes="400px" className="object-cover" />
+                </div>
+              )}
+              <div className="overflow-y-auto md:flex-1" style={{ maxHeight: '85vh' }}>
                 {d.image && (
-                  <div className="relative w-full" style={{ height: 190 }}>
+                  <div className="relative w-full md:hidden" style={{ height: 190 }}>
                     <Image src={d.image} alt={d.name} fill sizes="100vw" className="object-cover" />
                   </div>
                 )}
                 <button onClick={() => setSheetItem(null)} aria-label="Close"
-                  className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center text-lg font-bold"
+                  className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center text-lg font-bold"
                   style={{ backgroundColor: 'rgba(253,251,247,0.95)', color: C.burgundy }}>
                   ✕
                 </button>
-                <div className="p-5 max-w-3xl mx-auto">
+                <div className="p-5 md:p-7 md:pr-14 max-w-3xl mx-auto">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="flex items-center gap-2 text-xl font-semibold" style={{ fontFamily: "'Playfair Display', serif", color: C.burgundy }}>
                       <VegDot isVeg={d.is_veg} /> {d.name}
