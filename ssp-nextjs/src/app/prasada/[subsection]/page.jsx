@@ -7,7 +7,8 @@ const SLUG_TO_TAB = {
   'bites-starters':  'Bites & Starters',
   'curries-daal':    'Curries & Daal',
   'biriyanis-rice':  'Biriyanis & Rice',
-  'rice-bowls':      'Rice Bowls',
+  'thalis-rice-bowls': 'Thalis & Rice Bowls',
+  'rice-bowls':      'Thalis & Rice Bowls', // legacy URL keeps working
   'indo-chinese':    'Indo Chinese',
   'naivedyam':       '🪔 Naivedyam',
 };

@@ -4,9 +4,10 @@ import BreakfastClient from '../BreakfastClient';
 export const revalidate = 3600;
 
 const SLUG_TO_TAB = {
-  'idli-vada':    'Idli & Vada',
-  'dosas':        'Dosas',
-  'poori-others': 'Poori & Others',
+  'idli-vada':            'Idli & Vada',
+  'dosas':                'Dosas',
+  'chicken-curry-combos': 'Chicken Curry Combos',
+  'poori-others':         'Poori & Others',
 };
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';

@@ -10,6 +10,7 @@ from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin
 from routes import content as content_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings
+from menu_additions import apply_menu_additions
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ async def lifespan(app: FastAPI):
     await create_admin_user()
     await migrate_slugs()
     await seed_slot_settings()
+    await apply_menu_additions()
     yield
     logger.info("Shutting down...")
     client.close()

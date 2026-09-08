@@ -28,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/prasada/curries-daal`,                 priority: 0.85, changeFrequency: 'weekly', lastModified: now },
     { url: `${BASE_URL}/prasada/naivedyam`,                    priority: 0.85, changeFrequency: 'weekly', lastModified: now },
     { url: `${BASE_URL}/prasada/biriyanis-rice`,               priority: 0.85, changeFrequency: 'weekly', lastModified: now },
-    { url: `${BASE_URL}/prasada/rice-bowls`,                   priority: 0.85, changeFrequency: 'weekly', lastModified: now },
+    { url: `${BASE_URL}/prasada/thalis-rice-bowls`,            priority: 0.85, changeFrequency: 'weekly', lastModified: now },
     { url: `${BASE_URL}/svadista`,                             priority: 0.9, changeFrequency: 'daily',  lastModified: now },
     { url: `${BASE_URL}/svadista/starters`,                    priority: 0.85, changeFrequency: 'weekly', lastModified: now },
     { url: `${BASE_URL}/svadista/indo-chinese`,                priority: 0.85, changeFrequency: 'weekly', lastModified: now },
