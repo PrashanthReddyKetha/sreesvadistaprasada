@@ -15,6 +15,9 @@ const WhatsAppButton = () => {
   if (path.startsWith('/order') && cartCount > 0) return null;
   const onMenuPath = MENU_PATHS.some(p => path.startsWith(p));
   const nudgeVisible = cartCount > 0 && onMenuPath;
+  // OrderNowBar occupies the bottom edge on mobile marketing pages — float above it
+  const orderBarVisible = !nudgeVisible
+    && !['/order', '/checkout', '/admin', '/dashboard', '/reset-password'].some(p => path.startsWith(p));
 
   return (
     <a
@@ -22,7 +25,7 @@ const WhatsAppButton = () => {
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => trackWhatsAppClick('floating_button')}
-      className={`fixed right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl ${nudgeVisible ? 'bottom-20 md:bottom-6' : 'bottom-6'}`}
+      className={`fixed right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl ${(nudgeVisible || orderBarVisible) ? 'bottom-24 lg:bottom-6' : 'bottom-6'}`}
       style={{ backgroundColor: '#25D366' }}
       aria-label="Order via WhatsApp"
       data-testid="whatsapp-button"

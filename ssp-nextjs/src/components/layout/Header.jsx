@@ -109,16 +109,16 @@ const Header = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex items-center justify-between h-[74px] md:h-20">
             {/* Logo */}
-            <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-2.5 group flex-1 min-w-0 mr-2 lg:flex-initial lg:mr-0" data-testid="logo-link">
+            <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })} className="flex items-center gap-2.5 group" data-testid="logo-link">
               <LogoMark size={73} className="w-14 h-14 md:w-[73px] md:h-[73px] object-contain flex-shrink-0" />
-              <div className="flex flex-col justify-center gap-[3px] min-w-0">
+              <div className="flex flex-col justify-center gap-[3px]">
                 <p
-                  className="text-[16px] md:text-2xl font-bold tracking-tight leading-none truncate"
+                  className="text-[17px] md:text-2xl font-bold tracking-tight leading-none"
                   style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
                 >
                   Sree Svadista Prasada
                 </p>
-                <span className="text-[9px] md:text-xs italic leading-none truncate whitespace-nowrap" style={{ fontFamily: "'Playfair Display', serif", color: '#8B6914' }}>
+                <span className="text-[9px] md:text-xs italic leading-none" style={{ fontFamily: "'Playfair Display', serif", color: '#8B6914' }}>
                   Taste for your heart · memories on a plate
                 </span>
               </div>
@@ -226,15 +226,7 @@ const Header = () => {
             </nav>
 
             {/* Mobile Controls */}
-            <div className="flex items-center gap-0.5 lg:hidden flex-shrink-0">
-              <Link
-                href="/order"
-                className="px-2.5 py-1.5 text-[11px] font-bold text-white rounded-full whitespace-nowrap"
-                style={{ backgroundColor: '#800020' }}
-                data-testid="mobile-header-order-now"
-              >
-                Order
-              </Link>
+            <div className="flex items-center gap-1 lg:hidden">
               <button
                 className="relative p-2 rounded-full"
                 data-testid="mobile-cart-button"

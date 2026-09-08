@@ -8,6 +8,7 @@ import { NotifyMeProvider } from '@/context/NotifyMeContext'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import WhatsAppButton from '@/components/layout/WhatsAppButton'
+import OrderNowBar from '@/components/layout/OrderNowBar'
 import CartToast from '@/components/CartToast'
 import ScrollToTop from '@/components/ScrollToTop'
 import BackendWarmup from '@/components/BackendWarmup'
@@ -79,6 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {children}
               </main>
               <Footer />
+              <OrderNowBar />
               <WhatsAppButton />
               <CartToast />
               </NotifyMeProvider>
