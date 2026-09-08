@@ -8,7 +8,8 @@ const LogoMark = ({ size = 64, className = '' }) => {
 
   if (!error) {
     return (
-      <img
+      // header logo is above the fold everywhere — keep it eager
+      <img decoding="async"
         src="/logo-header.png"
         alt="Sree Svadista Prasada"
         onError={() => setError(true)}

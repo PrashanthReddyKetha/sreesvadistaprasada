@@ -10,7 +10,7 @@ const OurStory = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
-        <img
+        <img loading="lazy" decoding="async"
           src={images.storyTeaser}
           alt="Our Story"
           className="absolute inset-0 w-full h-full object-cover"
@@ -51,7 +51,7 @@ const OurStory = () => {
               </p>
             </div>
             <div className="relative rounded-lg overflow-hidden" style={{ height: '400px' }}>
-              <img
+              <img loading="lazy" decoding="async"
                 src={images.cooking}
                 alt="Traditional South Indian cooking"
                 className="w-full h-full object-cover"

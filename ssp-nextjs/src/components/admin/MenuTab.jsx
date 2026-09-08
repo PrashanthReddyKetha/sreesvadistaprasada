@@ -483,7 +483,7 @@ export default function MenuTab() {
                 <input type="checkbox" checked={selected.has(item.id)} onChange={() => toggleSelect(item.id)}
                   className="w-4 h-4 accent-[#800020] flex-shrink-0 cursor-pointer" />
                 {item.image ? (
-                  <img src={item.image} alt={item.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+                  <img loading="lazy" decoding="async" src={item.image} alt={item.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
                 ) : (
                   <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor:'rgba(128,0,32,0.08)' }}>
                     <Utensils size={22} style={{ color:'#800020' }} />

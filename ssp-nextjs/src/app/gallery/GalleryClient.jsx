@@ -87,7 +87,7 @@ const Gallery = () => {
           >
             &times;
           </button>
-          <img
+          <img loading="lazy" decoding="async"
             src={filtered[lightboxIdx]?.src}
             alt={filtered[lightboxIdx]?.alt}
             className="max-w-full max-h-[80vh] rounded-lg object-contain"

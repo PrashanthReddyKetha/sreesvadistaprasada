@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Flame, ShoppingBag, ChevronRight, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { isOrderable } from '@/config/softLaunch';
@@ -49,7 +49,9 @@ function Stepper({ qty, onChange }) {
 
 export default function OrderClient({ initialItems = [] }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  // NOTE: deliberately NOT useSearchParams() — it opts this whole component out
+  // of prerendering, shipping an empty shell instead of the baked menu list.
+  // The ?cat= deep link is read from window.location on mount instead.
   const {
     cartItems, cartCount, cartTotal, addToCart, updateQuantity,
     deliveryType, setDeliveryType, pickupSlot, setPickupSlot,
@@ -84,7 +86,8 @@ export default function OrderClient({ initialItems = [] }) {
   const deepLinked = useRef(false);
   useEffect(() => {
     if (deepLinked.current || loading || !dishes.length) return;
-    const cat = searchParams?.get('cat');
+    let cat = null;
+    try { cat = new URLSearchParams(window.location.search).get('cat'); } catch {}
     if (cat && SECTIONS.some(s => s.id === cat)) {
       deepLinked.current = true;
       setTimeout(() => scrollTo(cat), 250);

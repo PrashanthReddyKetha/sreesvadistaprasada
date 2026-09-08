@@ -174,7 +174,7 @@ const DailySpecialsTab = () => {
           {items.map((it) => (
             <div key={it.id} className="bg-white rounded-lg overflow-hidden border" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
               <div className="relative h-32 bg-gray-100">
-                {it.image && <img src={it.image} alt={it.title} className="w-full h-full object-cover" />}
+                {it.image && <img loading="lazy" decoding="async" src={it.image} alt={it.title} className="w-full h-full object-cover" />}
                 <span className="absolute top-2 right-2 px-2 py-0.5 text-[10px] font-bold rounded-sm uppercase" style={{ backgroundColor: it.active ? '#4A7C59' : '#9CA3AF', color: 'white' }}>
                   {it.active ? 'Live' : 'Hidden'}
                 </span>
@@ -243,7 +243,7 @@ const DailySpecialsTab = () => {
                         style={{ borderColor: 'rgba(128,0,32,0.08)' }}
                       >
                         {item.image && (
-                          <img src={item.image} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                          <img loading="lazy" decoding="async" src={item.image} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold truncate" style={{ color: '#2D2422' }}>{item.name}</p>
@@ -272,7 +272,7 @@ const DailySpecialsTab = () => {
               </div>
               <Field label="Image URL" value={form.image} onChange={(v) => setForm({ ...form, image: v })} />
               {form.image && (
-                <img src={form.image} alt="preview" className="w-full h-28 object-cover rounded-lg" />
+                <img loading="lazy" decoding="async" src={form.image} alt="preview" className="w-full h-28 object-cover rounded-lg" />
               )}
               <Field label="Link (auto-set from menu, or e.g. /breakfast)" value={form.link} onChange={(v) => setForm({ ...form, link: v })} />
               <label className="flex items-center gap-2 text-sm font-medium cursor-pointer" style={{ color: '#5C4B47' }}>
