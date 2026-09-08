@@ -113,12 +113,12 @@ const Header = () => {
               <LogoMark size={73} className="w-14 h-14 md:w-[73px] md:h-[73px] object-contain flex-shrink-0" />
               <div className="flex flex-col justify-center gap-[3px]">
                 <p
-                  className="text-[17px] md:text-2xl font-bold tracking-tight leading-none"
+                  className="text-[17px] md:text-2xl font-bold tracking-tight leading-none whitespace-nowrap"
                   style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
                 >
                   Sree Svadista Prasada
                 </p>
-                <span className="text-[9px] md:text-xs italic leading-none" style={{ fontFamily: "'Playfair Display', serif", color: '#8B6914' }}>
+                <span className="text-[9px] md:text-xs italic leading-none whitespace-nowrap" style={{ fontFamily: "'Playfair Display', serif", color: '#8B6914' }}>
                   Taste for your heart · memories on a plate
                 </span>
               </div>
@@ -135,7 +135,7 @@ const Header = () => {
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
                     <button
-                      className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200"
+                      className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 whitespace-nowrap"
                       style={{ color: openDropdown === item.name ? '#800020' : '#5C4B47' }}
                       data-testid={`nav-${item.name.toLowerCase().replace(/\s/g, '-')}`}
                     >
@@ -165,7 +165,7 @@ const Header = () => {
                   <Link
                     key={item.path}
                     href={item.path}
-                    className="px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200"
+                    className="px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 whitespace-nowrap"
                     style={{
                       color: isActive(item.path) ? '#800020' : '#5C4B47',
                       backgroundColor: isActive(item.path) ? 'rgba(128, 0, 32, 0.05)' : 'transparent'
@@ -181,7 +181,7 @@ const Header = () => {
               <div className="flex items-center gap-2 ml-3 pl-3 border-l" style={{ borderColor: 'rgba(244, 196, 48, 0.3)' }}>
                 <Link
                   href="/order"
-                  className="px-4 py-2 text-sm font-semibold text-white rounded-full transition-transform duration-200 hover:scale-[1.03]"
+                  className="px-4 py-2 text-sm font-semibold text-white rounded-full transition-transform duration-200 hover:scale-[1.03] whitespace-nowrap"
                   style={{ backgroundColor: '#800020' }}
                   data-testid="header-order-now"
                 >
@@ -205,15 +205,13 @@ const Header = () => {
                   )}
                 </button>
                 {user ? (
-                  <div className="flex items-center gap-2">
-                    {user.role === 'admin' ? (
-                      <Link href="/admin" className="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-[#800020]/10" style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.3)' }}>
-                        Admin Panel
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {user.role === 'admin' && (
+                      <Link href="/admin" className="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-[#800020]/10 whitespace-nowrap" style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.3)' }}>
+                        Admin
                       </Link>
-                    ) : (
-                      <Link href="/dashboard" className="text-xs font-semibold hidden xl:block max-w-[100px] truncate hover:underline" style={{ color: '#800020' }}>{user.name}</Link>
                     )}
-                    <Link href="/dashboard" className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" style={{ color: '#800020' }} data-testid="dashboard-button" aria-label="My Account">
+                    <Link href="/dashboard" className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5" style={{ color: '#800020' }} data-testid="dashboard-button" aria-label="My Account" title={user.name}>
                       <User size={20} />
                     </Link>
                   </div>
