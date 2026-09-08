@@ -79,6 +79,11 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-track { background: var(--ivory); }
 ::-webkit-scrollbar-thumb { background: var(--burgundy); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #600018; }
+
+/* Elements that opt out via inline scrollbar-width:none (chip rows, carousels)
+   must also hide the WebKit scrollbar — in-app browsers (Instagram/Facebook)
+   ignore scrollbar-width and would otherwise paint the burgundy thumb bars */
+[style*="scrollbar-width"]::-webkit-scrollbar { display: none; }
 ::selection { background-color: var(--burgundy); color: white; }
 
 /* App utilities */
