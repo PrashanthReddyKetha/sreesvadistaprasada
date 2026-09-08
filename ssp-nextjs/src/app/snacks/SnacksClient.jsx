@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import React, { useEffect } from 'react';
 import { Clock, MessageCircle, Bell, Package, Sparkles } from 'lucide-react';
 import { useNotifyMe } from '@/context/NotifyMeContext';
@@ -19,11 +20,7 @@ const Snacks = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem+1.5rem)] md:pt-[calc(32px+5rem+2rem)] pb-10 relative overflow-hidden" style={{ minHeight: 'min(58vh, 500px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Traditional handmade Andhra pickles and podis"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <Image fill priority sizes="100vw" src="https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920" alt="Traditional handmade Andhra pickles and podis" className="object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45,36,34,0.94) 0%, rgba(45,36,34,0.78) 50%, rgba(45,36,34,0.45) 100%)' }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
           <div className="max-w-2xl">

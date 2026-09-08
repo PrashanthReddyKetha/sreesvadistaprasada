@@ -89,11 +89,7 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(45vh, 360px)' }}>
-        <img
-          src="https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
-          alt="Sree Svadista"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <Image fill priority sizes="100vw" src="https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920" alt="Sree Svadista" className="object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(92,0,24,0.8) 50%, rgba(128,0,32,0.6) 100%)' }} />
         <div className="relative h-full w-full px-4 md:px-8 flex items-center">
           <div className="max-w-7xl mx-auto w-full">

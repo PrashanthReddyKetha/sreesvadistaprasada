@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-// Loads the real logo (background-removed PNG) from /logo.png.
+// Loads the compact header logo (/logo-header.png, ~10KB at 200px) — the
+// original /logo.png is 400KB+ and stays only for social/schema images.
 // Falls back to the SVG mark if the file is missing.
 const LogoMark = ({ size = 64, className = '' }) => {
   const [error, setError] = useState(false);
@@ -8,7 +9,7 @@ const LogoMark = ({ size = 64, className = '' }) => {
   if (!error) {
     return (
       <img
-        src="/logo.png?v=2"
+        src="/logo-header.png"
         alt="Sree Svadista Prasada"
         onError={() => setError(true)}
         className={className || undefined}

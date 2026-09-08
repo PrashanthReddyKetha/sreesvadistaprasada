@@ -825,7 +825,7 @@ const SubscriptionsInner = () => {
     <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ minHeight: 'min(42vh, 340px)' }}>
-        <Image fill priority src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920"
+        <Image fill priority src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920"
           alt="Dabba Wala" className="absolute inset-0 object-cover" sizes="100vw" />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)` }} />
         <div className="relative h-full w-full px-4 md:px-8 flex items-center pt-[calc(32px+4rem+1.25rem)] md:pt-[calc(32px+5rem+1.5rem)] pb-8">
@@ -872,7 +872,7 @@ const SubscriptionsInner = () => {
         <section className="py-10 md:py-16 px-4 md:px-8" style={{ backgroundColor: C.primary }}>
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="relative rounded-xl overflow-hidden order-1 md:order-none" style={{ aspectRatio: '4/3', boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}>
-              <Image fill src="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&q=85&w=800"
+              <Image fill src="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800"
                 alt="Fresh South Indian curry being cooked the same morning it's delivered" className="object-cover" sizes="(max-width: 768px) 100vw, 480px" />
               <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[11px] font-semibold text-white" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
                 Cooked this morning, not last week

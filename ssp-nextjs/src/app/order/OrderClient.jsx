@@ -47,15 +47,15 @@ function Stepper({ qty, onChange }) {
   );
 }
 
-export default function OrderClient() {
+export default function OrderClient({ initialItems = [] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
     cartItems, cartCount, cartTotal, addToCart, updateQuantity,
     deliveryType, setDeliveryType, pickupSlot, setPickupSlot,
   } = useCart();
-  const [dishes, setDishes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [dishes, setDishes] = useState(initialItems);
+  const [loading, setLoading] = useState(initialItems.length === 0);
   const [search, setSearch] = useState('');
   // While searching, collapse the sticky controls so results stay visible above the keyboard.
   // Expands back on Cancel, on blur with no text, or on any scroll once the keyboard is closed.
@@ -184,11 +184,7 @@ export default function OrderClient() {
     <div className="min-h-screen pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: C.ivory }}>
       {/* ── Hero banner ── */}
       <section ref={heroRef} className="relative overflow-hidden" style={{ height: 170 }}>
-        <img
-          src="https://images.unsplash.com/photo-1742281258189-3b933879867a?crop=entropy&cs=srgb&fm=jpg&q=85&w=1600"
-          alt="Fresh Andhra food"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <Image fill priority sizes="100vw" src="https://images.unsplash.com/photo-1742281258189-3b933879867a?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1600" alt="Fresh Andhra food" className="object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.94) 0%, rgba(128,0,32,0.75) 55%, rgba(128,0,32,0.45) 100%)' }} />
         <div className="relative h-full max-w-3xl mx-auto px-4 flex flex-col justify-center">
           <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>

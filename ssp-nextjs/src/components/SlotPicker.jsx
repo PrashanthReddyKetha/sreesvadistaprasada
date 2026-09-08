@@ -70,7 +70,12 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false 
   });
 
   if (loading && !data) {
-    return <div className="text-sm py-3" style={{ color: '#5C4B47' }}>Loading collection times…</div>;
+    // Same height as the loaded picker (label row + chip row) — no layout shift
+    return (
+      <div className="min-h-[86px] flex items-center text-sm" style={{ color: '#5C4B47' }}>
+        Loading collection times…
+      </div>
+    );
   }
   if (error) {
     return (

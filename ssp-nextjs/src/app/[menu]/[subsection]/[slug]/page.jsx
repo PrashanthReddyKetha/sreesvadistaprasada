@@ -1,9 +1,32 @@
 import { notFound } from 'next/navigation';
 import ItemDetailClient from './ItemDetailClient';
 
-export const revalidate = 60;
+// 15 min ISR — pages are pre-built at deploy (generateStaticParams below), so
+// visitors always get a static page instantly; regeneration happens in the
+// background. 60s was hammering the Render backend for no visible benefit.
+export const revalidate = 900;
+export const dynamicParams = true; // items added after deploy still render on demand
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';
+
+// Pre-build every dish page at deploy time — this was the only route rendered
+// per-request, making each first click on a dish wait for the backend.
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(`${BASE}/api/menu`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const items = await res.json();
+    const { buildItemUrl } = await import('@/lib/itemUrl');
+    return items
+      .filter(i => i.slug)
+      .map(i => {
+        const [, menu, subsection, slug] = buildItemUrl(i).split('/');
+        return { menu, subsection, slug };
+      });
+  } catch {
+    return []; // build proceeds; pages fall back to on-demand ISR
+  }
+}
 
 async function getItem(slug) {
   try {

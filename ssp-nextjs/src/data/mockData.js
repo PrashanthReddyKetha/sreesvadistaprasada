@@ -3,7 +3,7 @@
 export const heroSlides = [
   {
     id: 1,
-    image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
+    image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920',
     title: "Welcome Home.",
     subtitle: "The authentic taste you missed, carried forward with love.",
     description: "Order in a few taps — collect in ~40 minutes and save 10%, or get it delivered.",
@@ -12,7 +12,7 @@ export const heroSlides = [
   },
   {
     id: 2,
-    image: 'https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
+    image: 'https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920',
     title: "Two Kitchens.\nOne Soul.",
     subtitle: "Divinity for the soul. Spice for the heart.",
     description: "Prasada & Svadista — choose your world.",
@@ -21,7 +21,7 @@ export const heroSlides = [
   },
   {
     id: 3,
-    image: 'https://images.unsplash.com/photo-1727404679933-99daa2a7573a?crop=entropy&cs=srgb&fm=jpg&q=85&w=1920',
+    image: 'https://images.unsplash.com/photo-1727404679933-99daa2a7573a?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920',
     title: "Your Daily Dose\nof Home.",
     subtitle: "Wholesome meal subscriptions delivered to your door.",
     description: "The Dabba Wala service — just like mother used to pack.",
@@ -39,7 +39,7 @@ export const featuredDishes = [
     description: "Slow-cooked country chicken simmered in roasted coriander and red chillies. The aroma will remind you of Sunday lunches at your grandmother's house.",
     price: "£12.99",
     spiceLevel: 3,
-    image: "https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
+    image: "https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
     tag: "Bestseller",
     allergens: ["none"]
   },
@@ -51,7 +51,7 @@ export const featuredDishes = [
     description: "Temple-style tangy tamarind rice, prepared with hand-pounded spices and pure devotion.",
     price: "£8.99",
     spiceLevel: 1,
-    image: "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
+    image: "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
     tag: "Chef's Pick",
     allergens: ["nuts"]
   },
@@ -63,7 +63,7 @@ export const featuredDishes = [
     description: "Country chicken biriyani with aromatic basmati rice, slow-cooked in earthen pots the village way.",
     price: "£15.99",
     spiceLevel: 3,
-    image: "https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
+    image: "https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
     tag: "Popular",
     allergens: ["dairy"]
   },
@@ -75,7 +75,7 @@ export const featuredDishes = [
     description: "Crispy rice crepe with spiced potato filling, served with sambar and three chutneys on a banana leaf.",
     price: "£8.99",
     spiceLevel: 2,
-    image: "https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
+    image: "https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
     tag: "Morning Favourite",
     allergens: ["none"]
   },
@@ -87,7 +87,7 @@ export const featuredDishes = [
     description: "Stuffed brinjal curry with peanut and sesame paste, a treasured Andhra delicacy.",
     price: "£9.99",
     spiceLevel: 2,
-    image: "https://images.unsplash.com/photo-1680529672551-16132239d69b?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
+    image: "https://images.unsplash.com/photo-1680529672551-16132239d69b?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
     tag: "",
     allergens: ["nuts", "sesame"]
   },
@@ -99,7 +99,7 @@ export const featuredDishes = [
     description: "Sweet rice with jaggery, ghee and cashews — the divine offering that melts on your tongue.",
     price: "£7.99",
     spiceLevel: 0,
-    image: "https://images.unsplash.com/photo-1666251214695-405f673b396a?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
+    image: "https://images.unsplash.com/photo-1666251214695-405f673b396a?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
     tag: "Divine",
     allergens: ["dairy", "nuts"]
   }
@@ -109,25 +109,25 @@ export const mealMoments = [
   {
     id: 1,
     name: 'Breakfast',
-    image: 'https://images.unsplash.com/photo-1694849789325-914b71ab4075?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
+    image: 'https://images.unsplash.com/photo-1694849789325-914b71ab4075?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400',
     link: '/order?cat=breakfast'
   },
   {
     id: 2,
     name: 'Veg Mains',
-    image: 'https://images.unsplash.com/photo-1742281257707-0c7f7e5ca9c6?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
+    image: 'https://images.unsplash.com/photo-1742281257707-0c7f7e5ca9c6?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400',
     link: '/order?cat=veg'
   },
   {
     id: 3,
     name: 'Non-Veg Mains',
-    image: 'https://images.unsplash.com/photo-1628690570327-14e16dca1518?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
+    image: 'https://images.unsplash.com/photo-1628690570327-14e16dca1518?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400',
     link: '/order?cat=nonVeg'
   },
   {
     id: 4,
     name: 'Evening Delights',
-    image: 'https://images.unsplash.com/photo-1572442568216-e4a31af30b69?crop=entropy&cs=srgb&fm=jpg&q=85&w=400',
+    image: 'https://images.unsplash.com/photo-1572442568216-e4a31af30b69?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400',
     link: '/order?cat=streetFood'
   }
 ];
@@ -141,7 +141,7 @@ export const menuItems = {
       price: "£12.99",
       spiceLevel: 3,
       subcategory: "Curries",
-      image: "https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 2,
@@ -150,7 +150,7 @@ export const menuItems = {
       price: "£13.99",
       spiceLevel: 4,
       subcategory: "Curries",
-      image: "https://images.unsplash.com/photo-1680529672551-16132239d69b?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1680529672551-16132239d69b?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 3,
@@ -159,7 +159,7 @@ export const menuItems = {
       price: "£15.99",
       spiceLevel: 3,
       subcategory: "Biriyanis",
-      image: "https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 4,
@@ -168,7 +168,7 @@ export const menuItems = {
       price: "£16.99",
       spiceLevel: 3,
       subcategory: "Starters",
-      image: "https://images.unsplash.com/photo-1628690570327-14e16dca1518?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1628690570327-14e16dca1518?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     }
   ],
   veg: [
@@ -179,7 +179,7 @@ export const menuItems = {
       price: "£9.99",
       spiceLevel: 2,
       subcategory: "Curries",
-      image: "https://images.unsplash.com/photo-1680529672551-16132239d69b?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1680529672551-16132239d69b?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 6,
@@ -188,7 +188,7 @@ export const menuItems = {
       price: "£8.99",
       spiceLevel: 2,
       subcategory: "Curries",
-      image: "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 7,
@@ -197,7 +197,7 @@ export const menuItems = {
       price: "£11.99",
       spiceLevel: 2,
       subcategory: "Biriyanis",
-      image: "https://images.unsplash.com/photo-1727404746799-253aa9a8ace6?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1727404746799-253aa9a8ace6?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     }
   ],
   prasada: [
@@ -208,7 +208,7 @@ export const menuItems = {
       price: "£8.99",
       spiceLevel: 1,
       subcategory: "Rice",
-      image: "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 9,
@@ -217,7 +217,7 @@ export const menuItems = {
       price: "£7.99",
       spiceLevel: 0,
       subcategory: "Rice",
-      image: "https://images.unsplash.com/photo-1666251214695-405f673b396a?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1666251214695-405f673b396a?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 10,
@@ -226,7 +226,7 @@ export const menuItems = {
       price: "£5.99",
       spiceLevel: 1,
       subcategory: "Prasadam Specials",
-      image: "https://images.unsplash.com/photo-1708963993351-e30633c102ce?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1708963993351-e30633c102ce?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     }
   ],
   breakfast: [
@@ -237,7 +237,7 @@ export const menuItems = {
       price: "£6.99",
       spiceLevel: 1,
       subcategory: "Tiffins",
-      image: "https://images.unsplash.com/photo-1736239093051-508a8472a934?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1736239093051-508a8472a934?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 12,
@@ -246,7 +246,7 @@ export const menuItems = {
       price: "£8.99",
       spiceLevel: 2,
       subcategory: "Tiffins",
-      image: "https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 13,
@@ -255,7 +255,7 @@ export const menuItems = {
       price: "£6.99",
       spiceLevel: 1,
       subcategory: "Tiffins",
-      image: "https://images.unsplash.com/photo-1694849789325-914b71ab4075?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1694849789325-914b71ab4075?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 14,
@@ -264,7 +264,7 @@ export const menuItems = {
       price: "£5.99",
       spiceLevel: 2,
       subcategory: "Snacks",
-      image: "https://images.unsplash.com/photo-1572442568216-e4a31af30b69?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1572442568216-e4a31af30b69?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     }
   ],
   pickles: [
@@ -274,7 +274,7 @@ export const menuItems = {
       description: "Tangy sorrel leaves pickle - grandmother's treasured recipe",
       price: "£4.99",
       spiceLevel: 3,
-      image: "https://images.unsplash.com/photo-1621427017774-f0e7ebbda11f?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1621427017774-f0e7ebbda11f?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 16,
@@ -282,7 +282,7 @@ export const menuItems = {
       description: "Spicy raw mango pickle with mustard, the king of Telugu pickles",
       price: "£4.99",
       spiceLevel: 4,
-      image: "https://images.unsplash.com/photo-1621427017774-f0e7ebbda11f?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1621427017774-f0e7ebbda11f?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
       id: 17,
@@ -290,7 +290,7 @@ export const menuItems = {
       description: "Traditional lemon pickle aged in ceramic jars",
       price: "£4.49",
       spiceLevel: 2,
-      image: "https://images.unsplash.com/photo-1621427017774-f0e7ebbda11f?crop=entropy&cs=srgb&fm=jpg&q=85&w=400"
+      image: "https://images.unsplash.com/photo-1621427017774-f0e7ebbda11f?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     }
   ],
   podis: [
@@ -383,13 +383,13 @@ export const chefSpecial = {
 };
 
 export const images = {
-  svadistaCinema: "https://images.unsplash.com/photo-1588594907301-823478af8be5?crop=entropy&cs=srgb&fm=jpg&q=85&w=1200",
-  picklesShelf: "https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
-  storyTeaser: "https://images.unsplash.com/photo-1748323123788-87a32949f4b0?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
-  tiffin: "https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
-  svadista: "https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&q=85&w=1200",
-  prasada: "https://images.unsplash.com/photo-1742281257687-092746ad6021?crop=entropy&cs=srgb&fm=jpg&q=85&w=1200",
-  cooking: "https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&q=85&w=800"
+  svadistaCinema: "https://images.unsplash.com/photo-1588594907301-823478af8be5?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1200",
+  picklesShelf: "https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800",
+  storyTeaser: "https://images.unsplash.com/photo-1748323123788-87a32949f4b0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800",
+  tiffin: "https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800",
+  svadista: "https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1200",
+  prasada: "https://images.unsplash.com/photo-1742281257687-092746ad6021?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1200",
+  cooking: "https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800"
 };
 
 export const deliveryAreas = [
@@ -543,17 +543,17 @@ export const faqData = [
 ];
 
 export const galleryImages = [
-  { id: 1, src: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Traditional brass vessels with sweets', category: 'Kitchen' },
-  { id: 2, src: 'https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Chicken curry in clay pot', category: 'Svadista' },
-  { id: 3, src: 'https://images.unsplash.com/photo-1742281257687-092746ad6021?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Traditional South Indian thali', category: 'Prasada' },
-  { id: 4, src: 'https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Fragrant biriyani', category: 'Svadista' },
-  { id: 5, src: 'https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Masala Dosa on banana leaf', category: 'Breakfast' },
-  { id: 6, src: 'https://images.unsplash.com/photo-1588594907301-823478af8be5?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Spices tempering in oil', category: 'Kitchen' },
-  { id: 7, src: 'https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Pickle jars on wooden shelf', category: 'Snacks' },
-  { id: 8, src: 'https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Traditional cooking process', category: 'Kitchen' },
-  { id: 9, src: 'https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Rice in clay bowl', category: 'Prasada' },
-  { id: 10, src: 'https://images.unsplash.com/photo-1666251214695-405f673b396a?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Temple prasadam offering', category: 'Prasada' },
-  { id: 11, src: 'https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Cooking in traditional pan', category: 'Kitchen' },
-  { id: 12, src: 'https://images.unsplash.com/photo-1748323123788-87a32949f4b0?crop=entropy&cs=srgb&fm=jpg&q=85&w=600', alt: 'Traditional Indian kitchen', category: 'Kitchen' },
+  { id: 1, src: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Traditional brass vessels with sweets', category: 'Kitchen' },
+  { id: 2, src: 'https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Chicken curry in clay pot', category: 'Svadista' },
+  { id: 3, src: 'https://images.unsplash.com/photo-1742281257687-092746ad6021?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Traditional South Indian thali', category: 'Prasada' },
+  { id: 4, src: 'https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Fragrant biriyani', category: 'Svadista' },
+  { id: 5, src: 'https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Masala Dosa on banana leaf', category: 'Breakfast' },
+  { id: 6, src: 'https://images.unsplash.com/photo-1588594907301-823478af8be5?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Spices tempering in oil', category: 'Kitchen' },
+  { id: 7, src: 'https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Pickle jars on wooden shelf', category: 'Snacks' },
+  { id: 8, src: 'https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Traditional cooking process', category: 'Kitchen' },
+  { id: 9, src: 'https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Rice in clay bowl', category: 'Prasada' },
+  { id: 10, src: 'https://images.unsplash.com/photo-1666251214695-405f673b396a?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Temple prasadam offering', category: 'Prasada' },
+  { id: 11, src: 'https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Cooking in traditional pan', category: 'Kitchen' },
+  { id: 12, src: 'https://images.unsplash.com/photo-1748323123788-87a32949f4b0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Traditional Indian kitchen', category: 'Kitchen' },
 ];
 
