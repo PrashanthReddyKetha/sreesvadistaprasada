@@ -1630,7 +1630,32 @@ const CheckoutInner = () => {
               {/* Goes well with — pairs_with upsell */}
               <PairsRow cartItems={cartItems} addToCart={addToCart} />
 
-              {/* Card payment */}
+              {/* Card payment — locked (not hidden) until the customer has
+                  signed in or chosen guest, so the full journey is always visible */}
+              {!canCheckout && (
+                <div className="bg-white rounded-2xl p-4 space-y-3" style={{ border: '1px solid rgba(128,0,32,0.1)', opacity: 0.55, pointerEvents: 'none' }} aria-hidden="true">
+                  <div className="flex items-center gap-2">
+                    <CreditCard size={14} style={{ color: '#800020' }} />
+                    <span className="font-bold text-sm" style={{ color: '#800020' }}>Payment</span>
+                    <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-400"><Lock size={10} /> Stripe</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="px-3 py-4 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }} />
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="p-4 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }} />
+                      <div className="p-4 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }} />
+                      <div className="p-4 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!canCheckout && (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold"
+                  style={{ backgroundColor: '#FBF3DC', border: '1px solid rgba(244,196,48,0.5)', color: '#5C4B47' }}>
+                  <Lock size={13} style={{ color: '#8B6914' }} />
+                  <span>Payment unlocks once you <b>sign in</b> or <b>continue as guest</b> above 👆</span>
+                </div>
+              )}
               {canCheckout && (
                 <div className="bg-white rounded-2xl p-4 space-y-3" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
                   <div className="flex items-center gap-2">
@@ -1686,7 +1711,14 @@ const CheckoutInner = () => {
                 </div>
               )}
 
-              {/* Pay button */}
+              {/* Pay button — always visible; disabled + instructive before unlock */}
+              {!canCheckout && (
+                <button disabled
+                  className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2"
+                  style={{ background: '#9CA3AF', cursor: 'not-allowed' }}>
+                  <Lock size={14} /> Sign in or continue as guest to pay {fmt(grandTotal)}
+                </button>
+              )}
               {canCheckout && (
                 <button onClick={handleOrder} disabled={submitting || !meetsMinimum || !validPricing}
                   className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-60"
