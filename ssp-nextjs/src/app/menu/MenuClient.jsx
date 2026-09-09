@@ -41,6 +41,16 @@ const Menu = ({ initialItems = [] }) => {
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  // Pure-veg filter (is_veg flag), shared session memory with /order
+  const [vegOnly, setVegOnlyRaw] = useState(false);
+  useEffect(() => {
+    try { if (sessionStorage.getItem('ssp_veg_only') === '1') setVegOnlyRaw(true); } catch {}
+  }, []);
+  const setVegOnly = (v) => {
+    setVegOnlyRaw(v);
+    if (v && activeCategory === 'nonVeg') setActiveCategory('all');
+    try { sessionStorage.setItem('ssp_veg_only', v ? '1' : '0'); } catch {}
+  };
   const { addToCart } = useCart();
   const { openNotifyMe } = useNotifyMe();
 
@@ -63,6 +73,7 @@ const Menu = ({ initialItems = [] }) => {
   const byName = (a, b) => a.name.localeCompare(b.name);
   const filtered = allDishes
     .filter(dish => !HIDDEN_CATEGORIES.has(dish.category))
+    .filter(dish => !vegOnly || dish.is_veg)
     .filter(dish => {
       // A search always spans the whole menu — the category chips don't
       // constrain it, so "dosa" is never hidden behind the wrong filter
@@ -173,7 +184,19 @@ const Menu = ({ initialItems = [] }) => {
             </div>
           </div>
           <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {categories.map(cat => (
+          <button onClick={() => setVegOnly(!vegOnly)}
+            aria-pressed={vegOnly}
+            className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
+            style={{
+              border: '1.5px solid #4A7C59',
+              backgroundColor: vegOnly ? '#4A7C59' : 'transparent',
+              color: vegOnly ? 'white' : '#4A7C59',
+            }}
+            data-testid="menu-veg-toggle">
+            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: vegOnly ? '#fff' : '#4A7C59' }} />
+            Veg only
+          </button>
+          {categories.filter(cat => !(vegOnly && cat.id === 'nonVeg')).map(cat => (
             <button
               key={cat.id}
               onClick={() => { setActiveCategory(cat.id); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}

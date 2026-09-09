@@ -68,6 +68,15 @@ export default function OrderClient({ initialItems = [] }) {
   // summary row so more dishes fit on screen; tapping it scrolls back up to expand
   const [controlsCollapsed, setControlsCollapsed] = useState(false);
   const [navigating, setNavigating] = useState(false); // instant feedback on Go to Checkout
+  // Pure-veg filter (is_veg flag — eggs count as non-veg), remembered for the session
+  const [vegOnly, setVegOnlyRaw] = useState(false);
+  useEffect(() => {
+    try { if (sessionStorage.getItem('ssp_veg_only') === '1') setVegOnlyRaw(true); } catch {}
+  }, []);
+  const setVegOnly = (v) => {
+    setVegOnlyRaw(v);
+    try { sessionStorage.setItem('ssp_veg_only', v ? '1' : '0'); } catch {}
+  };
 
   // Warm up the (heavy, Stripe-laden) checkout route as soon as a cart exists
   useEffect(() => {
@@ -189,10 +198,15 @@ export default function OrderClient({ initialItems = [] }) {
       .filter(d =>
         d.category === sec.id &&
         isOrderable(d.category) &&
+        (!vegOnly || d.is_veg) &&
         (!q || d.name.toLowerCase().includes(q) || (d.description || '').toLowerCase().includes(q))
       )
       .sort((a, b) => a.name.localeCompare(b.name)),
   })).filter(sec => sec.items.length > 0);
+
+  // Chips only for sections that still have dishes under the veg filter
+  const visibleSections = SECTIONS.filter(sec =>
+    dishes.some(d => d.category === sec.id && isOrderable(d.category) && (!vegOnly || d.is_veg)));
 
   const handleAdd = (d) => addToCart({ id: d.id, name: d.name, price: d.price, image: d.image, category: d.category });
 
@@ -280,7 +294,18 @@ export default function OrderClient({ initialItems = [] }) {
 
           {/* Category chips */}
           <div className={searchMode ? 'hidden' : 'flex gap-2 overflow-x-auto mt-3 pb-1'} style={{ scrollbarWidth: 'none' }}>
-            {SECTIONS.map(sec => (
+            <button onClick={() => setVegOnly(!vegOnly)}
+              aria-pressed={vegOnly}
+              className="flex-none flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full"
+              style={{
+                border: `1.5px solid ${C.veg}`,
+                backgroundColor: vegOnly ? C.veg : 'transparent',
+                color: vegOnly ? '#fff' : C.veg,
+              }}>
+              <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: vegOnly ? '#fff' : C.veg }} />
+              Veg only
+            </button>
+            {visibleSections.map(sec => (
               <button key={sec.id} onClick={() => scrollTo(sec.id)}
                 className="flex-none text-xs font-bold px-3.5 py-1.5 rounded-full"
                 style={{
