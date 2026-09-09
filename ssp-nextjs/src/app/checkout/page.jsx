@@ -792,7 +792,10 @@ const CheckoutInner = () => {
       if (typeof detail === 'string' && detail.toLowerCase().includes('collection time')) {
         setPickupSlot(null);
       }
-      if (deliveryType === 'delivery' && e.response?.status === 400) {
+      // Only a genuinely bad postcode should clear the confirmed zone — other
+      // 400s (minimum order, slot full, paused) must not reset it
+      if (deliveryType === 'delivery' && e.response?.status === 400
+          && typeof detail === 'string' && /postcode/i.test(detail)) {
         setZoneInfo(null);
       }
     }
