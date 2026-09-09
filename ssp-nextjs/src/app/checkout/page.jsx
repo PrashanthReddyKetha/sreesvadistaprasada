@@ -492,7 +492,7 @@ function CheckoutPostcodeInput({ onZoneFound }) {
 /* ── Browse more items modal ─────────────────────────────────────────────── */
 const CATEGORY_LABELS = {
   breakfast: 'Breakfast', nonVeg: 'Non-Veg', veg: 'Veg',
-  streetFood: 'Street Food', ragiSpecials: 'Ragi', drinks: 'Drinks & Juices',
+  streetFood: 'Street Food', ragiSpecials: 'Ragi', drinks: 'Beverages',
 };
 
 function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
