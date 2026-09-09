@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    title: 'Svadista',
+    title: 'SSP',
     statusBarStyle: 'default',
   },
   openGraph: {
