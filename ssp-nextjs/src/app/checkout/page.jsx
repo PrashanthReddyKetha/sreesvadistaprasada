@@ -109,7 +109,7 @@ function DeliveryBar({ total, freeOver, onAddMore }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true, feeSaved = 0, feeSavedIsEstimate = false, smallFeeSaved = 0 }) {
+function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true, feeSaved = 0, feeSavedIsEstimate = false, smallFeeSaved = 0, onAddMore }) {
   const [collapsed, setCollapsed] = useState(false);
   const grandTotal = grandTotalProp ?? (cartTotal - takeawayDiscount + (deliveryFee || 0));
 
@@ -123,6 +123,15 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
           <span className="font-bold text-sm" style={{ color: '#800020' }}>
             Order ({cartItems.reduce((s, i) => s + i.quantity, 0)} items)
           </span>
+          {onAddMore && (
+            <span role="button" tabIndex={0}
+              onClick={e => { e.stopPropagation(); onAddMore(); }}
+              onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); onAddMore(); } }}
+              className="px-2.5 py-1 rounded-full text-[11px] font-black cursor-pointer"
+              style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
+              + Add items
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="font-bold text-sm" style={{ color: '#800020' }}>{fmt(grandTotal)}</span>
@@ -1598,11 +1607,6 @@ const CheckoutInner = () => {
                 </div>
               )}
 
-              {/* Delivery nudge — only show for delivery with known zone */}
-              {deliveryType === 'delivery' && freeDeliveryAt && (
-                <DeliveryBar total={effectiveSubtotal} freeOver={freeDeliveryAt} onAddMore={() => setShowBrowse(true)} />
-              )}
-
               {/* Order summary */}
               <OrderSummary
                 cartItems={cartItems}
@@ -1620,6 +1624,7 @@ const CheckoutInner = () => {
                 feeSaved={potentialDeliveryFee ?? MIN_DELIVERY_FEE}
                 feeSavedIsEstimate={collectSavingIsEstimate}
                 smallFeeSaved={meetsMinimum && effectiveSubtotal <= 19.99 ? 1.50 : 0}
+                onAddMore={() => setShowBrowse(true)}
               />
 
               {/* Goes well with — pairs_with upsell */}
