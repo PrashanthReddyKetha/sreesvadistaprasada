@@ -14,6 +14,8 @@ interface AuthContextType {
   login: (userData: User, token: string) => void;
   logout: () => void;
   authOpen: boolean;
+  authMode: string;
+  openAuth: (mode?: string) => void;
   setAuthOpen: (open: boolean) => void;
   initialized: boolean;
 }
@@ -29,6 +31,9 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
+  // Which tab the modal should open on ('login' | 'register')
+  const [authMode, setAuthMode] = useState('login');
+  const openAuth = (mode: string = 'login') => { setAuthMode(mode); setAuthOpen(true); };
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
@@ -57,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, authOpen, setAuthOpen, initialized }}>
+    <AuthContext.Provider value={{ user, login, logout, authOpen, setAuthOpen, authMode, openAuth, initialized }}>
       {children}
     </AuthContext.Provider>
   );

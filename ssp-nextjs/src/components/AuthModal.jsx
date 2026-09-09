@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   X, Eye, EyeOff, User, Mail, Phone, Lock,
   CheckCircle, Shield, AlertCircle, Info
@@ -151,9 +151,14 @@ function Divider() {
 
 /* ══════════════════════════════════════════════════════════════════════════ */
 const AuthModal = () => {
-  const { authOpen, setAuthOpen, login } = useAuth();
+  const { authOpen, setAuthOpen, authMode, login } = useAuth();
 
   const [tab, setTab]     = useState('login');
+
+  // Open on the tab the caller asked for (Sign in vs Sign up buttons)
+  useEffect(() => {
+    if (authOpen) setTab(authMode === 'register' ? 'register' : 'login');
+  }, [authOpen, authMode]);
   const [step, setStep]   = useState(1);
   const [loading, setLoading]       = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);

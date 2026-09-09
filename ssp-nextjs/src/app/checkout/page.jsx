@@ -232,7 +232,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
 }
 
 /* ── Inline sign-in / guest prompt ──────────────────────────────────────── */
-function GuestPrompt({ onGuest, onSignIn }) {
+function GuestPrompt({ onGuest, onSignIn, onSignUp }) {
   return (
     <div className="rounded-2xl border-2 p-5 space-y-3" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }}>
       <p className="text-sm font-bold" style={{ color: '#2D2422' }}>How would you like to continue?</p>
@@ -244,7 +244,7 @@ function GuestPrompt({ onGuest, onSignIn }) {
           <span className="text-xs font-semibold text-center" style={{ color: '#2D2422' }}>Sign In</span>
           <span className="text-[10px] text-gray-400 text-center">Incl. Google · auto-fill details</span>
         </button>
-        <button onClick={onSignIn}
+        <button onClick={onSignUp || onSignIn}
           className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:border-[#800020] hover:bg-white"
           style={{ borderColor: 'rgba(128,0,32,0.2)' }}>
           <UserPlus size={20} style={{ color: '#800020' }} />
@@ -664,7 +664,7 @@ const CheckoutInner = () => {
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, addToCart,
           deliveryType, setDeliveryType, zoneInfo, setZoneInfo,
           pickupSlot, setPickupSlot } = useCart();
-  const { user, login, setAuthOpen } = useAuth();
+  const { user, login, setAuthOpen, openAuth } = useAuth();
 
   const [guestMode, setGuestMode] = useState(false);
   const [showBrowse, setShowBrowse] = useState(false);
@@ -1430,7 +1430,8 @@ const CheckoutInner = () => {
             {showGuestPrompt && (
               <GuestPrompt
                 onGuest={() => setGuestMode(true)}
-                onSignIn={() => setAuthOpen(true)}
+                onSignIn={() => openAuth('login')}
+                onSignUp={() => openAuth('register')}
               />
             )}
 
@@ -1444,12 +1445,12 @@ const CheckoutInner = () => {
                   and this order counts as your first.
                 </p>
                 <div className="flex gap-2">
-                  <button onClick={() => setAuthOpen(true)}
+                  <button onClick={() => openAuth('login')}
                     className="flex-1 py-2 rounded-lg text-xs font-black text-white"
                     style={{ backgroundColor: '#800020' }}>
                     Sign in
                   </button>
-                  <button onClick={() => setAuthOpen(true)}
+                  <button onClick={() => openAuth('register')}
                     className="flex-1 py-2 rounded-lg text-xs font-black"
                     style={{ border: '1.5px solid #800020', color: '#800020', backgroundColor: 'white' }}>
                     Sign up
