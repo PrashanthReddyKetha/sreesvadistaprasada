@@ -67,6 +67,19 @@ export default function OrderClient({ initialItems = [] }) {
   // Once the list is being browsed, the toggle + slot picker collapse to a slim
   // summary row so more dishes fit on screen; tapping it scrolls back up to expand
   const [controlsCollapsed, setControlsCollapsed] = useState(false);
+  const [navigating, setNavigating] = useState(false); // instant feedback on Go to Checkout
+
+  // Warm up the (heavy, Stripe-laden) checkout route as soon as a cart exists
+  useEffect(() => {
+    if (cartCount > 0) router.prefetch('/checkout');
+  }, [cartCount, router]);
+
+  // Coming back from checkout must not leave the bar stuck on "Opening…"
+  useEffect(() => {
+    const reset = () => setNavigating(false);
+    window.addEventListener('pageshow', reset);
+    return () => window.removeEventListener('pageshow', reset);
+  }, []);
   const [activeSection, setActiveSection] = useState('breakfast');
   const sectionRefs = useRef({});
   const stickyRef = useRef(null);
@@ -412,20 +425,29 @@ export default function OrderClient({ initialItems = [] }) {
       {/* ── Sticky cart bar ── */}
       {cartCount > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4 animate-slide-up">
-          <button onClick={() => router.push('/checkout')}
-            className="w-full max-w-3xl mx-auto flex items-center gap-3 rounded-2xl px-5 py-4 text-white"
-            style={{ backgroundColor: C.burgundy, boxShadow: '0 -6px 24px rgba(92,0,23,0.35)' }}>
+          <button
+            onClick={() => { setNavigating(true); router.push('/checkout'); }}
+            disabled={navigating}
+            className="w-full max-w-3xl mx-auto flex items-center gap-3 rounded-2xl px-5 py-4 text-white active:scale-[0.985] transition-transform"
+            style={{ backgroundColor: navigating ? '#5C0017' : C.burgundy, boxShadow: '0 -6px 24px rgba(92,0,23,0.35)' }}>
             <ShoppingBag size={18} />
             <span className="text-sm font-black">
               {cartCount} item{cartCount > 1 ? 's' : ''} · £{cartTotal.toFixed(2)}
             </span>
-            {deliveryType === 'takeaway' && (
+            {deliveryType === 'takeaway' && !navigating && (
               <span className="text-[11px] font-bold" style={{ color: C.saffron }}>
                 {pickupSlot ? `Collect ${pickupSlot.label}` : 'Collect ASAP'}
               </span>
             )}
-            <span className="ml-auto flex items-center gap-1 text-sm font-black">
-              Go to Checkout <ChevronRight size={16} />
+            <span className="ml-auto flex items-center gap-1.5 text-sm font-black">
+              {navigating ? (
+                <>
+                  <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                  Opening checkout…
+                </>
+              ) : (
+                <>Go to Checkout <ChevronRight size={16} /></>
+              )}
             </span>
           </button>
         </div>
