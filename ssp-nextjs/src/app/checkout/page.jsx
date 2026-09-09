@@ -266,7 +266,10 @@ function PairsRow({ cartItems, addToCart }) {
       if (!inCart.has(pid) && !seen.has(pid)) { seen.add(pid); wanted.push(pid); }
     }
   }
-  const picks = wanted.map(pid => menu.find(m => m.id === pid && m.available)).filter(Boolean).slice(0, 4);
+  // Only orderable categories — pickles/podis are coming-soon and can't be added
+  const picks = wanted
+    .map(pid => menu.find(m => m.id === pid && m.available && isOrderable(m.category)))
+    .filter(Boolean).slice(0, 4);
   if (!picks.length) return null;
 
   return (
