@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Phone, Mail, MapPin, Instagram, ArrowRight } from 'lucide-react';
 import api from '@/api';
 import { trackNewsletterSignup } from '@/lib/analytics';
+import AddToHomeScreen from '@/components/AddToHomeScreen';
 
 const WhatsAppIcon = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -234,6 +235,11 @@ const Footer = () => {
                   info@sreesvadistaprasada.com
                 </a>
               </div>
+            </div>
+
+            {/* Add to home screen — hidden automatically when installed/unsupported */}
+            <div className="mt-5">
+              <AddToHomeScreen variant="footer" />
             </div>
 
             {/* Social */}

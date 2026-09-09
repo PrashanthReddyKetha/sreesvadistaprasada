@@ -16,6 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
 import SlotPicker from '@/components/SlotPicker';
+import AddToHomeScreen from '@/components/AddToHomeScreen';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackPurchase } from '@/lib/analytics';
 import { isOrderable } from '@/config/softLaunch';
@@ -1132,6 +1133,7 @@ const CheckoutInner = () => {
               : 'Estimated time: 40\u201350 minutes'}
           </p>
           <LoyaltyBanner />
+          <AddToHomeScreen />
           <div className="flex flex-col sm:flex-row gap-3">
             <button onClick={() => router.push('/')}
               className="flex-1 py-3 text-sm font-semibold rounded-xl border-2 transition-all hover:bg-gray-50"
