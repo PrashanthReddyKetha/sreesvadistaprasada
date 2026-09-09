@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, Truck, CheckCircle, MapPin, User, Mail, Phone, FileText,
   Plus, Minus, Trash2, ArrowLeft, X, Zap, Lock, Eye, EyeOff,
-  LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard, AlertCircle
+  LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard, AlertCircle, Search
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
@@ -491,26 +491,34 @@ function CheckoutPostcodeInput({ onZoneFound }) {
 
 /* ── Browse more items modal ─────────────────────────────────────────────── */
 const CATEGORY_LABELS = {
-  nonVeg: 'Non-Veg', veg: 'Veg', prasada: 'Prasada',
-  breakfast: 'Breakfast', snacks: 'Snacks', pickles: 'Pickles', podis: 'Podis',
+  breakfast: 'Breakfast', nonVeg: 'Non-Veg', veg: 'Veg',
+  streetFood: 'Street Food', ragiSpecials: 'Ragi', drinks: 'Drinks & Juices',
 };
 
 function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
-  const [allItems, setAllItems] = useState([]);
+  // menuCache is warmed on checkout mount (PairsRow) → the modal opens instantly
+  const cached = getCached('all');
+  const [allItems, setAllItems] = useState(() => (cached || []).filter(i => isOrderable(i.category)));
   const [activeCat, setActiveCat] = useState('all');
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(!cached);
   const cartIds = new Set(cartItems.map(i => i.id));
   const remaining = freeDeliveryAt ? Math.max(0, freeDeliveryAt - cartTotal) : 0;
 
   useEffect(() => {
     api.get('/menu?available=true')
-      .then(r => setAllItems(r.data.filter(i => isOrderable(i.category))))
+      .then(r => { setCached('all', r.data); setAllItems(r.data.filter(i => isOrderable(i.category))); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
   const categories = ['all', ...Object.keys(CATEGORY_LABELS).filter(c => allItems.some(i => i.category === c))];
-  const shown = activeCat === 'all' ? allItems : allItems.filter(i => i.category === activeCat);
+  const q = search.trim().toLowerCase();
+  // Searching spans every category, regardless of the active tab
+  const shown = (q
+    ? allItems.filter(i => i.name.toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q))
+    : activeCat === 'all' ? allItems : allItems.filter(i => i.category === activeCat)
+  ).slice().sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center">
@@ -531,13 +539,29 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
           </button>
         </div>
 
+        {/* Search */}
+        <div className="px-4 pt-2.5 flex-shrink-0">
+          <div className="flex items-center gap-2 rounded-full px-3.5 py-2"
+            style={{ backgroundColor: '#F6F1E7', border: '1px solid rgba(128,0,32,0.12)' }}>
+            <Search size={14} className="text-gray-400 flex-shrink-0" />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search dishes…"
+              className="flex-1 bg-transparent outline-none text-sm" style={{ color: '#2D2422' }} />
+            {search && (
+              <button onClick={() => setSearch('')} aria-label="Clear search">
+                <X size={13} className="text-gray-400" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Category tabs */}
         <div className="flex gap-2 px-4 py-2.5 overflow-x-auto border-b flex-shrink-0"
           style={{ borderColor: 'rgba(128,0,32,0.08)', scrollbarWidth: 'none' }}>
           {categories.map(cat => (
-            <button key={cat} onClick={() => setActiveCat(cat)}
+            <button key={cat} onClick={() => { setActiveCat(cat); setSearch(''); }}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
-              style={{ backgroundColor: activeCat === cat ? '#800020' : 'rgba(128,0,32,0.07)', color: activeCat === cat ? 'white' : '#800020' }}>
+              style={{ backgroundColor: activeCat === cat && !q ? '#800020' : 'rgba(128,0,32,0.07)', color: activeCat === cat && !q ? 'white' : '#800020' }}>
               {cat === 'all' ? 'All' : CATEGORY_LABELS[cat] || cat}
             </button>
           ))}
@@ -546,6 +570,9 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
         {/* Items */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
           {loading && <div className="flex justify-center py-12"><span className="w-6 h-6 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" /></div>}
+          {!loading && shown.length === 0 && (
+            <p className="text-center text-sm text-gray-400 py-10">No dishes match &ldquo;{search}&rdquo;.</p>
+          )}
           {!loading && shown.map(item => {
             const inCart = cartIds.has(item.id);
             return (
