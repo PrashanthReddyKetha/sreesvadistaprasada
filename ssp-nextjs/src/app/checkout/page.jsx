@@ -1321,6 +1321,17 @@ const CheckoutInner = () => {
                 </div>
               )}
 
+              {/* Small order fee nudge — with the other money strips, like the drawer */}
+              {deliveryType === 'delivery' && meetsMinimum && smallOrderFee > 0 && (
+                <div className="px-3 py-2.5 rounded-lg text-[11px] font-medium flex items-start gap-2"
+                  style={{ backgroundColor: '#FFFBEB', color: '#92400E' }}>
+                  <AlertCircle size={13} className="flex-shrink-0 mt-0.5" />
+                  <span>
+                    <strong>£1.50 small order fee</strong> on delivery orders under £20 — add <strong>{fmt(20 - effectiveSubtotal)}</strong> more to waive it, or collect for free.
+                  </span>
+                </div>
+              )}
+
               {/* Delivery: collect nudge — mirrors cart drawer, with one-tap switch */}
               {deliveryType === 'delivery' && meetsMinimum && (
                 <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[11px] font-medium"
@@ -1586,16 +1597,6 @@ const CheckoutInner = () => {
 
               {/* Goes well with — pairs_with upsell */}
               <PairsRow cartItems={cartItems} addToCart={addToCart} />
-
-              {/* Small order fee nudge — delivery, above minimum, under £20 */}
-              {deliveryType === 'delivery' && meetsMinimum && smallOrderFee > 0 && (
-                <div className="px-4 py-3 rounded-xl text-sm flex items-start gap-2" style={{ backgroundColor: '#FFFBEB', color: '#92400E' }}>
-                  <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
-                  <span>
-                    <strong>£1.50 small order fee</strong> on delivery orders under £20 — add <strong>{fmt(20 - effectiveSubtotal)}</strong> more to waive it, or switch to collection for free.
-                  </span>
-                </div>
-              )}
 
               {/* Card payment */}
               {canCheckout && (
