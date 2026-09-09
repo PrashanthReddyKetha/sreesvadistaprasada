@@ -1284,7 +1284,44 @@ const CheckoutInner = () => {
                 />
               )}
 
-              {/* Delivery: collect nudge — mirrors cart drawer */}
+              {/* Minimum order progress — mirrors cart drawer */}
+              {!meetsMinimum && (
+                <div className="px-3 py-2.5 rounded-lg" style={{ backgroundColor: '#FFF7ED' }}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-medium" style={{ color: '#C2410C' }}>
+                      ⚠ Add <strong>{fmt(MINIMUM_ORDER - effectiveSubtotal)}</strong> more to place an order
+                    </span>
+                    <span className="text-[10px] text-gray-400">Min. {fmt(MINIMUM_ORDER)}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden bg-gray-200">
+                    <div className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min((effectiveSubtotal / MINIMUM_ORDER) * 100, 100)}%`, backgroundColor: '#C2410C' }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Free delivery progress — mirrors cart drawer */}
+              {deliveryType === 'delivery' && meetsMinimum && freeDeliveryAt && (
+                <div className="px-3 py-2.5 rounded-lg"
+                  style={{ backgroundColor: effectiveSubtotal >= freeDeliveryAt ? '#F0FFF4' : '#FFFBEB' }}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    {effectiveSubtotal >= freeDeliveryAt
+                      ? <span className="text-xs font-semibold" style={{ color: '#166534' }}>🚚 Delivery&apos;s on us!</span>
+                      : <span className="text-xs font-medium text-gray-600">
+                          🚚 Add <strong style={{ color: '#800020' }}>{fmt(freeDeliveryAt - effectiveSubtotal)}</strong> more for free delivery
+                        </span>}
+                    {effectiveSubtotal < freeDeliveryAt && (
+                      <span className="text-[10px] text-gray-400">Free over {fmt(freeDeliveryAt)}</span>
+                    )}
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden bg-gray-200">
+                    <div className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min((effectiveSubtotal / freeDeliveryAt) * 100, 100)}%`, backgroundColor: effectiveSubtotal >= freeDeliveryAt ? '#166534' : '#8B6914' }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Delivery: collect nudge — mirrors cart drawer, with one-tap switch */}
               {deliveryType === 'delivery' && meetsMinimum && (
                 <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[11px] font-medium"
                   style={{ backgroundColor: '#FFFBEB', color: '#92400E' }}>
@@ -1293,8 +1330,13 @@ const CheckoutInner = () => {
                     {collectSaving
                       ? <><strong>{fmt(collectSaving)}</strong> on this order</>
                       : <><strong>10%</strong> + no delivery fee</>
-                    } — switch above to apply
+                    }
                   </span>
+                  <button onClick={() => setDeliveryType('takeaway')}
+                    className="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-black text-white"
+                    style={{ backgroundColor: '#B45309' }}>
+                    Switch
+                  </button>
                 </div>
               )}
 
