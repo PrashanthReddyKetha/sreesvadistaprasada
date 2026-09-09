@@ -109,7 +109,7 @@ function DeliveryBar({ total, freeOver, onAddMore }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true, feeSaved = 0, feeSavedIsEstimate = false }) {
+function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true, feeSaved = 0, feeSavedIsEstimate = false, smallFeeSaved = 0 }) {
   const [collapsed, setCollapsed] = useState(false);
   const grandTotal = grandTotalProp ?? (cartTotal - takeawayDiscount + (deliveryFee || 0));
 
@@ -183,9 +183,15 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
                 <span>-{fmt(feeSaved)}{feeSavedIsEstimate ? '+' : ''}</span>
               </div>
             )}
+            {deliveryType === 'takeaway' && smallFeeSaved > 0 && (
+              <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
+                <span>Small order fee saved <span className="text-xs font-normal text-gray-400">(orders under £20)</span></span>
+                <span>-{fmt(smallFeeSaved)}</span>
+              </div>
+            )}
             {deliveryType === 'delivery' && smallOrderFee > 0 && (
               <div className="flex justify-between text-sm" style={{ color: '#92400E' }}>
-                <span>Small order fee <span className="text-xs text-gray-400">(orders under £20)</span></span>
+                <span>Small order fee <span className="text-xs text-gray-400">(orders under £20, excl. delivery fee)</span></span>
                 <span>{fmt(smallOrderFee)}</span>
               </div>
             )}
@@ -1533,6 +1539,7 @@ const CheckoutInner = () => {
                 feeKnown={deliveryType === 'takeaway' || !!validPricing}
                 feeSaved={potentialDeliveryFee ?? MIN_DELIVERY_FEE}
                 feeSavedIsEstimate={collectSavingIsEstimate}
+                smallFeeSaved={meetsMinimum && effectiveSubtotal <= 19.99 ? 1.50 : 0}
               />
 
               {/* Goes well with — pairs_with upsell */}
