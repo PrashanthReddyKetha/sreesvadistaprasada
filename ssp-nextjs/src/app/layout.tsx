@@ -9,6 +9,7 @@ import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import WhatsAppButton from '@/components/layout/WhatsAppButton'
 import OrderNowBar from '@/components/layout/OrderNowBar'
+import SWRegister from '@/components/SWRegister'
 import CartToast from '@/components/CartToast'
 import ScrollToTop from '@/components/ScrollToTop'
 import BackendWarmup from '@/components/BackendWarmup'
@@ -45,11 +46,24 @@ export const metadata: Metadata = {
   description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
   keywords: ['Indian takeaway Milton Keynes', 'Indian food delivery Milton Keynes', 'South Indian restaurant Milton Keynes', 'best Indian restaurant MK', 'South Indian food Milton Keynes'],
   metadataBase: new URL('https://sreesvadistaprasada.com'),
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'Svadista',
+    statusBarStyle: 'default',
+  },
   openGraph: {
     siteName: 'Sree Svadista Prasada',
     locale: 'en_GB',
     type: 'website',
   },
+}
+
+// Next 14: themeColor belongs in the viewport export, not metadata
+export const viewport = {
+  themeColor: '#800020',
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -84,6 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </main>
               <Footer />
               <OrderNowBar />
+              <SWRegister />
               <WhatsAppButton />
               <CartToast />
               </NotifyMeProvider>

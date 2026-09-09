@@ -18,6 +18,16 @@ const nextConfig = {
   // Canonical host is the apex domain (matches sitemap.ts, robots.ts and every
   // canonical/OG tag) — redirect www so Google consolidates ranking signals
   // onto one URL instead of splitting them across two hosts.
+  // The service worker file must never be cached by the browser/CDN, or
+  // updates to it (and the caches it manages) would take days to roll out.
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }],
+      },
+    ]
+  },
   async redirects() {
     return [
       {
