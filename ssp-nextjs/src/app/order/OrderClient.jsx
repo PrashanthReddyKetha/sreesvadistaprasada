@@ -218,7 +218,7 @@ export default function OrderClient({ initialItems = [] }) {
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-3">
           {/* Collection / Delivery toggle */}
           <div className={searchMode || controlsCollapsed ? 'hidden' : 'flex rounded-xl p-1 gap-1'} style={{ backgroundColor: '#F3EDE2' }}>
-            {[['takeaway', '🛵 Collection · save 10%'], ['delivery', '🚚 Delivery']].map(([val, label]) => (
+            {[['delivery', '🚚 Delivery'], ['takeaway', '🛵 Collection · save 10%']].map(([val, label]) => (
               <button key={val} onClick={() => setDeliveryType(val)}
                 className="flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-colors"
                 style={{

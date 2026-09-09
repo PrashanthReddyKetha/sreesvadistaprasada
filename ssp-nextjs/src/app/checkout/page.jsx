@@ -1230,8 +1230,8 @@ const CheckoutInner = () => {
               </p>
               <div className="flex gap-2">
                 {[
-                  { id: 'takeaway', label: collectSaving && !collectSavingIsEstimate ? `🛵 Collect & save ${fmt(collectSaving)}` : '🛵 Collect & save 10%' },
                   { id: 'delivery', label: '🚚 Delivery' },
+                  { id: 'takeaway', label: collectSaving && !collectSavingIsEstimate ? `🛵 Collect & save ${fmt(collectSaving)}` : '🛵 Collect & save 10%' },
                 ].map(opt => (
                   <button key={opt.id} onClick={() => setDeliveryType(opt.id)}
                     className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
