@@ -3,7 +3,7 @@
 export const heroSlides = [
   {
     id: 1,
-    image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920',
+    image: '/hero/slide-1.jpg',
     title: "Welcome Home.",
     subtitle: "The authentic taste you missed, carried forward with love.",
     description: "Order in a few taps — collect in ~40 minutes and save 10%, or get it delivered.",
@@ -12,7 +12,7 @@ export const heroSlides = [
   },
   {
     id: 2,
-    image: 'https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920',
+    image: '/hero/slide-2.jpg',
     title: "Two Kitchens.\nOne Soul.",
     subtitle: "Divinity for the soul. Spice for the heart.",
     description: "Prasada & Svadista — choose your world.",
@@ -21,7 +21,7 @@ export const heroSlides = [
   },
   {
     id: 3,
-    image: 'https://images.unsplash.com/photo-1727404679933-99daa2a7573a?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920',
+    image: '/hero/slide-3.jpg',
     title: "Your Daily Dose\nof Home.",
     subtitle: "Wholesome meal subscriptions delivered to your door.",
     description: "The Dabba Wala service — just like mother used to pack.",

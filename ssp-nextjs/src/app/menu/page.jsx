@@ -43,11 +43,21 @@ const jsonLd = {
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';
 
+// Only the fields the card grid renders — full item objects doubled this
+// page's HTML to ~700KB via the RSC flight payload.
+const slim = (i) => ({
+  id: i.id, name: i.name, slug: i.slug, description: i.description,
+  price: i.price, image: i.image, is_veg: i.is_veg, spice_level: i.spice_level,
+  category: i.category, subcategory: i.subcategory,
+  preorder_only: i.preorder_only, sold_out_today: i.sold_out_today,
+});
+
 async function getItems() {
   try {
     const res = await fetch(`${BASE}/api/menu?available=true`, { next: { revalidate: 3600 } });
     if (!res.ok) return [];
-    return res.json();
+    const items = await res.json();
+    return items.map(slim);
   } catch { return []; }
 }
 

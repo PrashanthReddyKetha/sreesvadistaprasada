@@ -7,11 +7,22 @@ export const revalidate = 300;
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';
 
+// Only the fields the order list actually renders — the full objects (faqs,
+// SEO text, pairs_with, galleries…) were being serialized twice per item
+// (HTML + RSC flight data), pushing this page's HTML past 700KB.
+const slim = (i) => ({
+  id: i.id, name: i.name, slug: i.slug, description: i.description,
+  price: i.price, image: i.image, is_veg: i.is_veg, spice_level: i.spice_level,
+  category: i.category, subcategory: i.subcategory, allergens: i.allergens,
+  preorder_only: i.preorder_only, sold_out_today: i.sold_out_today,
+});
+
 async function getMenu() {
   try {
     const res = await fetch(`${BASE}/api/menu?available=true`, { next: { revalidate: 300 } });
     if (!res.ok) return [];
-    return res.json();
+    const items = await res.json();
+    return items.map(slim);
   } catch { return []; }
 }
 

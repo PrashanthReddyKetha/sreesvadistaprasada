@@ -161,10 +161,10 @@ const Home = () => {
             {/* Svadista Card */}
             <Link href="/svadista" className="group" data-testid="svadista-world-card">
               <div className="relative overflow-hidden rounded-lg" style={{ height: '420px' }}>
-                <img loading="lazy" decoding="async"
+                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
                   src={images.svadista}
                   alt="Sree Svadista Non-Veg Specialties"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0" style={{
                   background: 'linear-gradient(to top, rgba(139, 58, 58, 0.95) 0%, rgba(139, 58, 58, 0.6) 40%, rgba(139, 58, 58, 0.15) 100%)'
@@ -190,10 +190,10 @@ const Home = () => {
             {/* Prasada Card */}
             <Link href="/prasada" className="group" data-testid="prasada-world-card">
               <div className="relative overflow-hidden rounded-lg" style={{ height: '420px' }}>
-                <img loading="lazy" decoding="async"
+                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
                   src={images.prasada}
                   alt="Sree Prasada Pure Veg Bliss"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0" style={{
                   background: 'linear-gradient(to top, rgba(74, 124, 89, 0.95) 0%, rgba(74, 124, 89, 0.6) 40%, rgba(74, 124, 89, 0.15) 100%)'
@@ -552,10 +552,10 @@ const Home = () => {
               <div className="relative rounded-lg overflow-hidden group" style={{ boxShadow: '0 8px 32px rgba(128, 0, 32, 0.08)' }}>
                 <Link href={chefSpecialItem ? buildItemUrl(chefSpecialItem) : '/breakfast'} className="block">
                 <div className="relative h-64 md:h-80 overflow-hidden">
-                  <img loading="lazy" decoding="async"
+                  <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
                     src={chefSpecialItem?.image || chefSpecial.image}
                     alt={chefSpecial.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                   <span
@@ -619,7 +619,7 @@ const Home = () => {
                     <Link key={moment.id} href={moment.link} className="group text-center" data-testid={`meal-moment-${moment.id}`}>
                       <div className="relative w-full aspect-square rounded-full overflow-hidden mb-3 transition-all duration-300 group-hover:shadow-lg"
                         style={{ border: '3px solid rgba(244, 196, 48, 0.3)' }}>
-                        <img loading="lazy" decoding="async" src={moment.image} alt={moment.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <Image fill loading="lazy" sizes="(max-width: 768px) 33vw, 15vw" src={moment.image} alt={moment.name} className="object-cover transition-transform duration-500 group-hover:scale-110" />
                         <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/65 to-transparent flex items-end justify-center pb-4 transition-colors duration-300 group-hover:from-[#800020]/70">
                           <span className="text-[11px] font-bold text-white tracking-widest uppercase">Order Now →</span>
                         </div>
@@ -630,7 +630,7 @@ const Home = () => {
                     <div key={moment.id} className="text-center opacity-80" data-testid={`meal-moment-${moment.id}`}>
                       <div className="relative w-full aspect-square rounded-full overflow-hidden mb-3"
                         style={{ border: '3px solid rgba(0,0,0,0.08)' }}>
-                        <img loading="lazy" decoding="async" src={moment.image} alt={moment.name} className="w-full h-full object-cover grayscale-[30%]" />
+                        <Image fill loading="lazy" sizes="(max-width: 768px) 33vw, 15vw" src={moment.image} alt={moment.name} className="object-cover grayscale-[30%]" />
                         <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
                           <span className="text-[11px] font-bold text-white/90 tracking-widest uppercase">Coming Soon</span>
                         </div>
@@ -784,10 +784,10 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="relative rounded-lg overflow-hidden" style={{ height: '380px' }}>
-              <img loading="lazy" decoding="async"
+              <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
                 src={images.picklesShelf}
                 alt="Traditional pickles and spices"
-                className="w-full h-full object-cover"
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               <span className="absolute bottom-4 left-4 px-3 py-1.5 rounded-sm text-xs font-semibold text-white" style={{ backgroundColor: '#4A7C59' }}>
@@ -852,10 +852,10 @@ const Home = () => {
               </Link>
             </div>
             <div className="order-1 md:order-2 relative rounded-lg overflow-hidden" style={{ height: '400px' }}>
-              <img loading="lazy" decoding="async"
+              <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
                 src={images.storyTeaser}
                 alt="Traditional Indian cooking"
-                className="w-full h-full object-cover"
+                className="object-cover"
               />
               <div className="absolute inset-0 rounded-lg" style={{ border: '1px solid rgba(244, 196, 48, 0.2)' }} />
             </div>
