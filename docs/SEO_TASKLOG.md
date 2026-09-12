@@ -51,6 +51,17 @@ keeps it closed until launch and will handle it themselves. Do not re-raise.
 
 On-page keyword map now live in H1s: menu→"170+ South Indian dishes · Milton Keynes"; breakfast→"South Indian breakfast … dosa, idli & vada"; svadista→"Andhra non-veg curries, biryani"; prasada→"pure veg South Indian food"; catering→"South Indian catering … weddings, corporate"; subscriptions→"Dabba Wala — weekly South Indian meal subscription"; delivery→"Food Delivery in Milton Keynes".
 
+## Cycle 4 — 2026-09-13 — COMPLETED (performance)
+
+| ID | Task | Status |
+|----|------|--------|
+| Q4a | Hero slides self-hosted in public/hero — LCP image no longer fetched from Unsplash through the optimizer on cache misses; preload + fetchPriority high confirmed in served HTML; webp variants 9–40KB | Verified live |
+| Q6 | All 7 raw `<img>` on home converted to next/image fill with sizes (two-worlds cards, chef special, meal moments, pickles, story) — 0 raw imgs in live HTML | Verified live |
+| Q10 | /menu + /order initialItems slimmed to rendered fields — HTML 710→633KB / 723→651KB (~11%); remaining bulk is 170 cards' srcset markup (compresses well under brotli); flight payload measured at 91KB | Verified live |
+| Q5 | JS diet: investigated — CartDrawer and AuthModal(+Firebase/Google, ~186KB) were already dynamically deferred in earlier perf work; remaining large chunks are framework (react-dom). No further safe cut without route-level refactor. | Closed (no action) |
+
+Re-run Lighthouse mobile after a few days of edge-cache warmth to quantify the LCP change (lab was 4.7s with the Unsplash proxy in the chain).
+
 ## Queue — next cycles (priority order)
 
 | ID | Task | Evidence / value | Effort | Can Claude do it? |
