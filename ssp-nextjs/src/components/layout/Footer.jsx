@@ -171,6 +171,7 @@ const Footer = () => {
             </h4>
             <ul className="space-y-2.5 text-sm">
               {[
+                { name: 'Delivery & Collection', path: '/delivery' },
                 { name: 'Milton Keynes', path: '/milton-keynes' },
                 { name: 'Edinburgh', path: '/edinburgh' },
                 { name: 'Glasgow', path: '/glasgow' },

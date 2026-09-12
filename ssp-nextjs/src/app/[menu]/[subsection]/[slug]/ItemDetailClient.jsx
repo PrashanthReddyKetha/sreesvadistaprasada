@@ -75,8 +75,8 @@ const CATEGORY_FAQS = {
 };
 
 const GENERAL_FAQS = [
-  { q:'How long does delivery take?', a:'45–60 mins for Milton Keynes, 60–90 mins for Edinburgh and Glasgow.' },
-  { q:'What is the minimum for free delivery?', a:'Orders over £30 qualify for free delivery across all our delivery areas.' },
+  { q:'How long does delivery take?', a:'30–60 mins across Milton Keynes. Edinburgh and Glasgow are coming soon.' },
+  { q:'What is the minimum for free delivery?', a:'Free delivery kicks in from £28–£40 depending on your MK zone — your exact threshold shows at checkout.' },
   { q:'Can I customise my order?', a:'Yes — use the Special Instructions field at checkout for any requests.' },
   { q:'Do you cater for large groups?', a:'Yes! Visit our Catering page to request a quote for events and celebrations.' },
 ];

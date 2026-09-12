@@ -32,6 +32,14 @@ checked in a build or on the live site. Full audit evidence: the three-agent
 Earlier same day (audit cycle 0): GBP status clarified — profile exists, owner
 keeps it closed until launch and will handle it themselves. Do not re-raise.
 
+## Cycle 2 — 2026-09-12 — COMPLETED
+
+| ID | Task | Status |
+|----|------|--------|
+| Q3 | `/delivery` landing page built from the real order engine (zones/fees/thresholds verified against backend/routes/orders.py), visible FAQ + FAQPage/Breadcrumb schema, sitemap entry, footer link | Verified (build) |
+| Q11 | Fixed contradictory item-page FAQ ("60–90 mins Edinburgh/Glasgow") and wrong money facts: "£30 free delivery everywhere" → zone-based £28–£40; "collection has no minimum" → £15 minimum applies to all orders (matches engine) | Implemented |
+| Q12 | next.config images restricted from `**` wildcard to the 6 hosts actually in use (checked live menu DB) — migrate the imglink.cc/vecteezy/edgeone item images to Firebase, then trim the list | Implemented |
+
 ## Queue — next cycles (priority order)
 
 | ID | Task | Evidence / value | Effort | Can Claude do it? |

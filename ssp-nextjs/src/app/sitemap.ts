@@ -51,6 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/street-food`,    priority: 0.8,  changeFrequency: 'weekly',  lastModified: STATIC_LASTMOD },
     { url: `${BASE_URL}/ragi-specials`,  priority: 0.8,  changeFrequency: 'weekly',  lastModified: STATIC_LASTMOD },
     { url: `${BASE_URL}/drinks`,         priority: 0.7,  changeFrequency: 'weekly',  lastModified: STATIC_LASTMOD },
+    { url: `${BASE_URL}/delivery`,       priority: 0.85, changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
     { url: `${BASE_URL}/subscriptions`,  priority: 0.9,  changeFrequency: 'weekly',  lastModified: STATIC_LASTMOD },
     { url: `${BASE_URL}/catering`,       priority: 0.8,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
     { url: `${BASE_URL}/story`,          priority: 0.6,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },

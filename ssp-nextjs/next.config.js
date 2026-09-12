@@ -2,8 +2,17 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    // Only the hosts we actually serve images from — a '**' wildcard turns
+    // /_next/image into an open optimisation proxy anyone can abuse.
     remotePatterns: [
-      { protocol: 'https', hostname: '**' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
+      { protocol: 'https', hostname: 'sreesvadistaprasada.com' },
+      // Stragglers still referenced by a few menu items in the DB — migrate
+      // those images to Firebase and then remove these entries.
+      { protocol: 'https', hostname: 'imglink.cc' },
+      { protocol: 'https', hostname: 'static.vecteezy.com' },
+      { protocol: 'https', hostname: '*.edgeone.app' },
     ],
     // Cache each transformed image for 30 days instead of the default 60s.
     // This is the primary lever for reducing Vercel Image Optimization usage.
