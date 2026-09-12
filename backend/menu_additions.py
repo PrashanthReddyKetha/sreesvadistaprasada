@@ -147,10 +147,11 @@ COMMON_DEFAULTS = {
 
 
 async def apply_menu_additions():
-    # Overnight Oats are made the night before — pre-order only (next-day collection)
+    # Pre-order flow is built but parked (docs/PREORDER.md) — Overnight Oats
+    # sell as normal add-to-cart items for now. Set True again to re-enable.
     await db.menu_items.update_many(
         {"name": {"$regex": "^Overnight Oats"}},
-        {"$set": {"preorder_only": True}},
+        {"$set": {"preorder_only": False}},
     )
 
     # One-time fix-up: the thali initially shipped with a borrowed rice-bowl

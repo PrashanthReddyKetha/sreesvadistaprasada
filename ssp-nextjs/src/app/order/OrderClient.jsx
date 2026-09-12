@@ -12,6 +12,7 @@ import { getCached, setCached } from '@/api/menuCache';
 import SlotPicker from '@/components/SlotPicker';
 import IntroPricesBanner from '@/components/IntroPricesBanner';
 import RestockBell from '@/components/RestockBell';
+import PushOptIn from '@/components/PushOptIn';
 
 const SECTIONS = [
   { id: 'breakfast',    name: 'Breakfast' },
@@ -232,6 +233,11 @@ export default function OrderClient({ initialItems = [] }) {
       {/* Introductory pricing — premium, once, no noise */}
       <div className="max-w-3xl mx-auto px-4 pt-3">
         <IntroPricesBanner compact />
+      </div>
+
+      {/* Push opt-in — only renders inside the installed app */}
+      <div className="max-w-3xl mx-auto px-4 pt-3">
+        <PushOptIn />
       </div>
 
       {/* ── Sticky order controls ── */}

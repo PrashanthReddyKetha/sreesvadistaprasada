@@ -6,11 +6,13 @@ import logging
 
 from database import client
 from seed import seed_menu, create_indexes, create_admin_user, seed_daily_specials, seed_content
-from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews, daily_specials, loyalty, admin_loyalty, pickup_slots
+from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews, daily_specials, loyalty, admin_loyalty, pickup_slots, push
 from routes import content as content_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings
 from menu_additions import apply_menu_additions
+from web_push import ensure_vapid_keys, scheduler_loop
+import asyncio
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -27,8 +29,14 @@ async def lifespan(app: FastAPI):
     await migrate_slugs()
     await seed_slot_settings()
     await apply_menu_additions()
+    await ensure_vapid_keys()
+    from database import db
+    await db.push_subs.create_index("endpoint", unique=True)
+    await db.push_campaigns.create_index("id", unique=True)
+    push_scheduler = asyncio.create_task(scheduler_loop())
     yield
     logger.info("Shutting down...")
+    push_scheduler.cancel()
     client.close()
 
 
@@ -67,6 +75,7 @@ app.include_router(loyalty.router, prefix="/api")
 app.include_router(admin_loyalty.router, prefix="/api")
 app.include_router(content_routes.router, prefix="/api")
 app.include_router(pickup_slots.router, prefix="/api")
+app.include_router(push.router, prefix="/api")
 
 
 @app.get("/api")

@@ -16,6 +16,7 @@ import DailySpecialsTab from '@/components/admin/DailySpecialsTab';
 import AdminLoyaltyTab from '@/components/admin/AdminLoyaltyTab';
 import KitchenTab from '@/components/admin/KitchenTab';
 import SlotSettingsTab from '@/components/admin/SlotSettingsTab';
+import PushTab from '@/components/admin/PushTab';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -833,6 +834,7 @@ const TABS = [
   { id:'reviews',       label:'Reviews',       icon:Star         },
   { id:'newsletter',    label:'Newsletter',    icon:Mail         },
   { id:'slots',         label:'Collection Times', icon:Clock     },
+  { id:'push',          label:'Push',          icon:Bell         },
 ];
 
 const Admin = () => {
@@ -962,6 +964,7 @@ const Admin = () => {
             <>
               {activeTab==='kitchen'       && <KitchenTab />}
               {activeTab==='slots'         && <SlotSettingsTab />}
+              {activeTab==='push'          && <PushTab />}
               {activeTab==='overview'      && <Overview {...data} />}
               {activeTab==='orders'        && <OrdersTab orders={data.orders} onStatusUpdate={handleStatusUpdate} />}
               {activeTab==='dabba'         && <DabbaWalaTab />}
