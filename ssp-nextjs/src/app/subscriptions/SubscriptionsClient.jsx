@@ -832,7 +832,7 @@ const SubscriptionsInner = () => {
           <div className="max-w-7xl mx-auto w-full">
             <div className="max-w-xl">
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service</p>
-              <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Your Daily Dose of Home</h1>
+              <h2 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Your Daily Dose of Home<span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Dabba Wala — Indian tiffin subscription in Milton Keynes</span></h2>
               <p className="text-sm text-gray-200">Fresh South Indian meals delivered Mon–Fri. No cooking required.</p>
               <p className="text-sm font-semibold mt-1.5" style={{ color: '#F4C430' }}>From £12.50 a meal on the monthly plan (£15 on weekly) · Fixed term — no auto-renewal, no hidden fees</p>
               <div className="flex items-center gap-5 mt-5 flex-wrap">

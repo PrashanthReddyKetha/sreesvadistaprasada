@@ -34,7 +34,6 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <h1 className="sr-only">Our Story — Authentic South Indian Restaurant Milton Keynes</h1>
       <StoryClient />
     </>
   );

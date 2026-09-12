@@ -57,7 +57,6 @@ export default async function PrasadaPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(FAQS)) }} />
-      <h1 className="sr-only">Pure Veg South Indian Food Milton Keynes — Temple-Style Andhra Cooking</h1>
       <PrasadaClient initialItems={initialItems} initialTab="Bites & Starters" />
       <FaqSection title="Prasada pure-veg menu — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse Prasada by section" />
     </>

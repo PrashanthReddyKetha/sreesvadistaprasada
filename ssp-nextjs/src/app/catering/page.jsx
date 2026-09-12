@@ -46,7 +46,6 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <h1 className="sr-only">South Indian Catering Milton Keynes — Weddings, Events & Corporate</h1>
       <CateringClient />
     </>
   );

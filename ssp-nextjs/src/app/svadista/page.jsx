@@ -56,7 +56,6 @@ export default async function SvadistaPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(FAQS)) }} />
-      <h1 className="sr-only">Non-Veg Indian Food Milton Keynes — Andhra Curries, Biryani & More</h1>
       <SvadistaClient initialItems={initialItems} initialTab="Starters" />
       <FaqSection title="Svadista non-veg menu — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse Svadista by section" />
     </>

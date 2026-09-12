@@ -5,7 +5,7 @@ const SITE = 'https://sreesvadistaprasada.com';
 
 export const metadata = {
   title: { absolute: 'South Indian Food Blog | Andhra Cuisine Guides | Sree Svadista Prasada' },
-  description: 'Guides to South Indian and Andhra cuisine — what is Dabba Wala, ragi health benefits, South Indian vs North Indian food, gongura, and more from Sree Svadista Prasada.',
+  description: 'Guides to South Indian and Andhra cuisine — what is Dabba Wala, ragi health benefits, South vs North Indian food, gongura and more.',
   alternates: { canonical: `${SITE}/blog` },
   openGraph: {
     title: 'South Indian Food Blog | Sree Svadista Prasada',

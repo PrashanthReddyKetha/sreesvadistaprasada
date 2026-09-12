@@ -40,6 +40,17 @@ keeps it closed until launch and will handle it themselves. Do not re-raise.
 | Q11 | Fixed contradictory item-page FAQ ("60–90 mins Edinburgh/Glasgow") and wrong money facts: "£30 free delivery everywhere" → zone-based £28–£40; "collection has no minimum" → £15 minimum applies to all orders (matches engine) | Implemented |
 | Q12 | next.config images restricted from `**` wildcard to the 6 hosts actually in use (checked live menu DB) — migrate the imglink.cc/vecteezy/edgeone item images to Firebase, then trim the list | Implemented |
 
+## Cycle 3 — 2026-09-12 — COMPLETED (on-page pass)
+
+| ID | Task | Status |
+|----|------|--------|
+| Q7 | Single H1 per page: 10 duplicate sr-only H1s removed; visible hero H1s now carry a keyword subtitle span (menu, breakfast, svadista, prasada, drinks, street-food, ragi, catering, subscriptions) | Verified — h1_count=1 in built HTML on all checked pages |
+| Q8 | /subscriptions hidden sr-only block converted to a visible server-rendered content section (plans, dabba contents, how it works); its heading is now the page's SSR'd h1 (client hero demoted to h2 — client h1 was never in server HTML); hidden "MK's only weekly subscription" claim dropped; keywords meta removed | Verified (build) |
+| — | Home title 92→54 chars ("Indian Takeaway Milton Keynes \| Sree Svadista Prasada") | Implemented |
+| — | Remaining >160-char descriptions trimmed: /blog, /edinburgh, /glasgow | Implemented |
+
+On-page keyword map now live in H1s: menu→"170+ South Indian dishes · Milton Keynes"; breakfast→"South Indian breakfast … dosa, idli & vada"; svadista→"Andhra non-veg curries, biryani"; prasada→"pure veg South Indian food"; catering→"South Indian catering … weddings, corporate"; subscriptions→"Dabba Wala — weekly South Indian meal subscription"; delivery→"Food Delivery in Milton Keynes".
+
 ## Queue — next cycles (priority order)
 
 | ID | Task | Evidence / value | Effort | Can Claude do it? |

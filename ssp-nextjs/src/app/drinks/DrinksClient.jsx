@@ -43,6 +43,7 @@ const Drinks = ({ initialItems = [] }) => {
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Juices & Soft Drinks
+              <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Fresh Indian drinks &amp; lassi in Milton Keynes</span>
             </h1>
             <p className="text-lg text-purple-100 leading-relaxed mb-1">Fresh juices, lassis & refreshing beverages.</p>
             <p className="text-sm text-purple-200 leading-relaxed max-w-md">

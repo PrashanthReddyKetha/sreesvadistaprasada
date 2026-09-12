@@ -37,7 +37,6 @@ export default async function RagiPage() {
   const initialItems = await getItems();
   return (
     <>
-      <h1 className="sr-only">Ragi & Millet Specials Milton Keynes — Healthy South Indian Superfoods</h1>
       <RagiClient initialItems={initialItems} />
     </>
   );

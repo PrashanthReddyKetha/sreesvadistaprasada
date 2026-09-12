@@ -43,6 +43,7 @@ const RagiSpecials = ({ initialItems = [] }) => {
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Ragi Specials
+              <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Healthy millet dishes, unique to our Milton Keynes kitchen</span>
             </h1>
             <p className="text-lg text-amber-100 leading-relaxed mb-1">Ancient grain. Timeless nourishment.</p>
             <p className="text-sm text-amber-200 leading-relaxed max-w-md">

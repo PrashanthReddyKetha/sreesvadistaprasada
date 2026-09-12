@@ -47,6 +47,7 @@ const Catering = () => {
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Catering & Events
+              <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">South Indian catering in Milton Keynes — weddings, corporate &amp; celebrations</span>
             </h1>
             <p className="text-lg text-gray-200 leading-relaxed" data-testid="catering-hero-subtitle">
               Poojas, Weddings, Corporate Events & More. Authentic South Indian food for your special occasions.

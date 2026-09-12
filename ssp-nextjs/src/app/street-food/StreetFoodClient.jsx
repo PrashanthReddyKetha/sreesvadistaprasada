@@ -43,6 +43,7 @@ const StreetFood = ({ initialItems = [] }) => {
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Evening Delights
+              <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Indian street food &amp; chaat in Milton Keynes</span>
             </h1>
             <p className="text-lg text-blue-100 leading-relaxed mb-1">Quick bites, snacks and evening treats.</p>
             <p className="text-sm text-blue-200 leading-relaxed max-w-md">

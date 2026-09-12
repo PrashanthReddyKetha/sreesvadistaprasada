@@ -5,7 +5,7 @@ const BASE_URL = 'https://sreesvadistaprasada.com';
 
 export const metadata = {
   title: { absolute: 'South Indian Food Glasgow — Coming Soon | Sree Svadista Prasada' },
-  description: 'Authentic Andhra South Indian food is coming to Glasgow. Register your interest for Dabba Wala tiffin deliveries and fresh Indian meals across Glasgow G postcodes.',
+  description: 'Authentic Andhra South Indian food is coming to Glasgow. Register your interest for Dabba Wala tiffins and fresh Indian meals across G postcodes.',
   alternates: { canonical: `${BASE_URL}/glasgow` },
   openGraph: {
     title: 'South Indian Food Glasgow — Coming Soon | Sree Svadista Prasada',

@@ -117,6 +117,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All' }) => {
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
                 Prasada
+                <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Pure veg South Indian food in Milton Keynes</span>
               </h1>
               <p className="text-lg text-green-100 leading-relaxed mb-1">From starters to biryanis — all pure veg.</p>
               <p className="text-sm text-green-200 leading-relaxed max-w-md">

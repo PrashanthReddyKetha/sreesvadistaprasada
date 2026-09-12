@@ -37,7 +37,6 @@ export default async function StreetFoodPage() {
   const initialItems = await getItems();
   return (
     <>
-      <h1 className="sr-only">Indian Street Food Milton Keynes — Pani Puri, Chaat & More</h1>
       <StreetFoodClient initialItems={initialItems} />
     </>
   );

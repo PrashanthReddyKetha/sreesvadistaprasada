@@ -56,7 +56,6 @@ export default async function BreakfastPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(FAQS)) }} />
-      <h1 className="sr-only">South Indian Breakfast Milton Keynes — Dosa, Idli, Vada & More</h1>
       <BreakfastClient initialItems={initialItems} initialTab="Idli & Vada" />
       <FaqSection title="South Indian breakfast — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse breakfast by section" />
     </>

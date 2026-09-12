@@ -37,7 +37,6 @@ export default async function DrinksPage() {
   const initialItems = await getItems();
   return (
     <>
-      <h1 className="sr-only">Mango Lassi & Indian Drinks Milton Keynes</h1>
       <DrinksClient initialItems={initialItems} />
     </>
   );

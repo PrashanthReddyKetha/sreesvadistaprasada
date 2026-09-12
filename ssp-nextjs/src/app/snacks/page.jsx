@@ -27,7 +27,6 @@ export const metadata = {
 export default function SnacksPage() {
   return (
     <>
-      <h1 className="sr-only">Hot, Sweet & Pickles — Coming Soon</h1>
       <SnacksClient />
     </>
   );

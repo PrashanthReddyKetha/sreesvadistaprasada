@@ -1,7 +1,7 @@
 import HomeClient from './HomeClient';
 
 export const metadata = {
-  title: { absolute: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery | Sree Svadista Prasada' },
+  title: { absolute: 'Indian Takeaway Milton Keynes | Sree Svadista Prasada' },
   description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
   openGraph: {
     title: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery',
