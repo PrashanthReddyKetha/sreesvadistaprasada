@@ -10,6 +10,8 @@ import { buildItemUrl } from '@/lib/itemUrl';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 import SlotPicker from '@/components/SlotPicker';
+import IntroPricesBanner from '@/components/IntroPricesBanner';
+import RestockBell from '@/components/RestockBell';
 
 const SECTIONS = [
   { id: 'breakfast',    name: 'Breakfast' },
@@ -208,7 +210,8 @@ export default function OrderClient({ initialItems = [] }) {
   const visibleSections = SECTIONS.filter(sec =>
     dishes.some(d => d.category === sec.id && isOrderable(d.category) && (!vegOnly || d.is_veg)));
 
-  const handleAdd = (d) => addToCart({ id: d.id, name: d.name, price: d.price, image: d.image, category: d.category });
+  const handleAdd = (d) => addToCart({ id: d.id, name: d.name, price: d.price, image: d.image, category: d.category, preorder: !!d.preorder_only });
+  const hasPreorder = cartItems.some(i => i.preorder);
 
   return (
     <div className="min-h-screen pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: C.ivory }}>
@@ -225,6 +228,11 @@ export default function OrderClient({ initialItems = [] }) {
           </p>
         </div>
       </section>
+
+      {/* Introductory pricing — premium, once, no noise */}
+      <div className="max-w-3xl mx-auto px-4 pt-3">
+        <IntroPricesBanner compact />
+      </div>
 
       {/* ── Sticky order controls ── */}
       <div ref={stickyRef} className="sticky z-30 top-[calc(32px+4rem)] md:top-[calc(32px+5rem)]"
@@ -246,7 +254,7 @@ export default function OrderClient({ initialItems = [] }) {
 
           {deliveryType === 'takeaway' && (
             <div className={searchMode || controlsCollapsed ? 'hidden' : 'mt-3'}>
-              <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} />
+              <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} requireTomorrow={hasPreorder} />
             </div>
           )}
 
@@ -356,13 +364,17 @@ export default function OrderClient({ initialItems = [] }) {
                     <span className="block text-[11px] truncate" style={{ color: C.muted }}>{d.description}</span>
                     <span className="block text-[13px] font-black mt-0.5" style={{ color: C.ink }}>£{Number(d.price).toFixed(2)}</span>
                   </button>
-                  {qty > 0 ? (
+                  {d.sold_out_today ? (
+                    <RestockBell item={d} compact />
+                  ) : qty > 0 ? (
                     <Stepper qty={qty} onChange={(n) => updateQuantity(d.id, n)} />
                   ) : (
                     <button onClick={() => handleAdd(d)}
                       className="shrink-0 rounded-full px-4 py-2 text-xs font-black tracking-wide"
-                      style={{ backgroundColor: C.saffron, color: C.ink, boxShadow: '0 1px 3px rgba(45,36,34,0.18)' }}>
-                      + ADD
+                      style={d.preorder_only
+                        ? { backgroundColor: C.burgundy, color: '#fff', boxShadow: '0 1px 3px rgba(45,36,34,0.18)' }
+                        : { backgroundColor: C.saffron, color: C.ink, boxShadow: '0 1px 3px rgba(45,36,34,0.18)' }}>
+                      {d.preorder_only ? 'Pre-order' : '+ ADD'}
                     </button>
                   )}
                 </div>
@@ -419,8 +431,16 @@ export default function OrderClient({ initialItems = [] }) {
                       ))}
                     </div>
                   )}
+                  {d.preorder_only && (
+                    <p className="text-[11px] font-bold mt-3 px-3 py-2 rounded-lg"
+                      style={{ backgroundColor: 'rgba(128,0,32,0.06)', color: C.burgundy }}>
+                      🌙 Made fresh overnight — pre-order today, collect tomorrow in your chosen slot.
+                    </p>
+                  )}
                   <div className="flex items-center gap-3 mt-5">
-                    {qty > 0 ? (
+                    {d.sold_out_today ? (
+                      <div className="flex-1 text-center py-2"><RestockBell item={d} /></div>
+                    ) : qty > 0 ? (
                       <>
                         <Stepper qty={qty} onChange={(n) => updateQuantity(d.id, n)} />
                         <button onClick={() => setSheetItem(null)}
@@ -432,8 +452,8 @@ export default function OrderClient({ initialItems = [] }) {
                     ) : (
                       <button onClick={() => handleAdd(d)}
                         className="flex-1 py-3.5 rounded-xl text-sm font-black"
-                        style={{ backgroundColor: C.saffron, color: C.ink }}>
-                        Add to basket — £{Number(d.price).toFixed(2)}
+                        style={d.preorder_only ? { backgroundColor: C.burgundy, color: '#fff' } : { backgroundColor: C.saffron, color: C.ink }}>
+                        {d.preorder_only ? 'Pre-order for tomorrow — ' : 'Add to basket — '}£{Number(d.price).toFixed(2)}
                       </button>
                     )}
                   </div>

@@ -10,7 +10,7 @@ import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackMenuCategoryView } from '@/lib/analytics';
 
-const TABS = ['Idli & Vada', 'Dosas', 'Chicken Curry Combos', 'Poori & Others', 'English Breakfast', 'All'];
+const TABS = ['All', 'Idli & Vada', 'Dosas', 'Chicken Curry Combos', 'Poori & Others', 'English Breakfast'];
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 

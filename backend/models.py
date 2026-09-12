@@ -171,6 +171,10 @@ class MenuItemCreate(BaseModel):
     faqs: List[dict] = []
     pairs_with: List[str] = []
     seo_meta_description: Optional[str] = None
+    # Pre-order items (e.g. Overnight Oats) can only be collected the NEXT day
+    preorder_only: bool = False
+    # "Sold out for today" — ISO date (London); item auto-returns the next day
+    sold_out_until: Optional[str] = None
 
 
 class MenuItemUpdate(BaseModel):
@@ -191,11 +195,16 @@ class MenuItemUpdate(BaseModel):
     faqs: Optional[List[dict]] = None
     pairs_with: Optional[List[str]] = None
     seo_meta_description: Optional[str] = None
+    preorder_only: Optional[bool] = None
+    sold_out_until: Optional[str] = None
+    clear_sold_out: bool = False  # explicit "back on sale now"
 
 
 class MenuItem(MenuItemCreate):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    # Computed on read: sold_out_until covers today (London)
+    sold_out_today: bool = False
 
 
 # --- Reviews ---

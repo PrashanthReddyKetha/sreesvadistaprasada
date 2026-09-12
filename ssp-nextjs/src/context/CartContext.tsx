@@ -9,6 +9,7 @@ interface CartItem {
   image?: string;
   category?: string;
   quantity: number;
+  preorder?: boolean; // made overnight — collection only, next-day slot
 }
 
 interface Toast {

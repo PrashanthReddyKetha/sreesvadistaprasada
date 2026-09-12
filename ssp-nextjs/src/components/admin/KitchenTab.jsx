@@ -211,8 +211,9 @@ export default function KitchenTab() {
 
   const eightySix = async (item) => {
     try {
-      await api.put(`/menu/${item.menu_item_id}`, { available: false });
-      showToast(`"${item.name}" marked sold out — hidden from the menu.`);
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
+      await api.put(`/menu/${item.menu_item_id}`, { sold_out_until: today });
+      showToast(`"${item.name}" is sold out for today — back automatically tomorrow.`);
     } catch {
       showToast('Could not mark sold out — try the Menu tab.');
     }

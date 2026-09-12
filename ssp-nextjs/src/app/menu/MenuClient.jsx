@@ -10,6 +10,8 @@ import { isOrderable } from '@/config/softLaunch';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
+import RestockBell from '@/components/RestockBell';
+import IntroPricesBanner from '@/components/IntroPricesBanner';
 
 const categories = [
   { id: 'all', name: 'All Dishes' },
@@ -128,9 +130,11 @@ const Menu = ({ initialItems = [] }) => {
           <p className="text-xs text-gray-500 line-clamp-1 mb-2 flex-1">{dish.description}</p>
           <div className="flex justify-between items-center">
             <span className="text-base font-bold" style={{ color: '#800020' }}>{'£'}{dish.price.toFixed(2)}</span>
-            {isOrderable(dish.category) ? (
-              <button onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ ...dish, price: `£${dish.price.toFixed(2)}` }); }} className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>
-                <ShoppingCart size={11} /> Add
+            {dish.sold_out_today ? (
+              <span onClick={e => { e.preventDefault(); e.stopPropagation(); }}><RestockBell item={dish} compact /></span>
+            ) : isOrderable(dish.category) ? (
+              <button onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ ...dish, price: `£${dish.price.toFixed(2)}`, preorder: !!dish.preorder_only }); }} className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }} data-testid={`menu-add-${dish.id}`}>
+                <ShoppingCart size={11} /> {dish.preorder_only ? 'Pre-order' : 'Add'}
               </button>
             ) : (
               <button
@@ -164,6 +168,11 @@ const Menu = ({ initialItems = [] }) => {
           </div>
         </div>
       </section>
+
+      {/* Introductory pricing */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pt-4">
+        <IntroPricesBanner />
+      </div>
 
       {/* Anchor for tab scroll */}
       <div id="section-tabs-anchor" />

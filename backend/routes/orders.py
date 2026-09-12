@@ -318,13 +318,30 @@ async def preview_calculate(body: OrderCalculateRequest):
             or "We're not taking orders right now — please check back soon."
         ))
 
+    from restock import is_sold_out_today, london_today
     items_data = []
+    has_preorder = False
     for i in body.items:
-        doc = await db.menu_items.find_one({"id": i.menu_item_id}, {"price": 1, "name": 1, "available": 1, "_id": 0})
-        if not doc or not doc.get("available"):
+        doc = await db.menu_items.find_one(
+            {"id": i.menu_item_id},
+            {"price": 1, "name": 1, "available": 1, "sold_out_until": 1, "preorder_only": 1, "_id": 0})
+        if not doc or not doc.get("available") or is_sold_out_today(doc):
             name = (doc or {}).get("name") or "An item in your basket"
             raise HTTPException(status_code=404, detail=f"{name} has just sold out — please remove it from your basket to continue.")
+        if doc.get("preorder_only"):
+            has_preorder = True
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
+
+    # Pre-order items are made overnight: collection only, tomorrow's slots only
+    if has_preorder:
+        if body.order_type != "takeaway":
+            raise HTTPException(status_code=400, detail=(
+                "Your basket includes a pre-order item (made fresh overnight) — "
+                "please switch to collection and pick a slot for tomorrow."))
+        if not body.scheduled_slot or body.scheduled_slot[:10] <= london_today():
+            raise HTTPException(status_code=400, detail=(
+                "Pre-order items are prepared the night before — "
+                "please choose a collection slot for tomorrow."))
 
     if body.scheduled_slot and body.order_type == "takeaway":
         if not slot_in_grid(slot_settings, body.scheduled_slot):
@@ -378,12 +395,25 @@ async def create_order(
             free_item_price = float(item["price"])
 
     # Server-side pricing — look up each item price from the DB, never trust the client
+    from restock import is_sold_out_today, london_today
     items_data = []
+    has_preorder = False
     for i in payload.items:
-        doc = await db.menu_items.find_one({"id": i.menu_item_id, "available": True}, {"price": 1, "_id": 0})
-        if not doc:
+        doc = await db.menu_items.find_one(
+            {"id": i.menu_item_id, "available": True},
+            {"price": 1, "sold_out_until": 1, "preorder_only": 1, "_id": 0})
+        if not doc or is_sold_out_today(doc):
             raise HTTPException(404, detail=f"Item '{i.menu_item_id}' is not available")
+        if doc.get("preorder_only"):
+            has_preorder = True
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
+
+    if has_preorder and (
+        payload.delivery_type != "takeaway"
+        or not payload.scheduled_slot
+        or payload.scheduled_slot[:10] <= london_today()
+    ):
+        raise HTTPException(400, "Pre-order items need a collection slot for tomorrow.")
     try:
         totals = calculate_order_total(
             items=items_data,

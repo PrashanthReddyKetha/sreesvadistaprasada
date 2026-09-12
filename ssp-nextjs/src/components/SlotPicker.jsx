@@ -10,9 +10,11 @@ import api from '@/api';
  *   pickupSlot / setPickupSlot — from useCart()
  *   compact — tighter layout for the checkout card
  */
-export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false }) {
+export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false, requireTomorrow = false }) {
   const [data, setData] = useState(null);       // API response for the active day
-  const [day, setDay] = useState('today');      // 'today' | 'tomorrow'
+  const [day, setDay] = useState(requireTomorrow ? 'tomorrow' : 'today'); // 'today' | 'tomorrow'
+  // Pre-order baskets are made overnight -- lock the picker to tomorrow
+  useEffect(() => { if (requireTomorrow) setDay('tomorrow'); }, [requireTomorrow]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -94,7 +96,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false 
   }
 
   const slots = data?.slots || [];
-  const showAsap = day === 'today' && data?.asap_available;
+  const showAsap = !requireTomorrow && day === 'today' && data?.asap_available;
   const closedToday = day === 'today' && !slots.length && !showAsap;
 
   return (
@@ -104,7 +106,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false 
           Collection time
         </span>
         <div className="flex gap-1">
-          {['today', 'tomorrow'].map(d => (
+          {(requireTomorrow ? ['tomorrow'] : ['today', 'tomorrow']).map(d => (
             <button key={d} onClick={() => setDay(d)}
               className="text-xs font-bold px-2.5 py-1 rounded-full capitalize"
               style={{
@@ -117,6 +119,11 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false 
         </div>
       </div>
 
+      {requireTomorrow && (
+        <p className="text-[11px] mb-1.5 font-semibold" style={{ color: '#8B6914' }}>
+          🌙 Your basket has a pre-order item — it’s made overnight, so collection is tomorrow.
+        </p>
+      )}
       {closedToday ? (
         <div className="rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: '#FBF3DC', border: '1px solid #EBD9A8', color: '#5C4B47' }}>
           We're closed for today's orders — switch to <b>Tomorrow</b> to pre-order from opening time.

@@ -283,7 +283,7 @@ function PairsRow({ cartItems, addToCart }) {
   }
   // Only orderable categories — pickles/podis are coming-soon and can't be added
   const picks = wanted
-    .map(pid => menu.find(m => m.id === pid && m.available && isOrderable(m.category)))
+    .map(pid => menu.find(m => m.id === pid && m.available && !m.sold_out_today && isOrderable(m.category)))
     .filter(Boolean).slice(0, 4);
   if (!picks.length) return null;
 
@@ -507,7 +507,7 @@ const CATEGORY_LABELS = {
 function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
   // menuCache is warmed on checkout mount (PairsRow) → the modal opens instantly
   const cached = getCached('all');
-  const [allItems, setAllItems] = useState(() => (cached || []).filter(i => isOrderable(i.category)));
+  const [allItems, setAllItems] = useState(() => (cached || []).filter(i => isOrderable(i.category) && !i.sold_out_today));
   const [activeCat, setActiveCat] = useState('all');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(!cached);
@@ -516,7 +516,7 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
 
   useEffect(() => {
     api.get('/menu?available=true')
-      .then(r => { setCached('all', r.data); setAllItems(r.data.filter(i => isOrderable(i.category))); })
+      .then(r => { setCached('all', r.data); setAllItems(r.data.filter(i => isOrderable(i.category) && !i.sold_out_today)); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -780,6 +780,7 @@ const CheckoutInner = () => {
     setAddressDropdown(false);
   };
 
+  const hasPreorder = cartItems.some(i => i.preorder);
   const freeItemDiscount = freeItem ? price(freeItem.price) : 0;
   const effectiveSubtotal = cartTotal + freeItemDiscount;
 
@@ -1357,6 +1358,19 @@ const CheckoutInner = () => {
                 </div>
               )}
 
+              {/* Pre-order items are collection-only, next day */}
+              {hasPreorder && deliveryType === 'delivery' && (
+                <div className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-[11px] font-medium"
+                  style={{ backgroundColor: '#FDECEA', color: '#8B3A3A' }}>
+                  <span>🌙 Your basket has a <strong>pre-order</strong> item — it’s collection-only, ready tomorrow.</span>
+                  <button onClick={() => setDeliveryType('takeaway')}
+                    className="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-black text-white"
+                    style={{ backgroundColor: '#8B3A3A' }}>
+                    Switch
+                  </button>
+                </div>
+              )}
+
               {/* Small order fee nudge — with the other money strips, like the drawer */}
               {deliveryType === 'delivery' && meetsMinimum && smallOrderFee > 0 && (
                 <div className="px-3 py-2.5 rounded-lg text-[11px] font-medium flex items-start gap-2"
@@ -1390,7 +1404,7 @@ const CheckoutInner = () => {
               {/* Collection time picker */}
               {deliveryType === 'takeaway' && (
                 <div className="px-3 py-3 rounded-lg" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(128,0,32,0.08)' }}>
-                  <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} compact />
+                  <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} compact requireTomorrow={hasPreorder} />
                 </div>
               )}
 

@@ -179,6 +179,17 @@ export default function MenuTab() {
     clearMenuCache(); await load();
   };
 
+  // Sold out for TODAY only — clears automatically tomorrow; "Back on sale" clears now
+  const toggleSoldOutToday = async (item) => {
+    if (item.sold_out_today) {
+      await api.put(`/menu/${item.id}`, { clear_sold_out: true });
+    } else {
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
+      await api.put(`/menu/${item.id}`, { sold_out_until: today });
+    }
+    clearMenuCache(); await load();
+  };
+
   const deleteItem = async (item) => {
     if (!window.confirm(`Permanently delete "${item.name}"? This cannot be undone.`)) return;
     await api.delete(`/menu/${item.id}`);
@@ -509,6 +520,14 @@ export default function MenuTab() {
                     style={{ backgroundColor: item.available?'#DCFCE7':'#FEE2E2', color: item.available?'#166534':'#991B1B' }}>
                     {item.available?'Live':'Hidden'}
                   </button>
+                  {item.available && (
+                    <button onClick={()=>toggleSoldOutToday(item)}
+                      title={item.sold_out_today ? 'Put it back on sale now — subscribers get their alert' : 'Sold out for today only — back automatically tomorrow'}
+                      className="text-xs px-2.5 py-1.5 rounded-lg font-semibold transition-all"
+                      style={{ backgroundColor: item.sold_out_today?'#FEF3C7':'#F6F1E7', color: item.sold_out_today?'#92400E':'#5C4B47' }}>
+                      {item.sold_out_today ? 'Back on sale' : 'Sold out today'}
+                    </button>
+                  )}
                   <button onClick={()=>startEdit(item)} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg font-semibold border"
                     style={{ borderColor:'#800020', color:'#800020' }}>
                     <Edit2 size={12} /> Edit

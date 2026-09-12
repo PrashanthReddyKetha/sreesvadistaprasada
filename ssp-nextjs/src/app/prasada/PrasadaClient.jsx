@@ -10,7 +10,7 @@ import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackMenuCategoryView } from '@/lib/analytics';
 
-const TABS = ['Bites & Starters', 'Curries', 'Biriyanis & Rice', 'Thalis & Rice Bowls', 'Indo Chinese', '🪔 Naivedyam', 'Ragi Specials', 'Protein & Healthy Bowls', 'All'];
+const TABS = ['All', 'Bites & Starters', 'Curries', 'Biriyanis & Rice', 'Thalis & Rice Bowls', 'Indo Chinese', '🪔 Naivedyam', 'Ragi Specials', 'Protein & Healthy Bowls'];
 
 const SECTION_MESSAGES = {
   'Bites & Starters': { icon: '🌿', text: 'Light bites and crispy evening delights — the perfect way to begin.' },

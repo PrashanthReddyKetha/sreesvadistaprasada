@@ -5,6 +5,7 @@ import os, json, re
 from database import db
 from models import MenuItem, MenuItemCreate, MenuItemUpdate, MenuCategory, Review, ReviewCreate
 from auth import require_admin, get_current_user, get_optional_user
+from restock import is_sold_out_today, sweep_expired_sold_outs, notify_restock, add_restock_sub
 
 router = APIRouter(prefix="/menu", tags=["menu"])
 
@@ -71,7 +72,13 @@ async def get_menu(
         else:
             query["$or"] = search_clause
 
+    # Opportunistic sweep: sold-out days that have passed come back live and
+    # fire any pending "notify me" alerts — no cron needed
+    await sweep_expired_sold_outs()
+
     items = await db.menu_items.find(query, {"_id": 0}).to_list(500)
+    for i in items:
+        i["sold_out_today"] = is_sold_out_today(i)
     return items
 
 
@@ -174,18 +181,43 @@ async def create_menu_item(payload: MenuItemCreate, _: dict = Depends(require_ad
 
 @router.put("/{item_id}", response_model=MenuItem)
 async def update_menu_item(item_id: str, payload: MenuItemUpdate, _: dict = Depends(require_admin)):
-    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    before = await db.menu_items.find_one({"id": item_id}, {"_id": 0})
+    if not before:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+
+    updates = {k: v for k, v in payload.model_dump().items()
+               if v is not None and k != "clear_sold_out"}
+    if payload.clear_sold_out:
+        updates["sold_out_until"] = None
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
     if "name" in updates and "slug" not in updates:
         updates["slug"] = await generate_unique_slug(updates["name"], exclude_id=item_id)
 
-    result = await db.menu_items.update_one({"id": item_id}, {"$set": updates})
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Menu item not found")
-
+    await db.menu_items.update_one({"id": item_id}, {"$set": updates})
     doc = await db.menu_items.find_one({"id": item_id}, {"_id": 0})
+
+    # Became purchasable again? → tell everyone waiting on it
+    was_out = (not before.get("available", True)) or is_sold_out_today(before)
+    now_in = doc.get("available", True) and not is_sold_out_today(doc)
+    if was_out and now_in:
+        await notify_restock(doc)
+
+    doc["sold_out_today"] = is_sold_out_today(doc)
     return doc
+
+
+@router.post("/{item_id}/notify-restock")
+async def notify_restock_subscribe(item_id: str, current_user: dict = Depends(get_current_user)):
+    """Signed-in customers: email + SMS me when this dish is back."""
+    item = await db.menu_items.find_one({"id": item_id}, {"_id": 0})
+    if not item:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    user = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    await add_restock_sub(item, user)
+    return {"message": f"We'll let you know the moment {item['name']} is back."}
 
 
 @router.delete("/{item_id}")
