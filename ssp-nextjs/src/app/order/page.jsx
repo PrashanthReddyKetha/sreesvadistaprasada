@@ -16,10 +16,13 @@ async function getMenu() {
 }
 
 export const metadata = {
-  title: 'Order Now | Sree Svadista Prasada',
+  title: { absolute: 'Order Online | Sree Svadista Prasada' },
   description:
     'Order authentic Andhra food for collection or delivery in Milton Keynes. Pick your collection time, pay securely, and collect fresh from our kitchen.',
   alternates: { canonical: 'https://sreesvadistaprasada.com/order' },
+  // Transactional funnel page duplicating /menu's content — keep it for
+  // people and out of the index; /menu is the page that should rank.
+  robots: { index: false, follow: true },
 };
 
 export default async function OrderPage() {

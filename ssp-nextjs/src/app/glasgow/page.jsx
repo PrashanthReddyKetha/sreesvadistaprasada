@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import FaqSection, { faqSchema } from '@/components/FaqSection';
 
 const BASE_URL = 'https://sreesvadistaprasada.com';
 
@@ -17,29 +18,17 @@ export const metadata = {
   },
 };
 
+// Rendered visibly below AND used for the FAQPage schema. No Restaurant node
+// here — the business has no Glasgow premises yet, and LocalBusiness markup
+// claiming a city without one risks a spam action.
+const FAQS = [
+  { q: 'Is there a South Indian restaurant in Glasgow?', a: 'Sree Svadista Prasada, a dedicated Andhra Telugu kitchen, is expanding to Glasgow. We currently serve Milton Keynes. Register your interest to be first to know when we launch Glasgow delivery.' },
+  { q: 'Where can I get South Indian food delivered in Glasgow?', a: 'We are bringing authentic Andhra curries, gongura dishes, dosas, and our Dabba Wala tiffin subscription to Glasgow. Contact us via WhatsApp to register your postcode.' },
+  { q: 'What makes Sree Svadista Prasada different from other Indian restaurants in Glasgow?', a: 'Unlike most "Indian" restaurants in Glasgow that serve Punjabi-style North Indian food, Sree Svadista Prasada specialises exclusively in Andhra Pradesh and Telugu cuisine — gongura curries, Guntur-spiced dishes, temple-style Prasada cooking, and the Dabba Wala home-style meal subscription.' },
+];
+
 const jsonLd = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Restaurant',
-    name: 'Sree Svadista Prasada',
-    description: 'Authentic South Indian restaurant delivering Andhra curries, dosas, biryani and Dabba Wala tiffin subscriptions. Currently serving Milton Keynes — Glasgow coming soon.',
-    url: `${BASE_URL}/glasgow`,
-    telephone: '+447307119962',
-    email: 'info@sreesvadistaprasada.com',
-    servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan'],
-    address: { '@type': 'PostalAddress', addressLocality: 'Glasgow', addressRegion: 'Scotland', addressCountry: 'GB' },
-    areaServed: { '@type': 'City', name: 'Glasgow' },
-    sameAs: ['https://sreesvadistaprasada.com'],
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      { '@type': 'Question', name: 'Is there a South Indian restaurant in Glasgow?', acceptedAnswer: { '@type': 'Answer', text: 'Sree Svadista Prasada, the UK\'s only dedicated Andhra Telugu kitchen, is expanding to Glasgow. Currently serving Milton Keynes. Register your interest to be first to know when we launch Glasgow delivery.' } },
-      { '@type': 'Question', name: 'Where can I get South Indian food delivered in Glasgow?', acceptedAnswer: { '@type': 'Answer', text: 'We are bringing authentic Andhra curries, gongura dishes, dosas, and our Dabba Wala tiffin subscription to Glasgow. Contact us via WhatsApp to register your postcode.' } },
-      { '@type': 'Question', name: 'What makes Sree Svadista Prasada different from other Indian restaurants in Glasgow?', acceptedAnswer: { '@type': 'Answer', text: 'Unlike most "Indian" restaurants in Glasgow that serve Punjabi-style North Indian food, Sree Svadista Prasada specialises exclusively in Andhra Pradesh and Telugu cuisine — gongura curries, Guntur-spiced dishes, temple-style Prasada cooking, and the Dabba Wala home-style meal subscription.' } },
-    ],
-  },
+  faqSchema(FAQS),
   {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -106,11 +95,14 @@ export default function GlasgowPage() {
           </div>
         </section>
 
+        {/* FAQs — visible twin of the FAQPage schema */}
+        <FaqSection title="South Indian food in Glasgow — your questions" faqs={FAQS} />
+
         {/* Currently ordering */}
         <section className="py-16 px-4 bg-white">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'var(--font-playfair), serif' }}>Want Authentic South Indian Food Now?</h2>
-            <p className="text-gray-600 mb-8">While Glasgow is coming soon, our UK-wide shipping for snacks, pickles and podis is available today. Dabba Wala subscriptions ship UK-wide.</p>
+            <p className="text-gray-600 mb-8">While Glasgow is coming soon, our full menu is available for collection and delivery in Milton Keynes today — and Dabba Wala subscriptions are open now.</p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/snacks" className="inline-block px-6 py-3 rounded-sm font-semibold text-sm" style={{ backgroundColor: '#800020', color: '#fff' }}>Shop Snacks &amp; Pickles</Link>
               <Link href="/subscriptions" className="inline-block px-6 py-3 rounded-sm font-semibold text-sm border" style={{ borderColor: '#800020', color: '#800020' }}>Dabba Wala Subscriptions</Link>

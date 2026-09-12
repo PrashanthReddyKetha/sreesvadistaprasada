@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import FaqSection, { faqSchema } from '@/components/FaqSection';
 
 const BASE_URL = 'https://sreesvadistaprasada.com';
 
@@ -17,29 +18,17 @@ export const metadata = {
   },
 };
 
+// Rendered visibly below AND used for the FAQPage schema. No Restaurant node
+// here — the business has no Edinburgh premises yet, and LocalBusiness markup
+// claiming a city without one risks a spam action.
+const FAQS = [
+  { q: 'Is there an authentic South Indian restaurant in Edinburgh?', a: 'Sree Svadista Prasada, a dedicated Andhra kitchen, is expanding to Edinburgh. We currently serve Milton Keynes. Register your interest for Edinburgh delivery and be first to know when we launch.' },
+  { q: 'Where can I get South Indian food delivered in Edinburgh?', a: 'We are bringing authentic Andhra curries, dosas, gongura dishes, and our Dabba Wala tiffin subscription to Edinburgh. Contact us via WhatsApp to register your postcode.' },
+  { q: 'What is Dabba Wala tiffin delivery?', a: 'Dabba Wala is a weekly South Indian home-style meal subscription — fresh tiffin boxes delivered to your door. From £12.50 per meal, currently available in Milton Keynes and coming to Edinburgh.' },
+];
+
 const jsonLd = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Restaurant',
-    name: 'Sree Svadista Prasada',
-    description: 'Authentic South Indian restaurant delivering Andhra curries, dosas, biryani and Dabba Wala tiffin subscriptions. Currently serving Milton Keynes — Edinburgh coming soon.',
-    url: `${BASE_URL}/edinburgh`,
-    telephone: '+447307119962',
-    email: 'info@sreesvadistaprasada.com',
-    servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan'],
-    address: { '@type': 'PostalAddress', addressLocality: 'Edinburgh', addressRegion: 'Scotland', addressCountry: 'GB' },
-    areaServed: { '@type': 'City', name: 'Edinburgh' },
-    sameAs: ['https://sreesvadistaprasada.com'],
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      { '@type': 'Question', name: 'Is there an authentic South Indian restaurant in Edinburgh?', acceptedAnswer: { '@type': 'Answer', text: 'Sree Svadista Prasada, the UK\'s only dedicated Andhra kitchen, is expanding to Edinburgh. Currently serving Milton Keynes. Register your interest for Edinburgh delivery and be first to know when we launch.' } },
-      { '@type': 'Question', name: 'Where can I get South Indian food delivered in Edinburgh?', acceptedAnswer: { '@type': 'Answer', text: 'We are bringing authentic Andhra curries, dosas, gongura dishes, and our Dabba Wala tiffin subscription to Edinburgh. Contact us via WhatsApp to register your postcode.' } },
-      { '@type': 'Question', name: 'What is Dabba Wala tiffin delivery?', acceptedAnswer: { '@type': 'Answer', text: 'Dabba Wala is a weekly South Indian home-style meal subscription — fresh tiffin boxes delivered to your door. From £12.50 per meal, currently available in Milton Keynes and coming to Edinburgh.' } },
-    ],
-  },
+  faqSchema(FAQS),
   {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -75,7 +64,7 @@ export default function EdinburghPage() {
                 South Indian Food Delivery in Edinburgh
               </h1>
               <p className="text-base md:text-lg text-gray-200 mb-8 leading-relaxed">
-                Edinburgh&rsquo;s only Andhra kitchen is on its way — authentic gongura curries, dosas, Dabba Wala tiffin subscriptions across Leith, Marchmont, Newington and all Edinburgh EH postcodes.
+                An authentic Andhra kitchen is on its way to Edinburgh — gongura curries, dosas and Dabba Wala tiffin subscriptions, planned for Leith, Marchmont, Newington and all Edinburgh EH postcodes.
               </p>
               <div className="flex flex-wrap gap-3">
                 <a href="https://wa.me/447307119962?text=I%27m%20interested%20in%20South%20Indian%20food%20delivery%20in%20Edinburgh" target="_blank" rel="noopener noreferrer">
@@ -106,11 +95,14 @@ export default function EdinburghPage() {
           </div>
         </section>
 
+        {/* FAQs — visible twin of the FAQPage schema */}
+        <FaqSection title="South Indian food in Edinburgh — your questions" faqs={FAQS} />
+
         {/* Currently ordering */}
         <section className="py-16 px-4 bg-white">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'var(--font-playfair), serif' }}>Want Authentic South Indian Food Now?</h2>
-            <p className="text-gray-600 mb-8">While Edinburgh is coming soon, our full menu including UK-wide shipping for snacks, pickles and podis is available today. Dabba Wala subscriptions ship UK-wide.</p>
+            <p className="text-gray-600 mb-8">While Edinburgh is coming soon, our full menu is available for collection and delivery in Milton Keynes today — and Dabba Wala subscriptions are open now.</p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/snacks" className="inline-block px-6 py-3 rounded-sm font-semibold text-sm" style={{ backgroundColor: '#800020', color: '#fff' }}>Shop Snacks &amp; Pickles</Link>
               <Link href="/subscriptions" className="inline-block px-6 py-3 rounded-sm font-semibold text-sm border" style={{ borderColor: '#800020', color: '#800020' }}>Dabba Wala Subscriptions</Link>

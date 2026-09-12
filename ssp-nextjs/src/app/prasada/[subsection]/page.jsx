@@ -1,16 +1,21 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import PrasadaClient from '../PrasadaClient';
 
 export const revalidate = 3600;
 
 const SLUG_TO_TAB = {
-  'bites-starters':  'Bites & Starters',
-  'curries-daal':    'Curries & Daal',
-  'biriyanis-rice':  'Biriyanis & Rice',
+  'bites-starters':    'Bites & Starters',
+  'curries':           'Curries',
+  'biriyanis-rice':    'Biriyanis & Rice',
   'thalis-rice-bowls': 'Thalis & Rice Bowls',
-  'rice-bowls':      'Thalis & Rice Bowls', // legacy URL keeps working
-  'indo-chinese':    'Indo Chinese',
-  'naivedyam':       '🪔 Naivedyam',
+  'indo-chinese':      'Indo Chinese',
+  'naivedyam':         '🪔 Naivedyam',
+};
+
+// Old URLs 308 to their current home instead of serving duplicate pages
+const LEGACY_REDIRECTS = {
+  'curries-daal': 'curries',
+  'rice-bowls':   'thalis-rice-bowls',
 };
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';
@@ -30,13 +35,17 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) return {};
+  const clean = tab.replace(/[^\w\s&-]/g, '').trim(); // no emoji in titles
   return {
-    title: `${tab} — Prasada Vegetarian Menu | Sree Svadista Prasada`,
-    description: `Order authentic South Indian vegetarian ${tab.toLowerCase()} dishes. Pure veg, freshly cooked in Milton Keynes — Edinburgh & Glasgow coming soon.`,
+    title: `${clean} — Prasada Vegetarian Menu`,
+    description: `Order authentic South Indian vegetarian ${clean.toLowerCase()} dishes. Pure veg, freshly cooked in Milton Keynes — Edinburgh & Glasgow coming soon.`,
+    alternates: { canonical: `https://sreesvadistaprasada.com/prasada/${params.subsection}` },
   };
 }
 
 export default async function PrasadaSubsectionPage({ params }) {
+  const legacy = LEGACY_REDIRECTS[params.subsection];
+  if (legacy) permanentRedirect(`/prasada/${legacy}`);
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) notFound();
   const initialItems = await getItems();

@@ -16,8 +16,9 @@ export async function generateMetadata({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) return {};
   return {
-    title: `${tab} — Hot, Sweet & Pickles — Coming Soon | Sree Svadista Prasada`,
+    title: `${tab} — Hot, Sweet & Pickles — Coming Soon`,
     description: `Authentic South Indian ${tab.toLowerCase()} — handmade with traditional recipes, coming soon to Milton Keynes, Edinburgh & Glasgow.`,
+    alternates: { canonical: `https://sreesvadistaprasada.com/snacks/${params.subsection}` },
   };
 }
 

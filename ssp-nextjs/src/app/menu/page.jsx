@@ -1,11 +1,28 @@
-import Link from 'next/link';
 import MenuClient from './MenuClient';
 
 export const revalidate = 3600;
 
+const OG_IMAGE = 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80';
+
 export const metadata = {
   title: 'Full South Indian Menu — 170+ Dishes',
-  description: 'Browse 170+ authentic South Indian dishes: Gongura Chicken, Natu Kodi Biryani, dosas, Pulihora, Ragi Specials, handmade pickles and podis. Order online for delivery across Milton Keynes (Wolverton, Stony Stratford, Bletchley) — Edinburgh and Glasgow coming soon.',
+  description: 'Browse 170+ authentic South Indian dishes — Gongura Chicken, Natu Kodi Biryani, dosas, Pulihora and Ragi Specials. Order online in Milton Keynes.',
+  alternates: { canonical: 'https://sreesvadistaprasada.com/menu' },
+  openGraph: {
+    title: 'Full South Indian Menu — 170+ Dishes | Sree Svadista Prasada',
+    description: 'Browse 170+ authentic South Indian dishes — Gongura Chicken, Natu Kodi Biryani, dosas, Pulihora and Ragi Specials. Order online in Milton Keynes.',
+    type: 'website',
+    url: 'https://sreesvadistaprasada.com/menu',
+    siteName: 'Sree Svadista Prasada',
+    locale: 'en_GB',
+    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: 'Full South Indian menu — Sree Svadista Prasada' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Full South Indian Menu — 170+ Dishes | Sree Svadista Prasada',
+    description: 'Browse 170+ authentic South Indian dishes. Order online in Milton Keynes.',
+    images: [OG_IMAGE],
+  },
 };
 
 const jsonLd = {
@@ -42,26 +59,6 @@ export default async function FullMenuPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Server-rendered intro — always visible to Google */}
-      <section className="sr-only">
-        <h1>Our Full Menu — 170+ South Indian Dishes</h1>
-        <p>
-          From slow-cooked Gongura Chicken and Natu Kodi Biryani to temple-style
-          Pulihora and crispy dosas — every dish made fresh to order. Browse by
-          category or order online for delivery across Milton Keynes (Wolverton, Stony
-          Stratford, Greenleys, Newport Pagnell, Bletchley, Westcroft, Central MK).
-          Edinburgh and Glasgow delivery is coming soon — join the waitlist.
-        </p>
-        <nav aria-label="Menu categories">
-          <Link href="/prasada">Prasada — Pure Vegetarian</Link>{' · '}
-          <Link href="/svadista">Svadista — Non-Vegetarian</Link>{' · '}
-          <Link href="/breakfast">Breakfast &amp; Tiffins</Link>{' · '}
-          <Link href="/street-food">Street Food</Link>{' · '}
-          <Link href="/ragi-specials">Ragi Specials</Link>{' · '}
-          <Link href="/snacks">Hot, Sweet &amp; Pickles</Link>{' · '}
-          <Link href="/drinks">Drinks</Link>
-        </nav>
-      </section>
       <MenuClient initialItems={initialItems} />
     </>
   );

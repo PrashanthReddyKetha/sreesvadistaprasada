@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { MapPin, Clock, ShoppingBag, CheckCircle } from 'lucide-react';
+import FaqSection from '@/components/FaqSection';
 
 const MENU_CATEGORIES = [
   { label: 'Prasada — Pure Vegetarian', sub: 'Curries, biryani, dosas & more', href: '/prasada', emoji: '🌿' },
@@ -19,7 +20,7 @@ const TRUST_POINTS = [
 ];
 
 export default function CityPage({ data, jsonLd }) {
-  const { city, tagline, deliveryTime, minOrder, freeDeliveryThreshold, areas, isKitchen } = data;
+  const { city, tagline, deliveryTime, minOrder, freeDeliveryThreshold, areas, isKitchen, faqs = [] } = data;
 
   return (
     <>
@@ -218,6 +219,9 @@ export default function CityPage({ data, jsonLd }) {
           </div>
         </div>
       </section>
+
+      {/* FAQs — visible twin of the FAQPage schema */}
+      <FaqSection title={`South Indian food in ${city} — your questions`} faqs={faqs} />
 
       {/* CTA */}
       <section className="py-16 px-4 md:px-8" style={{ backgroundColor: '#800020' }}>

@@ -8,6 +8,7 @@ const SLUG_TO_TAB = {
   'dosas':                'Dosas',
   'chicken-curry-combos': 'Chicken Curry Combos',
   'poori-others':         'Poori & Others',
+  'english-breakfast':    'English Breakfast',
 };
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';
@@ -28,8 +29,9 @@ export async function generateMetadata({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) return {};
   return {
-    title: `${tab} — Breakfast Menu | Sree Svadista Prasada`,
-    description: `Authentic South Indian ${tab.toLowerCase()} made fresh every morning. Order online for delivery in Milton Keynes — Edinburgh & Glasgow coming soon.`,
+    title: `${tab} — Breakfast Menu`,
+    description: `Authentic ${tab.toLowerCase()} made fresh every morning. Order online for delivery in Milton Keynes — Edinburgh & Glasgow coming soon.`,
+    alternates: { canonical: `https://sreesvadistaprasada.com/breakfast/${params.subsection}` },
   };
 }
 

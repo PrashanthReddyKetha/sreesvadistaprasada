@@ -30,8 +30,9 @@ export async function generateMetadata({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) return {};
   return {
-    title: `${tab} — Svadista Non-Veg Menu | Sree Svadista Prasada`,
+    title: `${tab} — Svadista Non-Veg Menu`,
     description: `Order authentic South Indian ${tab.toLowerCase()} dishes. Non-vegetarian specialities freshly cooked in Milton Keynes — Edinburgh & Glasgow coming soon.`,
+    alternates: { canonical: `https://sreesvadistaprasada.com/svadista/${params.subsection}` },
   };
 }
 

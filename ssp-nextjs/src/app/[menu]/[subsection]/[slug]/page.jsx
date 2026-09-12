@@ -1,5 +1,6 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import ItemDetailClient from './ItemDetailClient';
+import { buildItemUrl } from '@/lib/itemUrl';
 
 // 15 min ISR — pages are pre-built at deploy (generateStaticParams below), so
 // visitors always get a static page instantly; regeneration happens in the
@@ -84,21 +85,15 @@ export async function generateMetadata({ params }) {
   const catLabel = CATEGORY_LABELS[item.category] || 'South Indian Food';
   const desc = item.seo_meta_description
     || `${item.name} — ${(item.description || '').slice(0, 130).trim()}. Order online in Milton Keynes from Sree Svadista Prasada.`;
-  const itemUrl = `${SITE}/${params.menu}/${params.subsection}/${params.slug}`;
+  // Canonical comes from the item's real category/subcategory, never from the
+  // request params — this route matches any /{menu}/{subsection}/ prefix, so a
+  // params-built canonical would legitimise duplicate URLs.
+  const itemUrl = `${SITE}${buildItemUrl(item)}`;
   const images = item.image ? [{ url: item.image, width: 800, height: 600, alt: item.name }] : [];
 
   return {
     title: { absolute: `${item.name} | Indian Takeaway Milton Keynes | Sree Svadista Prasada` },
     description: desc,
-    keywords: [
-      item.name,
-      `${item.name} Milton Keynes`,
-      `${item.name} delivery`,
-      `${item.name} near me`,
-      `${catLabel} Milton Keynes`,
-      'South Indian food Milton Keynes',
-      'Indian takeaway Milton Keynes',
-    ].join(', '),
     openGraph: {
       title: `${item.name} | ${catLabel} Milton Keynes | Sree Svadista Prasada`,
       description: desc,
@@ -122,12 +117,19 @@ export default async function ItemPage({ params }) {
   const item = await getItem(params.slug);
   if (!item) notFound();
 
+  // One canonical URL per dish: any other /{menu}/{subsection}/ combination
+  // that resolves this slug is 308'd to the real path instead of serving a
+  // duplicate page.
+  const canonicalPath = buildItemUrl(item);
+  const requestPath = `/${params.menu}/${params.subsection}/${params.slug}`;
+  if (requestPath !== canonicalPath) permanentRedirect(canonicalPath);
+
   const [initialGoesWith, reviews] = await Promise.all([
     getGoesWith(item.pairs_with),
     getReviews(item.id),
   ]);
 
-  const itemUrl = `${SITE}/${params.menu}/${params.subsection}/${params.slug}`;
+  const itemUrl = `${SITE}${canonicalPath}`;
   const reviewCount = reviews.length;
   const avgRating = reviewCount > 0
     ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviewCount) * 10) / 10
@@ -175,11 +177,25 @@ export default async function ItemPage({ params }) {
     {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
-        { '@type': 'ListItem', position: 2, name: params.menu.charAt(0).toUpperCase() + params.menu.slice(1), item: `${SITE}/${params.menu}` },
-        { '@type': 'ListItem', position: 3, name: item.name, item: itemUrl },
-      ],
+      itemListElement: (() => {
+        const MENU_LABELS = {
+          svadista: 'Svadista', prasada: 'Prasada', breakfast: 'Breakfast',
+          snacks: 'Hot, Sweet & Pickles', drinks: 'Drinks',
+          'street-food': 'Street Food', 'ragi-specials': 'Ragi Specials',
+        };
+        const [, menuSeg, subSeg] = canonicalPath.split('/');
+        const crumbs = [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
+          { '@type': 'ListItem', position: 2, name: MENU_LABELS[menuSeg] || menuSeg, item: `${SITE}/${menuSeg}` },
+        ];
+        // Only menus that actually have /{menu}/{subsection} pages get that crumb
+        const HAS_SUBSECTION_PAGES = new Set(['svadista', 'prasada', 'breakfast', 'snacks']);
+        if (item.subcategory && HAS_SUBSECTION_PAGES.has(menuSeg)) {
+          crumbs.push({ '@type': 'ListItem', position: 3, name: item.subcategory.replace(/[^\w\s&-]/g, '').trim(), item: `${SITE}/${menuSeg}/${subSeg}` });
+        }
+        crumbs.push({ '@type': 'ListItem', position: crumbs.length + 1, name: item.name, item: itemUrl });
+        return crumbs;
+      })(),
     },
   ];
 

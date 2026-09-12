@@ -1,11 +1,11 @@
 import SvadistaClient from './SvadistaClient';
+import FaqSection, { faqSchema } from '@/components/FaqSection';
 
 export const revalidate = 3600;
 
 export const metadata = {
   title: { absolute: 'Andhra Curries & Biryani Milton Keynes | Sree Svadista Prasada' },
   description: 'Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, mutton biryani & more. Bold South Indian flavours. Order now.',
-  keywords: ['non veg Indian food Milton Keynes', 'chicken biryani Milton Keynes', 'South Indian meat curries MK', 'mutton curry delivery Milton Keynes', 'best biryani Milton Keynes', 'Andhra chicken curry delivery', 'authentic non veg South Indian food'],
   openGraph: {
     title: 'Andhra Curries & Biryani Milton Keynes | Sree Svadista Prasada',
     description: 'Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, mutton biryani & more. Bold South Indian flavours. Order now.',
@@ -33,47 +33,32 @@ async function getItems() {
   } catch { return []; }
 }
 
-const SVADISTA_FAQ = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'What are the most popular non-veg dishes?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Our most loved dishes are Natu Kodi Biryani (slow-cooked country chicken in basmati), Gongura Chicken (tangy sorrel leaf curry), Rayalaseema Mutton Curry, and Chicken 65. Every recipe is authentic Andhra home-style cooking.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'How spicy is Andhra food?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Andhra cuisine is known for bold, fiery flavours. Our dishes are prepared to traditional spice levels. You can request a milder preparation in the special instructions when ordering.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Do you deliver non-veg Indian food to Edinburgh and Glasgow?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Not yet — we currently deliver across Milton Keynes only. Edinburgh and Glasgow are coming soon; join the waitlist to be notified when we launch there.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'What makes Svadista different from other Indian takeaways?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Svadista means delicious in Sanskrit. Unlike generic Indian takeaways, every Svadista dish uses regional Andhra Telugu recipes — slow-cooked gravies, whole spice tadkas, and cuts of meat specific to traditional preparations like natu kodi (country chicken).' },
-    },
-  ],
-};
+// Rendered visibly below AND used for the FAQPage schema
+const FAQS = [
+  { q: 'What are the most popular non-veg dishes?', a: 'Our most loved dishes are Natu Kodi Biryani (slow-cooked country chicken in basmati), Gongura Chicken (tangy sorrel leaf curry), Rayalaseema Mutton Curry, and Chicken 65. Every recipe is authentic Andhra home-style cooking.' },
+  { q: 'How spicy is Andhra food?', a: 'Andhra cuisine is known for bold, fiery flavours. Our dishes are prepared to traditional spice levels. You can request a milder preparation in the special instructions when ordering.' },
+  { q: 'Do you deliver non-veg Indian food to Edinburgh and Glasgow?', a: 'Not yet — we currently deliver across Milton Keynes only. Edinburgh and Glasgow are coming soon; join the waitlist to be notified when we launch there.' },
+  { q: 'What makes Svadista different from other Indian takeaways?', a: 'Svadista means delicious in Sanskrit. Unlike generic Indian takeaways, every Svadista dish uses regional Andhra Telugu recipes — slow-cooked gravies, whole spice tadkas, and cuts of meat specific to traditional preparations like natu kodi (country chicken).' },
+];
+
+// Crawlable links to the subsection pages (the tab bar navigates by hash only)
+const SECTION_LINKS = [
+  { href: '/svadista/starters', label: 'Starters' },
+  { href: '/svadista/curries', label: 'Curries' },
+  { href: '/svadista/biriyani', label: 'Biriyani' },
+  { href: '/svadista/rice-bowls', label: 'Rice Bowls' },
+  { href: '/svadista/egg-specials', label: 'Egg Specials' },
+  { href: '/svadista/indo-chinese', label: 'Indo-Chinese' },
+];
 
 export default async function SvadistaPage() {
   const initialItems = await getItems();
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SVADISTA_FAQ) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(FAQS)) }} />
       <h1 className="sr-only">Non-Veg Indian Food Milton Keynes — Andhra Curries, Biryani & More</h1>
-      <p className="sr-only">
-        Bold, rustic Andhra
-        and Telugu non-vegetarian cooking — Gongura Chicken, Natu Kodi Biryani,
-        Mutton Curry, Egg Specials and Indo-Chinese dishes. Delivered across Milton
-        Keynes (Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley,
-        Westcroft, Central MK). Edinburgh and Glasgow delivery is coming soon.
-      </p>
       <SvadistaClient initialItems={initialItems} initialTab="Starters" />
+      <FaqSection title="Svadista non-veg menu — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse Svadista by section" />
     </>
   );
 }
