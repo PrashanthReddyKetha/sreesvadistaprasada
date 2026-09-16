@@ -191,13 +191,15 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
       }
 
       const [simRes, ...pairResults] = await Promise.all(promises);
-      setSimilar(simRes.data.filter(i => i.id !== item.id).slice(0, 8));
+      // Recommendation surfaces never show hidden or sold-out-today dishes
+      const live = (i) => i && i.available && !i.sold_out_today;
+      setSimilar(simRes.data.filter(i => live(i) && i.id !== item.id).slice(0, 8));
 
       if (needsGoesWith) {
         if (item.pairs_with?.length > 0) {
-          setGoesWith(pairResults.map(r => r.data).filter(Boolean));
+          setGoesWith(pairResults.map(r => r.data).filter(live));
         } else if (pairResults[0]) {
-          setGoesWith(pairResults[0].data.filter(i => i.id !== item.id).slice(0, 6));
+          setGoesWith(pairResults[0].data.filter(i => live(i) && i.id !== item.id).slice(0, 6));
         }
       }
     } catch { /* ignore */ }

@@ -158,6 +158,7 @@ async def get_menu_item_by_slug(slug: str):
     doc = await db.menu_items.find_one({"slug": slug}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Menu item not found")
+    doc["sold_out_today"] = is_sold_out_today(doc)
     return doc
 
 
@@ -166,6 +167,7 @@ async def get_menu_item(item_id: str):
     doc = await db.menu_items.find_one({"id": item_id}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Menu item not found")
+    doc["sold_out_today"] = is_sold_out_today(doc)
     return doc
 
 

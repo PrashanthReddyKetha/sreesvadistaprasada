@@ -51,7 +51,9 @@ async function getGoesWith(pairIds) {
           .catch(() => null)
       )
     );
-    return results.filter(Boolean);
+    // By-ID fetches bypass the ?available=true filter — never recommend a
+    // hidden or sold-out-today dish
+    return results.filter(i => i && i.available && !i.sold_out_today);
   } catch {
     return [];
   }

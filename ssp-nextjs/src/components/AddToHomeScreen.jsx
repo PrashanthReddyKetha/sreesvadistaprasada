@@ -47,11 +47,18 @@ export default function AddToHomeScreen({ variant = 'card' }) {
   if (hidden) return null;
 
   if (variant === 'footer') {
+    // No native prompt available (iOS Safari, in-app browsers): the one-line
+    // footer button can't host the install steps — send people to /app, the
+    // dedicated install page, instead of silently doing nothing.
+    const footerInstall = () => {
+      if (window.__sspDeferredInstall) { install(); return; }
+      window.location.href = '/app';
+    };
     return (
-      <button onClick={install}
+      <button onClick={footerInstall}
         className="inline-flex items-center gap-1.5 text-xs font-semibold underline underline-offset-2"
         style={{ color: '#F4C430' }}>
-        📲 Add Svadista to your home screen
+        📲 Add SSP to your home screen
       </button>
     );
   }
