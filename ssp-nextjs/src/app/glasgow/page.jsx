@@ -104,7 +104,7 @@ export default function GlasgowPage() {
             <h2 className="text-2xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'var(--font-playfair), serif' }}>Want Authentic South Indian Food Now?</h2>
             <p className="text-gray-600 mb-8">While Glasgow is coming soon, our full menu is available for collection and delivery in Milton Keynes today — and Dabba Wala subscriptions are open now.</p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/snacks" className="inline-block px-6 py-3 rounded-sm font-semibold text-sm" style={{ backgroundColor: '#800020', color: '#fff' }}>Shop Snacks &amp; Pickles</Link>
+              <Link href="/snacks" className="inline-block px-6 py-3 rounded-sm font-semibold text-sm" style={{ backgroundColor: '#800020', color: '#fff' }}>Lucky's Pantry</Link>
               <Link href="/subscriptions" className="inline-block px-6 py-3 rounded-sm font-semibold text-sm border" style={{ borderColor: '#800020', color: '#800020' }}>Dabba Wala Subscriptions</Link>
             </div>
           </div>

@@ -148,7 +148,7 @@ const Footer = () => {
                 { name: 'Weekly & Monthly Plans', path: '/subscriptions' },
                 { name: 'Corporate Catering', path: '/catering' },
                 { name: 'Temple Prasada Catering', path: '/catering' },
-                { name: 'Hot, Sweet & Pickles', path: '/snacks' },
+                { name: "Lucky's Pantry", path: '/snacks' },
                 { name: 'Event Catering', path: '/catering' },
               ].map((svc) => (
                 <li key={svc.name}>

@@ -81,7 +81,7 @@ const Header = () => {
         { name: 'Full Menu', path: '/menu' },
       ]
     },
-    { name: 'Hot, Sweet & Pickles', path: '/snacks' },
+    { name: "Lucky's Pantry", path: '/snacks' },
     { name: 'Dabba Wala', path: '/subscriptions' },
     { name: 'Our Story', path: '/story' },
     { name: 'Catering', path: '/catering' },

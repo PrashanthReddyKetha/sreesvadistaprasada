@@ -6,7 +6,7 @@ const MENU_CATEGORIES = [
   { label: 'Prasada — Pure Vegetarian', sub: 'Curries, biryani, dosas & more', href: '/prasada', emoji: '🌿' },
   { label: 'Svadista — Non-Veg', sub: 'Gongura chicken, Natu Kodi biryani & more', href: '/svadista', emoji: '🍗' },
   { label: 'Breakfast', sub: 'Idli, vada, dosas, poori — fresh every morning', href: '/breakfast', emoji: '🌅' },
-  { label: 'Snacks & Pickles', sub: 'Handmade podis, pickles & nibbles', href: '/snacks', emoji: '🫙' },
+  { label: "Lucky's Pantry", sub: 'Handmade podis, pickles & nibbles', href: '/snacks', emoji: '🫙' },
   { label: 'Dabba Wala Subscriptions', sub: 'Weekly meal plans from £12.50 per meal', href: '/subscriptions', emoji: '🥡' },
   { label: 'Catering', sub: 'Events, temple prasada, corporate', href: '/catering', emoji: '🎊' },
 ];

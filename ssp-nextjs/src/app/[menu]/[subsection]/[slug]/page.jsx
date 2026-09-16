@@ -182,7 +182,7 @@ export default async function ItemPage({ params }) {
       itemListElement: (() => {
         const MENU_LABELS = {
           svadista: 'Svadista', prasada: 'Prasada', breakfast: 'Breakfast',
-          snacks: 'Hot, Sweet & Pickles', drinks: 'Drinks',
+          snacks: "Lucky's Pantry", drinks: 'Drinks',
           'street-food': 'Street Food', 'ragi-specials': 'Ragi Specials',
         };
         const [, menuSeg, subSeg] = canonicalPath.split('/');
