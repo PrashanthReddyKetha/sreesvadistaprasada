@@ -1392,6 +1392,16 @@ const SubscriptionsInner = () => {
                         className="w-full p-3 rounded-xl text-sm focus:outline-none transition-colors"
                         style={{ border: `0.5px solid ${postcodeStatus?.ok === false ? '#DC2626' : postcodeStatus?.ok ? C.green : '#e0d9d0'}` }} />
                     </div>
+                    {/* Accounts created via Google/social have no phone — the driver
+                        needs one, and canProceed requires it, so always offer the field */}
+                    <div>
+                      <label className="text-xs font-semibold block mb-1" style={{ color: C.dark }}>Phone number *</label>
+                      <input type="tel" placeholder="+44 7xxx xxxxxx" value={customer.phone}
+                        onChange={e => setCustomer(prev => ({ ...prev, phone: e.target.value }))}
+                        className="w-full p-3 rounded-xl text-sm focus:outline-none transition-colors"
+                        style={{ border: '0.5px solid #e0d9d0' }} />
+                      <p className="text-[11px] mt-1" style={{ color: C.muted }}>So the driver can reach you on delivery day.</p>
+                    </div>
                   </div>
                   {/* Postcode feedback */}
                   {postcodeStatus === 'checking' && <p className="text-xs mt-1" style={{ color: C.muted }}>Checking postcode…</p>}
@@ -1502,6 +1512,27 @@ const SubscriptionsInner = () => {
                   Our meals are best enjoyed fresh. Please refrigerate within two hours if you are not eating immediately — they stay delicious until the evening.
                 </InfoBox>
               </div>
+
+              {/* Say WHY Next is disabled instead of leaving a dead button */}
+              {(user || isGuest) && !canProceed() && (() => {
+                const missing = [];
+                if (!customer.name) missing.push('name');
+                if (!customer.email) missing.push('email');
+                if (!customer.phone) missing.push('phone number');
+                if (!customer.line1) missing.push('address line 1');
+                if (!customer.city) missing.push('city');
+                if (!customer.postcode) missing.push('postcode');
+                else if (postcodeStatus === 'checking') missing.push('postcode check (a moment…)');
+                else if (!postcodeStatus?.ok) missing.push('a deliverable postcode');
+                if (!deliveryInstruction) missing.push('an "if you are not home" option');
+                else if (deliveryInstruction === 'neighbour' && !(neighbourName && neighbourDoor)) missing.push('neighbour details');
+                else if (deliveryInstruction === 'safeplace' && !safePlaceDesc) missing.push('safe place description');
+                return missing.length ? (
+                  <p className="text-xs mt-4 font-medium" style={{ color: C.darkGold }}>
+                    Still needed: {missing.join(', ')}.
+                  </p>
+                ) : null;
+              })()}
 
               <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
             </div>
