@@ -145,7 +145,7 @@ const Header = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1" ref={dropdownRef} data-testid="desktop-nav">
+            <nav className="hidden xl:flex items-center gap-1" ref={dropdownRef} data-testid="desktop-nav">
               {navItems.map((item) => (
                 item.dropdown ? (
                   <div
@@ -155,7 +155,7 @@ const Header = () => {
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
                     <button
-                      className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 whitespace-nowrap"
+                      className="flex items-center gap-1 px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 whitespace-nowrap"
                       style={{ color: openDropdown === item.name ? '#800020' : '#5C4B47' }}
                       data-testid={`nav-${item.name.toLowerCase().replace(/\s/g, '-')}`}
                     >
@@ -185,7 +185,7 @@ const Header = () => {
                   <Link
                     key={item.path}
                     href={item.path}
-                    className="px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 whitespace-nowrap"
+                    className="px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 whitespace-nowrap"
                     style={{
                       color: isActive(item.path) ? '#800020' : '#5C4B47',
                       backgroundColor: isActive(item.path) ? 'rgba(128, 0, 32, 0.05)' : 'transparent'
@@ -198,7 +198,7 @@ const Header = () => {
               ))}
 
               {/* Cart & Account */}
-              <div className="flex items-center gap-2 ml-3 pl-3 border-l" style={{ borderColor: 'rgba(244, 196, 48, 0.3)' }}>
+              <div className="flex items-center gap-1 ml-2 pl-2 border-l" style={{ borderColor: 'rgba(244, 196, 48, 0.3)' }}>
                 <button
                   className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5"
                   data-testid="search-button"
@@ -210,7 +210,7 @@ const Header = () => {
                 </button>
                 <Link
                   href="/order"
-                  className="px-4 py-2 text-sm font-semibold text-white rounded-full transition-transform duration-200 hover:scale-[1.03] whitespace-nowrap"
+                  className="px-3 py-2 text-sm font-semibold text-white rounded-full transition-transform duration-200 hover:scale-[1.03] whitespace-nowrap"
                   style={{ backgroundColor: '#800020' }}
                   data-testid="header-order-now"
                 >
@@ -259,7 +259,7 @@ const Header = () => {
             </nav>
 
             {/* Mobile Controls */}
-            <div className="flex items-center gap-1 lg:hidden">
+            <div className="flex items-center gap-1 xl:hidden">
               <button
                 className="p-2 rounded-full"
                 data-testid="mobile-search-button"
@@ -335,7 +335,7 @@ const Header = () => {
       {/* Mobile Nav */}
       {isMenuOpen && (
         <div
-          className="lg:hidden fixed left-0 right-0 bottom-0 overflow-y-auto"
+          className="xl:hidden fixed left-0 right-0 bottom-0 overflow-y-auto"
           style={{ top: '106px', backgroundColor: '#FDFBF7', zIndex: 55, borderTop: '2px solid rgba(244,196,48,0.3)', touchAction: 'manipulation', WebkitOverflowScrolling: 'touch' }}
           data-testid="mobile-nav"
         >
