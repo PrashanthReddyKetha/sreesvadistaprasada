@@ -124,7 +124,7 @@ const Footer = () => {
                 { name: 'FAQ', path: '/faq' },
               ].map((link) => (
                 <li key={link.path + link.name}>
-                  <Link
+                  <Link prefetch={false}
                     href={link.path}
                     className="text-sm transition-colors duration-200 hover:text-white"
                     style={{ color: '#A09890' }}
@@ -152,7 +152,7 @@ const Footer = () => {
                 { name: 'Event Catering', path: '/catering' },
               ].map((svc) => (
                 <li key={svc.name}>
-                  <Link
+                  <Link prefetch={false}
                     href={svc.path}
                     className="transition-colors duration-200 hover:text-white"
                     style={{ color: '#A09890' }}
@@ -177,7 +177,7 @@ const Footer = () => {
                 { name: 'Glasgow', path: '/glasgow' },
               ].map((city) => (
                 <li key={city.path}>
-                  <Link
+                  <Link prefetch={false}
                     href={city.path}
                     className="transition-colors duration-200 hover:text-white"
                     style={{ color: '#A09890' }}
@@ -289,10 +289,10 @@ const Footer = () => {
             &copy; {new Date().getFullYear()} Sree Svadista Prasada. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <Link href="/contact" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>Contact Us</Link>
-            <Link href="/faq" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>FAQ</Link>
-            <Link href="/privacy-policy" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>Privacy Policy</Link>
-            <Link href="/terms" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>Terms of Service</Link>
+            <Link prefetch={false} href="/contact" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>Contact Us</Link>
+            <Link prefetch={false} href="/faq" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>FAQ</Link>
+            <Link prefetch={false} href="/privacy-policy" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>Privacy Policy</Link>
+            <Link prefetch={false} href="/terms" className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>Terms of Service</Link>
           </div>
         </div>
       </div>
