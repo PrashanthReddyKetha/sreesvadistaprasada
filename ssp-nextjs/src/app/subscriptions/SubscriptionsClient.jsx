@@ -7,6 +7,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
+import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase, trackSubscriptionStepView } from '@/lib/analytics';
 
 const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
@@ -426,6 +427,7 @@ const SubscriptionsInner = () => {
   const [neighbourDoor, setNeighbourDoor] = useState('');
   const [safePlaceDesc, setSafePlaceDesc] = useState('');
   const [postcodeStatus, setPostcodeStatus] = useState(null); // null | 'checking' | {ok, city, msg}
+  const subAddrMode = useRef('new'); // 'saved' | 'new' — whether a stored address is selected
   const [isGuest, setIsGuest] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
@@ -653,6 +655,10 @@ const SubscriptionsInner = () => {
         payment_intent_id,
       });
       clearProg();
+      // Address-book bookkeeping — fire-and-forget, never blocks the subscription
+      if (user && subAddrMode.current === 'new' && customer.line1) {
+        saveAddress(customer, false);
+      }
       localStorage.setItem('ssp_subscription_success', JSON.stringify({
         plan: selectedPlan, box: selectedBox, startWeek: selectedStartWeek,
       }));
@@ -1371,6 +1377,28 @@ const SubscriptionsInner = () => {
                     <p className="text-sm" style={{ color: C.dark }}>Delivering to: <strong>{user.name}</strong> · {user.email}</p>
                     <button onClick={() => { /* logout handled by auth */ }} className="text-xs ml-2 underline" style={{ color: C.muted }}>Not you? Sign out</button>
                   </div>
+
+                  {/* Saved addresses — selecting one fills and verifies below */}
+                  <div className="mb-4">
+                    <AddressPicker
+                      onFill={(a) => {
+                        setCustomer(prev => ({
+                          ...prev,
+                          line1: a.line1 || '', line2: a.line2 || '', city: a.city || '', postcode: a.postcode || '',
+                          phone: a.phone || prev.phone,
+                        }));
+                        if (a.postcode) checkPostcode(a.postcode);
+                      }}
+                      onModeChange={(m) => {
+                        if (m === 'new' && subAddrMode.current === 'saved') {
+                          setCustomer(prev => ({ ...prev, line1: '', line2: '', city: '', postcode: '' }));
+                          setPostcodeStatus(null);
+                        }
+                        subAddrMode.current = m;
+                      }}
+                    />
+                  </div>
+
                   <div className="grid md:grid-cols-2 gap-4">
                     {[
                       { label: 'Address Line 1 *', key: 'line1', placeholder: '12 Curry Lane' },

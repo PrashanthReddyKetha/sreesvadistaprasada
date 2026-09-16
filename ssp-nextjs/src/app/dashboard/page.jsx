@@ -709,8 +709,133 @@ function AccountTab({ user, login }) {
         </div>
       </div>
 
+      <AddressBookCard />
+
       <div className="rounded-2xl p-4 text-sm" style={{ backgroundColor: '#FEF9C3', border: '1px solid #FDE68A', color: '#854D0E' }}>
         Need help with an order? Call us on <a href="tel:+447307119962" className="font-bold">+44 7307 119962</a> or WhatsApp us.
+      </div>
+    </div>
+  );
+}
+
+/* ══ Address Book ═══════════════════════════════════════ */
+const BLANK_ADDR = { label: 'Home', name: '', phone: '', line1: '', line2: '', city: 'Milton Keynes', postcode: '' };
+
+function AddressBookCard() {
+  const [addresses, setAddresses] = useState(null);
+  const [editing, setEditing] = useState(null);   // null | 'new' | address id
+  const [form, setForm] = useState(BLANK_ADDR);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const load = async () => {
+    try { const r = await api.get('/auth/addresses'); setAddresses(r.data || []); }
+    catch { setAddresses([]); }
+  };
+  useEffect(() => { load(); }, []);
+
+  const startEdit = (a) => { setEditing(a.id); setForm({ ...BLANK_ADDR, ...a }); setError(''); };
+  const startNew  = ()  => { setEditing('new'); setForm(BLANK_ADDR); setError(''); };
+
+  const submit = async () => {
+    if (!form.line1.trim() || !form.city.trim() || !form.postcode.trim()) { setError('Address line 1, city and postcode are required.'); return; }
+    setBusy(true); setError('');
+    try {
+      const body = { label: form.label || 'Home', name: form.name || undefined, phone: form.phone || undefined,
+        line1: form.line1, line2: form.line2 || undefined, city: form.city, postcode: form.postcode };
+      if (editing === 'new') await api.post('/auth/addresses', body);
+      else await api.put(`/auth/addresses/${editing}`, body);
+      setEditing(null); await load();
+    } catch (e) { setError(e.response?.data?.detail || 'Could not save the address.'); }
+    finally { setBusy(false); }
+  };
+
+  const makeDefault = async (id) => {
+    try { await api.put(`/auth/addresses/${id}`, { make_default: true }); await load(); } catch {}
+  };
+  const remove = async (id) => {
+    if (!window.confirm('Remove this address from your address book?')) return;
+    try { await api.delete(`/auth/addresses/${id}`); await load(); } catch {}
+  };
+
+  const inputCls = 'w-full px-3 py-2.5 rounded-xl text-sm border outline-none focus:ring-2 focus:ring-[#800020]/30';
+  const inputStyle = { borderColor: 'rgba(128,0,32,0.3)', color: '#3D2B1F', backgroundColor: '#FDFBF7' };
+
+  return (
+    <div className="rounded-2xl p-6 shadow-sm" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(244,196,48,0.2)' }}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Address Book</h3>
+        {editing === null && (addresses?.length || 0) < 5 && (
+          <button onClick={startNew} className="text-sm font-semibold" style={{ color: '#8B6914' }}>+ Add address</button>
+        )}
+      </div>
+
+      {addresses === null && <p className="text-sm" style={{ color: '#7A5C50' }}>Loading…</p>}
+      {addresses?.length === 0 && editing === null && (
+        <p className="text-sm" style={{ color: '#7A5C50' }}>
+          No saved addresses yet — your delivery address is saved here automatically when you order, or add one now.
+        </p>
+      )}
+
+      <div className="space-y-2.5">
+        {(addresses || []).map(a => (
+          <div key={a.id} className="rounded-xl p-3.5" style={{ backgroundColor: 'rgba(128,0,32,0.04)' }}>
+            {editing === a.id ? null : (
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold flex items-center gap-2" style={{ color: '#3D2B1F' }}>
+                    {a.label}
+                    {a.is_default && (
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#FBF3DC', color: '#8B6914', border: '1px solid #EBD9A8' }}>★ Default</span>
+                    )}
+                  </p>
+                  <p className="text-xs truncate" style={{ color: '#5C4B47' }}>{a.line1}{a.line2 ? `, ${a.line2}` : ''}, {a.city} {a.postcode}</p>
+                  {a.phone && <p className="text-[11px]" style={{ color: '#9CA3AF' }}>{a.phone}</p>}
+                </div>
+                <div className="flex items-center gap-2 shrink-0 text-xs font-semibold">
+                  {!a.is_default && <button onClick={() => makeDefault(a.id)} style={{ color: '#8B6914' }}>Set default</button>}
+                  <button onClick={() => startEdit(a)} style={{ color: '#800020' }}>Edit</button>
+                  <button onClick={() => remove(a.id)} className="text-red-500">Remove</button>
+                </div>
+              </div>
+            )}
+            {editing === a.id && <AddressForm form={form} setForm={setForm} busy={busy} error={error} onCancel={() => setEditing(null)} onSave={submit} inputCls={inputCls} inputStyle={inputStyle} />}
+          </div>
+        ))}
+        {editing === 'new' && (
+          <div className="rounded-xl p-3.5" style={{ backgroundColor: 'rgba(128,0,32,0.04)' }}>
+            <AddressForm form={form} setForm={setForm} busy={busy} error={error} onCancel={() => setEditing(null)} onSave={submit} inputCls={inputCls} inputStyle={inputStyle} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AddressForm({ form, setForm, busy, error, onCancel, onSave, inputCls, inputStyle }) {
+  const fields = [
+    { key: 'label', ph: 'Label — Home, Work…' },
+    { key: 'phone', ph: 'Phone for this address (optional)' },
+    { key: 'line1', ph: 'Address line 1 *' },
+    { key: 'line2', ph: 'Address line 2 (optional)' },
+    { key: 'city', ph: 'City *' },
+    { key: 'postcode', ph: 'Postcode *' },
+  ];
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {fields.map(f => (
+          <input key={f.key} type="text" placeholder={f.ph} value={form[f.key] || ''}
+            onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+            className={inputCls} style={inputStyle} />
+        ))}
+      </div>
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      <div className="flex gap-2 justify-end pt-1">
+        <button onClick={onCancel} className="text-sm px-3 py-1.5 rounded-lg" style={{ color: '#5C4B47', border: '1px solid #E5E7EB' }}>Cancel</button>
+        <button onClick={onSave} disabled={busy} className="text-sm px-4 py-1.5 rounded-lg font-semibold disabled:opacity-60" style={{ backgroundColor: '#800020', color: '#FDFBF7' }}>
+          {busy ? 'Saving…' : 'Save address'}
+        </button>
       </div>
     </div>
   );

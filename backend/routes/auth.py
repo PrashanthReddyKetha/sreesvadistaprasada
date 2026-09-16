@@ -11,7 +11,7 @@ from database import db
 from models import (
     UserCreate, UserLogin, UserUpdate, User, UserInDB, TokenResponse,
     GoogleAuthRequest, GoogleCompleteRequest,
-    PushTokenUpdate, SavedAddress, SavedAddressCreate,
+    PushTokenUpdate, SavedAddress, SavedAddressCreate, SavedAddressUpdate,
     PasswordResetRequest, PasswordResetConfirm,
 )
 from auth import hash_password, verify_password, create_access_token, get_current_user, require_admin
@@ -489,26 +489,77 @@ async def get_saved_addresses(current_user: dict = Depends(get_current_user)):
     return doc.get("saved_addresses", []) if doc else []
 
 
+def _addr_key(line1: str, postcode: str) -> str:
+    """Dedupe key: same first line + postcode = same address."""
+    return f"{(line1 or '').strip().lower()}|{(postcode or '').replace(' ', '').upper()}"
+
+
 @router.post("/addresses", response_model=SavedAddress)
 async def add_saved_address(payload: SavedAddressCreate, current_user: dict = Depends(get_current_user)):
     doc = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0, "saved_addresses": 1})
     existing = doc.get("saved_addresses", []) if doc else []
+
+    data = payload.model_dump(exclude={"make_default"})
+    make_default = payload.make_default or len(existing) == 0  # first address is always default
+
+    # Dedupe: same line1+postcode updates the existing entry instead of duplicating
+    key = _addr_key(payload.line1, payload.postcode)
+    dupe = next((a for a in existing if _addr_key(a.get("line1"), a.get("postcode")) == key), None)
+    if dupe:
+        merged = [
+            {**a, **data, "is_default": True} if a["id"] == dupe["id"]
+            else ({**a, "is_default": False} if make_default else a)
+            for a in existing
+        ]
+        if not make_default:
+            merged = [{**a, **data} if a["id"] == dupe["id"] else a for a in existing]
+        await db.users.update_one({"id": current_user["sub"]}, {"$set": {"saved_addresses": merged}})
+        return SavedAddress(**next(a for a in merged if a["id"] == dupe["id"]))
+
     if len(existing) >= 5:
-        raise HTTPException(status_code=400, detail="Maximum 5 saved addresses")
-    addr = SavedAddress(**payload.model_dump())
+        raise HTTPException(status_code=400, detail="Maximum 5 saved addresses — delete one first.")
+
+    addr = SavedAddress(**data, is_default=make_default)
+    updated = [{**a, "is_default": False} for a in existing] if make_default else existing
     await db.users.update_one(
         {"id": current_user["sub"]},
-        {"$push": {"saved_addresses": addr.model_dump()}},
+        {"$set": {"saved_addresses": updated + [addr.model_dump()]}},
     )
     return addr
 
 
+@router.put("/addresses/{address_id}", response_model=SavedAddress)
+async def update_saved_address(address_id: str, payload: SavedAddressUpdate, current_user: dict = Depends(get_current_user)):
+    doc = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0, "saved_addresses": 1})
+    existing = doc.get("saved_addresses", []) if doc else []
+    if not any(a["id"] == address_id for a in existing):
+        raise HTTPException(status_code=404, detail="Address not found")
+
+    changes = payload.model_dump(exclude_none=True)
+    make_default = changes.pop("make_default", None)
+    updated = []
+    for a in existing:
+        if a["id"] == address_id:
+            a = {**a, **changes}
+            if make_default is True:
+                a["is_default"] = True
+        elif make_default is True:
+            a = {**a, "is_default": False}
+        updated.append(a)
+    await db.users.update_one({"id": current_user["sub"]}, {"$set": {"saved_addresses": updated}})
+    return SavedAddress(**next(a for a in updated if a["id"] == address_id))
+
+
 @router.delete("/addresses/{address_id}")
 async def delete_saved_address(address_id: str, current_user: dict = Depends(get_current_user)):
-    result = await db.users.update_one(
-        {"id": current_user["sub"]},
-        {"$pull": {"saved_addresses": {"id": address_id}}},
-    )
-    if result.modified_count == 0:
+    doc = await db.users.find_one({"id": current_user["sub"]}, {"_id": 0, "saved_addresses": 1})
+    existing = doc.get("saved_addresses", []) if doc else []
+    target = next((a for a in existing if a["id"] == address_id), None)
+    if not target:
         raise HTTPException(status_code=404, detail="Address not found")
+    remaining = [a for a in existing if a["id"] != address_id]
+    # Deleting the default promotes the first remaining address
+    if target.get("is_default") and remaining:
+        remaining[0] = {**remaining[0], "is_default": True}
+    await db.users.update_one({"id": current_user["sub"]}, {"$set": {"saved_addresses": remaining}})
     return {"ok": True}

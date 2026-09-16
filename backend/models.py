@@ -58,10 +58,13 @@ class Address(BaseModel):
 class SavedAddress(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     label: str = "Home"  # Home, Work, Other
+    name: Optional[str] = None    # recipient, falls back to account name
+    phone: Optional[str] = None   # per-address phone, falls back to account phone
     line1: str
     line2: Optional[str] = None
     city: str
     postcode: str
+    is_default: bool = False
 
 
 # --- User ---
@@ -101,10 +104,24 @@ class PushTokenUpdate(BaseModel):
 
 class SavedAddressCreate(BaseModel):
     label: str = "Home"
+    name: Optional[str] = None
+    phone: Optional[str] = None
     line1: str
     line2: Optional[str] = None
     city: str
     postcode: str
+    make_default: bool = False
+
+
+class SavedAddressUpdate(BaseModel):
+    label: Optional[str] = None
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    line1: Optional[str] = None
+    line2: Optional[str] = None
+    city: Optional[str] = None
+    postcode: Optional[str] = None
+    make_default: Optional[bool] = None
 
 
 class User(BaseModel):

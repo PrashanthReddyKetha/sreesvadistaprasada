@@ -16,6 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
 import SlotPicker from '@/components/SlotPicker';
+import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import AddToHomeScreen from '@/components/AddToHomeScreen';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackPurchase } from '@/lib/analytics';
@@ -694,6 +695,16 @@ const CheckoutInner = () => {
   const [addressOptions, setAddressOptions] = useState([]);
   const [addressDropdown, setAddressDropdown] = useState(false);
 
+  // Address book (signed-in): 'saved' = a stored address is selected and the
+  // manual fields are hidden; 'new' = the normal blank form. Refs mirror the
+  // toggles so the async submit closure reads current values.
+  const [addrMode, setAddrMode] = useState('new');
+  const addrModeRef = useRef('new');
+  const [saveToBook, setSaveToBook] = useState(true);
+  const saveToBookRef = useRef(true);
+  const [makeDefaultNew, setMakeDefaultNew] = useState(false);
+  const makeDefaultNewRef = useRef(false);
+
   // Read freeItem from sessionStorage (deliveryType + zoneInfo live in CartContext)
   useEffect(() => {
     try {
@@ -730,6 +741,30 @@ const CheckoutInner = () => {
   }, [zoneInfo?.postcode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
+
+  // A saved address fills the same form the manual flow fills — the pricing
+  // and payment paths never know the difference
+  const applySavedAddress = useCallback((a) => {
+    setForm(f => ({
+      ...f,
+      line1: a.line1 || '', line2: a.line2 || '', city: a.city || '', postcode: a.postcode || '',
+      name: a.name || f.name, phone: a.phone || f.phone,
+    }));
+    setPcError('');
+    setAddressDropdown(false);
+  }, []);
+
+  const onAddrModeChange = useCallback((m) => {
+    // Only clear the fields on a real saved→new switch — the initial 'new'
+    // report (user has no saved addresses) must keep any profile prefill
+    const wasSaved = addrModeRef.current === 'saved';
+    setAddrMode(m);
+    addrModeRef.current = m;
+    if (m === 'new' && wasSaved) {
+      setForm(f => ({ ...f, line1: '', line2: '', city: '', postcode: '' }));
+      setPcError('');
+    }
+  }, []);
 
   // Fallback: postcodes.io for city auto-fill
   const fallbackPostcodeIo = async (pc) => {
@@ -1073,6 +1108,11 @@ const CheckoutInner = () => {
       // Fetch updated loyalty status for success screen
       if (user) {
         api.get('/loyalty/status').then(r => setPostOrderLoyalty(r.data)).catch(() => {});
+      }
+
+      // Address-book bookkeeping — fire-and-forget, never blocks the order
+      if (user && deliveryType === 'delivery' && addrModeRef.current === 'new' && saveToBookRef.current && form.line1) {
+        saveAddress(form, makeDefaultNewRef.current);
       }
 
       try { sessionStorage.removeItem('ssp_checkout_state'); } catch {}
@@ -1517,7 +1557,13 @@ const CheckoutInner = () => {
                   placeholder="you@example.com" locked={!!user?.email && form.email === user.email}
                   hint={user ? 'Order confirmation will be sent here' : ''} required />
 
-                {deliveryType === 'delivery' && <div>
+                {/* Saved addresses — signed-in only; falls through to the
+                    manual form when the book is empty or "somewhere else" */}
+                {deliveryType === 'delivery' && user && (
+                  <AddressPicker compact onFill={applySavedAddress} onModeChange={onAddrModeChange} />
+                )}
+
+                {deliveryType === 'delivery' && (!user || addrMode === 'new') && <div>
                   <label className="text-xs font-semibold block mb-1" style={{ color: '#5C4B47' }}>
                     Postcode <span className="text-red-400">*</span>
                     <span className="font-normal text-gray-400 ml-1">— we'll find your address</span>
@@ -1565,7 +1611,7 @@ const CheckoutInner = () => {
                   )}
                 </div>}
 
-                {deliveryType === 'delivery' && form.postcode.replace(/\s/g, '').length >= 5 && (
+                {deliveryType === 'delivery' && (!user || addrMode === 'new') && form.postcode.replace(/\s/g, '').length >= 5 && (
                   <div className="space-y-4">
                     <Field label="Address Line 1" icon={MapPin} value={form.line1} onChange={set('line1')}
                       placeholder="123 High Street" locked={!!form.line1 && !addressDropdown} required />
@@ -1573,6 +1619,25 @@ const CheckoutInner = () => {
                       placeholder="Flat / Apartment" />
                     <Field label="Town / City" icon={null} value={form.city} onChange={set('city')}
                       placeholder="Milton Keynes" locked={!!form.city && !addressDropdown} required />
+
+                    {user && form.line1 && (
+                      <div className="space-y-1.5 pt-1">
+                        <label className="flex items-center gap-2 text-xs font-medium cursor-pointer" style={{ color: '#5C4B47' }}>
+                          <input type="checkbox" checked={saveToBook}
+                            onChange={e => { setSaveToBook(e.target.checked); saveToBookRef.current = e.target.checked; }}
+                            className="accent-[#800020]" />
+                          Save to my address book
+                        </label>
+                        {saveToBook && (
+                          <label className="flex items-center gap-2 text-xs font-medium cursor-pointer ml-5" style={{ color: '#5C4B47' }}>
+                            <input type="checkbox" checked={makeDefaultNew}
+                              onChange={e => { setMakeDefaultNew(e.target.checked); makeDefaultNewRef.current = e.target.checked; }}
+                              className="accent-[#800020]" />
+                            Make this my default address
+                          </label>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
