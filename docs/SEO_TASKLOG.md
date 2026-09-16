@@ -62,6 +62,18 @@ On-page keyword map now live in H1s: menu→"170+ South Indian dishes · Milton 
 
 Re-run Lighthouse mobile after a few days of edge-cache warmth to quantify the LCP change (lab was 4.7s with the Unsplash proxy in the chain).
 
+## Cycle 5 — 2026-09-16 — COMPLETED (content & AI-search depth)
+
+| ID | Task | Status |
+|----|------|--------|
+| Q9a | Blog + ItemList schema and twitter card on /blog index | Implemented |
+| Q9b | New post /blog/dosa-milton-keynes — guide to all 12 live dosa varieties (names/prices/slugs verified against API), Article + FAQPage + Breadcrumb schema, internal links to dish pages + /delivery | Implemented |
+| Q9c | New post /blog/biryani-milton-keynes — 3 live biryanis + veg rice plates (verified), Andhra-vs-Hyderabadi context, same schema set | Implemented |
+| — | Visible intro sections on thin pages /drinks, /street-food, /snacks (server-rendered, with internal links) | Implemented |
+| Q12b | Stray image hosts closed out: imglink.cc/vecteezy images self-hosted in public/dishes + DB migration keyed on exact old URLs; the edgeone URL was ALREADY 404 in production ("Special Chicken Biryani with Egg" had a broken image) — repointed to the Dum Biryani photo as placeholder; hosts removed from next.config allowlist | Implemented — **owner: real photo needed for Special Chicken Biryani with Egg** |
+
+Content facts policy held: posts reference only live menu items with API-verified names/prices; no allergen or certification claims; dietary questions deferred to per-dish labels.
+
 ## Queue — next cycles (priority order)
 
 | ID | Task | Evidence / value | Effort | Can Claude do it? |

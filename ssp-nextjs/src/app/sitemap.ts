@@ -72,6 +72,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/glasgow`,        priority: 0.9,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
     // Blog + long-form content
     { url: `${BASE_URL}/blog`,                                       priority: 0.7, changeFrequency: 'weekly',  lastModified: STATIC_LASTMOD },
+    { url: `${BASE_URL}/blog/dosa-milton-keynes`,                    priority: 0.7, changeFrequency: 'monthly', lastModified: new Date('2026-09-13') },
+    { url: `${BASE_URL}/blog/biryani-milton-keynes`,                 priority: 0.7, changeFrequency: 'monthly', lastModified: new Date('2026-09-13') },
     { url: `${BASE_URL}/blog/what-is-dabba-wala`,                    priority: 0.65, changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
     { url: `${BASE_URL}/blog/south-indian-vs-north-indian-food`,     priority: 0.65, changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
     { url: `${BASE_URL}/blog/ragi-health-benefits`,                  priority: 0.65, changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },

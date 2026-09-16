@@ -154,6 +154,24 @@ async def apply_menu_additions():
         {"$set": {"preorder_only": False}},
     )
 
+    # Image host migration — keyed on exact old URLs so admin edits are never
+    # overwritten. imglink.cc/vecteezy images now live in the frontend's
+    # public/dishes; the edgeone URL was already returning 404 in production,
+    # so that item gets the Dum Biryani photo as a placeholder until a real
+    # photo is uploaded.
+    IMAGE_MIGRATIONS = {
+        "https://imglink.cc/cdn/6fld5-7VaP.jpg":
+            "https://sreesvadistaprasada.com/dishes/masala-dosa.jpg",
+        "https://imglink.cc/cdn/v0DGoCMJ52.jpg":
+            "https://sreesvadistaprasada.com/dishes/vada.jpg",
+        "https://static.vecteezy.com/system/resources/thumbnails/040/986/112/small_2x/ai-generated-indian-biryani-rice-professional-advertising-foodgraphy-photo.jpg":
+            "https://sreesvadistaprasada.com/dishes/veg-fried-rice.jpg",
+        "https://yearling-green-hgf3gqzard.edgeone.app/spl%20chicken%20biryani.jpeg":
+            "https://firebasestorage.googleapis.com/v0/b/sreesvadistaprasada.firebasestorage.app/o/Dum%20Biriyani.jpg?alt=media&token=19f4b7d8-bd4c-4408-8972-06969a1b94ee",
+    }
+    for old_url, new_url in IMAGE_MIGRATIONS.items():
+        await db.menu_items.update_many({"image": old_url}, {"$set": {"image": new_url}})
+
     # One-time fix-up: the thali initially shipped with a borrowed rice-bowl
     # photo and a generic description. Keyed on the placeholder image so this
     # never overwrites later admin edits.

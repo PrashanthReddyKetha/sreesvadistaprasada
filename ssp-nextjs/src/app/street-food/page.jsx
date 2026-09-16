@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import StreetFoodClient from './StreetFoodClient';
 
 export const revalidate = 3600;
@@ -38,6 +39,24 @@ export default async function StreetFoodPage() {
   return (
     <>
       <StreetFoodClient initialItems={initialItems} />
+      <section className="py-12 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }}>
+        <div className="max-w-3xl mx-auto text-sm leading-relaxed" style={{ color: '#5C4B47' }}>
+          <div className="w-10 h-0.5 mb-3" style={{ backgroundColor: '#F4C430' }} />
+          <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+            Indian street food & evening delights in Milton Keynes
+          </h2>
+          <p className="mb-3">
+            Evening in an Indian town has its own menu — hot, quick, unapologetically savoury.
+            This page is our version of that hour: street-style snacks and evening bites cooked
+            fresh in Greenleys, not reheated under a lamp.
+          </p>
+          <p>
+            Order them alongside the <Link href="/menu" className="underline font-semibold" style={{ color: '#800020' }}>full menu</Link> for
+            <Link href="/delivery" className="underline font-semibold" style={{ color: '#800020' }}> delivery across Milton Keynes</Link>,
+            or collect from the kitchen and save 10%.
+          </p>
+        </div>
+      </section>
     </>
   );
 }

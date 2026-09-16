@@ -16,9 +16,30 @@ export const metadata = {
     locale: 'en_GB',
     images: [{ url: 'https://images.unsplash.com/photo-1742281257687-092746ad6021?w=1200&q=80', width: 1200, height: 630, alt: 'South Indian food guides' }],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'South Indian Food Blog | Sree Svadista Prasada',
+    images: ['https://images.unsplash.com/photo-1742281257687-092746ad6021?w=1200&q=80'],
+  },
 };
 
 const POSTS = [
+  {
+    slug: 'dosa-milton-keynes',
+    title: 'Dosa in Milton Keynes — A Guide to Every Dosa We Make',
+    excerpt: 'Twelve varieties from one traditionally fermented batter — plain to Nellore ghee karam. What makes a real dosa, and how to choose yours.',
+    category: 'Food Guide',
+    readTime: '6 min read',
+    image: 'https://images.unsplash.com/photo-1742281258189-3b933879867a?w=600&q=80',
+  },
+  {
+    slug: 'biryani-milton-keynes',
+    title: 'Biryani in Milton Keynes — The Andhra Way',
+    excerpt: 'Hotter and more rustic than the Mughlai north: dum biryani, fry piece biryani, and the Andhra spiced rice plates beside them.',
+    category: 'Food Guide',
+    readTime: '5 min read',
+    image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?w=600&q=80',
+  },
   {
     slug: 'what-is-dabba-wala',
     title: 'What Is Dabba Wala? The Complete Guide to Indian Tiffin Delivery',
@@ -54,9 +75,32 @@ const POSTS = [
   },
 ];
 
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    '@id': `${SITE}/blog`,
+    name: 'South Indian Food Guides — Sree Svadista Prasada',
+    description: 'Guides to South Indian and Andhra cuisine from the kitchen of Sree Svadista Prasada.',
+    url: `${SITE}/blog`,
+    publisher: { '@type': 'Organization', name: 'Sree Svadista Prasada', url: SITE, logo: { '@type': 'ImageObject', url: `${SITE}/logo.png` } },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: POSTS.map((post, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: post.title,
+      url: `${SITE}${post.href || `/blog/${post.slug}`}`,
+    })),
+  },
+];
+
 export default function BlogPage() {
   return (
     <main className="min-h-screen bg-amber-50">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] bg-gradient-to-br from-amber-900 via-amber-800 to-orange-900 text-white py-16 px-6">
         <div className="max-w-4xl mx-auto">

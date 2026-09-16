@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import DrinksClient from './DrinksClient';
 
 export const revalidate = 3600;
@@ -38,6 +39,24 @@ export default async function DrinksPage() {
   return (
     <>
       <DrinksClient initialItems={initialItems} />
+      <section className="py-12 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }}>
+        <div className="max-w-3xl mx-auto text-sm leading-relaxed" style={{ color: '#5C4B47' }}>
+          <div className="w-10 h-0.5 mb-3" style={{ backgroundColor: '#F4C430' }} />
+          <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+            Traditional Indian drinks, made in Milton Keynes
+          </h2>
+          <p className="mb-3">
+            The drinks on this page come from the same kitchen as everything else we cook — fresh
+            lassis and traditional South Indian beverages made to order, not poured from a carton.
+            They ride along with any food order across Milton Keynes.
+          </p>
+          <p>
+            Pair them with a <Link href="/breakfast/dosas" className="underline font-semibold" style={{ color: '#800020' }}>crispy dosa</Link>,
+            a fiery plate from the <Link href="/svadista" className="underline font-semibold" style={{ color: '#800020' }}>Svadista menu</Link>,
+            or order on their own with <Link href="/delivery" className="underline font-semibold" style={{ color: '#800020' }}>delivery across all MK postcodes</Link>.
+          </p>
+        </div>
+      </section>
     </>
   );
 }
