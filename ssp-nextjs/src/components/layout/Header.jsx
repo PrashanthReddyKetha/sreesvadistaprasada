@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, ShoppingCart, User, ChevronDown } from 'lucide-react';
+import { Menu, X, ShoppingCart, User, ChevronDown, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
@@ -15,9 +15,28 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [pendingReward, setPendingReward] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchInputRef = useRef(null);
   const pathname = usePathname();
   const router = useRouter();
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  const submitSearch = (e) => {
+    e?.preventDefault();
+    const q = searchTerm.trim();
+    if (!q) return;
+    setSearchOpen(false);
+    setSearchTerm('');
+    setIsMenuOpen(false);
+    // /menu reads ?q= only on mount — force a real navigation when already there
+    if (pathname === '/menu') window.location.href = `/menu?q=${encodeURIComponent(q)}`;
+    else router.push(`/menu?q=${encodeURIComponent(q)}`);
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 40);
@@ -28,6 +47,7 @@ const Header = () => {
   useEffect(() => {
     setIsMenuOpen(false);
     setOpenDropdown(null);
+    setSearchOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -179,6 +199,15 @@ const Header = () => {
 
               {/* Cart & Account */}
               <div className="flex items-center gap-2 ml-3 pl-3 border-l" style={{ borderColor: 'rgba(244, 196, 48, 0.3)' }}>
+                <button
+                  className="p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5"
+                  data-testid="search-button"
+                  aria-label="Search the menu"
+                  style={{ color: '#800020' }}
+                  onClick={() => setSearchOpen(o => !o)}
+                >
+                  <Search size={20} />
+                </button>
                 <Link
                   href="/order"
                   className="px-4 py-2 text-sm font-semibold text-white rounded-full transition-transform duration-200 hover:scale-[1.03] whitespace-nowrap"
@@ -232,6 +261,15 @@ const Header = () => {
             {/* Mobile Controls */}
             <div className="flex items-center gap-1 lg:hidden">
               <button
+                className="p-2 rounded-full"
+                data-testid="mobile-search-button"
+                aria-label="Search the menu"
+                style={{ color: '#800020' }}
+                onClick={() => { setSearchOpen(o => !o); setIsMenuOpen(false); }}
+              >
+                <Search size={20} />
+              </button>
+              <button
                 className="relative p-2 rounded-full"
                 data-testid="mobile-cart-button"
                 aria-label="Open cart"
@@ -261,6 +299,38 @@ const Header = () => {
           </div>
         </div>
       </header>
+
+      {/* Search bar — slides down under the header on any screen size */}
+      {searchOpen && (
+        <div
+          className="fixed left-0 right-0 z-40 shadow-lg top-[calc(32px+74px)] md:top-[calc(32px+80px)]"
+          style={{ backgroundColor: '#FDFBF7', borderBottom: '2px solid rgba(244,196,48,0.4)' }}
+          data-testid="header-search-bar"
+        >
+          <form onSubmit={submitSearch} className="max-w-2xl mx-auto flex items-center gap-2 px-4 py-3">
+            <Search size={18} className="shrink-0" style={{ color: '#8B6914' }} />
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              onKeyDown={e => e.key === 'Escape' && setSearchOpen(false)}
+              placeholder="Search 170+ dishes — dosa, biryani, gongura…"
+              className="flex-1 bg-transparent text-sm py-1.5 focus:outline-none"
+              style={{ color: '#2D2422' }}
+              aria-label="Search the menu"
+            />
+            <button type="submit" className="px-4 py-2 rounded-full text-xs font-bold text-white disabled:opacity-40"
+              style={{ backgroundColor: '#800020' }} disabled={!searchTerm.trim()}>
+              Search
+            </button>
+            <button type="button" onClick={() => setSearchOpen(false)} aria-label="Close search"
+              className="p-1.5 rounded-full hover:bg-[#800020]/5" style={{ color: '#5C4B47' }}>
+              <X size={16} />
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Mobile Nav */}
       {isMenuOpen && (
