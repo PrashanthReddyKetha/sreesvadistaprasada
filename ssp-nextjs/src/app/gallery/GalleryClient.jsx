@@ -1,17 +1,43 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { galleryImages } from '@/data/mockData';
 
-const categories = ['All', 'Kitchen', 'Svadista', 'Prasada', 'Breakfast', 'Snacks'];
-
-const Gallery = () => {
+/**
+ * Gallery = curated shots (kitchen, atmosphere — from mockData) + every live
+ * menu item photo, passed in from the server page. Dish photos link through
+ * to their dish page from the lightbox.
+ */
+const Gallery = ({ dishImages = [] }) => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [lightboxIdx, setLightboxIdx] = useState(null);
 
+  // Curated first (kitchen/mood shots), then the full menu; dedupe by src so
+  // a curated photo that is also a dish photo appears once
+  const allImages = useMemo(() => {
+    const seen = new Set();
+    const merged = [];
+    for (const img of [...galleryImages, ...dishImages]) {
+      if (seen.has(img.src)) continue;
+      seen.add(img.src);
+      merged.push(img);
+    }
+    return merged;
+  }, [dishImages]);
+
+  // Filters follow whatever categories actually have photos
+  const categories = useMemo(() => {
+    const present = [...new Set(allImages.map(i => i.category))];
+    const order = ['Kitchen', 'Svadista', 'Prasada', 'Breakfast', 'Street Food', 'Ragi Specials', 'Drinks', "Lucky's Pantry", 'Snacks'];
+    return ['All', ...order.filter(c => present.includes(c)), ...present.filter(c => !order.includes(c))];
+  }, [allImages]);
+
   const filtered = activeFilter === 'All'
-    ? galleryImages
-    : galleryImages.filter(img => img.category === activeFilter);
+    ? allImages
+    : allImages.filter(img => img.category === activeFilter);
+
+  const current = lightboxIdx !== null ? filtered[lightboxIdx] : null;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
@@ -24,7 +50,9 @@ const Gallery = () => {
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Gallery
             </h1>
-            <p className="text-base text-gray-200 leading-relaxed">A glimpse into our kitchens, our food, and our love for cooking.</p>
+            <p className="text-base text-gray-200 leading-relaxed">
+              Every dish on the menu, and the kitchen behind it — {allImages.length} photos and counting.
+            </p>
           </div>
         </div>
       </section>
@@ -37,12 +65,12 @@ const Gallery = () => {
           {categories.map(cat => (
             <button
               key={cat}
-              onClick={() => { setActiveFilter(cat); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
+              onClick={() => { setActiveFilter(cat); setLightboxIdx(null); const anchor = document.getElementById('section-tabs-anchor'); if (anchor) { const top = anchor.getBoundingClientRect().top + window.scrollY - 106; window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } }}
               className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                 activeFilter === cat ? 'text-white' : 'text-gray-600 hover:bg-[#800020]/10'
               }`}
               style={activeFilter === cat ? { backgroundColor: '#800020' } : {}}
-              data-testid={`gallery-filter-${cat.toLowerCase()}`}
+              data-testid={`gallery-filter-${cat.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
             >
               {cat}
             </button>
@@ -61,7 +89,7 @@ const Gallery = () => {
                 className="relative aspect-square rounded-lg overflow-hidden group cursor-pointer"
                 data-testid={`gallery-image-${img.id}`}
               >
-                <Image fill src={img.src} alt={img.alt} className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width:640px) 50vw,(max-width:1024px) 33vw,25vw" />
+                <Image fill loading="lazy" src={img.src} alt={img.alt} className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width:640px) 50vw,(max-width:1024px) 33vw,25vw" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
                   <p className="text-white text-xs font-medium p-3 translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
                     {img.alt}
@@ -74,7 +102,7 @@ const Gallery = () => {
       </section>
 
       {/* Lightbox */}
-      {lightboxIdx !== null && (
+      {current && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
           onClick={() => setLightboxIdx(null)}
@@ -88,14 +116,21 @@ const Gallery = () => {
             &times;
           </button>
           <img loading="lazy" decoding="async"
-            src={filtered[lightboxIdx]?.src}
-            alt={filtered[lightboxIdx]?.alt}
-            className="max-w-full max-h-[80vh] rounded-lg object-contain"
+            src={current.src}
+            alt={current.alt}
+            className="max-w-full max-h-[78vh] rounded-lg object-contain"
             onClick={(e) => e.stopPropagation()}
           />
-          <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white text-sm font-medium text-center">
-            {filtered[lightboxIdx]?.alt}
-          </p>
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center" onClick={(e) => e.stopPropagation()}>
+            <p className="text-white text-sm font-medium">{current.alt}</p>
+            {current.href && (
+              <Link href={current.href}
+                className="inline-block mt-2 px-4 py-1.5 rounded-full text-xs font-bold"
+                style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
+                View this dish →
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </div>
