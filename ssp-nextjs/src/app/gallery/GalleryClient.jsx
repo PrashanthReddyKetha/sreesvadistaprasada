@@ -2,35 +2,22 @@
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { galleryImages } from '@/data/mockData';
 
 /**
- * Gallery = curated shots (kitchen, atmosphere — from mockData) + every live
- * menu item photo, passed in from the server page. Dish photos link through
- * to their dish page from the lightbox.
+ * Gallery = every LIVE menu item's photo, passed in from the server page —
+ * nothing curated, nothing stock, nothing hidden. Each photo links through
+ * to its dish page from the lightbox.
  */
 const Gallery = ({ dishImages = [] }) => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [lightboxIdx, setLightboxIdx] = useState(null);
 
-  // Curated first (kitchen/mood shots), then the full menu; dedupe by src so
-  // a curated photo that is also a dish photo appears once
-  const allImages = useMemo(() => {
-    const seen = new Set();
-    const merged = [];
-    for (const img of [...galleryImages, ...dishImages]) {
-      if (seen.has(img.src)) continue;
-      seen.add(img.src);
-      // Curated shots predate the Lucky's Pantry rename
-      merged.push(img.category === 'Snacks' ? { ...img, category: "Lucky's Pantry" } : img);
-    }
-    return merged;
-  }, [dishImages]);
+  const allImages = dishImages;
 
   // Filters follow whatever categories actually have photos
   const categories = useMemo(() => {
     const present = [...new Set(allImages.map(i => i.category))];
-    const order = ['Kitchen', 'Svadista', 'Prasada', 'Breakfast', 'Street Food', 'Ragi Specials', 'Drinks', "Lucky's Pantry", 'Snacks'];
+    const order = ['Svadista', 'Prasada', 'Breakfast', 'Street Food', 'Ragi Specials', 'Drinks', "Lucky's Pantry"];
     return ['All', ...order.filter(c => present.includes(c)), ...present.filter(c => !order.includes(c))];
   }, [allImages]);
 
