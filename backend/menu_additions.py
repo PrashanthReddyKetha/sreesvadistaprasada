@@ -133,6 +133,19 @@ NEW_ITEMS = [
         "image": VEG_THALI_IMAGE,
         "seo_meta_description": VEG_THALI_SEO,
     },
+    {
+        "name": "Perugu Vada (2 pcs)",
+        "description": "Medu vada soaked in thick whisked perugu (curd) with a mustard-and-curry-leaf tadka, ginger and a hint of green chilli — cool, tangy and impossible to stop at one.",
+        "price": 4.99,
+        "category": "breakfast",
+        "subcategory": "Idli & Vada",
+        "slug": "perugu-vada-2-pcs",
+        "is_veg": True,
+        "spice_level": 1,
+        # Placeholder — reuses the vada photo until a real perugu vada shot is uploaded
+        "image": "https://sreesvadistaprasada.com/dishes/vada.jpg",
+        "seo_meta_description": "Order perugu vada (curd vada / dahi vada) in Milton Keynes — soft medu vada soaked in seasoned yogurt with a curry-leaf tadka.",
+    },
 ]
 
 COMMON_DEFAULTS = {
