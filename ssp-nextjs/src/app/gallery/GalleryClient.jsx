@@ -21,7 +21,8 @@ const Gallery = ({ dishImages = [] }) => {
     for (const img of [...galleryImages, ...dishImages]) {
       if (seen.has(img.src)) continue;
       seen.add(img.src);
-      merged.push(img);
+      // Curated shots predate the Lucky's Pantry rename
+      merged.push(img.category === 'Snacks' ? { ...img, category: "Lucky's Pantry" } : img);
     }
     return merged;
   }, [dishImages]);
