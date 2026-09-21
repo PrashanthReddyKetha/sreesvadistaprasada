@@ -20,7 +20,8 @@ import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import AddToHomeScreen from '@/components/AddToHomeScreen';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackPurchase } from '@/lib/analytics';
-import { isOrderable } from '@/config/softLaunch';
+import { isOrderable, DELIVERY_LOCKED } from '@/config/softLaunch';
+import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
@@ -1314,22 +1315,24 @@ const CheckoutInner = () => {
               <p className="text-xs font-semibold" style={{ color: '#5C4B47' }}>
                 How would you like to receive your order?
               </p>
-              <div className="flex gap-2">
-                {[
-                  { id: 'delivery', label: '🚚 Delivery' },
-                  { id: 'takeaway', label: collectSaving && !collectSavingIsEstimate ? `🛵 Collect & save ${fmt(collectSaving)}` : '🛵 Collect & save 10%' },
-                ].map(opt => (
-                  <button key={opt.id} onClick={() => setDeliveryType(opt.id)}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                    style={{
-                      backgroundColor: deliveryType === opt.id ? '#800020' : 'white',
-                      color: deliveryType === opt.id ? 'white' : '#5C4B47',
-                      border: deliveryType === opt.id ? 'none' : '1px solid rgba(128,0,32,0.2)',
-                    }}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+              {DELIVERY_LOCKED ? <DeliveryLockedNotice /> : (
+                <div className="flex gap-2">
+                  {[
+                    { id: 'delivery', label: '🚚 Delivery' },
+                    { id: 'takeaway', label: collectSaving && !collectSavingIsEstimate ? `🛵 Collect & save ${fmt(collectSaving)}` : '🛵 Collect & save 10%' },
+                  ].map(opt => (
+                    <button key={opt.id} onClick={() => setDeliveryType(opt.id)}
+                      className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                      style={{
+                        backgroundColor: deliveryType === opt.id ? '#800020' : 'white',
+                        color: deliveryType === opt.id ? 'white' : '#5C4B47',
+                        border: deliveryType === opt.id ? 'none' : '1px solid rgba(128,0,32,0.2)',
+                      }}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Zone confirmed pill — with Change button */}
               {deliveryType === 'delivery' && zoneInfo && (

@@ -7,7 +7,8 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 import { trackViewCart, trackBeginCheckout } from '@/lib/analytics';
-import { isOrderable } from '@/config/softLaunch';
+import { isOrderable, DELIVERY_LOCKED } from '@/config/softLaunch';
+import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 
 const MINIMUM_ORDER = 15.00;
 const MIN_DELIVERY_FEE = 2.49; // Zone 1 (nearest MK postcodes) — floor used before postcode is known
@@ -377,21 +378,25 @@ const CartDrawer = () => {
         ) : (
           <>
             {/* Delivery / Takeaway toggle */}
-            <div className="px-6 py-3 border-b flex gap-2" style={{ borderColor: 'rgba(128,0,32,0.08)', backgroundColor: '#FDFBF7' }}>
-              {[
-                { id: 'delivery', label: '🚚 Delivery' },
-                { id: 'takeaway', label: collectSaving && !collectSavingIsEstimate ? `🛵 Collect & save ${fmt(collectSaving)}` : '🛵 Collect & save 10%' },
-              ].map(opt => (
-                <button key={opt.id} onClick={() => setDeliveryType(opt.id)}
-                  className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                  style={{
-                    backgroundColor: deliveryType === opt.id ? '#800020' : 'white',
-                    color: deliveryType === opt.id ? 'white' : '#5C4B47',
-                    border: deliveryType === opt.id ? 'none' : '1px solid rgba(128,0,32,0.2)',
-                  }}>
-                  {opt.label}
-                </button>
-              ))}
+            <div className="px-6 py-3 border-b" style={{ borderColor: 'rgba(128,0,32,0.08)', backgroundColor: '#FDFBF7' }}>
+              {DELIVERY_LOCKED ? <DeliveryLockedNotice compact /> : (
+                <div className="flex gap-2">
+                  {[
+                    { id: 'delivery', label: '🚚 Delivery' },
+                    { id: 'takeaway', label: collectSaving && !collectSavingIsEstimate ? `🛵 Collect & save ${fmt(collectSaving)}` : '🛵 Collect & save 10%' },
+                  ].map(opt => (
+                    <button key={opt.id} onClick={() => setDeliveryType(opt.id)}
+                      className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                      style={{
+                        backgroundColor: deliveryType === opt.id ? '#800020' : 'white',
+                        color: deliveryType === opt.id ? 'white' : '#5C4B47',
+                        border: deliveryType === opt.id ? 'none' : '1px solid rgba(128,0,32,0.2)',
+                      }}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Takeaway: saving callout */}

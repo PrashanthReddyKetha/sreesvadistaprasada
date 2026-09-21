@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Flame, ShoppingBag, ChevronRight, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { isOrderable } from '@/config/softLaunch';
+import { isOrderable, DELIVERY_LOCKED } from '@/config/softLaunch';
+import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 import { buildItemUrl } from '@/lib/itemUrl';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
@@ -245,17 +246,21 @@ export default function OrderClient({ initialItems = [] }) {
         style={{ backgroundColor: C.ivory, borderBottom: `1px solid ${C.line}`, boxShadow: '0 4px 12px rgba(45,36,34,0.06)' }}>
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-3">
           {/* Collection / Delivery toggle */}
-          <div className={searchMode || controlsCollapsed ? 'hidden' : 'flex rounded-xl p-1 gap-1'} style={{ backgroundColor: '#F3EDE2' }}>
-            {[['delivery', '🚚 Delivery'], ['takeaway', '🛵 Collection · save 10%']].map(([val, label]) => (
-              <button key={val} onClick={() => setDeliveryType(val)}
-                className="flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-colors"
-                style={{
-                  backgroundColor: deliveryType === val ? C.burgundy : 'transparent',
-                  color: deliveryType === val ? '#fff' : C.muted,
-                }}>
-                {label}
-              </button>
-            ))}
+          <div className={searchMode || controlsCollapsed ? 'hidden' : ''}>
+            {DELIVERY_LOCKED ? <DeliveryLockedNotice compact /> : (
+              <div className="flex rounded-xl p-1 gap-1" style={{ backgroundColor: '#F3EDE2' }}>
+                {[['delivery', '🚚 Delivery'], ['takeaway', '🛵 Collection · save 10%']].map(([val, label]) => (
+                  <button key={val} onClick={() => setDeliveryType(val)}
+                    className="flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-colors"
+                    style={{
+                      backgroundColor: deliveryType === val ? C.burgundy : 'transparent',
+                      color: deliveryType === val ? '#fff' : C.muted,
+                    }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {deliveryType === 'takeaway' && (

@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { trackAddToCart, trackRemoveFromCart } from '@/lib/analytics';
+import { DELIVERY_LOCKED } from '@/config/softLaunch';
 
 interface CartItem {
   id: string;
@@ -90,7 +91,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     setCartItems(loadCart());
     try {
       const dt = sessionStorage.getItem(DT_KEY);
-      if (dt === 'delivery' || dt === 'takeaway') setDeliveryTypeRaw(dt);
+      // Delivery is paused — never restore a stale 'delivery' choice from
+      // before the lock, even from an open tab or old session storage.
+      if (!DELIVERY_LOCKED && (dt === 'delivery' || dt === 'takeaway')) setDeliveryTypeRaw(dt);
     } catch {}
     try {
       const zi = localStorage.getItem(ZONE_KEY);
@@ -120,9 +123,12 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const setDeliveryType = useCallback((type: string) => {
-    setDeliveryTypeRaw(type);
-    try { sessionStorage.setItem(DT_KEY, type); } catch {}
-    if (type !== 'takeaway') setPickupSlot(null);
+    // Delivery is paused site-wide — this is the one place that can never
+    // be routed around, no matter which screen calls it.
+    const next = DELIVERY_LOCKED ? 'takeaway' : type;
+    setDeliveryTypeRaw(next);
+    try { sessionStorage.setItem(DT_KEY, next); } catch {}
+    if (next !== 'takeaway') setPickupSlot(null);
   }, [setPickupSlot]);
 
   const setZoneInfo = useCallback((info: ZoneInfo | null) => {
