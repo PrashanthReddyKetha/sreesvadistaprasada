@@ -4,6 +4,7 @@ import { Playfair_Display, Lato } from 'next/font/google'
 import dynamic from 'next/dynamic'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
+import { KitchenProvider } from '@/context/KitchenContext'
 import { NotifyMeProvider } from '@/context/NotifyMeContext'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -84,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KQ89WB49" height="0" width="0" style={{ display:'none', visibility:'hidden' }} /></noscript>
         {/* End Google Tag Manager (noscript) */}
           <AuthProvider>
+            <KitchenProvider>
             <CartProvider>
               <NotifyMeProvider>
               <Suspense fallback={null}><GTMPageView /></Suspense>
@@ -103,6 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <CartToast />
               </NotifyMeProvider>
             </CartProvider>
+            </KitchenProvider>
           </AuthProvider>
         <CookieConsent />
       </body>

@@ -2,13 +2,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { useKitchen } from '@/context/KitchenContext';
 import api from '@/api';
 import {
   ShoppingBag, Users, Package, Mail, MessageSquare, Bell,
   TrendingUp, Clock, CheckCircle, XCircle, RefreshCw,
   ChevronDown, ChevronRight, LayoutDashboard,
   ArrowLeft, Send, CheckCheck, AlertCircle,
-  Calendar, Utensils, Star, Sparkles, Gift
+  Calendar, Utensils, Star, Sparkles, Gift, Power
 } from 'lucide-react';
 import DabbaWalaTab from '@/components/admin/DabbaWalaTab';
 import MenuTab from '@/components/admin/MenuTab';
@@ -820,6 +821,42 @@ const ReviewsTab = () => {
 };
 
 // ─── Main Admin Page ──────────────────────────────────────────────────────────
+/* ── Kitchen Open/Closed toggle ─────────────────────────────────────────── */
+const KitchenToggle = () => {
+  const kitchen = useKitchen();
+  const [busy, setBusy] = useState(false);
+
+  const toggle = async () => {
+    if (busy) return;
+    let paused_message;
+    if (kitchen.open) {
+      if (!window.confirm('Close the kitchen? Customers will see a "Kitchen closed" banner and checkout will be disabled until you reopen.')) return;
+      const msg = window.prompt('Message to show customers (optional):', "Our kitchen is closed today — we're not taking orders right now. Please check back soon.");
+      if (msg === null) return;
+      paused_message = msg.trim();
+    }
+    setBusy(true);
+    try {
+      await api.put('/admin/settings/pickup-slots', kitchen.open ? { paused: true, paused_message } : { paused: false });
+      await kitchen.refresh();
+    } catch (e) {
+      alert(e.response?.data?.detail || 'Could not update kitchen status.');
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <button onClick={toggle} disabled={busy} data-testid="kitchen-toggle"
+      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-60"
+      style={kitchen.open
+        ? { backgroundColor: '#2E7D32', color: 'white' }
+        : { backgroundColor: '#F4C430', color: '#2D2422', boxShadow: '0 0 0 3px rgba(244,196,48,0.35)' }}
+      title={kitchen.open ? 'Click to close the kitchen (stops orders)' : 'Click to reopen the kitchen'}>
+      <Power size={14} className={busy ? 'animate-pulse' : ''} />
+      {kitchen.open ? 'Kitchen: OPEN' : 'Kitchen: CLOSED'}
+    </button>
+  );
+};
+
 const TABS = [
   { id:'kitchen',       label:'Kitchen',       icon:Utensils     },
   { id:'overview',      label:'Overview',      icon:TrendingUp   },
@@ -908,6 +945,7 @@ const Admin = () => {
           <p className="text-xs text-white/60">Sree Svadista Prasada</p>
         </div>
         <div className="flex items-center gap-3">
+          <KitchenToggle />
           <Link href="/dashboard"
             className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
             style={{ backgroundColor:'rgba(255,255,255,0.15)', color:'white' }}>

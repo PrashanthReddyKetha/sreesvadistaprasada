@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, ShoppingCart, User, ChevronDown, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { useKitchen } from '@/context/KitchenContext';
 import api from '@/api';
 import LogoMark from '../LogoMark';
 
@@ -12,6 +13,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartCount, setCartOpen } = useCart();
   const { user, logout, setAuthOpen } = useAuth();
+  const kitchen = useKitchen();
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [pendingReward, setPendingReward] = useState(false);
@@ -98,7 +100,16 @@ const Header = () => {
 
   return (
     <>
-      {/* Notification Bar */}
+      {/* Kitchen closed bar — overrides everything else; set from Admin */}
+      {!kitchen.open ? (
+        <div
+          data-testid="kitchen-closed-bar"
+          className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-bold tracking-wide overflow-hidden"
+          style={{ backgroundColor: '#2D2422', color: '#F4C430' }}
+        >
+          <span className="truncate">🔒 Kitchen closed &nbsp;·&nbsp; {kitchen.message}</span>
+        </div>
+      ) : (
       <div
         data-testid="notification-bar"
         className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-medium tracking-wide overflow-hidden [&_[data-marquee]]:sm:hidden"
@@ -115,6 +126,7 @@ const Header = () => {
           </>
         )}
       </div>
+      )}
 
       {/* Header */}
       <header

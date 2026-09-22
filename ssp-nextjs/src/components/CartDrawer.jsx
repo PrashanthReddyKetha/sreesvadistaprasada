@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useKitchen } from '@/context/KitchenContext';
 import api from '../api';
 import { trackViewCart, trackBeginCheckout } from '@/lib/analytics';
 import { isOrderable, DELIVERY_LOCKED } from '@/config/softLaunch';
@@ -268,6 +269,7 @@ const CartDrawer = () => {
   const { cartItems, cartCount, cartTotal, cartOpen, setCartOpen, updateQuantity, removeFromCart, addToCart,
           deliveryType, setDeliveryType, zoneInfo, setZoneInfo } = useCart();
   const { user } = useAuth();
+  const kitchen = useKitchen();
 
   const [loyaltyStatus, setLoyaltyStatus] = useState(null);
   const [freeItem, setFreeItem]           = useState(null);
@@ -569,16 +571,23 @@ const CartDrawer = () => {
                 </div>
               </div>
 
+              {!kitchen.open && (
+                <p className="text-xs text-center mb-2 px-2 py-2 rounded-lg font-semibold" style={{ backgroundColor: '#2D2422', color: '#F4C430' }}>
+                  🔒 {kitchen.message}
+                </p>
+              )}
               <button
                 onClick={handleCheckout}
-                disabled={!meetsMinimum || needsPostcode}
+                disabled={!meetsMinimum || needsPostcode || !kitchen.open}
                 className="w-full py-3.5 text-sm font-semibold rounded-xl flex items-center justify-center gap-2 transition-all"
                 style={{
-                  backgroundColor: !meetsMinimum || needsPostcode ? '#D1D5DB' : '#800020',
-                  color: !meetsMinimum || needsPostcode ? '#9CA3AF' : 'white',
-                  cursor: !meetsMinimum || needsPostcode ? 'not-allowed' : 'pointer',
+                  backgroundColor: !meetsMinimum || needsPostcode || !kitchen.open ? '#D1D5DB' : '#800020',
+                  color: !meetsMinimum || needsPostcode || !kitchen.open ? '#9CA3AF' : 'white',
+                  cursor: !meetsMinimum || needsPostcode || !kitchen.open ? 'not-allowed' : 'pointer',
                 }}>
-                {!meetsMinimum
+                {!kitchen.open
+                  ? 'Kitchen closed'
+                  : !meetsMinimum
                   ? `Add ${fmt(MINIMUM_ORDER - effectiveSubtotal)} more to order`
                   : needsPostcode
                     ? 'Enter postcode to continue'
@@ -586,7 +595,7 @@ const CartDrawer = () => {
                       ? 'Collect my order'
                       : 'Send it Home'
                 }
-                {meetsMinimum && !needsPostcode && <ArrowRight size={16} />}
+                {kitchen.open && meetsMinimum && !needsPostcode && <ArrowRight size={16} />}
               </button>
             </div>
           </>

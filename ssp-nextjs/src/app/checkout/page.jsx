@@ -13,6 +13,7 @@ import { auth as fbAuth } from '@/firebase';
 import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { useKitchen } from '@/context/KitchenContext';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
 import SlotPicker from '@/components/SlotPicker';
@@ -667,6 +668,7 @@ const CheckoutInner = () => {
           deliveryType, setDeliveryType, zoneInfo, setZoneInfo,
           pickupSlot, setPickupSlot } = useCart();
   const { user, login, setAuthOpen, openAuth } = useAuth();
+  const kitchen = useKitchen();
 
   const [guestMode, setGuestMode] = useState(false);
   const [showBrowse, setShowBrowse] = useState(false);
@@ -1026,6 +1028,7 @@ const CheckoutInner = () => {
 
   const handleOrder = async () => {
     setError('');
+    if (!kitchen.open) { setError(kitchen.message); return; }
     if (!meetsMinimum) { setError(`Minimum order is ${fmt(MINIMUM_ORDER)} — please add more items.`); return; }
     const required = deliveryType === 'takeaway'
       ? ['name', 'email', 'phone']
@@ -1802,7 +1805,12 @@ const CheckoutInner = () => {
                   <Lock size={14} /> Sign in or continue as guest to pay {fmt(grandTotal)}
                 </button>
               )}
-              {canCheckout && (
+              {canCheckout && !kitchen.open && (
+                <div className="w-full py-4 px-4 text-sm font-bold text-center rounded-2xl" style={{ backgroundColor: '#2D2422', color: '#F4C430' }}>
+                  🔒 {kitchen.message}
+                </div>
+              )}
+              {canCheckout && kitchen.open && (
                 <button onClick={handleOrder} disabled={submitting || !meetsMinimum || !validPricing}
                   className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-60"
                   style={{ background: meetsMinimum ? 'linear-gradient(135deg, #800020, #5C0018)' : '#9CA3AF', cursor: meetsMinimum ? 'pointer' : 'not-allowed' }}>

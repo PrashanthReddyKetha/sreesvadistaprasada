@@ -2,6 +2,24 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link'
 import Image from 'next/image'
+
+const SPECIAL_FALLBACK = 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400';
+// next/image has no built-in broken-image fallback — swap src on error
+const SpecialImage = ({ src, alt }) => {
+  const [url, setUrl] = useState(src || SPECIAL_FALLBACK);
+  useEffect(() => { setUrl(src || SPECIAL_FALLBACK); }, [src]);
+  return (
+    <Image
+      src={url}
+      alt={alt}
+      fill
+      className="object-cover transition-transform duration-500 group-hover:scale-110"
+      sizes="200px"
+      quality={75}
+      onError={() => setUrl(SPECIAL_FALLBACK)}
+    />
+  );
+};
 import { useRouter } from 'next/navigation';
 import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin, Bell } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '@/data/mockData';
@@ -266,14 +284,7 @@ const Home = () => {
                     style={{ boxShadow: '0 2px 10px rgba(128,0,32,0.06)', border: '1px solid rgba(244,196,48,0.4)' }}
                   >
                     <div className="relative h-28 overflow-hidden">
-                      <Image
-                        src={s.image || 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400'}
-                        alt={s.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        sizes="200px"
-                        quality={75}
-                      />
+                      <SpecialImage src={s.image} alt={s.title} />
                       <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-sm" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
                         Today
                       </span>
