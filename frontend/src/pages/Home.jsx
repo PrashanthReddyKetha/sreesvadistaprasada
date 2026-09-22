@@ -241,6 +241,7 @@ const Home = () => {
                         src={s.image || 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400'}
                         alt={s.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400'; }}
                       />
                       <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-sm" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
                         Today

@@ -14,21 +14,25 @@ async def list_active_specials():
         {"active": True}, {"_id": 0}
     ).sort("display_order", 1).to_list(50)
 
-    # Overlay live price + image from the linked menu item so edits always reflect
+    # Overlay live price + image from the linked menu item so edits always reflect.
+    # Specials without menu_item_id fall back to an exact title match on the menu.
     item_ids = [d["menu_item_id"] for d in docs if d.get("menu_item_id")]
-    if item_ids:
+    titles = [d["title"] for d in docs if not d.get("menu_item_id") and d.get("title")]
+    if item_ids or titles:
         live = await db.menu_items.find(
-            {"id": {"$in": item_ids}},
-            {"_id": 0, "id": 1, "price": 1, "image": 1},
-        ).to_list(len(item_ids))
-        live_map = {item["id"]: item for item in live}
+            {"$or": [{"id": {"$in": item_ids}}, {"name": {"$in": titles}}]},
+            {"_id": 0, "id": 1, "name": 1, "price": 1, "image": 1},
+        ).to_list(len(item_ids) + len(titles))
+        by_id = {item["id"]: item for item in live}
+        by_name = {item["name"]: item for item in live}
         for doc in docs:
-            mid = doc.get("menu_item_id")
-            if mid and mid in live_map:
-                if live_map[mid].get("price") is not None:
-                    doc["price"] = live_map[mid]["price"]
-                if live_map[mid].get("image"):
-                    doc["image"] = live_map[mid]["image"]
+            item = by_id.get(doc.get("menu_item_id")) or by_name.get(doc.get("title"))
+            if not item:
+                continue
+            if item.get("price") is not None:
+                doc["price"] = item["price"]
+            if item.get("image"):
+                doc["image"] = item["image"]
 
     return docs
 
