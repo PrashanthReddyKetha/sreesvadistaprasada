@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User, ChevronDown } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { useKitchen } from '../../context/KitchenContext';
 import LogoMark from '../LogoMark';
 import api from '../../api';
 
@@ -10,6 +11,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartCount, setCartOpen } = useCart();
   const { user, logout, setAuthOpen } = useAuth();
+  const kitchen = useKitchen();
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [loyaltyPending, setLoyaltyPending] = useState(false);
@@ -82,8 +84,16 @@ const Header = () => {
 
   return (
     <>
-      {/* Loyalty reward bar — shown when pending reward, dismissable */}
-      {loyaltyPending && !rewardBarDismissed ? (
+      {/* Kitchen closed bar — overrides everything else; set from Admin */}
+      {!kitchen.open ? (
+        <div
+          data-testid="kitchen-closed-bar"
+          className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-bold tracking-wide overflow-hidden"
+          style={{ backgroundColor: '#2D2422', color: '#F4C430' }}
+        >
+          <span className="truncate">🔒 Kitchen closed &nbsp;·&nbsp; {kitchen.message}</span>
+        </div>
+      ) : loyaltyPending && !rewardBarDismissed ? (
         <div className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-8 text-center text-xs sm:text-sm font-semibold"
           style={{ backgroundColor: '#F4C430', color: '#800020' }}>
           🎁 Your free dish is ready — choose any item from our menu!{' '}

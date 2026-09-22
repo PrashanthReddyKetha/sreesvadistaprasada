@@ -6,6 +6,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
+import { KitchenProvider } from "./context/KitchenContext";
 import { useCart } from "./context/CartContext";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
@@ -89,6 +90,7 @@ function App() {
     <HelmetProvider>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
     <AuthProvider>
+    <KitchenProvider>
     <CartProvider>
       <div className="App">
         <BrowserRouter>
@@ -138,6 +140,7 @@ function App() {
         </BrowserRouter>
       </div>
     </CartProvider>
+    </KitchenProvider>
     </AuthProvider>
     </GoogleOAuthProvider>
     </HelmetProvider>

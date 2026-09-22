@@ -243,6 +243,16 @@ async def list_pickup_slots(date_str: Optional[str] = Query(None, alias="date"))
 
 # ── Admin API ─────────────────────────────────────────────────────────────────
 
+@router.get("/kitchen-status")
+async def kitchen_status():
+    """Public — lets the site show a 'kitchen closed' banner and disable checkout."""
+    settings = await get_slot_settings()
+    return {
+        "open": not settings.get("paused"),
+        "message": settings.get("paused_message") or "Our kitchen is closed today — we're not taking orders right now. Please check back soon.",
+    }
+
+
 @router.get("/admin/settings/pickup-slots")
 async def get_settings_admin(_: dict = Depends(require_admin)):
     settings = await get_slot_settings()

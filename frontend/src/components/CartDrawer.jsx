@@ -3,6 +3,7 @@ import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, Truck, Zap, Gift, Sear
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useKitchen } from '../context/KitchenContext';
 import api from '../api';
 import LoyaltyProgressBar from './LoyaltyProgressBar';
 
@@ -186,6 +187,7 @@ const CartDrawer = () => {
   const navigate = useNavigate();
   const { cartItems, cartCount, cartTotal, cartOpen, setCartOpen, updateQuantity, removeFromCart, addToCart } = useCart();
   const { user, setAuthOpen } = useAuth();
+  const kitchen = useKitchen();
 
   const [deliveryType, setDeliveryType] = useState('delivery');
   const [loyalty, setLoyalty]           = useState(null);
@@ -460,10 +462,15 @@ const CartDrawer = () => {
                   </div>
                 </div>
 
-                <button onClick={goToCheckout}
-                  className="w-full py-3.5 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+                {!kitchen.open && (
+                  <p className="text-xs text-center mb-2 px-2 py-2 rounded-lg font-semibold" style={{ backgroundColor: '#2D2422', color: '#F4C430' }}>
+                    🔒 {kitchen.message}
+                  </p>
+                )}
+                <button onClick={goToCheckout} disabled={!kitchen.open}
+                  className="w-full py-3.5 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: '#800020', paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))' }}>
-                  {deliveryType === 'takeaway' ? 'Collect my order' : 'Send it Home'} <ArrowRight size={16} />
+                  {!kitchen.open ? 'Kitchen closed' : deliveryType === 'takeaway' ? 'Collect my order' : 'Send it Home'} <ArrowRight size={16} />
                 </button>
               </div>
             </div>

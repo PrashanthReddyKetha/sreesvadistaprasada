@@ -9,6 +9,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useKitchen } from '../context/KitchenContext';
 import LoyaltyProgressBar from '../components/LoyaltyProgressBar';
 import api from '../api';
 
@@ -405,6 +406,7 @@ const CheckoutInner = () => {
   // Loyalty & delivery state from CartDrawer
   const { deliveryType = 'delivery', freeItem = null } = location.state || {};
 
+  const kitchen = useKitchen();
   const [guestMode, setGuestMode] = useState(false);
   const [showBrowse, setShowBrowse] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -537,6 +539,7 @@ const CheckoutInner = () => {
 
   const handleOrder = async () => {
     setError('');
+    if (!kitchen.open) { setError(kitchen.message); return; }
     // Minimum order check against regular cart items (matches backend logic)
     if (cartTotal < 15) { setError('Minimum order is £15.00. Please add more items to continue.'); return; }
     const required = deliveryType === 'takeaway'
@@ -1009,7 +1012,12 @@ const CheckoutInner = () => {
               )}
 
               {/* Pay button */}
-              {canCheckout && (
+              {canCheckout && !kitchen.open && (
+                <div className="w-full py-4 px-4 text-sm font-bold text-center rounded-2xl" style={{ backgroundColor: '#2D2422', color: '#F4C430' }}>
+                  🔒 {kitchen.message}
+                </div>
+              )}
+              {canCheckout && kitchen.open && (
                 <button onClick={handleOrder} disabled={submitting}
                   className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-60"
                   style={{ background: 'linear-gradient(135deg, #800020, #5C0018)' }}>
