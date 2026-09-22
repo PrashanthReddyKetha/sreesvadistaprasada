@@ -6,6 +6,7 @@ import { Menu, X, ShoppingCart, User, ChevronDown, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useKitchen } from '@/context/KitchenContext';
+import KitchenClosedNotify from '@/components/KitchenClosedNotify';
 import api from '@/api';
 import LogoMark from '../LogoMark';
 
@@ -107,7 +108,8 @@ const Header = () => {
           className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-bold tracking-wide overflow-hidden"
           style={{ backgroundColor: '#2D2422', color: '#F4C430' }}
         >
-          <span className="truncate">🔒 Kitchen closed &nbsp;·&nbsp; {kitchen.message}</span>
+          <span className="truncate">🔒 Kitchen closed <span className="hidden sm:inline">&nbsp;·&nbsp; {kitchen.message}</span></span>
+          <span className="ml-3 flex-shrink-0"><KitchenClosedNotify compact /></span>
         </div>
       ) : (
       <div

@@ -21,7 +21,7 @@ const urlBase64ToUint8Array = (base64) => {
 const isInstalled = () =>
   window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-async function subscribeAndSave() {
+export async function subscribeAndSave() {
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {

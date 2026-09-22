@@ -8,11 +8,17 @@ from datetime import datetime, timedelta, date
 from typing import Optional, Dict
 from zoneinfo import ZoneInfo
 
+import asyncio
+import logging
+import uuid
+
 from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from database import db
-from auth import require_admin
+from auth import require_admin, get_optional_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="", tags=["pickup-slots"])
 
@@ -253,6 +259,66 @@ async def kitchen_status():
     }
 
 
+class ReopenSubscribe(BaseModel):
+    email: EmailStr
+    name: Optional[str] = Field(None, max_length=80)
+
+
+@router.post("/kitchen-status/notify-me")
+async def kitchen_reopen_subscribe(body: ReopenSubscribe, user: Optional[dict] = Depends(get_optional_user)):
+    """Customer asks to be told when the kitchen reopens. One row per email."""
+    settings = await get_slot_settings()
+    if not settings.get("paused"):
+        return {"ok": True, "already_open": True}
+    email = body.email.lower().strip()
+    await db.reopen_subs.update_one(
+        {"email": email},
+        {"$set": {
+            "id": str(uuid.uuid4()),
+            "email": email,
+            "name": (body.name or (user or {}).get("name") or "").strip(),
+            "user_id": (user or {}).get("id"),
+            "created_at": datetime.utcnow().isoformat(),
+        }},
+        upsert=True,
+    )
+    return {"ok": True}
+
+
+async def broadcast_kitchen_reopened():
+    """Fire-and-forget: push to every push subscriber + email everyone who asked."""
+    from notifications import send_email, _wrap, SITE_URL
+    from web_push import new_campaign, send_to_all
+
+    title = "We're open! 🍛"
+    body = "The kitchen is cooking again — order now for today's fresh Andhra meals."
+
+    try:
+        campaign = new_campaign(title, body, "/order", None)
+        campaign["source"] = "kitchen_reopen"
+        stats = await send_to_all(campaign)
+        campaign.update(status="sent", sent_at=datetime.utcnow().isoformat(), stats={**campaign["stats"], **stats})
+        await db.push_campaigns.insert_one(campaign)
+        logger.info("Kitchen reopen push: %s", stats)
+    except Exception as e:
+        logger.warning("Kitchen reopen push failed: %s", e)
+
+    subs = await db.reopen_subs.find({}, {"_id": 0}).to_list(length=2000)
+    for sub in subs:
+        greeting = f"Hi {sub['name']}," if sub.get("name") else "Hi,"
+        html = _wrap(
+            title,
+            f"<p>{greeting}</p><p>You asked us to let you know when the kitchen reopened &mdash; "
+            "we're back and taking orders now.</p>"
+            "<p>Fresh, authentic Andhra food, cooked to order in Milton Keynes.</p>",
+            "Order now", f"{SITE_URL}/order",
+        )
+        send_email(sub["email"], "We're open again — order today 🍛", html)
+    if subs:
+        await db.reopen_subs.delete_many({})
+        logger.info("Kitchen reopen emails queued: %d", len(subs))
+
+
 @router.get("/admin/settings/pickup-slots")
 async def get_settings_admin(_: dict = Depends(require_admin)):
     settings = await get_slot_settings()
@@ -276,7 +342,11 @@ async def update_settings_admin(payload: PickupSlotSettingsUpdate, admin: dict =
         raise HTTPException(400, "Nothing to update")
     updates["updated_at"] = datetime.utcnow().isoformat()
     updates["updated_by"] = admin.get("sub")
+    was_paused = bool((await get_slot_settings()).get("paused"))
     await db.settings.update_one({"_id": SETTINGS_ID}, {"$set": updates}, upsert=True)
     settings = await get_slot_settings()
     settings.pop("_id", None)
+    # Closed → open transition: tell everyone who's waiting
+    if was_paused and updates.get("paused") is False:
+        asyncio.create_task(broadcast_kitchen_reopened())
     return settings

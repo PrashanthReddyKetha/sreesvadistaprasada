@@ -14,6 +14,7 @@ import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcEle
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useKitchen } from '@/context/KitchenContext';
+import KitchenClosedNotify from '@/components/KitchenClosedNotify';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
 import SlotPicker from '@/components/SlotPicker';
@@ -1808,6 +1809,7 @@ const CheckoutInner = () => {
               {canCheckout && !kitchen.open && (
                 <div className="w-full py-4 px-4 text-sm font-bold text-center rounded-2xl" style={{ backgroundColor: '#2D2422', color: '#F4C430' }}>
                   🔒 {kitchen.message}
+                  <div className="mt-2"><KitchenClosedNotify /></div>
                 </div>
               )}
               {canCheckout && kitchen.open && (

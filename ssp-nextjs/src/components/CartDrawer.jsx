@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useKitchen } from '@/context/KitchenContext';
+import KitchenClosedNotify from '@/components/KitchenClosedNotify';
 import api from '../api';
 import { trackViewCart, trackBeginCheckout } from '@/lib/analytics';
 import { isOrderable, DELIVERY_LOCKED } from '@/config/softLaunch';
@@ -574,6 +575,7 @@ const CartDrawer = () => {
               {!kitchen.open && (
                 <p className="text-xs text-center mb-2 px-2 py-2 rounded-lg font-semibold" style={{ backgroundColor: '#2D2422', color: '#F4C430' }}>
                   🔒 {kitchen.message}
+                  <span className="block mt-1"><KitchenClosedNotify /></span>
                 </p>
               )}
               <button
