@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, RefreshCw, CheckCircle, Printer, Copy, AlertTriangle, X } from 'lucide-react';
 import api from '@/api';
+import WhatsAppSend from '@/components/admin/WhatsAppSend';
+import { dabbaDeliveryMessage, dabbaWelcomeMessage, dabbaRenewalMessage } from '@/lib/whatsappMessages';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '—';
@@ -188,6 +190,12 @@ function DabbaOperations() {
                                 {d.status}
                               </span>
                             )}
+                            {d.status !== 'failed' && (
+                              <div className="mt-1.5">
+                                <WhatsAppSend compact phone={d.phone} message={dabbaDeliveryMessage(d)}
+                                  label={d.status === 'delivered' ? 'Delivered msg' : 'On the way msg'} />
+                              </div>
+                            )}
                           </td>
                         </tr>
                       );
@@ -356,6 +364,10 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
         <div>
           <h2 className="text-2xl font-bold" style={{ fontFamily:"'Playfair Display', serif", color:'#800020' }}>{sub.customer_name}</h2>
           <p className="text-sm" style={{ color:'#7A5C50' }}>{sub.customer_email} · {sub.customer_phone}</p>
+          <div className="flex gap-2 flex-wrap mt-2">
+            <WhatsAppSend phone={sub.customer_phone} message={dabbaWelcomeMessage(sub)} label="Welcome msg" />
+            <WhatsAppSend phone={sub.customer_phone} message={dabbaRenewalMessage(sub)} label="Renewal reminder" />
+          </div>
         </div>
         <Badge status={sub.status} />
       </div>
@@ -761,6 +773,10 @@ function DabbaDeliverySheet() {
                     <p className="text-xs" style={{ color:'#5C4B47' }}>{addr}</p>
                     {d.delivery_instruction && d.delivery_instruction !== 'door' && <p className="text-xs mt-0.5" style={{ color:'#8B6914' }}>Note: {d.delivery_instruction}{d.neighbour_name ? ` — ${d.neighbour_name}, ${d.neighbour_door}` : ''}{d.safe_place_description ? ` — ${d.safe_place_description}` : ''}</p>}
                     {d.custom_request && <p className="text-xs mt-0.5 italic" style={{ color:'#7A5C50' }}>"{d.custom_request}"</p>}
+                    <div className="mt-2 print:hidden">
+                      <WhatsAppSend compact phone={d.phone} message={dabbaDeliveryMessage(d)}
+                        label={d.status === 'delivered' ? 'Delivered msg' : 'On the way msg'} />
+                    </div>
                   </div>
                   <input type="checkbox" checked={d.status==='delivered'} onChange={() => toggleDelivered(d.delivery_id, d.status)} className="mt-1 w-4 h-4 accent-[#4A7C59] cursor-pointer" />
                 </div>

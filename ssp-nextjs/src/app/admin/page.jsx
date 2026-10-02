@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useKitchen } from '@/context/KitchenContext';
 import api from '@/api';
+import WhatsAppSend from '@/components/admin/WhatsAppSend';
+import { orderMessage } from '@/lib/whatsappMessages';
 import {
   ShoppingBag, Users, Package, Mail, MessageSquare, Bell,
   TrendingUp, Clock, CheckCircle, XCircle, RefreshCw,
@@ -274,6 +276,10 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
                         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Update Status</p>
                         <OrderActions order={o} onUpdate={onStatusUpdate} />
                         <p className="text-xs text-gray-400 mt-3">Current: <Badge status={o.status} /></p>
+                        {/* One tap: opens WhatsApp with the update for the current status, ready to send */}
+                        <div className="mt-3">
+                          <WhatsAppSend phone={o.customer_phone} message={orderMessage(o)} label="Send update on WhatsApp" />
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -361,6 +361,7 @@ async def get_todays_deliveries(current_user: dict = Depends(require_admin)):
             "seq": i + 1,
             "name": s["customer_name"].split()[0] if s.get("customer_name") else "—",
             "full_name": s.get("customer_name", ""),
+            "phone": s.get("customer_phone"),
             "box_type": s.get("box_type", "prasada"),
             "preferences": s.get("preferences", []),
             "custom_request": s.get("custom_request"),
