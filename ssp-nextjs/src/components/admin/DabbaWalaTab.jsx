@@ -368,6 +368,10 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
               ['Plan', sub.plan?.charAt(0).toUpperCase()+sub.plan?.slice(1)],
               ['Box', bm.label],
               ['Price', `£${sub.price}`],
+              ...(sub.delivery_fee_total != null ? [[
+                'Delivery fee',
+                `£${sub.delivery_fee_total.toFixed(2)} (${sub.charged_delivery_meals} × £${(sub.delivery_fee_per_meal || 0).toFixed(2)}, ${sub.free_delivery_meals} free)`,
+              ]] : []),
               ['Status', sub.status],
               ['Start date', sub.start_date || '—'],
               ['End date', sub.end_date || '—'],

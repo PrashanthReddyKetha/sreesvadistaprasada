@@ -52,14 +52,15 @@ const TABS = [
 
 /* ══════════════════════════════════════════════════════ */
 function DashboardInner() {
-  const { user, logout, login, initialized } = useAuth();
+  const { user, logout, login, initialized, setAuthOpen } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [orders, setOrders] = useState([]);
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedOrder, setExpandedOrder] = useState(null);
+  // WhatsApp/SMS tracking links arrive as ?tab=orders&order=<id> — open that order straight away
+  const [expandedOrder, setExpandedOrder] = useState(searchParams.get('order'));
   const [enquiries, setEnquiries] = useState({ contact: [], catering: [] });
   const [unreadCount, setUnreadCount] = useState(0);
   const [reviews, setReviews] = useState([]);
@@ -67,9 +68,14 @@ function DashboardInner() {
   const [loadError, setLoadError] = useState('');
 
   /* redirect if not logged in */
+  // A tracking link (?tab=…) opened while signed out asks for sign-in and stays
+  // put, so the customer lands on their order instead of being bounced home.
+  const isDeepLink = !!searchParams.get('tab');
   useEffect(() => {
-    if (initialized && !user) router.push('/', { replace: true });
-  }, [user, router, initialized]);
+    if (!initialized || user) return;
+    if (isDeepLink) setAuthOpen(true);
+    else router.push('/', { replace: true });
+  }, [user, router, initialized, isDeepLink, setAuthOpen]);
 
   const load = useCallback(async (silent) => {
     if (!user) return;
@@ -106,9 +112,15 @@ function DashboardInner() {
     return () => clearInterval(interval);
   }, [user, load]);
 
-  if (!user) return null;
+  if (!user) return initialized && isDeepLink ? (
+    <div className="min-h-screen pt-32 px-4 text-center" style={{ backgroundColor: '#FAF8F4' }}>
+      <p className="text-lg font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Sign in to track your order</p>
+      <p className="text-sm mb-5" style={{ color: '#5C4B47' }}>Your live order status and Dabba Wala deliveries are in your account.</p>
+      <button onClick={() => setAuthOpen(true)} className="px-6 py-3 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>Sign in</button>
+    </div>
+  ) : null;
 
-  const pending   = orders.filter(o => o.status === 'pending').length;
+  const pending  = orders.filter(o => o.status === 'pending').length;
   const active    = orders.filter(o => ['confirmed','preparing','ready','out_for_delivery'].includes(o.status)).length;
   const delivered = orders.filter(o => o.status === 'delivered').length;
   const ordersSpent = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0);

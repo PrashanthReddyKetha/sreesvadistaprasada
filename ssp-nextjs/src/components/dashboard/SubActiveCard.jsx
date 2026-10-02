@@ -276,7 +276,9 @@ export default function SubActiveCard({ sub }) {
             {[
               ['Plan', sub.plan?.charAt(0).toUpperCase() + sub.plan?.slice(1) + ' Plan'],
               ['Box', boxMeta.label],
-              ['Price', `£${sub.price}`],
+              ['Price', sub.delivery_fee_total > 0
+                ? `£${sub.price.toFixed(2)} (plan £${sub.plan_price.toFixed(2)} + delivery £${sub.delivery_fee_total.toFixed(2)})`
+                : `£${sub.price}`],
               ['Start date', sub.start_date ? new Date(sub.start_date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '—'],
               ['End date', sub.end_date ? new Date(sub.end_date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '—'],
               ['Delivering to', addr ? (typeof addr==='string' ? addr : `${addr.line1}, ${addr.city}, ${addr.postcode}`) : '—'],

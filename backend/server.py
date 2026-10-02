@@ -8,6 +8,7 @@ from database import client
 from seed import seed_menu, create_indexes, create_admin_user, seed_daily_specials, seed_content
 from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews, daily_specials, loyalty, admin_loyalty, pickup_slots, push
 from routes import content as content_routes
+from routes import whatsapp as whatsapp_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings
 from menu_additions import apply_menu_additions
@@ -33,10 +34,19 @@ async def lifespan(app: FastAPI):
     from database import db
     await db.push_subs.create_index("endpoint", unique=True)
     await db.push_campaigns.create_index("id", unique=True)
+    await db.wa_messages.create_index("dedupe_key", unique=True)
+    await db.wa_messages.create_index("sid", sparse=True)
+    await db.wa_optouts.create_index("phone", unique=True)
+    await db.subscriptions.create_index("email_key", sparse=True)
+    from subscription_pricing import backfill_email_keys
+    await backfill_email_keys()
+    from whatsapp import renewal_reminder_loop
     push_scheduler = asyncio.create_task(scheduler_loop())
+    renewal_scheduler = asyncio.create_task(renewal_reminder_loop())
     yield
     logger.info("Shutting down...")
     push_scheduler.cancel()
+    renewal_scheduler.cancel()
     client.close()
 
 
@@ -76,6 +86,7 @@ app.include_router(admin_loyalty.router, prefix="/api")
 app.include_router(content_routes.router, prefix="/api")
 app.include_router(pickup_slots.router, prefix="/api")
 app.include_router(push.router, prefix="/api")
+app.include_router(whatsapp_routes.router, prefix="/api")
 
 
 @app.get("/api")

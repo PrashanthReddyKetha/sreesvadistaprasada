@@ -10,20 +10,18 @@ from database import db
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
-from models import Subscription, SubscriptionCreate, SubscriptionStatusUpdate, SubscriptionStatus
+from pydantic import BaseModel
+from models import Subscription, SubscriptionCreate, SubscriptionStatusUpdate, SubscriptionStatus, Address
 from auth import get_current_user, get_optional_user, require_admin
 from notifications import (
     send_email, send_sms, notify_admin,
     email_subscription_confirmation, email_delivery_skipped,
     email_subscription_cancelled, email_subscription_expired,
 )
+from subscription_pricing import quote_subscription, email_key
+from whatsapp import notify_customer, whatsapp_enabled, tracking_link, first_name
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
-
-PLAN_PRICES = {
-    "weekly":  75.0,
-    "monthly": 250.0,
-}
 
 PLAN_DAYS = {
     "weekly":  4,   # Mon + 4 = Fri
@@ -45,6 +43,45 @@ def _check_sub_rate(request: Request):
     _sub_rate_store[ip].append(now)
 
 
+_quote_rate_store: dict = defaultdict(list)
+QUOTE_RATE_MAX = 40      # quotes per hour per IP — enough for typing, too few to probe emails
+
+def _check_quote_rate(request: Request):
+    ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    cutoff = now - SUB_RATE_WINDOW
+    _quote_rate_store[ip] = [t for t in _quote_rate_store[ip] if t > cutoff]
+    if len(_quote_rate_store[ip]) >= QUOTE_RATE_MAX:
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait before trying again.")
+    _quote_rate_store[ip].append(now)
+
+
+class SubscriptionQuoteRequest(BaseModel):
+    plan: str
+    customer_email: str = ""
+    delivery_address: Address
+
+
+@router.post("/quote")
+async def quote(
+    payload: SubscriptionQuoteRequest,
+    current_user: Optional[dict] = Depends(get_optional_user),
+    _: None = Depends(_check_quote_rate),
+):
+    """
+    Price preview for the wizard: plan + delivery, with the free-delivery
+    welcome applied or not. Same function create_subscription charges against.
+    """
+    try:
+        result = await quote_subscription(
+            payload.plan, payload.customer_email, payload.delivery_address.postcode,
+            current_user["sub"] if current_user else None,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return result
+
+
 @router.post("", response_model=Subscription)
 async def create_subscription(
     request: Request,
@@ -52,9 +89,16 @@ async def create_subscription(
     current_user: Optional[dict] = Depends(get_optional_user),
     _: None = Depends(_check_sub_rate),
 ):
-    price = PLAN_PRICES.get(payload.plan.lower(), 75.0)
-    days  = PLAN_DAYS.get(payload.plan.lower(), 4)
     user_id = current_user["sub"] if current_user else None
+    try:
+        pricing = await quote_subscription(
+            payload.plan, payload.customer_email, payload.delivery_address.postcode, user_id,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    plan = pricing["plan"]
+    price = pricing["total"]
+    days  = PLAN_DAYS[plan]
 
     # Verify payment with Stripe before creating the subscription — same rule as orders.
     # Never trust the client for price; an unverified subscription is a free one.
@@ -67,7 +111,7 @@ async def create_subscription(
         raise HTTPException(400, "Invalid payment — please try again")
     if pi.status != "succeeded":
         raise HTTPException(400, "Payment was not completed — please try again")
-    if pi.amount != round(price * 100):
+    if pi.amount != pricing["total_pence"]:
         raise HTTPException(400, "Payment amount does not match plan price")
 
     # Calculate end_date and cancellation window
@@ -81,8 +125,16 @@ async def create_subscription(
     cancellation_window = (datetime.utcnow() + timedelta(hours=48)).isoformat()
 
     subscription = Subscription(
-        **payload.model_dump(exclude={'user_id'}),
+        **payload.model_dump(exclude={'user_id', 'plan'}),
+        plan=plan,
         price=price,
+        plan_price=pricing["plan_price"],
+        delivery_zone=pricing["zone"],
+        delivery_fee_per_meal=pricing["delivery_fee_per_meal"],
+        free_delivery_meals=pricing["free_delivery_meals"],
+        charged_delivery_meals=pricing["charged_delivery_meals"],
+        delivery_fee_total=pricing["delivery_fee_total"],
+        email_key=email_key(payload.customer_email),
         user_id=user_id,
         end_date=end_date_str,
         cancellation_window_expires=cancellation_window,
@@ -90,14 +142,23 @@ async def create_subscription(
     await db.subscriptions.insert_one(subscription.model_dump())
     subj, html = email_subscription_confirmation(subscription.model_dump(), payload.customer_name)
     send_email(payload.customer_email, subj, html)
-    send_sms(
-        payload.customer_phone,
-        f"Sree Svadista Prasada: your {payload.plan} Dabba Wala subscription is confirmed. Starts {payload.start_date}.",
+    notify_customer(
+        "sub_confirmed", payload.customer_phone,
+        [first_name(payload.customer_name), plan, payload.start_date, f"{price:.2f}",
+         tracking_link("subscriptions")],
+        dedupe_key=f"sub_confirmed:{subscription.id}",
+        sms_fallback=(
+            f"Sree Svadista Prasada: your {plan} Dabba Wala subscription is confirmed. "
+            f"Starts {payload.start_date}. Manage it: {tracking_link('subscriptions')}"
+        ),
     )
     notify_admin(
-        f"New subscription · {payload.plan} · {payload.customer_name}",
-        f"<p>{payload.customer_name} ({payload.customer_email}) started a <b>{payload.plan}</b> "
-        f"{payload.box_type} plan from {payload.start_date}.</p>",
+        f"New subscription · {plan} · {payload.customer_name}",
+        f"<p>{payload.customer_name} ({payload.customer_email}) started a <b>{plan}</b> "
+        f"{payload.box_type} plan from {payload.start_date}.</p>"
+        f"<p>Plan £{pricing['plan_price']:.2f} + delivery £{pricing['delivery_fee_total']:.2f} "
+        f"({pricing['charged_delivery_meals']} × £{pricing['delivery_fee_per_meal']:.2f}, "
+        f"{pricing['free_delivery_meals']} free) = <b>£{price:.2f}</b></p>",
     )
     return subscription
 
@@ -229,7 +290,8 @@ async def skip_delivery(sub_id: str, date: str, current_user: dict = Depends(get
     if sub.get("customer_email"):
         subj, html = email_delivery_skipped(name, date, short_notice)
         send_email(sub["customer_email"], subj, html)
-    if sub.get("customer_phone"):
+    # Customer just did this themselves in the dashboard — email is enough once WhatsApp is live
+    if sub.get("customer_phone") and not whatsapp_enabled():
         send_sms(
             sub["customer_phone"],
             f"Sree Svadista Prasada: your Dabba Wala on {date} is skipped. Plan resumes after that day.",

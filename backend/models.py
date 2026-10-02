@@ -324,7 +324,15 @@ class SubscriptionStatusUpdate(BaseModel):
 
 class Subscription(SubscriptionCreate):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    price: float = 0.0
+    price: float = 0.0              # total charged: plan + delivery
+    # Delivery pricing snapshot — set server-side by subscription_pricing, never from the client
+    plan_price: Optional[float] = None
+    delivery_zone: Optional[int] = None
+    delivery_fee_per_meal: Optional[float] = None
+    free_delivery_meals: Optional[int] = None
+    charged_delivery_meals: Optional[int] = None
+    delivery_fee_total: Optional[float] = None
+    email_key: Optional[str] = None         # lower-cased email — recognises returning guests
     status: SubscriptionStatus = SubscriptionStatus.active
     end_date: Optional[str] = None
     meals_delivered: int = 0

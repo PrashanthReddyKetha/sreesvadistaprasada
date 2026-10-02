@@ -396,7 +396,7 @@ function GuestPhoneVerify({ phone, verifiedPhone, onVerified }) {
 
   if (isVerified) return (
     <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#166534' }}>
-      <CheckCircle size={13} /> Mobile verified — we&apos;ll text your order updates here.
+      <CheckCircle size={13} /> Mobile verified — we&apos;ll send order updates here by WhatsApp or text. Reply STOP any time.
     </div>
   );
 

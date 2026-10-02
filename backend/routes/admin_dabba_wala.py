@@ -15,6 +15,7 @@ from notifications import (
     send_email, send_sms, notify_admin,
     email_subscription_cancelled, email_renewal_reminder, email_delivery_issue,
 )
+from whatsapp import notify_customer, tracking_link, first_name, send_renewal_reminder as wa_renewal_reminder
 import uuid
 
 router = APIRouter(prefix="/admin", tags=["admin-dabba-wala"])
@@ -272,9 +273,10 @@ async def send_renewal_reminder(sub_id: str, current_user: dict = Depends(requir
         send_email(doc["customer_email"], subj, html)
         sent = True
     if doc.get("customer_phone"):
-        send_sms(
-            doc["customer_phone"],
-            f"Sree Svadista Prasada: your Dabba Wala ends {doc.get('end_date','soon')}. Renew at sreesvadistaprasada.com/subscriptions",
+        # Shares its dedupe key with the automatic reminder — a customer is never nudged twice
+        await wa_renewal_reminder(doc)
+        await db.subscriptions.update_one(
+            {"id": sub_id}, {"$set": {"renewal_reminded_at": datetime.utcnow().isoformat()}}
         )
         sent = True
     entry = audit_entry(current_user, "renewal_reminder_sent", None, datetime.utcnow().isoformat())
@@ -391,12 +393,32 @@ async def update_delivery_status(delivery_id: str, payload: dict, current_user: 
     if sub_id and date:
         sub = await db.subscriptions.find_one({"id": sub_id}, {"_id": 0})
         if sub and sub.get("customer_phone"):
-            sms_copy = {
-                "out_for_delivery": f"Sree Svadista Prasada: your Dabba Wala box for {date} is on the way. Please keep your phone handy.",
-                "delivered": f"Sree Svadista Prasada: your Dabba Wala box for {date} has been delivered — enjoy! Rate today's meal on your dashboard.",
-            }.get(new_status)
-            if sms_copy:
-                send_sms(sub["customer_phone"], sms_copy)
+            name = first_name(sub.get("customer_name"))
+            link = tracking_link("subscriptions")
+            if new_status == "out_for_delivery":
+                menu_doc = await db.weekly_menu_days.find_one(
+                    {"date": date, "box_type": sub.get("box_type", "prasada")}, {"_id": 0, "items": 1}
+                )
+                dishes = ", ".join((menu_doc or {}).get("items") or []) or "chef's choice"
+                notify_customer(
+                    "sub_on_the_way", sub["customer_phone"], [name, dishes, link],
+                    dedupe_key=f"sub_on_the_way:{delivery_id}",
+                    sms_fallback=f"Sree Svadista Prasada: your Dabba Wala box for {date} is on the way. Please keep your phone handy.",
+                )
+            elif new_status == "delivered":
+                # A daily subscriber gets one message a day, not two — "delivered" is only
+                # sent when the box was left unattended and they need to know where it is.
+                where = {
+                    "door": "left at your door",
+                    "neighbour": f"left with your neighbour {sub.get('neighbour_name') or ''}".strip(),
+                    "safeplace": "left in your safe place",
+                }.get(sub.get("delivery_instruction", "door"))
+                if where:
+                    notify_customer(
+                        "sub_delivered", sub["customer_phone"], [name, where, link],
+                        dedupe_key=f"sub_delivered:{delivery_id}",
+                        sms_fallback=f"Sree Svadista Prasada: your Dabba Wala box for {date} has been delivered ({where}) — enjoy!",
+                    )
         if new_status == "delivered" and sub:
             menu_doc = await db.weekly_menu_days.find_one(
                 {"date": date, "box_type": sub.get("box_type", "prasada")}, {"_id": 0}
@@ -429,6 +451,12 @@ async def flag_delivery_issue(delivery_id: str, payload: dict, current_user: dic
             if sub.get("customer_email"):
                 subj, html = email_delivery_issue(name, date, description)
                 send_email(sub["customer_email"], subj, html)
+            notify_customer(
+                "sub_issue", sub.get("customer_phone"),
+                [first_name(name), date, (description or "we hit a snag with your delivery").rstrip(". "),
+                 tracking_link("subscriptions")],
+                dedupe_key=f"sub_issue:{delivery_id}",
+            )
             notify_admin(
                 f"Delivery issue flagged · {name} · {date}",
                 f"<p><b>{name}</b> ({sub.get('customer_email','—')}) — delivery {delivery_id}:</p>"

@@ -18,6 +18,7 @@ from notifications import (
     email_order_confirmation, email_order_status,
     create_notification, send_push_notification,
 )
+from whatsapp import notify_customer, whatsapp_enabled, tracking_link, first_name
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -497,8 +498,15 @@ async def create_order(
             when = f"Your requested time was full — new collection time {slot_label(scheduled_final)}."
         sms_body = f"Sree Svadista Prasada: order #{short_id} received — £{order.total:.2f}. {when}"
     else:
+        when = "We'll message you when it's on the way."
         sms_body = f"Sree Svadista Prasada: order #{short_id} received — £{order.total:.2f}. We'll text you when it's on the way."
-    send_sms(payload.customer_phone, sms_body)
+    notify_customer(
+        "order_received", payload.customer_phone,
+        [first_name(payload.customer_name), short_id, f"{order.total:.2f}", when,
+         tracking_link("orders", order.id)],
+        dedupe_key=f"order_received:{order.id}",
+        sms_fallback=sms_body,
+    )
     notify_admin(
         f"New order · £{order.total:.2f} · {payload.customer_name}",
         f"<p>New order <b>#{short_id}</b> from {payload.customer_name} "
@@ -580,8 +588,26 @@ async def update_order_status(
             "delivered": delivered_sms,
             "cancelled": f"Order #{disp} was cancelled. Reply to your confirmation email if this is wrong.",
         }.get(payload.status.value)
+        # WhatsApp only for the moments that matter: ready / on the way / delivered / cancelled.
+        # "confirmed" and "preparing" are visible on the tracking link from the first
+        # message; a collected takeaway needs no message at all — they're holding the bag.
+        wa_event = {
+            "ready": "order_ready",
+            "out_for_delivery": "order_on_the_way",
+            "delivered": None if is_takeaway else "order_delivered",
+            "cancelled": "order_cancelled",
+        }.get(payload.status.value)
         if sms_copy and doc.get("customer_phone"):
-            send_sms(doc["customer_phone"], f"Sree Svadista Prasada: {sms_copy}")
+            sms_text = f"Sree Svadista Prasada: {sms_copy}"
+            if wa_event:
+                notify_customer(
+                    wa_event, doc["customer_phone"],
+                    [first_name(name), disp, tracking_link("orders", order_id)],
+                    dedupe_key=f"{wa_event}:{order_id}",
+                    sms_fallback=sms_text,
+                )
+            elif not whatsapp_enabled():
+                send_sms(doc["customer_phone"], sms_text)
         if payload.status.value == "cancelled" and doc.get("scheduled_slot_final"):
             from routes.pickup_slots import release_slot
             await release_slot(doc["scheduled_slot_final"])
@@ -689,8 +715,12 @@ async def cancel_order(order_id: str, current_user: dict = Depends(get_current_u
             f"<p>Hi {cust_name},</p><p>Your order <b>#{short_id}</b> has been cancelled as requested.</p>"
             "<p>If you did not request this, please contact us immediately.</p>",
         )
-    if cust_phone:
-        send_sms(cust_phone, f"Sree Svadista Prasada: Order #{short_id} cancelled. Contact us if this was not you.")
+    notify_customer(
+        "order_cancelled", cust_phone,
+        [first_name(cust_name), short_id, tracking_link("orders", order_id)],
+        dedupe_key=f"order_cancelled:{order_id}",
+        sms_fallback=f"Sree Svadista Prasada: Order #{short_id} cancelled. Contact us if this was not you.",
+    )
     user_id = doc.get("user_id")
     if user_id:
         await create_notification(

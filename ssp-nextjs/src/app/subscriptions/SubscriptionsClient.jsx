@@ -367,6 +367,22 @@ function StickyMobileCta() {
   );
 }
 
+/* Delivery pricing in plain words — welcome offer for new accounts, standard rate for returning ones */
+const DeliveryQuoteNote = ({ quote, promoOnly }) => {
+  const fee = `£${quote.delivery_fee_per_meal.toFixed(2)}`;
+  const rate = `${fee} per meal (${quote.delivery_discount_pct}% less than our standard £${quote.standard_delivery_fee.toFixed(2)})`;
+  const priceLine = quote.charged_delivery_meals > 0
+    ? quote.free_delivery_meals > 0
+      ? `After that, delivery to your postcode is ${rate} — £${quote.delivery_fee_total.toFixed(2)} for the remaining ${quote.charged_delivery_meals} meals.`
+      : `Delivery to your postcode is ${rate} — £${quote.delivery_fee_total.toFixed(2)} for ${quote.charged_delivery_meals} meals.`
+    : 'That covers every delivery on this plan, so there is no delivery charge to add.';
+  return (
+    <InfoBox bg={C.greenLight} border={C.green} color={C.greenText}>
+      <strong>{quote.promo_message}</strong>{!promoOnly && <> {priceLine}</>}
+    </InfoBox>
+  );
+};
+
 const StepIndicator = ({ step }) => (
   <div className="py-5 px-4 md:px-8" style={{ backgroundColor: C.surface, borderBottom: `0.5px solid rgba(128,0,32,0.1)` }}>
     <div className="max-w-2xl mx-auto flex items-center justify-between">
@@ -439,6 +455,8 @@ const SubscriptionsInner = () => {
   const [lapsedSub, setLapsedSub] = useState(null);
   const postcodeTimer = useRef(null);
   const wizardTopRef  = useRef(null);
+  const [quote, setQuote] = useState(null);       // server-priced plan + delivery breakdown
+  const [quoteError, setQuoteError] = useState('');
 
   /* scroll to top on page enter */
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
@@ -552,6 +570,27 @@ const SubscriptionsInner = () => {
     postcodeTimer.current = setTimeout(() => checkPostcode(sanitized), 600);
   };
 
+  /* live price quote — the server owns pricing (plan + delivery, welcome offer applied or not) */
+  const fetchQuote = useCallback(async () => {
+    const res = await api.post('/subscriptions/quote', {
+      plan: selectedPlan,
+      customer_email: customer.email,
+      delivery_address: { line1: customer.line1, line2: customer.line2 || undefined, city: customer.city || 'Milton Keynes', postcode: customer.postcode },
+    });
+    return res.data;
+  }, [selectedPlan, customer.email, customer.line1, customer.line2, customer.city, customer.postcode]);
+
+  useEffect(() => {
+    if (step < 5 || !postcodeStatus?.ok || !customer.line1 || !customer.postcode) { setQuote(null); return; }
+    let stale = false;
+    const t = setTimeout(() => {
+      fetchQuote()
+        .then(q => { if (!stale) { setQuote(q); setQuoteError(''); } })
+        .catch(e => { if (!stale) { setQuote(null); setQuoteError(e.response?.data?.detail || 'Could not calculate your delivery price. Please try again.'); } });
+    }, 500);
+    return () => { stale = true; clearTimeout(t); };
+  }, [step, postcodeStatus, fetchQuote, customer.line1, customer.postcode]);
+
   /* proceed validation */
   const canProceed = () => {
     if (step === 1) return !!selectedPlan;
@@ -625,9 +664,10 @@ const SubscriptionsInner = () => {
     setSubmitStatus('loading');
     setErrorMessage('');
     try {
-      const planPrice = planData?.price || 45;
-      // 1. Create payment intent
-      const intentRes = await api.post('/payments/create-intent', { amount: planPrice });
+      // 1. Re-price at the moment of payment so the charge always matches what the server will verify
+      const fresh = await fetchQuote();
+      setQuote(fresh);
+      const intentRes = await api.post('/payments/create-intent', { amount: fresh.total });
       const { client_secret, payment_intent_id } = intentRes.data;
       // 2. Confirm card payment with individual elements
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
@@ -662,7 +702,7 @@ const SubscriptionsInner = () => {
       localStorage.setItem('ssp_subscription_success', JSON.stringify({
         plan: selectedPlan, box: selectedBox, startWeek: selectedStartWeek,
       }));
-      trackSubscriptionPurchase(selectedPlan, selectedBox, planData?.price || 75, planData?.meals || 0, planData?.perMeal || 0);
+      trackSubscriptionPurchase(selectedPlan, selectedBox, fresh.total, planData?.meals || 0, planData?.perMeal || 0);
       setSubmitStatus('success');
     } catch (e) {
       setSubmitStatus('error');
@@ -840,7 +880,7 @@ const SubscriptionsInner = () => {
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service</p>
               <h2 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Your Daily Dose of Home<span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Dabba Wala — Indian tiffin subscription in Milton Keynes</span></h2>
               <p className="text-sm text-gray-200">Fresh South Indian meals delivered Mon–Fri. No cooking required.</p>
-              <p className="text-sm font-semibold mt-1.5" style={{ color: '#F4C430' }}>From £12.50 a meal on the monthly plan (£15 on weekly) · Fixed term — no auto-renewal, no hidden fees</p>
+              <p className="text-sm font-semibold mt-1.5" style={{ color: '#F4C430' }}>From £12.50 a meal on the monthly plan (£15 on weekly) + delivery · No delivery fee in your first week · Fixed term — no auto-renewal, no hidden fees</p>
               <div className="flex items-center gap-5 mt-5 flex-wrap">
                 <a href="#plans" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm transition-colors duration-150" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
                   See plans &amp; pricing <ArrowRight size={15} />
@@ -1006,9 +1046,10 @@ const SubscriptionsInner = () => {
                     style={{ backgroundColor: 'white', border: selectedPlan === plan.id ? `2px solid ${C.primary}` : '0.5px solid #e0d9d0', boxShadow: selectedPlan === plan.id ? `0 4px 20px rgba(128,0,32,0.1)` : '0 2px 6px rgba(0,0,0,0.04)' }}>
                     <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-3" style={plan.badgeStyle}>{plan.badge}</span>
                     <p className="font-semibold mb-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, color: C.primary }}>{plan.name}</p>
-                    <p className="mb-1" style={{ fontSize: 24, fontWeight: 500, color: C.primary }}>£{plan.price}</p>
+                    <p className="mb-1" style={{ fontSize: 24, fontWeight: 500, color: C.primary }}>£{plan.price} <span style={{ fontSize: 13, fontWeight: 400, color: C.muted }}>+ delivery</span></p>
                     <p className="text-sm" style={{ color: C.muted }}>{plan.meals} meals · Mon–Fri · Serves 1</p>
                     <p className="text-xs" style={{ color: C.muted }}>£{plan.perMeal} per meal · Lunch delivery 12–2pm</p>
+                    <p className="text-xs" style={{ color: C.muted }}><strong style={{ color: C.greenText }}>No delivery fee in your first week</strong> · then from £1.74 per delivery</p>
                     {plan.save && <p className="text-xs font-bold mt-1.5" style={{ color: C.greenText }}>{plan.save}</p>}
                     {selectedPlan === plan.id && <div className="absolute top-4 right-4"><Check size={16} style={{ color: C.primary }} /></div>}
                   </button>
@@ -1017,7 +1058,7 @@ const SubscriptionsInner = () => {
 
               <div className="mt-5">
                 <InfoBox bg={C.surface} border="#e0d9d0" color={C.muted}>
-                  No hidden charges, no auto-renewal — you are always in control.
+                  No hidden charges, no auto-renewal — you are always in control. Plans are priced as meals + delivery: <strong>we waive the delivery fee for your first week (5 meals)</strong>, and after that it is a small per-meal delivery fee based on your postcode (from £1.74 — 30% less than our standard delivery rate), shown in full before you pay.
                 </InfoBox>
               </div>
 
@@ -1428,7 +1469,7 @@ const SubscriptionsInner = () => {
                         onChange={e => setCustomer(prev => ({ ...prev, phone: e.target.value }))}
                         className="w-full p-3 rounded-xl text-sm focus:outline-none transition-colors"
                         style={{ border: '0.5px solid #e0d9d0' }} />
-                      <p className="text-[11px] mt-1" style={{ color: C.muted }}>So the driver can reach you on delivery day.</p>
+                      <p className="text-[11px] mt-1" style={{ color: C.muted }}>So the driver can reach you, and for delivery updates by WhatsApp or text — reply STOP any time.</p>
                     </div>
                   </div>
                   {/* Postcode feedback */}
@@ -1534,6 +1575,16 @@ const SubscriptionsInner = () => {
                 </div>
               )}
 
+              {/* Delivery price for this address */}
+              {postcodeStatus?.ok && quote && (
+                <div className="mt-6">
+                  <DeliveryQuoteNote quote={quote} />
+                </div>
+              )}
+              {postcodeStatus?.ok && quoteError && (
+                <p className="text-xs mt-4 font-medium text-red-600">{quoteError}</p>
+              )}
+
               {/* Food safety note */}
               <div className="mt-6">
                 <InfoBox bg={C.surface} border="#e0d9d0" color={C.muted}>
@@ -1592,7 +1643,7 @@ const SubscriptionsInner = () => {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-3xl font-bold text-white">£{planData?.price}</p>
-                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>£{planData?.perMeal}/meal</p>
+                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>£{planData?.perMeal}/meal{quote?.delivery_fee_total > 0 ? ' + delivery' : ''}</p>
                     </div>
                   </div>
                 </div>
@@ -1682,14 +1733,35 @@ const SubscriptionsInner = () => {
                           <span>{planData?.meals} meals × £{planData?.perMeal}</span>
                           <span style={{ color: C.dark }}>£{planData?.price}.00</span>
                         </div>
-                        <div className="flex justify-between text-sm text-gray-500 mb-3">
-                          <span>Delivery (Mon–Fri)</span>
-                          <span style={{ color: C.green }} className="font-semibold">Free</span>
-                        </div>
-                        <div className="border-t pt-3 flex justify-between items-center" style={{ borderColor: '#f0ebe6' }}>
+                        {quote?.free_delivery_meals > 0 && (
+                          <div className="flex justify-between text-sm text-gray-500 mb-2">
+                            <span>Delivery · first {quote.free_delivery_meals} meals</span>
+                            <span style={{ color: C.green }} className="font-semibold">Free</span>
+                          </div>
+                        )}
+                        {quote?.charged_delivery_meals > 0 && (
+                          <div className="flex justify-between text-sm text-gray-500 mb-2">
+                            <span>
+                              Delivery · {quote.charged_delivery_meals} meals × £{quote.delivery_fee_per_meal.toFixed(2)}
+                              <span className="block text-[11px]" style={{ color: C.greenText }}>
+                                {quote.delivery_discount_pct}% off our standard £{quote.standard_delivery_fee.toFixed(2)}
+                              </span>
+                            </span>
+                            <span style={{ color: C.dark }}>£{quote.delivery_fee_total.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="border-t pt-3 mt-3 flex justify-between items-center" style={{ borderColor: '#f0ebe6' }}>
                           <span className="font-bold text-base" style={{ color: C.dark }}>Total today</span>
-                          <span className="text-2xl font-bold" style={{ color: C.primary }}>£{planData?.price}.00</span>
+                          <span className="text-2xl font-bold" style={{ color: C.primary }}>{quote ? `£${quote.total.toFixed(2)}` : '—'}</span>
                         </div>
+                        {quote && quote.promo_state !== 'welcome' && (
+                          <div className="mt-3"><DeliveryQuoteNote quote={quote} promoOnly /></div>
+                        )}
+                        {!quote && (
+                          <p className="text-xs mt-2" style={{ color: quoteError ? '#DC2626' : C.muted }}>
+                            {quoteError || 'Calculating delivery for your postcode…'}
+                          </p>
+                        )}
                       </div>
 
                       {/* Card input */}
@@ -1729,17 +1801,17 @@ const SubscriptionsInner = () => {
                       </div>
 
                       {/* Pay button */}
-                      <button onClick={handleConfirm} disabled={!termsChecked || submitStatus === 'loading'}
+                      <button onClick={handleConfirm} disabled={!termsChecked || !quote || submitStatus === 'loading'}
                         className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 hover:shadow-xl"
                         style={{ background: `linear-gradient(135deg, ${C.primary}, #5C0018)` }}>
                         {submitStatus === 'loading'
                           ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
-                          : <>Pay £{planData?.price}.00 — {planData?.name}</>
+                          : <>Pay {quote ? `£${quote.total.toFixed(2)}` : '…'} — {planData?.name}</>
                         }
                       </button>
 
                       <div className="flex items-center justify-center gap-4">
-                        {[['🔒', 'Secure'], ['🍛', 'Fresh daily'], ['📦', 'Free delivery']].map(([icon, label]) => (
+                        {[['🔒', 'Secure'], ['🍛', 'Fresh daily'], ['📦', 'No hidden fees']].map(([icon, label]) => (
                           <div key={label} className="flex items-center gap-1">
                             <span className="text-sm">{icon}</span>
                             <span className="text-[11px] text-gray-400">{label}</span>
