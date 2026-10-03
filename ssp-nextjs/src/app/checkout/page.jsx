@@ -196,6 +196,18 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
                 <span>🏷️ Coupon {coupon.code} <span className="text-xs font-normal text-gray-400">({coupon.label})</span></span><span>-{fmt(coupon.discount)}</span>
               </div>
             )}
+            {deliveryType === 'takeaway' && feeSaved > 0 && (
+              <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
+                <span>Delivery fee saved by collecting</span>
+                <span>-{fmt(feeSaved)}{feeSavedIsEstimate ? '+' : ''}</span>
+              </div>
+            )}
+            {deliveryType === 'takeaway' && smallFeeSaved > 0 && (
+              <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
+                <span>Small order fee saved <span className="text-xs font-normal text-gray-400">(orders under £20)</span></span>
+                <span>-{fmt(smallFeeSaved)}</span>
+              </div>
+            )}
             {deliveryType === 'delivery' && smallOrderFee > 0 && (
               <div className="flex justify-between text-sm" style={{ color: '#92400E' }}>
                 <span>Small order fee <span className="text-xs text-gray-400">(orders under £20, excl. delivery fee)</span></span>
@@ -1729,9 +1741,9 @@ const CheckoutInner = () => {
                 grandTotal={grandTotal}
                 deliveryType={deliveryType}
                 feeKnown={deliveryType === 'takeaway' || !!validPricing}
-                feeSaved={potentialDeliveryFee ?? MIN_DELIVERY_FEE}
+                feeSaved={kitchen.deliveryEnabled ? (potentialDeliveryFee ?? MIN_DELIVERY_FEE) : 0}
                 feeSavedIsEstimate={collectSavingIsEstimate}
-                smallFeeSaved={meetsMinimum && effectiveSubtotal <= 19.99 ? 1.50 : 0}
+                smallFeeSaved={kitchen.deliveryEnabled && meetsMinimum && effectiveSubtotal <= 19.99 ? 1.50 : 0}
                 onAddMore={() => setShowBrowse(true)}
               />
 
