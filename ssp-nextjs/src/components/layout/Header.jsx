@@ -123,8 +123,12 @@ const Header = () => {
           </Link>
         ) : (
           <>
-            <span className="hidden sm:inline">Swagatam MK 🙏 &nbsp;·&nbsp; Authentic Andhra flavours, cooked fresh and delivered across Milton Keynes — order now 🌶️</span>
-            <span className="sm:hidden">Swagatam MK 🙏 · Fresh Andhra flavours, delivered — order now 🌶️</span>
+            <span className="hidden sm:inline">Swagatam MK 🙏 &nbsp;·&nbsp; {kitchen.deliveryEnabled
+              ? 'Authentic Andhra flavours, cooked fresh and delivered across Milton Keynes — order now 🌶️'
+              : 'Authentic Andhra flavours, cooked fresh in Milton Keynes — order now, collect and save 10% 🌶️'}</span>
+            <span className="sm:hidden">Swagatam MK 🙏 · {kitchen.deliveryEnabled
+              ? 'Fresh Andhra flavours, delivered — order now 🌶️'
+              : 'Fresh Andhra flavours — collect & save 10% 🌶️'}</span>
           </>
         )}
       </div>

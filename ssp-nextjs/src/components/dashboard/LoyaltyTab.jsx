@@ -49,7 +49,7 @@ export default function LoyaltyTab() {
         </h3>
         <p className="text-[#5C4B47] text-sm leading-relaxed max-w-sm mx-auto mb-6">
           Every time you complete 5 orders with us, you earn a free item from our entire menu.
-          Any dish. No minimum order value. Only the delivery fee applies.
+          Any dish from the menu, added free to your next order.
         </p>
         <div className="flex items-center justify-center gap-1 mb-6">
           {[1, 2, 3, 4, 5].map(n => (
@@ -87,7 +87,7 @@ export default function LoyaltyTab() {
           </div>
           <p className="text-sm text-white/85 mb-4 leading-relaxed">
             Choose any item from our entire menu on your next order — completely free.
-            No minimum order. Only the delivery fee applies.
+            Just add it to your next order.
           </p>
           <Link
             href="/menu"

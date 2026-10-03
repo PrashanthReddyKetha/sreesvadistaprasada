@@ -64,7 +64,7 @@ function SkipModal({ date, shortNotice, onConfirm, onCancel, submitting }) {
           Skip delivery on {new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}?
         </h3>
         <p className="text-sm mb-3" style={{ color: '#5C4B47' }}>
-          We completely understand — emergencies happen, plans change, sometimes you just won't be home. Are you sure you want to cancel this meal?
+          We completely understand — plans change. This meal won't be delivered, and it isn't automatically moved to another day. If you'd like a longer break or to arrange something different, just message us.
         </p>
         {shortNotice && (
           <div className="rounded-lg p-3 mb-4 text-xs" style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '0.5px solid #F4C430' }}>
@@ -141,7 +141,7 @@ export default function SubActiveCard({ sub }) {
       await api.post(`/subscriptions/${sub.id}/deliveries/${skipTarget.date}/skip`);
       setSkipTarget(null);
       loadDeliveries();
-    } catch { /* show inline error? keep minimal */ }
+    } catch (e) { alert(e.response?.data?.detail || "Sorry, we couldn't skip that meal — please try again or message us."); }
     finally { setSkipping(false); }
   };
 

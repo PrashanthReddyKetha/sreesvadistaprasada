@@ -168,7 +168,7 @@ function getWeekConfig() {
     weeks.push({
       label: i === 0 ? 'Next week' : i === 1 ? 'The week after' : `In ${i + 1} weeks`,
       monday: m,
-      badge: i === 0 ? 'Recommended start' : 'Preview',
+      badge: i === 0 ? 'Recommended start' : 'Or start this week',
     });
   }
 
@@ -512,9 +512,9 @@ const SubscriptionsInner = () => {
 
   /* set start week when tab changes in step 3 */
   useEffect(() => {
-    const w = weekCfg.weeks[menuTab];
+    const w = selectedPlan === 'monthly' ? weekCfg.weeks[0] : weekCfg.weeks[menuTab];
     if (w) setSelectedStartWeek(isoDate(w.monday));
-  }, [menuTab, weekCfg.weeks]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [menuTab, weekCfg.weeks, selectedPlan]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* fetch menu for a tab — with auto-retry for Render cold start */
   const fetchMenu = useCallback(async (tabIdx, attempt = 1) => {
@@ -558,7 +558,7 @@ const SubscriptionsInner = () => {
         city: res.data.city,
         msg: ok
           ? `Postcode verified — we deliver to ${res.data.city}. Your meals will be on their way from ${fmtShort(nextMon)}.`
-          : 'We do not currently deliver to this postcode. We serve Milton Keynes, Edinburgh, and Glasgow.',
+          : 'We do not currently deliver to this postcode. Dabba Wala is available within Milton Keynes.',
       });
     } catch { setPostcodeStatus({ ok: false, msg: 'Could not verify postcode.' }); }
   }, [weekCfg]);
@@ -969,7 +969,7 @@ const SubscriptionsInner = () => {
             <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>How it works</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {[
-                { icon: Package, title: 'Pick your dabba', desc: 'Prasada, Svadista, or a bit of both. Weekly trial or monthly saver.' },
+                { icon: Package, title: 'Pick your dabba', desc: 'Prasada (veg) or Svadista (non-veg). Weekly trial or monthly saver.' },
                 { icon: Calendar, title: 'Tell us your week', desc: 'Pick a start date, any dietary preferences, and where to deliver.' },
                 { icon: Truck, title: 'Open it warm', desc: 'Cooked that morning and delivered hot, Mon–Fri, straight to you.' },
               ].map((row, i) => (
@@ -1627,7 +1627,7 @@ const SubscriptionsInner = () => {
             const BoxIcon = boxData?.id === 'prasada' ? Leaf : Flame;
             const boxColor = boxData?.id === 'prasada' ? C.green : C.primary;
             const boxBg = boxData?.id === 'prasada' ? C.greenLight : '#FAECE7';
-            const friDate = (() => { const d = new Date(selectedStartWeek + 'T12:00:00'); d.setDate(d.getDate() + 4); return isoDate(d); })();
+            const friDate = (() => { const d = new Date(selectedStartWeek + 'T12:00:00'); d.setDate(d.getDate() + (selectedPlan === 'monthly' ? 25 : 4)); return isoDate(d); })();
             const days = currentMenuData ? Object.entries(currentMenuData.days || {}) : [];
             return (
               <div>

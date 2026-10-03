@@ -13,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useNotifyMe } from '@/context/NotifyMeContext';
 import { isOrderable } from '@/config/softLaunch';
+import RestockBell from '@/components/RestockBell';
 import api from '@/api';
 import { buildItemUrl } from '@/lib/itemUrl';
 
@@ -75,8 +76,8 @@ const CATEGORY_FAQS = {
 };
 
 const GENERAL_FAQS = [
-  { q:'How long does delivery take?', a:'30–60 mins across Milton Keynes. Edinburgh and Glasgow are coming soon.' },
-  { q:'What is the minimum for free delivery?', a:'Free delivery kicks in from £28–£40 depending on your MK zone — your exact threshold shows at checkout.' },
+  { q:'How do I get my order?', a:'Order online and collect from our kitchen in Greenleys, Milton Keynes (MK12) — usually ready in about 40 minutes, and collection saves 10%. When delivery is switched on you can choose it at checkout.' },
+  { q:'Is there a minimum order?', a:'Yes — the minimum order is £15.' },
   { q:'Can I customise my order?', a:'Yes — use the Special Instructions field at checkout for any requests.' },
   { q:'Do you cater for large groups?', a:'Yes! Visit our Catering page to request a quote for events and celebrations.' },
 ];
@@ -209,7 +210,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
 
   const handleAddToCart = () => {
     for (let i = 0; i < qty; i++) {
-      addToCart({ ...item, price:`£${item.price.toFixed(2)}` });
+      addToCart({ ...item, price:`£${item.price.toFixed(2)}`, preorder: !!item.preorder_only });
     }
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -326,6 +327,11 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
                 <SpiceDots level={item.spice_level} />
               </div>
 
+              {!(item.allergens?.length > 0) && (
+                <p className="mb-4 text-xs flex items-center gap-1.5" style={{ color:'#8B6914' }}>
+                  <AlertTriangle size={13} /> Allergen details aren&apos;t listed for this dish yet — please ask us before ordering.
+                </p>
+              )}
               {item.allergens?.length > 0 && (
                 <div className="mb-4">
                   <div className="flex items-center gap-1.5 mb-2">
@@ -358,7 +364,12 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
                 </button>
               </div>
 
-              {isOrderable(item.category) ? (
+              {isOrderable(item.category) && item.sold_out_today ? (
+                <div className="rounded-xl p-4 text-center" style={{ backgroundColor:'#F3EDE2' }}>
+                  <p className="text-sm font-semibold mb-2" style={{ color:'#5C4B47' }}>Sold out for today</p>
+                  <RestockBell item={item} />
+                </div>
+              ) : isOrderable(item.category) ? (
                 <>
                   <div className="flex items-center gap-3">
                     <p className="text-sm font-semibold" style={{ color:'#5C4B47' }}>Quantity</p>
@@ -630,7 +641,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
             </div>
             {isOrderable(item.category) ? (
               <button onClick={() => {
-                addToCart({ ...item, price:`£${item.price.toFixed(2)}` });
+                addToCart({ ...item, price:`£${item.price.toFixed(2)}`, preorder: !!item.preorder_only });
                 if (goesWith[0]) addToCart({ ...goesWith[0], price:`£${goesWith[0].price.toFixed(2)}` });
               }} className="mt-4 w-full py-3 rounded-xl font-semibold text-sm transition-all hover:shadow-lg"
                 style={{ backgroundColor:'#F4C430', color:'#3D2B1F' }}>

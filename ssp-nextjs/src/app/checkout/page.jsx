@@ -1046,7 +1046,9 @@ const CheckoutInner = () => {
     const required = deliveryType === 'takeaway'
       ? ['name', 'email', 'phone']
       : ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
-    if (required.some(k => !form[k].trim())) { setError('Please fill in all required fields.'); return; }
+    const FIELD_LABELS = { name: 'your name', email: 'your email', phone: 'your mobile number', line1: 'your address', city: 'your town', postcode: 'your postcode' };
+    const missing = required.filter(k => !form[k].trim());
+    if (missing.length) { setError(`Please add ${missing.map(k => FIELD_LABELS[k]).join(', ')}.`); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('Please enter a valid email address.'); return; }
     if (!user && fbAuth && verifiedPhone !== normPhone(form.phone)) {
       setError('Please verify your mobile number first — we text you when your order is ready.');
@@ -1226,7 +1228,7 @@ const CheckoutInner = () => {
           {success.isTakeaway && success.slotFinal && (
             <div className="rounded-xl px-4 py-3 mb-4 text-sm font-bold"
               style={{ backgroundColor: '#FBF3DC', color: '#854D0E' }}>
-              \ud83d\udd70\ufe0f Collect at {slotLabel(success.slotFinal)}
+              🕰️ Collect at {slotLabel(success.slotFinal)}
               {success.slotBumped && (
                 <p className="text-xs font-medium mt-1">
                   Your requested time had just filled up, so we&apos;ve moved you to the next available slot.
@@ -1839,6 +1841,9 @@ const CheckoutInner = () => {
                   🔒 {kitchen.message}
                   <div className="mt-2"><KitchenClosedNotify /></div>
                 </div>
+              )}
+              {error && (
+                <p role="alert" className="text-sm font-medium p-3 rounded-xl" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{error}</p>
               )}
               {canCheckout && kitchen.open && (
                 <button onClick={handleOrder} disabled={submitting || !meetsMinimum || !validPricing}

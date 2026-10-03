@@ -93,7 +93,7 @@ export default function SubscriptionsAboutPage() {
 
         {/* Plans */}
         <h2 className="text-2xl font-bold mt-10 mb-5" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-          The Three Dabbas
+          The Two Dabbas
         </h2>
         <div className="grid gap-4 mb-10">
           {[
@@ -104,10 +104,6 @@ export default function SubscriptionsAboutPage() {
             {
               name: 'Svadista Dabba — Non-Vegetarian',
               desc: 'Rice, chicken or mutton curry, pickle, omelette and papad. Bold Andhra flavour, every day.',
-            },
-            {
-              name: 'Mixed Dabba — Weekly Rotation',
-              desc: 'A weekly rotation of Prasada and Svadista. Variety planned by our kitchen. The most popular plan for families.',
             },
           ].map(plan => (
             <div key={plan.name} className="rounded-lg p-5" style={{ border: '1px solid rgba(244,196,48,0.4)', backgroundColor: '#FDFBF7' }}>

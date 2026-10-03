@@ -67,14 +67,14 @@ export default function Page() {
             <p>
               Rice, dal, sabzi, curry, pickle and papad — a complete home-style South
               Indian meal, packed fresh and delivered hot. No MSG. No preservatives.
-              Traditional Andhra and Telugu recipes, every day. Choose Prasada (pure veg),
-              Svadista (non-veg) or a Mixed weekly box, or save with the monthly plan.
+              Traditional Andhra and Telugu recipes, every day. Choose Prasada (pure veg)
+              or Svadista (non-veg), weekly — or save with the monthly plan.
             </p>
           </div>
           <div>
             <h2 className="text-lg font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>How it works</h2>
             <p>
-              Choose your plan, pick your delivery days, and we cook fresh and deliver to
+              Choose your plan and start week, and we cook fresh and deliver Monday to Friday to
               your door. No auto-renewal — and if your plans change, just get in touch. We&apos;re flexible.
             </p>
           </div>

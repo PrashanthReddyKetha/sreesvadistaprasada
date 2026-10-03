@@ -1,4 +1,5 @@
 'use client';
+import { useKitchen } from '@/context/KitchenContext';
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link'
 import Image from 'next/image'
@@ -31,6 +32,7 @@ import { isOrderable } from '@/config/softLaunch';
 import { buildItemUrl } from '@/lib/itemUrl';
 
 const Home = () => {
+  const { deliveryEnabled } = useKitchen();
   const trendingRef = useRef(null);
   const specialsRef = useRef(null);
   const trendingPausedRef = useRef(false);
@@ -508,8 +510,8 @@ const Home = () => {
 
           <div className="grid grid-cols-3 gap-3 md:gap-12 mb-8 md:mb-12">
             {[
-              { num: '01', icon: Package, title: 'Pick Your Dabba', desc: 'Prasada, Svadista, or a bit of both. Weekly or monthly — whichever fits your week.' },
-              { num: '02', icon: Calendar, title: 'Tell Us Your Days', desc: 'Choose days and times. Pause for a holiday, switch the menu, no fuss.' },
+              { num: '01', icon: Package, title: 'Pick Your Dabba', desc: 'Prasada (veg) or Svadista (non-veg). Weekly or monthly — whichever fits your week.' },
+              { num: '02', icon: Calendar, title: 'Tell Us Your Week', desc: 'Pick your start week and preferences. Skip a day when you need to — and message us for anything else.' },
               { num: '03', icon: Truck, title: 'Open It Warm', desc: 'Packed fresh, sealed hot, at your door — the way a home meal should arrive.' },
             ].map((step) => (
               <div key={step.num} className="text-center" data-testid={`dabba-step-${step.num}`}>
@@ -659,6 +661,7 @@ const Home = () => {
       {/* ============================================ */}
       {/* DELIVERY POSTCODE CHECKER */}
       {/* ============================================ */}
+      {deliveryEnabled && (
       <section className="py-16 md:py-24 px-4 md:px-8" data-testid="postcode-checker-section">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -728,6 +731,7 @@ const Home = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============================================ */}
       {/* GALLERY PREVIEW */}

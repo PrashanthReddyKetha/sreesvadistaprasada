@@ -6,7 +6,7 @@ export const heroSlides = [
     image: '/hero/slide-1.jpg',
     title: "Welcome Home.",
     subtitle: "The authentic taste you missed, carried forward with love.",
-    description: "Order in a few taps — collect in ~40 minutes and save 10%, or get it delivered.",
+    description: "Order in a few taps — collect in ~40 minutes and save 10%.",
     cta: "Order Now",
     link: "/order"
   },
@@ -413,10 +413,10 @@ export const faqData = [
   {
     category: 'Subscriptions (Dabba Wala)',
     items: [
-      { q: 'How does the Dabba Wala subscription work?', a: 'Choose your plan (Weekly/Monthly/Family), select your box type (Prasada/Svadista/Mixed), set any dietary preferences, and pick your start date. Freshly cooked meals are delivered to your door on your chosen days.' },
+      { q: 'How does the Dabba Wala subscription work?', a: 'Choose your plan (weekly or monthly), select your box (Prasada veg or Svadista non-veg), set any dietary preferences, and pick your start week. Freshly cooked meals are delivered to your door Monday to Friday.' },
       { q: 'Can I pause or cancel my subscription?', a: 'You can skip individual delivery days from your Dashboard. If you need to pause, change or cancel your plan, get in touch on WhatsApp, phone or email — we\'re flexible and will work it out with you. Plans don\'t auto-renew, so there are no recurring charges.' },
       { q: 'What comes in a typical dabba (tiffin)?', a: 'Each meal includes rice/roti, a main curry, dal or sambar, a side dish, pickle/chutney, and papad. Portions are generous for one adult.' },
-      { q: 'Can I switch between Prasada and Svadista boxes?', a: 'Absolutely. With the Mixed Box option, we alternate between veg and non-veg meals. You can also switch your box type at any time.' },
+      { q: 'Can I switch between Prasada and Svadista boxes?', a: 'Each plan is one box type. If you would like to switch, message us and we will sort it out with you.' },
     ]
   },
   {
