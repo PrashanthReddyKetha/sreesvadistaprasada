@@ -29,10 +29,13 @@ export default async function Page() {
   // The kitchen's own dish photos stand in for the stock pictures
   const photos = await getDishPhotos();
   const art = {
-    hero: photos['veg-thali']?.image,
+    hero: photos['tomato-rice']?.image,
     meal: photos['pappu-pappadam-roti-pachadi-rice-yogurt']?.image,
-    why: photos['tomato-pappu']?.image,
-    rotation: ['tomato-pappu', 'gutti-vankaya-masala', 'sambar', 'gongura-chicken-curry', 'pulihora', 'spicy-andhra-chicken-curry']
+    why: photos['aloo-kurma']?.image,
+    // Different dishes from the "dishes like these" row above them on the page
+    whyPhotos: ['aloo-kurma', 'fish-pulusu-2', 'curd-rice', 'perugu-pulusu', 'potato-fry', 'rasam', 'egg-fry', 'coconut-rice']
+      .filter(s => photos[s]).map(s => photos[s]),
+    rotation: ['tomato-pappu', 'sambar', 'gongura-pappu', 'bhindi-pulusu', 'chicken-curry-2', 'mulakkada-tomato-curry']
       .filter(s => photos[s]).map(s => photos[s]),
   };
   return (

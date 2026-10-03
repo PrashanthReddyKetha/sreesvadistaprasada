@@ -345,6 +345,53 @@ function LandingMenuPeek({ weekCfg, art = {} }) {
   );
 }
 
+/* A slow, swipeable row of the kitchen's own dish photos. It moves on by itself
+   every few seconds, stops while it is being touched or hovered, and stays still
+   for anyone who has asked their device to reduce motion. */
+function PhotoScroller({ photos, caption }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || photos.length < 2) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let holdUntil = 0;
+    const hold = () => { holdUntil = Date.now() + 6000; };
+    el.addEventListener('pointerdown', hold);
+    el.addEventListener('pointermove', hold);
+    el.addEventListener('wheel', hold, { passive: true });
+    const timer = setInterval(() => {
+      if (Date.now() < holdUntil || !el.firstElementChild) return;
+      const r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) return;   // only while it is on screen
+      const step = el.firstElementChild.getBoundingClientRect().width + 12;
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
+      el.scrollTo({ left: atEnd ? 0 : el.scrollLeft + step, behavior: 'smooth' });
+    }, 3500);
+    return () => {
+      clearInterval(timer);
+      el.removeEventListener('pointerdown', hold);
+      el.removeEventListener('pointermove', hold);
+      el.removeEventListener('wheel', hold);
+    };
+  }, [photos.length]);
+  return (
+    <div className="relative min-w-0 order-1 md:order-none" data-testid="why-photos">
+      <div ref={ref} className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1" style={{ scrollbarWidth: 'none' }}>
+        {photos.map(ph => (
+          <div key={ph.name} className="relative flex-none w-[82%] sm:w-[70%] snap-center rounded-xl overflow-hidden"
+            style={{ aspectRatio: '4/3', boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}>
+            <Image fill src={ph.image} alt={ph.name} className="object-cover" sizes="(max-width: 768px) 82vw, 340px" />
+            <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[11px] font-semibold text-white" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
+              {ph.name}
+            </span>
+          </div>
+        ))}
+      </div>
+      {caption && <p className="text-xs italic mt-3" style={{ color: 'rgba(255,255,255,0.75)' }}>{caption}</p>}
+    </div>
+  );
+}
+
 const LANDING_FAQS = [
   { q: "What if I'm not home when the meal arrives?", a: 'You choose at checkout — we can call you on arrival, leave it at your door, with a neighbour, or in your safe place.' },
   { q: 'Can I pause or skip a week?', a: 'You can skip individual days from your Dashboard. Going on holiday or need a longer break? Message us — we\'re flexible and will sort it out with you.' },
@@ -1860,14 +1907,18 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       {pageState === 'wizard' && step === 1 && (
         <section className="py-10 md:py-16 px-4 md:px-8" style={{ backgroundColor: C.primary }}>
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="relative rounded-xl overflow-hidden order-1 md:order-none" style={{ aspectRatio: '4/3', boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}>
-              <Image fill src={art.why || 'https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800'}
-                alt="A home-style dal from our kitchen, cooked the morning it is delivered" className="object-cover" sizes="(max-width: 768px) 100vw, 480px" />
-              <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[11px] font-semibold text-white" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
-                Cooked this morning, not last week
-              </span>
-            </div>
-            <div>
+            {art.whyPhotos?.length > 1 ? (
+              <PhotoScroller photos={art.whyPhotos} caption="From our kitchen — cooked this morning, not last week." />
+            ) : (
+              <div className="relative rounded-xl overflow-hidden order-1 md:order-none" style={{ aspectRatio: '4/3', boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}>
+                <Image fill src={art.why || 'https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800'}
+                  alt="A home-style dish from our kitchen, cooked the morning it is delivered" className="object-cover" sizes="(max-width: 768px) 100vw, 480px" />
+                <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[11px] font-semibold text-white" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
+                  Cooked this morning, not last week
+                </span>
+              </div>
+            )}
+            <div className="min-w-0">
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>Why Dabba Wala</p>
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
                 Not a meal-prep box. A hot meal, cooked today.

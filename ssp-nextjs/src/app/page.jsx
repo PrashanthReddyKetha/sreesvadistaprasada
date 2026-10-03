@@ -75,11 +75,11 @@ export default async function HomePage() {
   // circles and the photo grid. A missing photo falls back to the picture already in place.
   const pic = (slug) => photos[slug]?.image;
   const art = {
-    hero: [pic('veg-thali'), pic('chicken-fry-piece-biryani'), pic('pappu-pappadam-roti-pachadi-rice-yogurt')],
+    hero: [pic('veg-thali'), pic('chicken-fry-piece-biryani'), pic('sambar-rice')],
     svadista: pic('chicken-dum-biryani'),
     prasada: pic('pulihora'),
     moments: { 1: pic('masala-dosa'), 2: pic('gutti-vankaya-masala'), 3: pic('spicy-andhra-chicken-curry'), 4: pic('punugulu') },
-    gallery: ['masala-dosa', 'chicken-dum-biryani', 'gutti-vankaya-masala', 'idli-3-pcs', 'gongura-chicken-curry', 'pulihora', 'punugulu', 'chicken-65']
+    gallery: ['idli-3-pcs', 'gongura-chicken-curry', 'lemon-rice', 'chicken-65', 'poori-2pcs', 'andhra-egg-curry', 'vada-3-pcs', 'mango-lassi']
       .filter(s => photos[s]).map(s => ({ id: s, src: photos[s].image, alt: photos[s].name })),
   };
   // Opening hours come from the Collection Times set in admin; if they can't be
