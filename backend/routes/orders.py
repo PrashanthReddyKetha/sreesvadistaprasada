@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from datetime import datetime, timedelta
 import asyncio
+import logging
 import math
 import os
 import re
@@ -19,8 +20,10 @@ from notifications import (
     create_notification, send_push_notification,
 )
 from whatsapp import notify_customer, whatsapp_enabled, tracking_link, first_name
+from coupons import resolve_coupon, redeem as redeem_coupon
 
 router = APIRouter(prefix="/orders", tags=["orders"])
+logger = logging.getLogger(__name__)
 
 # ── Zone-based delivery pricing ───────────────────────────────────────────────
 
@@ -163,12 +166,50 @@ def calculate_order_total(
         "small_order_fee":   small_order_fee,
         "delivery_fee":      delivery_fee,
         "takeaway_discount": takeaway_discount,
+        "coupon_code":       None,
+        "coupon_discount":   0.0,
+        "coupon":            None,
         "grand_total":       grand_total,
         "order_type":        order_type,
         "zone":              zone,
         "free_delivery_at":  free_delivery_at,
         "postcode":          postcode.upper() if postcode else None,
     }
+
+
+async def price_with_coupon(
+    items_data: list, order_type: str, postcode: str, free_item_price: float,
+    coupon_code: Optional[str], user_id: Optional[str], email: Optional[str],
+) -> tuple[dict, Optional[str]]:
+    """
+    calculate_order_total + coupon. Returns (totals, coupon_error). A refused
+    coupon never blocks pricing — totals come back without it and the reason
+    is returned for the UI. Percent/fixed codes discount the food (after any
+    loyalty free dish); free-delivery codes zero the delivery fee.
+    """
+    totals = calculate_order_total(items_data, order_type, postcode, free_item_price)
+    if not coupon_code:
+        return totals, None
+    food_pence = round((totals["subtotal"] - totals["free_item_discount"]) * 100)
+    applied, err = await resolve_coupon(
+        coupon_code, scope="orders", base_pence=food_pence,
+        delivery_pence=round(totals["delivery_fee"] * 100),
+        user_id=user_id, email=email, order_type=order_type,
+        has_loyalty_item=free_item_price > 0,
+    )
+    if err or not applied:
+        return totals, err
+    if applied["discount_type"] == "free_delivery":
+        totals["delivery_fee"] = 0.0
+    totals["coupon_code"] = applied["code"]
+    totals["coupon_discount"] = applied["discount"]
+    totals["coupon"] = applied
+    totals["grand_total"] = round(
+        totals["subtotal"] - totals["free_item_discount"]
+        - (0.0 if applied["discount_type"] == "free_delivery" else applied["discount"])
+        + totals["small_order_fee"] + totals["delivery_fee"] - totals["takeaway_discount"], 2
+    )
+    return totals, None
 
 
 # ── Loyalty engine ────────────────────────────────────────────────────────────
@@ -301,10 +342,12 @@ class OrderCalculateRequest(BaseModel):
     postcode: str = ""
     free_item_id: Optional[str] = None
     scheduled_slot: Optional[str] = None  # takeaway collection slot, validated below
+    coupon_code: Optional[str] = None
+    customer_email: Optional[str] = None  # lets per-customer coupon rules work for guests
 
 
 @router.post("/calculate")
-async def preview_calculate(body: OrderCalculateRequest):
+async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[dict] = Depends(get_optional_user)):
     """
     Live pricing preview — no auth. Called on every cart/postcode/type change.
     Looks up prices from DB so the resulting PaymentIntent total matches
@@ -358,13 +401,11 @@ async def preview_calculate(body: OrderCalculateRequest):
             free_item_price = float(free_doc["price"])
 
     try:
-        result = calculate_order_total(
-            items=items_data,
-            order_type=body.order_type,
-            postcode=body.postcode,
-            free_item_price=free_item_price,
+        result, coupon_error = await price_with_coupon(
+            items_data, body.order_type, body.postcode, free_item_price,
+            body.coupon_code, current_user["sub"] if current_user else None, body.customer_email,
         )
-        return {"ok": True, **result}
+        return {"ok": True, **result, "coupon_error": coupon_error}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -416,14 +457,19 @@ async def create_order(
     ):
         raise HTTPException(400, "Pre-order items need a collection slot for tomorrow.")
     try:
-        totals = calculate_order_total(
-            items=items_data,
-            order_type=payload.delivery_type,
-            postcode=payload.delivery_address.postcode if payload.delivery_address else "",
-            free_item_price=free_item_price,
+        totals, coupon_error = await price_with_coupon(
+            items_data, payload.delivery_type,
+            payload.delivery_address.postcode if payload.delivery_address else "",
+            free_item_price, payload.coupon_code, user_id, payload.customer_email,
         )
     except ValueError as e:
         raise HTTPException(400, detail=str(e))
+    if payload.coupon_code and coupon_error:
+        # Code stopped being valid between preview and payment (e.g. last use taken).
+        # If the customer paid the full price anyway the order goes through below;
+        # otherwise the amount check fails and the UI shows the "charged but not
+        # confirmed" message for a manual fix.
+        logger.warning("Coupon %s refused at order creation: %s", payload.coupon_code, coupon_error)
 
     # Verify payment with Stripe before creating the order
     if not payload.payment_intent_id:
@@ -467,14 +513,28 @@ async def create_order(
         delivery_fee=totals["delivery_fee"],
         takeaway_discount=totals["takeaway_discount"],
         free_item_discount=totals["free_item_discount"],
+        coupon_discount=totals["coupon_discount"],
         total=totals["grand_total"],
         user_id=user_id,
         is_loyalty_qualifying=is_qualifying,
     )
+    order.coupon_code = totals["coupon_code"]
     # Server-authoritative: assigned here, never accepted from the client
     order.order_number = await next_order_number()
     order.scheduled_slot_final = scheduled_final
     await db.orders.insert_one(order.model_dump())
+
+    if totals["coupon"]:
+        ok = await redeem_coupon(
+            totals["coupon"], scope="orders", ref_id=order.id, user_id=user_id,
+            email=payload.customer_email, customer_name=payload.customer_name,
+        )
+        if not ok:
+            notify_admin(
+                f"Coupon over-redeemed · {totals['coupon_code']} · order #{order.order_number}",
+                f"<p>Two customers used <b>{totals['coupon_code']}</b> at the same moment; the cap was "
+                f"exceeded by one. Order <b>#{order.order_number}</b> was honoured at the discounted price.</p>",
+            )
 
     # If redeeming, clear pending reward and increment redeemed counter
     if payload.is_loyalty_redemption and user_id:

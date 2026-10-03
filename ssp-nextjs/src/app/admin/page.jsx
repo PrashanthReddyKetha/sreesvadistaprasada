@@ -11,7 +11,7 @@ import {
   TrendingUp, Clock, CheckCircle, XCircle, RefreshCw,
   ChevronDown, ChevronRight, LayoutDashboard,
   ArrowLeft, Send, CheckCheck, AlertCircle,
-  Calendar, Utensils, Star, Sparkles, Gift, Power
+  Calendar, Utensils, Star, Sparkles, Gift, Power, Tag
 } from 'lucide-react';
 import DabbaWalaTab from '@/components/admin/DabbaWalaTab';
 import MenuTab from '@/components/admin/MenuTab';
@@ -20,6 +20,7 @@ import AdminLoyaltyTab from '@/components/admin/AdminLoyaltyTab';
 import KitchenTab from '@/components/admin/KitchenTab';
 import SlotSettingsTab from '@/components/admin/SlotSettingsTab';
 import PushTab from '@/components/admin/PushTab';
+import CouponsTab from '@/components/admin/CouponsTab';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -874,6 +875,7 @@ const TABS = [
   { id:'users',         label:'Users',         icon:Users        },
   { id:'enquiries',     label:'Enquiries',     icon:MessageSquare},
   { id:'loyalty',       label:'Loyalty',       icon:Gift         },
+  { id:'coupons',       label:'Coupons',       icon:Tag          },
   { id:'reviews',       label:'Reviews',       icon:Star         },
   { id:'newsletter',    label:'Newsletter',    icon:Mail         },
   { id:'slots',         label:'Collection Times', icon:Clock     },
@@ -1018,6 +1020,7 @@ const Admin = () => {
               {activeTab==='users'         && <UsersTab users={data.users} />}
               {activeTab==='enquiries'     && <EnquiriesTab contacts={data.contacts} catering={data.catering} onStatusUpdate={handleStatusUpdate} reload={fetchAll} />}
               {activeTab==='loyalty'       && <AdminLoyaltyTab />}
+              {activeTab==='coupons'       && <CouponsTab />}
               {activeTab==='reviews'       && <ReviewsTab />}
               {activeTab==='newsletter'    && <NewsletterTab newsletter={data.newsletter} reload={fetchAll} />}
             </>

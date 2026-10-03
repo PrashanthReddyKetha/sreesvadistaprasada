@@ -283,7 +283,8 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
         f"<p>Hi {name}, we've received your order <b>#{disp}</b>. " + intro +
         f'<table style="width:100%;font-size:14px;border-top:1px solid rgba(0,0,0,0.1);margin-top:10px">{items_rows}</table>'
         f'<p style="margin-top:12px"><b>Subtotal:</b> £{order.get("subtotal",0):.2f}<br>'
-        f'<b>Delivery:</b> £{order.get("delivery_fee",0):.2f}<br>'
+        + (f'<b>Coupon {order.get("coupon_code")}:</b> −£{order.get("coupon_discount",0):.2f}<br>' if order.get("coupon_code") else "")
+        + f'<b>Delivery:</b> £{order.get("delivery_fee",0):.2f}<br>'
         f'<b>Total:</b> £{order.get("total",0):.2f}</p>'
         + dest_line,
         "Track My Order", f"{SITE_URL}/dashboard",

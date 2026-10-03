@@ -8,6 +8,7 @@ import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcEle
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
 import AddressPicker, { saveAddress } from '@/components/AddressPicker';
+import CouponPanel from '@/components/CouponPanel';
 import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase, trackSubscriptionStepView } from '@/lib/analytics';
 
 const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
@@ -457,6 +458,7 @@ const SubscriptionsInner = () => {
   const wizardTopRef  = useRef(null);
   const [quote, setQuote] = useState(null);       // server-priced plan + delivery breakdown
   const [quoteError, setQuoteError] = useState('');
+  const [couponCode, setCouponCode] = useState('');
 
   /* scroll to top on page enter */
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
@@ -576,9 +578,11 @@ const SubscriptionsInner = () => {
       plan: selectedPlan,
       customer_email: customer.email,
       delivery_address: { line1: customer.line1, line2: customer.line2 || undefined, city: customer.city || 'Milton Keynes', postcode: customer.postcode },
+      coupon_code: couponCode || undefined,
+      box_type: selectedBox || undefined,
     });
     return res.data;
-  }, [selectedPlan, customer.email, customer.line1, customer.line2, customer.city, customer.postcode]);
+  }, [selectedPlan, selectedBox, couponCode, customer.email, customer.line1, customer.line2, customer.city, customer.postcode]);
 
   useEffect(() => {
     if (step < 5 || !postcodeStatus?.ok || !customer.line1 || !customer.postcode) { setQuote(null); return; }
@@ -693,6 +697,7 @@ const SubscriptionsInner = () => {
         is_guest: isGuest || !user,
         user_id: user?.id || undefined,
         payment_intent_id,
+        coupon_code: fresh.coupon_code || undefined,
       });
       clearProg();
       // Address-book bookkeeping — fire-and-forget, never blocks the subscription
@@ -1750,6 +1755,17 @@ const SubscriptionsInner = () => {
                             <span style={{ color: C.dark }}>£{quote.delivery_fee_total.toFixed(2)}</span>
                           </div>
                         )}
+                        {quote?.coupon && quote.coupon.discount_type !== 'free_delivery' && (
+                          <div className="flex justify-between text-sm mb-2 font-semibold" style={{ color: C.greenText }}>
+                            <span>🏷️ Coupon {quote.coupon.code} <span className="text-[11px] font-normal" style={{ color: C.muted }}>({quote.coupon.label})</span></span>
+                            <span>-£{quote.coupon.discount.toFixed(2)}</span>
+                          </div>
+                        )}
+                        {quote?.coupon?.discount_type === 'free_delivery' && (
+                          <div className="flex justify-between text-sm mb-2 font-semibold" style={{ color: C.greenText }}>
+                            <span>🏷️ Coupon {quote.coupon.code}</span><span>Free delivery</span>
+                          </div>
+                        )}
                         <div className="border-t pt-3 mt-3 flex justify-between items-center" style={{ borderColor: '#f0ebe6' }}>
                           <span className="font-bold text-base" style={{ color: C.dark }}>Total today</span>
                           <span className="text-2xl font-bold" style={{ color: C.primary }}>{quote ? `£${quote.total.toFixed(2)}` : '—'}</span>
@@ -1763,6 +1779,16 @@ const SubscriptionsInner = () => {
                           </p>
                         )}
                       </div>
+
+                      <CouponPanel
+                        scope="subscriptions"
+                        email={customer.email}
+                        ctx={{ subtotal: planData?.price || 0, plan: selectedPlan, boxType: selectedBox }}
+                        applied={quote?.coupon || null}
+                        error={quote?.coupon_error || null}
+                        onApply={setCouponCode}
+                        onRemove={() => setCouponCode('')}
+                      />
 
                       {/* Card input */}
                       <div className="bg-white rounded-2xl p-4 space-y-3" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>

@@ -269,6 +269,7 @@ class OrderCreate(BaseModel):
     loyalty_free_item_id: Optional[str] = None
     loyalty_free_item_name: Optional[str] = None
     loyalty_free_item_original_price: float = 0.0
+    coupon_code: Optional[str] = None   # re-validated server-side; stored normalised
 
 
 class OrderStatusUpdate(BaseModel):
@@ -282,6 +283,7 @@ class Order(OrderCreate):
     delivery_fee: float = 0.0
     takeaway_discount: float = 0.0
     free_item_discount: float = 0.0
+    coupon_discount: float = 0.0
     total: float = 0.0
     status: OrderStatus = OrderStatus.pending
     payment_intent_id: Optional[str] = None
@@ -316,6 +318,7 @@ class SubscriptionCreate(BaseModel):
     is_guest: bool = False
     user_id: Optional[str] = None
     payment_intent_id: Optional[str] = None
+    coupon_code: Optional[str] = None
 
 
 class SubscriptionStatusUpdate(BaseModel):
@@ -332,6 +335,7 @@ class Subscription(SubscriptionCreate):
     free_delivery_meals: Optional[int] = None
     charged_delivery_meals: Optional[int] = None
     delivery_fee_total: Optional[float] = None
+    coupon_discount: float = 0.0
     email_key: Optional[str] = None         # lower-cased email — recognises returning guests
     status: SubscriptionStatus = SubscriptionStatus.active
     end_date: Optional[str] = None

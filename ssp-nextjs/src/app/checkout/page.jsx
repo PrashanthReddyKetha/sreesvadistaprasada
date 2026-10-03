@@ -24,6 +24,7 @@ import { getCached, setCached } from '@/api/menuCache';
 import { trackPurchase } from '@/lib/analytics';
 import { isOrderable, DELIVERY_LOCKED } from '@/config/softLaunch';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
+import CouponPanel from '@/components/CouponPanel';
 
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
@@ -113,7 +114,7 @@ function DeliveryBar({ total, freeOver, onAddMore }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true, feeSaved = 0, feeSavedIsEstimate = false, smallFeeSaved = 0, onAddMore }) {
+function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, coupon = null, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true, feeSaved = 0, feeSavedIsEstimate = false, smallFeeSaved = 0, onAddMore }) {
   const [collapsed, setCollapsed] = useState(false);
   const grandTotal = grandTotalProp ?? (cartTotal - takeawayDiscount + (deliveryFee || 0));
 
@@ -190,6 +191,11 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
                 <span>Takeaway 10% off</span><span>-{fmt(takeawayDiscount)}</span>
               </div>
             )}
+            {coupon && coupon.discount_type !== 'free_delivery' && (
+              <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
+                <span>🏷️ Coupon {coupon.code} <span className="text-xs font-normal text-gray-400">({coupon.label})</span></span><span>-{fmt(coupon.discount)}</span>
+              </div>
+            )}
             {deliveryType === 'takeaway' && feeSaved > 0 && (
               <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
                 <span>Delivery fee saved</span>
@@ -214,7 +220,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
                 {!feeKnown
                   ? <span className="text-xs text-gray-400 italic">Enter postcode above</span>
                   : deliveryFee === 0
-                    ? <span className="font-semibold" style={{ color: '#166534' }}>Free</span>
+                    ? <span className="font-semibold" style={{ color: '#166534' }}>{coupon?.discount_type === 'free_delivery' ? `Free · ${coupon.code}` : 'Free'}</span>
                     : <span className="text-gray-600">{fmt(deliveryFee)}</span>
                 }
               </div>
@@ -680,6 +686,7 @@ const CheckoutInner = () => {
   const [freeItem, setFreeItem] = useState(null);
   const [serverPricing, setServerPricing] = useState(null);
   const [calcError, setCalcError] = useState('');
+  const [couponCode, setCouponCode] = useState('');   // code the customer picked; server decides if it counts
   const [unavailableItems, setUnavailableItems] = useState([]); // stale cart items no longer on the menu
   const [verifiedPhone, setVerifiedPhone] = useState('');       // guest OTP-verified number
   const [postOrderLoyalty, setPostOrderLoyalty] = useState(null);
@@ -838,6 +845,8 @@ const CheckoutInner = () => {
         postcode: form.postcode,
         free_item_id: freeItem?.id,
         scheduled_slot: deliveryType === 'takeaway' ? pickupSlot?.iso : undefined,
+        coupon_code: couponCode || undefined,
+        customer_email: form.email || undefined,
       });
       setServerPricing(r.data);
       setCalcError('');
@@ -881,12 +890,14 @@ const CheckoutInner = () => {
         setZoneInfo(null);
       }
     }
-  }, [cartItems, deliveryType, form.postcode, freeItem, pickupSlot?.iso]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cartItems, deliveryType, form.postcode, freeItem, pickupSlot?.iso, couponCode, form.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { recalculate(); }, [recalculate]);
 
   // Only use serverPricing if it matches the current delivery type — prevents stale data on toggle
   const validPricing = serverPricing?.order_type === deliveryType ? serverPricing : null;
+  const appliedCoupon = validPricing?.coupon || null;
+  const couponError = validPricing?.coupon_error || null;
 
   // Derived display values — prefer server pricing, fall back to client estimate
   const meetsMinimum = effectiveSubtotal >= MINIMUM_ORDER;
@@ -913,7 +924,7 @@ const CheckoutInner = () => {
   // Wallet handler reads live state through a ref so the listener never goes stale
   const walletCtx = useRef({});
   useEffect(() => {
-    walletCtx.current = { form, cartItems, freeItem, freeItemDiscount, deliveryType, pickupSlot, validPricing, meetsMinimum, pcError, user };
+    walletCtx.current = { form, cartItems, freeItem, freeItemDiscount, deliveryType, pickupSlot, validPricing, meetsMinimum, pcError, user, couponCode: validPricing?.coupon_code || undefined };
   });
 
   useEffect(() => {
@@ -989,6 +1000,7 @@ const CheckoutInner = () => {
           notes: ctx.form.notes || undefined,
           scheduled_slot: ctx.deliveryType === 'takeaway' ? ctx.pickupSlot?.iso : undefined,
           payment_intent_id,
+          coupon_code: ctx.couponCode,
           is_loyalty_redemption: !!ctx.freeItem,
           loyalty_free_item_id: ctx.freeItem?.id,
           loyalty_free_item_name: ctx.freeItem?.name,
@@ -1104,6 +1116,7 @@ const CheckoutInner = () => {
         notes: form.notes || undefined,
         scheduled_slot: deliveryType === 'takeaway' ? pickupSlot?.iso : undefined,
         payment_intent_id,
+        coupon_code: validPricing.coupon_code || undefined,
         is_loyalty_redemption: !!freeItem,
         loyalty_free_item_id: freeItem?.id,
         loyalty_free_item_name: freeItem?.name,
@@ -1702,6 +1715,7 @@ const CheckoutInner = () => {
                 freeItemDiscount={freeItemDiscount}
                 takeawayDiscount={takeawayDiscount}
                 smallOrderFee={smallOrderFee}
+                coupon={appliedCoupon}
                 updateQuantity={updateQuantity}
                 removeFromCart={removeFromCart}
                 deliveryFee={deliveryFee}
@@ -1713,6 +1727,20 @@ const CheckoutInner = () => {
                 smallFeeSaved={meetsMinimum && effectiveSubtotal <= 19.99 ? 1.50 : 0}
                 onAddMore={() => setShowBrowse(true)}
               />
+
+              {/* Coupons — offers list + manual code; server prices it via /orders/calculate */}
+              {meetsMinimum && (
+                <CouponPanel
+                  scope="orders"
+                  email={form.email}
+                  ctx={{ subtotal: effectiveSubtotal, orderType: deliveryType }}
+                  applied={appliedCoupon}
+                  error={couponError}
+                  onApply={setCouponCode}
+                  onRemove={() => setCouponCode('')}
+                  disabledReason={freeItem ? 'Your free loyalty dish is already applied — it\'s one offer per order. Remove the free dish to use a coupon instead.' : null}
+                />
+              )}
 
               {/* Goes well with — pairs_with upsell */}
               <PairsRow cartItems={cartItems} addToCart={addToCart} />

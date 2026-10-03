@@ -46,6 +46,7 @@ const orderSummary = (o) => [
   ...(o.items || []).map(i => `${i.quantity} × ${i.name} — ${money(i.price * i.quantity)}`),
   o.free_item_discount > 0 ? `Loyalty free dish — -${money(o.free_item_discount)}` : '',
   o.takeaway_discount > 0 ? `Collection discount — -${money(o.takeaway_discount)}` : '',
+  o.coupon_code ? `Coupon ${o.coupon_code} — -${money(o.coupon_discount)}` : '',
   o.small_order_fee > 0 ? `Small order fee — ${money(o.small_order_fee)}` : '',
   o.delivery_type !== 'takeaway' ? `Delivery — ${o.delivery_fee > 0 ? money(o.delivery_fee) : 'Free'}` : '',
   `*Total paid: ${money(o.total)}*`,

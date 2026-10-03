@@ -9,6 +9,7 @@ from seed import seed_menu, create_indexes, create_admin_user, seed_daily_specia
 from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews, daily_specials, loyalty, admin_loyalty, pickup_slots, push
 from routes import content as content_routes
 from routes import whatsapp as whatsapp_routes
+from routes import coupons as coupon_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings
 from menu_additions import apply_menu_additions
@@ -38,6 +39,10 @@ async def lifespan(app: FastAPI):
     await db.wa_messages.create_index("sid", sparse=True)
     await db.wa_optouts.create_index("phone", unique=True)
     await db.subscriptions.create_index("email_key", sparse=True)
+    await db.coupons.create_index("code", unique=True)
+    await db.coupons.create_index("id", unique=True)
+    await db.coupon_redemptions.create_index([("coupon_id", 1), ("user_id", 1)])
+    await db.coupon_redemptions.create_index([("coupon_id", 1), ("email_key", 1)])
     from subscription_pricing import backfill_email_keys
     await backfill_email_keys()
     from whatsapp import renewal_reminder_loop
@@ -87,6 +92,7 @@ app.include_router(content_routes.router, prefix="/api")
 app.include_router(pickup_slots.router, prefix="/api")
 app.include_router(push.router, prefix="/api")
 app.include_router(whatsapp_routes.router, prefix="/api")
+app.include_router(coupon_routes.router, prefix="/api")
 
 
 @app.get("/api")

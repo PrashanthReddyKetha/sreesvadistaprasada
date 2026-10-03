@@ -19,6 +19,7 @@ from notifications import (
     email_subscription_cancelled, email_subscription_expired,
 )
 from subscription_pricing import quote_subscription, email_key
+from coupons import redeem as redeem_coupon
 from whatsapp import notify_customer, whatsapp_enabled, tracking_link, first_name
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
@@ -60,6 +61,8 @@ class SubscriptionQuoteRequest(BaseModel):
     plan: str
     customer_email: str = ""
     delivery_address: Address
+    coupon_code: Optional[str] = None
+    box_type: Optional[str] = None
 
 
 @router.post("/quote")
@@ -76,6 +79,7 @@ async def quote(
         result = await quote_subscription(
             payload.plan, payload.customer_email, payload.delivery_address.postcode,
             current_user["sub"] if current_user else None,
+            coupon_code=payload.coupon_code, box_type=payload.box_type,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -93,6 +97,7 @@ async def create_subscription(
     try:
         pricing = await quote_subscription(
             payload.plan, payload.customer_email, payload.delivery_address.postcode, user_id,
+            coupon_code=payload.coupon_code, box_type=payload.box_type,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -134,12 +139,25 @@ async def create_subscription(
         free_delivery_meals=pricing["free_delivery_meals"],
         charged_delivery_meals=pricing["charged_delivery_meals"],
         delivery_fee_total=pricing["delivery_fee_total"],
+        coupon_discount=pricing["coupon_discount"],
         email_key=email_key(payload.customer_email),
         user_id=user_id,
         end_date=end_date_str,
         cancellation_window_expires=cancellation_window,
     )
+    subscription.coupon_code = pricing["coupon_code"]
     await db.subscriptions.insert_one(subscription.model_dump())
+    if pricing["coupon"]:
+        ok = await redeem_coupon(
+            pricing["coupon"], scope="subscriptions", ref_id=subscription.id, user_id=user_id,
+            email=payload.customer_email, customer_name=payload.customer_name,
+        )
+        if not ok:
+            notify_admin(
+                f"Coupon over-redeemed · {pricing['coupon_code']} · Dabba Wala",
+                f"<p>Two customers used <b>{pricing['coupon_code']}</b> at the same moment; the cap was "
+                f"exceeded by one. {payload.customer_name}'s plan was honoured at the discounted price.</p>",
+            )
     subj, html = email_subscription_confirmation(subscription.model_dump(), payload.customer_name)
     send_email(payload.customer_email, subj, html)
     notify_customer(
@@ -158,7 +176,9 @@ async def create_subscription(
         f"{payload.box_type} plan from {payload.start_date}.</p>"
         f"<p>Plan £{pricing['plan_price']:.2f} + delivery £{pricing['delivery_fee_total']:.2f} "
         f"({pricing['charged_delivery_meals']} × £{pricing['delivery_fee_per_meal']:.2f}, "
-        f"{pricing['free_delivery_meals']} free) = <b>£{price:.2f}</b></p>",
+        f"{pricing['free_delivery_meals']} free)"
+        + (f" − coupon {pricing['coupon_code']} £{pricing['coupon_discount']:.2f}" if pricing['coupon_code'] else "")
+        + f" = <b>£{price:.2f}</b></p>",
     )
     return subscription
 

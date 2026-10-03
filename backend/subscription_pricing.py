@@ -108,9 +108,45 @@ def build_quote(plan: str, postcode: str, returning: bool = False) -> dict:
         "delivery_discount_pct": SUB_DELIVERY_DISCOUNT_PCT,
         "promo_state": "returning" if returning else "welcome",
         "promo_message": promo_message,
+        "coupon_code": None,
+        "coupon_discount_pence": 0,
+        "coupon_discount": 0.0,
+        "coupon": None,
+        "coupon_error": None,
     }
 
 
-async def quote_subscription(plan: str, email: str, postcode: str, user_id: Optional[str]) -> dict:
-    """Price a sign-up. Raises ValueError on bad input."""
-    return build_quote(plan, postcode, await has_subscribed_before(email, user_id))
+async def quote_subscription(
+    plan: str, email: str, postcode: str, user_id: Optional[str],
+    coupon_code: Optional[str] = None, box_type: Optional[str] = None,
+) -> dict:
+    """
+    Price a sign-up. Raises ValueError on bad input. A refused coupon never
+    blocks the quote — the reason comes back in coupon_error. Percent/fixed
+    codes discount the plan price; free-delivery codes drop the delivery fee.
+    """
+    q = build_quote(plan, postcode, await has_subscribed_before(email, user_id))
+    if not coupon_code:
+        return q
+    from coupons import resolve_coupon
+    applied, err = await resolve_coupon(
+        coupon_code, scope="subscriptions", base_pence=q["plan_price_pence"],
+        delivery_pence=q["delivery_fee_total_pence"], user_id=user_id, email=email,
+        plan=q["plan"], box_type=box_type,
+    )
+    if err or not applied:
+        q["coupon_error"] = err
+        return q
+    if applied["discount_type"] == "free_delivery":
+        q["delivery_fee_total_pence"] = 0
+        q["delivery_fee_total"] = 0.0
+        q["charged_delivery_meals"] = 0
+        q["free_delivery_meals"] = q["meals"]
+    q["coupon_code"] = applied["code"]
+    q["coupon_discount_pence"] = applied["discount_pence"]
+    q["coupon_discount"] = applied["discount_pence"] / 100
+    q["coupon"] = applied
+    plan_after = q["plan_price_pence"] - (0 if applied["discount_type"] == "free_delivery" else applied["discount_pence"])
+    q["total_pence"] = plan_after + q["delivery_fee_total_pence"]
+    q["total"] = q["total_pence"] / 100
+    return q
