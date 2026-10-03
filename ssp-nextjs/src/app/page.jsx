@@ -84,9 +84,10 @@ export default async function HomePage() {
     rail: [
       ['Breakfast', '/breakfast', 'idli-3-pcs'], ['Dosa', '/breakfast/dosas', 'masala-dosa'], ['Biryani', '/svadista/biriyani', 'chicken-dum-biryani'],
       ['Chicken curry', '/svadista/curries', 'chicken-curry-2'], ['Veg curries', '/prasada/curries', 'gongura-pappu'],
-      ['Veg thali', '/prasada/thalis-rice-bowls', 'pappu-pappadam-roti-pachadi-rice-yogurt'], ['Street food', '/street-food', 'pani-puri-8-pcs'],
-      ['Tiffin service', '/subscriptions', 'sambar-rice'],
-    ].map(([label, href, slug]) => ({ label, href, image: pic(slug) })).filter(r => r.image),
+      ['Veg thali', '/prasada/thalis-rice-bowls', 'veg-thali'], ['Street food', '/street-food', 'pani-puri-8-pcs'],
+      // Stock photo (Pexels) of a steel tiffin carrier, kept in public/stock
+      ['Tiffin service', '/subscriptions', null, '/stock/tiffin-carrier.jpg'],
+    ].map(([label, href, slug, file]) => ({ label, href, image: file || pic(slug) })).filter(r => r.image),
     // Photos taken on the wooden table or in the garden, so the grid reads as one set
     gallery: ['fish-pulusu-2', 'tomato-pappu', 'tandoori-chicken-1pcs', 'gutti-vankaya-masala', 'mulakkada-tomato-curry', 'whole-grilled-chicken', 'egg-fry', 'poori-2pcs']
       .filter(s => photos[s]).map(s => ({ id: s, src: photos[s].image, alt: photos[s].name })),

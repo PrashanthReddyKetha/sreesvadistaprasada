@@ -960,7 +960,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ minHeight: 'min(42vh, 340px)' }}>
         <Image fill priority src={art.hero || 'https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920'}
-          alt="A packed lunch box with rice, curry and sides" className="absolute inset-0 object-cover" sizes="100vw" />
+          alt="Indian meals packed in takeaway boxes — rice, curries and salad" className="absolute inset-0 object-cover" sizes="100vw" />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(58,10,22,0.9) 0%, rgba(58,10,22,0.74) 38%, rgba(58,10,22,0.4) 72%, rgba(58,10,22,0.22) 100%)` }} />
         <div className="relative h-full w-full px-4 md:px-8 flex items-center pt-[calc(32px+4rem+1.25rem)] md:pt-[calc(32px+5rem+1.5rem)] pb-8">
           <div className="max-w-7xl mx-auto w-full">
@@ -968,7 +968,11 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service</p>
               <h2 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Your Daily Dose of Home<span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Dabba Wala — Indian tiffin subscription in Milton Keynes</span></h2>
               <p className="text-sm text-gray-200">Fresh South Indian meals delivered Mon–Fri. No cooking required.</p>
-              <p className="text-sm font-semibold mt-1.5" style={{ color: '#F4C430' }}>From £13.75 a meal on the monthly plan (£15 on weekly) + delivery · No delivery fee on your first meals · Fixed term — no auto-renewal, no hidden fees</p>
+              <ul className="text-sm font-semibold mt-2.5 space-y-1" style={{ color: '#F4C430' }}>
+                <li className="flex gap-2"><Check size={15} className="shrink-0 mt-0.5" />From £13.75 a meal on the monthly plan (£15 on weekly) + delivery</li>
+                <li className="flex gap-2"><Check size={15} className="shrink-0 mt-0.5" />No delivery fee on your first meals</li>
+                <li className="flex gap-2"><Check size={15} className="shrink-0 mt-0.5" />Fixed term — no auto-renewal, no hidden fees</li>
+              </ul>
               <div className="flex items-center gap-5 mt-5 flex-wrap">
                 <a href="#plans" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm transition-colors duration-150" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
                   See plans &amp; pricing <ArrowRight size={15} />
@@ -988,16 +992,16 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       {/* Quick trust strip */}
       {pageState === 'wizard' && step === 1 && (
         <section className="py-5 px-4 md:px-8" style={{ backgroundColor: C.surface, borderBottom: '0.5px solid rgba(128,0,32,0.1)' }}>
-          <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+          <div className="max-w-5xl mx-auto grid grid-cols-2 gap-x-3 gap-y-2.5 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-8 sm:gap-y-3">
             {[
               { icon: Star, text: 'Freshly cooked every day' },
               { icon: Users, text: 'Home-style Andhra kitchen' },
               { icon: MapPin, text: 'Delivering across MK1–MK19' },
               { icon: Shield, text: 'Fixed term — no auto-renewal' },
             ].map((row, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <row.icon size={15} style={{ color: C.primary }} />
-                <span className="text-xs font-semibold" style={{ color: C.dark }}>{row.text}</span>
+              <div key={i} className="flex items-start sm:items-center gap-2">
+                <row.icon size={15} className="shrink-0 mt-0.5 sm:mt-0" style={{ color: C.primary }} />
+                <span className="text-xs font-semibold leading-snug" style={{ color: C.dark }}>{row.text}</span>
               </div>
             ))}
           </div>
@@ -1883,19 +1887,19 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       {pageState === 'wizard' && step === 1 && (
         <section className="py-10 md:py-14 px-4 md:px-8" style={{ backgroundColor: C.cream }}>
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>How it works</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-5 sm:mb-8" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>How it works</h2>
+            <div className="grid grid-cols-3 gap-3 sm:gap-6">
               {[
                 { icon: Package, title: 'Pick your dabba', desc: 'Prasada (veg) or Svadista (non-veg). Weekly trial or monthly saver.' },
                 { icon: Calendar, title: 'Tell us your week', desc: 'Pick a start date, any dietary preferences, and where to deliver.' },
                 { icon: Truck, title: 'Open it warm', desc: 'Cooked that morning and delivered hot, Mon–Fri, straight to you.' },
               ].map((row, i) => (
                 <div key={i} className="text-center">
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: C.surface, border: `2px solid ${C.primary}` }}>
-                    <row.icon size={20} style={{ color: C.primary }} />
+                  <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3" style={{ backgroundColor: C.surface, border: `2px solid ${C.primary}` }}>
+                    <row.icon size={18} style={{ color: C.primary }} />
                   </div>
-                  <h3 className="font-bold mb-1" style={{ color: C.dark }}>{row.title}</h3>
-                  <p className="text-sm" style={{ color: C.muted }}>{row.desc}</p>
+                  <h3 className="text-[13px] sm:text-base leading-tight font-bold mb-1" style={{ color: C.dark }}>{row.title}</h3>
+                  <p className="text-[11px] sm:text-sm leading-snug" style={{ color: C.muted }}>{row.desc}</p>
                 </div>
               ))}
             </div>

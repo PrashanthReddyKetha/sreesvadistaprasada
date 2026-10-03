@@ -29,12 +29,12 @@ export default async function Page() {
   // The kitchen's own dish photos stand in for the stock pictures
   const photos = await getDishPhotos();
   const art = {
-    // Stock photo (Unsplash) of a packed lunch box, until there is a photo of a real dabba
-    hero: 'https://images.unsplash.com/photo-1781747835478-a9c3bab5a670?crop=entropy&cs=srgb&fm=jpg&auto=format&q=70&w=1920',
+    // Stock photo (Pexels) of Indian meals packed in takeaway boxes, kept in public/stock — until there is a photo of a real dabba
+    hero: '/stock/tiffin-meals.jpg',
     meal: photos['veg-thali']?.image,
     why: photos['curd-rice']?.image,
     // Different dishes from the "dishes like these" row above them on the page
-    whyPhotos: ['fish-pulusu-2', 'tandoori-chicken-1pcs', 'chicken-fry-piece-biryani', 'chicken-dum-biryani', 'tomato-pappu', 'gutti-vankaya-masala', 'mulakkada-tomato-curry', 'gongura-chicken-curry']
+    whyPhotos: ['gutti-vankaya-masala', 'fish-pulusu-2', 'tomato-pappu', 'tandoori-chicken-1pcs', 'chicken-fry-piece-biryani', 'mulakkada-tomato-curry', 'chicken-dum-biryani', 'gongura-chicken-curry']
       .filter(s => photos[s]).map(s => photos[s]),
     rotation: ['sambar', 'gongura-pappu', 'bhindi-pulusu', 'chicken-curry-2', 'andhra-egg-curry', 'lemon-rice']
       .filter(s => photos[s]).map(s => photos[s]),
