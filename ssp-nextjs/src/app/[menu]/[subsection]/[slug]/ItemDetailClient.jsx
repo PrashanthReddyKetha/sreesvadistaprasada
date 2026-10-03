@@ -304,11 +304,6 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
               <h1 className="text-3xl md:text-4xl font-bold mb-3 leading-tight" style={{ fontFamily:"'Playfair Display',serif", color:'#3D2B1F' }}>
                 {item.name}
               </h1>
-              {!['pickles', 'podis'].includes((item.category || '').toLowerCase()) && (
-                <p className="text-sm mb-3" style={{ color:'#7A5C50' }}>
-                  {item.name.replace(/\s*\(\s*\d[^)]*\)\s*/g, ' ').trim()} in Milton Keynes — order online for delivery or collection
-                </p>
-              )}
 
               <div className="flex items-center gap-4 mb-4 flex-wrap">
                 {reviews.length > 0 ? (

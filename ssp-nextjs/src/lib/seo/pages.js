@@ -330,6 +330,5 @@ export function dishSeo(item) {
     name,
     title: `${name} in Milton Keynes${B}`,
     keywords: [name, `${name} Milton Keynes`, `${name} near me`, `${name} takeaway`, 'Indian takeaway Milton Keynes'],
-    line: `${name} in Milton Keynes — order online for delivery or collection`,
   };
 }

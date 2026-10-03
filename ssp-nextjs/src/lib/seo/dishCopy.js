@@ -218,6 +218,6 @@ export function dishContent(item) {
   const comingSoon = item.category === 'pickles' || item.category === 'podis';
   const order = comingSoon
     ? `${name} is part of our Andhra pickles and podis range, which is coming soon — tap Notify Me and we will tell you when it launches.`
-    : `Order ${name} in Milton Keynes online — collect from our Greenleys kitchen (MK12) and save 10%, or have it delivered across Milton Keynes.`;
+    : `Order ${name} online — collect from our Greenleys kitchen in Milton Keynes (MK12) and save 10%, or have it delivered.`;
   return { name, about: DISH_COPY[item.slug] || null, order, parent };
 }
