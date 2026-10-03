@@ -24,7 +24,7 @@ function SpiceBar({ level }) {
   );
 }
 
-const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
+const Breakfast = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
   const SK = 'ssp_breakfast_tab';
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
@@ -100,7 +100,7 @@ const Breakfast = ({ initialItems = [], initialTab = 'All' }) => {
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Breakfast
-              <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">South Indian breakfast in Milton Keynes — dosa, idli &amp; vada</span>
+              <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">{seoHeading || <>South Indian breakfast in Milton Keynes — dosa, idli &amp; vada</>}</span>
             </h1>
             <p className="text-lg text-yellow-100 leading-relaxed mb-1">Idlis, dosas, vadas and more.</p>
             <p className="text-sm text-yellow-200 leading-relaxed max-w-md">

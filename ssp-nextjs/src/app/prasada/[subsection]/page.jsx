@@ -1,3 +1,4 @@
+import { categorySeo } from '@/lib/categorySeo';
 import { notFound, permanentRedirect } from 'next/navigation';
 import PrasadaClient from '../PrasadaClient';
 
@@ -36,9 +37,10 @@ export async function generateMetadata({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) return {};
   const clean = tab.replace(/[^\w\s&-]/g, '').trim(); // no emoji in titles
+  const seo = categorySeo('prasada', params.subsection);
   return {
-    title: `${clean} — Prasada Vegetarian Menu`,
-    description: `Order authentic South Indian vegetarian ${clean.toLowerCase()} dishes. Pure veg, freshly cooked in Milton Keynes — Edinburgh & Glasgow coming soon.`,
+    title: seo?.title || `${clean} — Prasada Vegetarian Menu`,
+    description: seo?.description || `Order authentic South Indian vegetarian ${clean.toLowerCase()}. Pure veg, freshly cooked in Milton Keynes.`,
     alternates: { canonical: `https://sreesvadistaprasada.com/prasada/${params.subsection}` },
   };
 }
@@ -49,5 +51,5 @@ export default async function PrasadaSubsectionPage({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) notFound();
   const initialItems = await getItems();
-  return <PrasadaClient initialItems={initialItems} initialTab={tab} />;
+  return <PrasadaClient initialItems={initialItems} initialTab={tab} seoHeading={categorySeo('prasada', params.subsection)?.h1} />;
 }

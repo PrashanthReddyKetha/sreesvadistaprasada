@@ -1,3 +1,4 @@
+import { categorySeo } from '@/lib/categorySeo';
 import { notFound } from 'next/navigation';
 import BreakfastClient from '../BreakfastClient';
 
@@ -28,9 +29,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) return {};
+  const seo = categorySeo('breakfast', params.subsection);
   return {
-    title: `${tab} — Breakfast Menu`,
-    description: `Authentic ${tab.toLowerCase()} made fresh every morning. Order online for delivery in Milton Keynes — Edinburgh & Glasgow coming soon.`,
+    title: seo?.title || `${tab} — Breakfast Menu`,
+    description: seo?.description || `Authentic ${tab.toLowerCase()} made fresh every morning in Milton Keynes. Order online.`,
     alternates: { canonical: `https://sreesvadistaprasada.com/breakfast/${params.subsection}` },
   };
 }
@@ -39,5 +41,5 @@ export default async function BreakfastSubsectionPage({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) notFound();
   const initialItems = await getItems();
-  return <BreakfastClient initialItems={initialItems} initialTab={tab} />;
+  return <BreakfastClient initialItems={initialItems} initialTab={tab} seoHeading={categorySeo('breakfast', params.subsection)?.h1} />;
 }
