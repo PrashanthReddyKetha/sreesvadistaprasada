@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getDeliveryEnabled } from '@/lib/siteStatus';
 import FaqSection, { faqSchema } from '@/components/FaqSection';
 
 const BASE_URL = 'https://sreesvadistaprasada.com';
@@ -48,7 +49,10 @@ const jsonLd = [
   },
 ];
 
-export default function DeliveryPage() {
+export const revalidate = 600;
+
+export default async function DeliveryPage() {
+  const delivery = await getDeliveryEnabled();
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -56,6 +60,11 @@ export default function DeliveryPage() {
         {/* Hero */}
         <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: '#800020' }}>
           <div className="max-w-4xl mx-auto px-4 md:px-8 py-14">
+            {!delivery && (
+              <p className="mb-6 px-4 py-3 rounded-xl text-sm font-semibold" style={{ backgroundColor: '#F4C430', color: '#2D2422' }} data-testid="delivery-paused">
+                Delivery is paused at the moment. You can still order online and collect from our Greenleys kitchen (MK12) with 10% off — delivery will be back here as soon as it is running.
+              </p>
+            )}
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Food Delivery in Milton Keynes

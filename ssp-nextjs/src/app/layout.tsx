@@ -41,10 +41,10 @@ const lato = Lato({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery | Sree Svadista Prasada',
+    default: 'Indian Takeaway Milton Keynes | Authentic South Indian Food | Sree Svadista Prasada',
     template: '%s | Sree Svadista Prasada',
   },
-  description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
+  description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food. Order online.',
   keywords: ['Indian takeaway Milton Keynes', 'Indian food delivery Milton Keynes', 'South Indian restaurant Milton Keynes', 'best Indian restaurant MK', 'South Indian food Milton Keynes'],
   metadataBase: new URL('https://sreesvadistaprasada.com'),
   manifest: '/manifest.json',

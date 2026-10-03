@@ -6,7 +6,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend
 
 // Stable lastModified for static routes — bump when a page materially changes.
 // (Reporting "modified now" on every regeneration teaches Google to ignore lastmod.)
-const STATIC_LASTMOD = new Date('2026-09-12')
+const STATIC_LASTMOD = new Date('2026-10-03')
 
 async function getMenuItems(): Promise<{ id: string; updated_at?: string }[]> {
   try {
@@ -68,8 +68,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/breakfast/about`,      priority: 0.75, changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
     // City landing pages
     { url: `${BASE_URL}/milton-keynes`,  priority: 0.9,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
-    { url: `${BASE_URL}/edinburgh`,      priority: 0.9,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
-    { url: `${BASE_URL}/glasgow`,        priority: 0.9,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
+    { url: `${BASE_URL}/edinburgh`,      priority: 0.3,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
+    { url: `${BASE_URL}/glasgow`,        priority: 0.3,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
     // Blog + long-form content
     { url: `${BASE_URL}/blog`,                                       priority: 0.7, changeFrequency: 'weekly',  lastModified: STATIC_LASTMOD },
     { url: `${BASE_URL}/blog/dosa-milton-keynes`,                    priority: 0.7, changeFrequency: 'monthly', lastModified: new Date('2026-09-13') },

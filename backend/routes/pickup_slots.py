@@ -264,6 +264,15 @@ async def kitchen_status():
     }
 
 
+@router.get("/opening-hours")
+async def opening_hours():
+    """Public — the hours set in admin, so the site's structured data never disagrees with them."""
+    settings = await get_slot_settings()
+    days = settings.get("days") or {}
+    return {"days": {k: {"closed": bool(v.get("closed")), "open": v.get("open"), "close": v.get("close")}
+                     for k, v in days.items() if k in DAY_KEYS}}
+
+
 class ReopenSubscribe(BaseModel):
     email: EmailStr
     name: Optional[str] = Field(None, max_length=80)

@@ -1,3 +1,4 @@
+import { getOpeningHoursSpec } from '@/lib/siteStatus';
 import CityPage from '@/components/CityPage';
 import { faqSchema } from '@/components/FaqSection';
 
@@ -43,7 +44,7 @@ const data = {
   faqs: FAQS,
 };
 
-const jsonLd = [
+const baseJsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
@@ -84,6 +85,14 @@ const jsonLd = [
   },
 ];
 
-export default function MiltonKeynesPage() {
+export const revalidate = 600;
+
+export default async function MiltonKeynesPage() {
+  const hours = await getOpeningHoursSpec();
+  const jsonLd = baseJsonLd.map(node => {
+    if (!node.openingHoursSpecification) return node;
+    const { openingHoursSpecification, ...rest } = node;
+    return hours && hours.length ? { ...rest, openingHoursSpecification: hours } : rest;
+  });
   return <CityPage data={data} jsonLd={jsonLd} />;
 }

@@ -333,3 +333,11 @@ def test_fifth_delivered_order_earns_a_reward_guests_earn_nothing(client, menu, 
     deliver(user_headers)
     u = run(db.users.find_one({"id": "u1"}))
     assert u["loyalty_order_count"] == 5 and u["loyalty_pending_reward"] is True
+
+
+def test_opening_hours_are_public_and_follow_admin_settings(client, admin_headers):
+    days = client.get("/api/opening-hours").json()["days"]
+    assert set(days) == {"mon", "tue", "wed", "thu", "fri", "sat", "sun"} and days["fri"]["close"] == "21:00"
+    client.put("/api/admin/settings/pickup-slots", headers=admin_headers,
+               json={"days": {"sun": {"closed": True, "open": "08:00", "close": "20:30"}}})
+    assert client.get("/api/opening-hours").json()["days"]["sun"]["closed"] is True

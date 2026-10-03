@@ -1,11 +1,23 @@
 import HomeClient from './HomeClient';
+import { getDeliveryEnabled, getOpeningHoursSpec } from '@/lib/siteStatus';
 
-export const metadata = {
+// Re-read the admin settings (delivery switch, opening hours) every 10 minutes
+export const revalidate = 600;
+
+const DESC_COLLECTION = 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food. Order online and collect.';
+const DESC_DELIVERY = 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.';
+
+export async function generateMetadata() {
+  const delivery = await getDeliveryEnabled();
+  const description = delivery ? DESC_DELIVERY : DESC_COLLECTION;
+  return {
   title: { absolute: 'Indian Takeaway Milton Keynes | Sree Svadista Prasada' },
-  description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
+  description,
   openGraph: {
-    title: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery',
-    description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
+    title: delivery
+      ? 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery'
+      : 'Indian Takeaway Milton Keynes | Authentic South Indian Food',
+    description,
     type: 'website',
     url: 'https://sreesvadistaprasada.com/',
     siteName: 'Sree Svadista Prasada',
@@ -13,7 +25,8 @@ export const metadata = {
     images: [{ url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80', width: 1200, height: 630 }],
   },
   alternates: { canonical: 'https://sreesvadistaprasada.com' },
-};
+  };
+}
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -77,14 +90,26 @@ const jsonLd = {
   ],
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [delivery, hours] = await Promise.all([getDeliveryEnabled(), getOpeningHoursSpec()]);
+  // Opening hours come from the Collection Times set in admin; if they can't be
+  // read, say nothing rather than publish hours that might be wrong.
+  const graph = jsonLd['@graph'].map(node => {
+    if (node['@type'] !== 'Restaurant') return node;
+    const { openingHoursSpecification, ...rest } = node;
+    return hours && hours.length ? { ...rest, openingHoursSpecification: hours } : rest;
+  });
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...jsonLd, '@graph': graph }) }}
       />
-      <h1 className="sr-only">Indian Takeaway Milton Keynes — Authentic South Indian Food Delivery</h1>
+      <h1 className="sr-only">
+        {delivery
+          ? 'Indian Takeaway Milton Keynes — Authentic South Indian Food Delivery'
+          : 'Indian Takeaway Milton Keynes — Authentic South Indian Food'}
+      </h1>
       <HomeClient />
     </>
   );
