@@ -927,7 +927,7 @@ const CheckoutInner = () => {
   // Wallet handler reads live state through a ref so the listener never goes stale
   const walletCtx = useRef({});
   useEffect(() => {
-    walletCtx.current = { form, cartItems, freeItem, freeItemDiscount, deliveryType, pickupSlot, validPricing, meetsMinimum, pcError, user, couponCode: validPricing?.coupon_code || undefined };
+    walletCtx.current = { kitchen, form, cartItems, freeItem, freeItemDiscount, deliveryType, pickupSlot, validPricing, meetsMinimum, pcError, user, couponCode: validPricing?.coupon_code || undefined };
   });
 
   useEffect(() => {
@@ -945,6 +945,7 @@ const CheckoutInner = () => {
     pr.on('paymentmethod', async (ev) => {
       const ctx = walletCtx.current;
       const fail = (msg) => { ev.complete('fail'); setError(msg); };
+      if (!ctx.kitchen.open) return fail(ctx.kitchen.message);
       if (!ctx.validPricing || !ctx.meetsMinimum) return fail("We couldn't confirm your total — please check your basket and try again.");
       if (ctx.deliveryType === 'delivery') {
         if (ctx.pcError) return fail('Your postcode is outside our delivery area — switch to collection or use an MK postcode.');
@@ -953,6 +954,7 @@ const CheckoutInner = () => {
       setError('');
       setSubmitting(true);
       let capturedPI = null;
+      let walletPaid = false;
       try {
         // Re-check the slot at the last moment
         if (ctx.deliveryType === 'takeaway' && ctx.pickupSlot?.iso) {
@@ -984,6 +986,7 @@ const CheckoutInner = () => {
           const { error: actionErr } = await stripe.confirmCardPayment(client_secret);
           if (actionErr) { setError(actionErr.message || 'Payment failed. Please try again.'); return; }
         }
+        walletPaid = true;
 
         const name  = ctx.form.name?.trim()  || ev.payerName  || '';
         const email = ctx.form.email?.trim() || ev.payerEmail || '';
@@ -1024,7 +1027,7 @@ const CheckoutInner = () => {
         });
         clearCart();
       } catch (e) {
-        if (capturedPI && e.response) {
+        if (capturedPI && walletPaid) {
           setError(`Your card was charged ${fmt(walletCtx.current.validPricing?.grand_total ?? 0)} (ref: ${capturedPI.slice(-8).toUpperCase()}) but the order could not be confirmed. Please WhatsApp or call us immediately quoting this reference so we can fix it.`);
         } else {
           setError(e.response?.data?.detail || 'Something went wrong. Please try again.');
@@ -1041,6 +1044,9 @@ const CheckoutInner = () => {
       });
     }
   }, [paymentRequest, validPricing?.grand_total]);
+
+  // A payment that succeeded but whose order hasn't been confirmed yet (see handleOrder)
+  const paidIntent = useRef(null);
 
   const handleOrder = async () => {
     setError('');
@@ -1087,19 +1093,29 @@ const CheckoutInner = () => {
 
       // Server-verified total only — never fall back to a client-guessed amount
       const chargeAmount = validPricing.grand_total;
-      const intentRes = await api.post('/payments/create-intent', { amount: chargeAmount, purpose: 'order' });
-      const { client_secret, payment_intent_id } = intentRes.data;
-      capturedPI = payment_intent_id;
+      let payment_intent_id;
+      if (paidIntent.current && paidIntent.current.amount === chargeAmount) {
+        // Already charged for exactly this total on an earlier attempt — reuse it
+        payment_intent_id = paidIntent.current.id;
+        capturedPI = payment_intent_id;
+        paymentSucceeded = true;
+      } else {
+        const intentRes = await api.post('/payments/create-intent', { amount: chargeAmount, purpose: 'order' });
+        const { client_secret } = intentRes.data;
+        payment_intent_id = intentRes.data.payment_intent_id;
+        capturedPI = payment_intent_id;
 
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
-        payment_method: {
-          card: cardNumberElement,
-          billing_details: { name: form.name, email: form.email, address: { postal_code: billingPostcode || form.postcode } },
-        },
-      });
-      if (stripeError) { setError(stripeError.message || 'Payment failed. Please try again.'); return; }
-      if (paymentIntent.status !== 'succeeded') { setError('Payment was not completed. Please try again.'); return; }
-      paymentSucceeded = true;
+        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
+          payment_method: {
+            card: cardNumberElement,
+            billing_details: { name: form.name, email: form.email, address: { postal_code: billingPostcode || form.postcode } },
+          },
+        });
+        if (stripeError) { setError(stripeError.message || 'Payment failed. Please try again.'); return; }
+        if (paymentIntent.status !== 'succeeded') { setError('Payment was not completed. Please try again.'); return; }
+        paymentSucceeded = true;
+        paidIntent.current = { id: payment_intent_id, amount: chargeAmount };
+      }
 
       const items = [
         ...cartItems.map(i => ({ menu_item_id: i.id, name: i.name, price: price(i.price), quantity: i.quantity })),
@@ -1149,10 +1165,11 @@ const CheckoutInner = () => {
         slotFinal,
         slotBumped: !!(pickupSlot?.iso && slotFinal && slotFinal !== pickupSlot.iso),
       });
+      paidIntent.current = null;
       clearCart();
     } catch (e) {
       if (paymentSucceeded && capturedPI) {
-        setError(`Your card was charged ${fmt(validPricing?.grand_total ?? grandTotal)} (ref: ${capturedPI.slice(-8).toUpperCase()}) but the order could not be confirmed. Please WhatsApp or call us immediately quoting this reference so we can fix it.`);
+        setError(`Your card was charged ${fmt(validPricing?.grand_total ?? grandTotal)} (ref: ${capturedPI.slice(-8).toUpperCase()}) but the order could not be confirmed. You will not be charged again — tap Pay to retry, or WhatsApp or call us quoting this reference so we can fix it.`);
       } else {
         setError(e.response?.data?.detail || 'Something went wrong. Please try again.');
       }

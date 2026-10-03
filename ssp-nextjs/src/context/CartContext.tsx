@@ -105,6 +105,16 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     setHydrated(true);
   }, []);
 
+  // Another tab changed the cart (added items, or placed the order) — follow it,
+  // so a stale tab can never resurrect a basket that has already been paid for.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) setCartItems(loadCart());
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   // Persist cart to localStorage — but never before hydration, or the initial
   // empty state overwrites the saved cart
   useEffect(() => {

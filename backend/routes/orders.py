@@ -43,6 +43,7 @@ ZONE_DELIVERY_FEE = {1: 2.49, 2: 2.99, 3: 3.99, 4: 4.99}
 ZONE_FREE_DELIVERY_THRESHOLD = {1: 28.00, 2: 30.00, 3: 35.00, 4: 40.00}
 
 MINIMUM_ORDER         = 15.00
+MIN_CARD_PAYMENT       = 0.50   # Stripe will not take a GBP card payment below this
 SMALL_ORDER_FEE       = 1.50
 SMALL_ORDER_THRESHOLD = 19.99   # small order fee applies if subtotal <= this
 TAKEAWAY_DISCOUNT_PCT = 0.10
@@ -191,6 +192,7 @@ async def price_with_coupon(
     totals = calculate_order_total(items_data, order_type, postcode, free_item_price)
     if not coupon_code:
         return totals, None
+    without_coupon = dict(totals)
     food_pence = round((totals["subtotal"] - totals["free_item_discount"]) * 100)
     applied, err = await resolve_coupon(
         coupon_code, scope="orders", base_pence=food_pence,
@@ -210,6 +212,11 @@ async def price_with_coupon(
         - (0.0 if applied["discount_type"] == "free_delivery" else applied["discount"])
         + totals["small_order_fee"] + totals["delivery_fee"] - totals["takeaway_discount"], 2
     )
+    if totals["grand_total"] < MIN_CARD_PAYMENT:
+        return without_coupon, (
+            f"That code would take your total below £{MIN_CARD_PAYMENT:.2f}, the smallest card payment "
+            "we can take — add another item to use it."
+        )
     return totals, None
 
 
@@ -404,6 +411,9 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
         free_doc = await db.menu_items.find_one({"id": body.free_item_id, "available": True}, {"price": 1, "_id": 0})
         if free_doc:
             free_item_price = float(free_doc["price"])
+            # The free dish is added at full price and then discounted in full —
+            # exactly how create_order prices it — so both totals always agree.
+            items_data.append({"price": free_item_price, "quantity": 1})
 
     try:
         result, coupon_error = await price_with_coupon(
@@ -437,7 +447,12 @@ async def create_order(
 
     # Validate loyalty redemption before pricing
     free_item_price = 0.0
+    if payload.is_loyalty_redemption and not payload.loyalty_free_item_id:
+        # No dish chosen — an ordinary order; never burn the reward for nothing
+        payload.is_loyalty_redemption = False
     if payload.is_loyalty_redemption:
+        if payload.loyalty_free_item_id not in {i.menu_item_id for i in payload.items}:
+            raise HTTPException(400, "Your free dish isn't in the order — please add it again")
         if not user_id:
             raise HTTPException(400, "Must be logged in to redeem a loyalty reward")
         user = await db.users.find_one({"id": user_id}, {"_id": 0})
@@ -568,16 +583,17 @@ async def create_order(
 
     # If redeeming, clear pending reward and increment redeemed counter
     if payload.is_loyalty_redemption and user_id:
-        user = await db.users.find_one({"id": user_id}, {"_id": 0})
-        redeemed = user.get("loyalty_rewards_redeemed", 0) + 1
-        await db.users.update_one(
-            {"id": user_id},
-            {"$set": {
-                "loyalty_pending_reward": False,
-                "loyalty_rewards_redeemed": redeemed,
-                "loyalty_last_updated": datetime.utcnow().isoformat(),
-            }},
+        claimed = await db.users.update_one(
+            {"id": user_id, "loyalty_pending_reward": True},
+            {"$set": {"loyalty_pending_reward": False, "loyalty_last_updated": datetime.utcnow().isoformat()},
+             "$inc": {"loyalty_rewards_redeemed": 1}},
         )
+        if claimed.modified_count == 0:
+            notify_admin(
+                f"Loyalty reward used twice · order #{order.order_number}",
+                f"<p>Order <b>#{order.order_number}</b> was paid with a free loyalty dish, but that reward "
+                "had already been used by another order placed at the same moment. The order was honoured.</p>",
+            )
 
     subj, html = email_order_confirmation(order.model_dump(), payload.customer_name)
     send_email(payload.customer_email, subj, html)
