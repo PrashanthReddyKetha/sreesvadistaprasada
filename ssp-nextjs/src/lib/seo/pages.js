@@ -218,7 +218,7 @@ export const PAGE_SEO = {
   '/story': {
     primary: 'telugu and andhra food milton keynes',
     title: `Telugu & Andhra Food Milton Keynes — Our Story${B}`,
-    description: 'The story behind Sree Svadista Prasada — a Telugu family kitchen bringing authentic Andhra home cooking to Milton Keynes. Family recipes, cooked fresh.',
+    description: 'The story behind Sree Svadista Prasada — one Telugu woman\'s dream of giving people far from home the food their amma made. Andhra cooking in Milton Keynes.',
     keywords: ['Telugu restaurant Milton Keynes', 'Andhra food Milton Keynes', 'Telugu food UK', 'authentic South Indian food', 'Sree Svadista Prasada'],
     h1: 'Telugu & Andhra home cooking in Milton Keynes',
   },

@@ -40,6 +40,10 @@ const OurStory = ({ seoLine }) => {
                 The Beginning
               </h2>
               <p className="text-base text-gray-600 leading-relaxed mb-4">
+                Sree Svadista Prasada began with one Telugu woman&apos;s dream: to give people living far
+                from home the taste of the food their amma made.
+              </p>
+              <p className="text-base text-gray-600 leading-relaxed mb-4">
                 Every great journey starts with a longing. For us, it was the longing for the taste of home —
                 the kind of food that wraps you in warmth, transports you back to your grandmother's kitchen,
                 and makes you feel truly at peace.

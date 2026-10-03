@@ -914,7 +914,7 @@ const SubscriptionsInner = ({ onNeedStripe }) => {
           <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
             {[
               { icon: Star, text: 'Freshly cooked every day' },
-              { icon: Users, text: 'Family-run Andhra kitchen' },
+              { icon: Users, text: 'Home-style Andhra kitchen' },
               { icon: MapPin, text: 'Delivering across MK1–MK19' },
               { icon: Shield, text: 'Fixed term — no auto-renewal' },
             ].map((row, i) => (
@@ -944,10 +944,10 @@ const SubscriptionsInner = ({ onNeedStripe }) => {
                 Not a meal-prep box. A hot meal, cooked today.
               </h2>
               <p className="text-sm text-gray-200 mb-6">
-                Most Milton Keynes meal services batch-cook and reheat. We don't. Every dabba is cooked fresh that morning in our own kitchen and delivered hot — to your home, your office, anywhere in MK.
+                Many meal services batch-cook and reheat. We don't. Every dabba is cooked fresh that morning in our own kitchen and delivered hot — to your home, your office, anywhere in MK.
               </p>
               <p className="text-sm italic mb-6" style={{ color: '#F4C430' }}>
-                Cooked by our own family kitchen in Milton Keynes — the same hands, every single day.
+                Cooked in our own kitchen in Milton Keynes — the same hands, every single day.
               </p>
               <div className="space-y-4">
                 {[

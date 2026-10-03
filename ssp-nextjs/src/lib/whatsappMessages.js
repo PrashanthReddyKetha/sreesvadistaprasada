@@ -96,7 +96,7 @@ export const orderMessage = (o) => {
       takeaway
         ? `Thank you for collecting order #${num}, ${name}! 🙏`
         : `${name}, order #${num} has been delivered. 🙏`,
-      `We hope every bite tastes like home. If you enjoyed it, a quick rating means the world to our small family kitchen:`,
+      `We hope every bite tastes like home. If you enjoyed it, a quick rating means the world to our small kitchen:`,
       trackLink('reviews'),
     ],
     cancelled: [
