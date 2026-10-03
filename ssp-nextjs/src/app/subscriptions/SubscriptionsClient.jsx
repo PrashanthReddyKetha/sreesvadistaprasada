@@ -96,8 +96,8 @@ const STORAGE_KEY = 'ssp_dabba_v4';
 const STORAGE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 const PLANS = [
-  { id: 'weekly',  name: 'Weekly trial',  price: 75,  perMeal: 15,  meals: 5,  badge: 'Start here',   badgeStyle: { backgroundColor: C.greenLight, color: C.greenText } },
-  { id: 'monthly', name: 'Monthly saver', price: 250, perMeal: 12.5, meals: 20, badge: 'Best value',  badgeStyle: { backgroundColor: C.amberLight, color: C.amberText }, save: 'Save £50 vs weekly' },
+  { id: 'weekly',  name: 'Weekly trial',  price: 75,  perMeal: 15,  meals: 5,  freeDeliveries: 2, badge: 'Start here',   badgeStyle: { backgroundColor: C.greenLight, color: C.greenText } },
+  { id: 'monthly', name: 'Monthly saver', price: 275, perMeal: 13.75, meals: 20, freeDeliveries: 5, badge: 'Best value',  badgeStyle: { backgroundColor: C.amberLight, color: C.amberText }, save: 'Save £25 vs weekly' },
 ];
 
 const BOXES = [
@@ -359,7 +359,7 @@ function StickyMobileCta() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden px-4 py-3" style={{ backgroundColor: C.primary, boxShadow: '0 -4px 16px rgba(0,0,0,0.25)' }}>
       <a href="#plans" className="flex items-center justify-between gap-3">
-        <span className="text-xs text-white/90 font-medium">From £12.50 a meal on the monthly plan · Fixed term, no auto-renewal</span>
+        <span className="text-xs text-white/90 font-medium">From £13.75 a meal on the monthly plan · Fixed term, no auto-renewal</span>
         <span className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-sm shrink-0" style={{ backgroundColor: C.gold, color: C.dark }}>
           See plans <ArrowRight size={14} />
         </span>
@@ -886,7 +886,7 @@ const SubscriptionsInner = () => {
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service</p>
               <h2 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Your Daily Dose of Home<span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Dabba Wala — Indian tiffin subscription in Milton Keynes</span></h2>
               <p className="text-sm text-gray-200">Fresh South Indian meals delivered Mon–Fri. No cooking required.</p>
-              <p className="text-sm font-semibold mt-1.5" style={{ color: '#F4C430' }}>From £12.50 a meal on the monthly plan (£15 on weekly) + delivery · No delivery fee in your first week · Fixed term — no auto-renewal, no hidden fees</p>
+              <p className="text-sm font-semibold mt-1.5" style={{ color: '#F4C430' }}>From £13.75 a meal on the monthly plan (£15 on weekly) + delivery · No delivery fee on your first meals · Fixed term — no auto-renewal, no hidden fees</p>
               <div className="flex items-center gap-5 mt-5 flex-wrap">
                 <a href="#plans" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm transition-colors duration-150" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
                   See plans &amp; pricing <ArrowRight size={15} />
@@ -1055,7 +1055,7 @@ const SubscriptionsInner = () => {
                     <p className="mb-1" style={{ fontSize: 24, fontWeight: 500, color: C.primary }}>£{plan.price} <span style={{ fontSize: 13, fontWeight: 400, color: C.muted }}>+ delivery</span></p>
                     <p className="text-sm" style={{ color: C.muted }}>{plan.meals} meals · Mon–Fri · Serves 1</p>
                     <p className="text-xs" style={{ color: C.muted }}>£{plan.perMeal} per meal · Lunch delivery 12–2pm</p>
-                    <p className="text-xs" style={{ color: C.muted }}><strong style={{ color: C.greenText }}>No delivery fee in your first week</strong> · then from £1.74 per delivery</p>
+                    <p className="text-xs" style={{ color: C.muted }}><strong style={{ color: C.greenText }}>No delivery fee on your first {plan.freeDeliveries} meals</strong> · then from £1.74 per delivery</p>
                     {plan.save && <p className="text-xs font-bold mt-1.5" style={{ color: C.greenText }}>{plan.save}</p>}
                     {selectedPlan === plan.id && <div className="absolute top-4 right-4"><Check size={16} style={{ color: C.primary }} /></div>}
                   </button>
@@ -1064,7 +1064,7 @@ const SubscriptionsInner = () => {
 
               <div className="mt-5">
                 <InfoBox bg={C.surface} border="#e0d9d0" color={C.muted}>
-                  No hidden charges, no auto-renewal — you are always in control. Plans are priced as meals + delivery: <strong>we waive the delivery fee for your first week (5 meals)</strong>, and after that it is a small per-meal delivery fee based on your postcode (from £1.74 — 30% less than our standard delivery rate), shown in full before you pay.
+                  No hidden charges, no auto-renewal — you are always in control. Plans are priced as meals + delivery: <strong>we waive the delivery fee on your first meals (2 on the weekly plan, 5 on the monthly)</strong>, and after that it is a small per-meal delivery fee based on your postcode (from £1.74 — 30% less than our standard delivery rate), shown in full before you pay.
                 </InfoBox>
               </div>
 

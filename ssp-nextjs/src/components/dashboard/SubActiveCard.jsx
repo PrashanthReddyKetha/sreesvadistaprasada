@@ -244,6 +244,19 @@ export default function SubActiveCard({ sub }) {
                         {statusMeta.label}
                       </span>
                     )}
+                    {status === 'skipped' && (
+                      delivery?.makeup_date ? (
+                        <span className="ml-auto text-[10px] font-semibold" style={{ color: '#166534' }}>
+                          Make-up meal added · {new Date(delivery.makeup_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </span>
+                      ) : (
+                        <a href={`https://wa.me/447307119962?text=${encodeURIComponent(`Hi, I skipped my Dabba Wala on ${date} and would like some help with it.`)}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="ml-auto text-[10px] font-semibold underline" style={{ color: '#800020' }}>
+                          Need help with this meal? Contact us
+                        </a>
+                      )
+                    )}
                     {canSkip && (
                       <button onClick={() => openSkip(date)}
                         className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full"

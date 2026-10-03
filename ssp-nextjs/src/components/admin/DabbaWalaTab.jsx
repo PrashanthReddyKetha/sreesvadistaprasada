@@ -332,6 +332,65 @@ function DabbaSubscribers() {
   );
 }
 
+/* Skipped meals for one plan, with a one-tap "give a make-up meal" (adds a day to the end of the plan).
+   The server enforces the allowance: 1 on a weekly plan, 4 on a monthly. */
+function SkippedMeals({ sub, onChanged }) {
+  const [info, setInfo] = useState(null);
+  const [busy, setBusy] = useState(null);
+  const [err, setErr] = useState('');
+
+  const load = useCallback(() => {
+    api.get(`/admin/subscriptions/${sub.id}/skips`).then(r => setInfo(r.data)).catch(() => setErr('Could not load skipped meals.'));
+  }, [sub.id]);
+  useEffect(() => { load(); }, [load]);
+
+  const give = async (date) => {
+    if (busy) return;
+    if (!window.confirm(`Give a make-up meal for the skipped day ${fmtDate(date)}? The plan will run one delivery day longer and the customer will be emailed.`)) return;
+    setBusy(date); setErr('');
+    try {
+      const r = await api.post(`/admin/subscriptions/${sub.id}/skips/${date}/make-up`);
+      setInfo(r.data);
+      onChanged && onChanged();
+    } catch (e) {
+      setErr(e.response?.data?.detail || 'Could not add the make-up meal.');
+    } finally { setBusy(null); }
+  };
+
+  if (!info) return null;
+  return (
+    <div className="bg-white rounded-xl p-5" style={{ border:'0.5px solid #e0d9d0' }} data-testid="skipped-meals">
+      <div className="flex items-center justify-between mb-3">
+        <p className="font-semibold text-sm" style={{ color:'#800020' }}>Skipped meals</p>
+        <p className="text-xs" style={{ color:'#5C4B47' }}>Make-up meals given: <b>{info.used} of {info.limit}</b></p>
+      </div>
+      {info.skips.length === 0 ? (
+        <p className="text-xs" style={{ color:'#7A5C50' }}>No meals skipped on this plan.</p>
+      ) : (
+        <div className="space-y-2">
+          {info.skips.map(s => (
+            <div key={s.date} className="flex items-center gap-3 text-sm">
+              <span style={{ color:'#2D2422' }}>{fmtDate(s.date)}</span>
+              {s.short_notice && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor:'#FEF3C7', color:'#92400E' }}>Short notice</span>}
+              {s.made_up ? (
+                <span className="ml-auto text-xs font-semibold" style={{ color:'#166534' }}>Made up{s.makeup_date ? ` · ${fmtDate(s.makeup_date)}` : ''}</span>
+              ) : info.remaining > 0 ? (
+                <button onClick={() => give(s.date)} disabled={busy === s.date}
+                  className="ml-auto px-3 py-1 text-xs font-semibold rounded-lg text-white disabled:opacity-60" style={{ backgroundColor:'#800020' }}>
+                  {busy === s.date ? 'Adding…' : 'Give make-up meal'}
+                </button>
+              ) : (
+                <span className="ml-auto text-xs" style={{ color:'#7A5C50' }}>Allowance used</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {err && <p className="text-xs mt-3" style={{ color:'#991B1B' }}>{err}</p>}
+    </div>
+  );
+}
+
 function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
   const [sub, setSub] = useState(initialSub);
   const [addingNote, setAddingNote] = useState(false);
@@ -373,6 +432,7 @@ function DabbaSubscriberProfile({ sub: initialSub, onBack }) {
       </div>
 
       <div className="space-y-5">
+        <SkippedMeals sub={sub} onChanged={() => api.get(`/subscriptions/${sub.id}`).then(r => setSub(r.data)).catch(() => {})} />
         <div className="bg-white rounded-xl p-5" style={{ border:'0.5px solid #e0d9d0' }}>
           <p className="font-semibold text-sm mb-4" style={{ color:'#800020' }}>Subscription</p>
           <div className="grid grid-cols-2 gap-3 text-sm">

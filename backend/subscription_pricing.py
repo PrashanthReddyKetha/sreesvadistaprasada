@@ -6,7 +6,8 @@ All money maths is done in integer pence; floats only appear at the edges
 
 Delivery rules:
   • Per-meal delivery fee = the standard zone fee (routes/orders.py) less 30%.
-  • Every new account gets the delivery fee waived on its first 5 meals ("welcome").
+  • Every new account gets the delivery fee waived on its first meals ("welcome"):
+    2 on the weekly plan, 5 on the monthly plan.
   • An account that has subscribed before pays delivery from meal 1 ("returning").
     Guests have no account, so they are recognised by email instead.
 """
@@ -16,11 +17,12 @@ from typing import Optional
 from database import db
 from routes.orders import get_zone_from_postcode, ZONE_DELIVERY_FEE
 
-PLAN_PRICE_PENCE = {"weekly": 7500, "monthly": 25000}
+PLAN_PRICE_PENCE = {"weekly": 7500, "monthly": 27500}
 PLAN_MEALS = {"weekly": 5, "monthly": 20}
 
 SUB_DELIVERY_DISCOUNT_PCT = 30   # subscription delivery is 30% below the standard zone fee
-FREE_DELIVERY_MEALS = 5          # welcome offer: no delivery fee on the first 5 meals
+# Welcome offer: no delivery fee on a new customer's first meals
+FREE_DELIVERY_MEALS = {"weekly": 2, "monthly": 5}
 
 
 def to_pence(amount: float) -> int:
@@ -77,7 +79,7 @@ def build_quote(plan: str, postcode: str, returning: bool = False) -> dict:
     plan_pence = PLAN_PRICE_PENCE[plan]
     fee_pence = subscription_fee_pence(zone)
 
-    free_meals = 0 if returning else min(FREE_DELIVERY_MEALS, meals)
+    free_meals = 0 if returning else min(FREE_DELIVERY_MEALS[plan], meals)
     charged_meals = meals - free_meals
     delivery_pence = charged_meals * fee_pence
     total_pence = plan_pence + delivery_pence

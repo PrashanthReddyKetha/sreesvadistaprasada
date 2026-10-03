@@ -13,7 +13,7 @@ from models import (
 from auth import require_admin
 from notifications import (
     send_email, send_sms, notify_admin,
-    email_subscription_cancelled, email_renewal_reminder, email_delivery_issue,
+    email_subscription_cancelled, email_renewal_reminder, email_delivery_issue, _wrap, SITE_URL,
 )
 from whatsapp import notify_customer, tracking_link, first_name, send_renewal_reminder as wa_renewal_reminder
 import uuid
@@ -297,6 +297,100 @@ async def get_subscriber_history(sub_id: str, current_user: dict = Depends(requi
         return []
     history = await db.subscriptions.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
     return history
+
+
+# ─── Make-up meals for skipped days ───────────────────────────────────────────
+# A skipped meal gives nothing automatically. The kitchen can choose to add a
+# make-up meal at the end of the plan: at most 1 on a weekly plan, 4 on a monthly.
+MAKEUP_LIMIT = {"weekly": 1, "monthly": 4}
+
+
+def _next_weekday(date_str: str) -> str:
+    d = datetime.strptime(date_str, "%Y-%m-%d") + timedelta(days=1)
+    while d.weekday() >= 5:
+        d += timedelta(days=1)
+    return d.strftime("%Y-%m-%d")
+
+
+async def _skip_summary(sub: dict) -> dict:
+    rows = await db.delivery_tracking.find(
+        {"sub_id": sub["id"], "status": "skipped"}, {"_id": 0}
+    ).sort("delivery_id", 1).to_list(100)
+    limit = MAKEUP_LIMIT.get((sub.get("plan") or "").lower(), 0)
+    used = int(sub.get("makeup_meals_given") or 0)
+    return {
+        "limit": limit,
+        "used": used,
+        "remaining": max(0, limit - used),
+        "end_date": sub.get("end_date"),
+        "skips": [{
+            "date": r["delivery_id"].rsplit("_", 1)[-1],
+            "skipped_at": r.get("skipped_at"),
+            "short_notice": bool(r.get("short_notice")),
+            "made_up": bool(r.get("made_up")),
+            "makeup_date": r.get("makeup_date"),
+        } for r in rows],
+    }
+
+
+@router.get("/subscriptions/{sub_id}/skips")
+async def list_skips(sub_id: str, current_user: dict = Depends(require_admin)):
+    return await _skip_summary(await _get_sub_or_404(sub_id))
+
+
+@router.post("/subscriptions/{sub_id}/skips/{date}/make-up")
+async def give_makeup_meal(sub_id: str, date: str, current_user: dict = Depends(require_admin)):
+    """Add one meal to the end of the plan for a skipped day."""
+    sub = await _get_sub_or_404(sub_id)
+    if sub.get("status") == "cancelled":
+        raise HTTPException(status_code=400, detail="This plan is cancelled — reinstate it first.")
+    if not sub.get("end_date"):
+        raise HTTPException(status_code=400, detail="This plan has no end date to extend.")
+    limit = MAKEUP_LIMIT.get((sub.get("plan") or "").lower(), 0)
+
+    # Claim the skipped day first, so two taps can never give two meals for one skip
+    delivery_id = f"{sub_id}_{date}"
+    claimed = await db.delivery_tracking.update_one(
+        {"delivery_id": delivery_id, "status": "skipped", "made_up": {"$ne": True}},
+        {"$set": {"made_up": True}},
+    )
+    if not claimed.modified_count:
+        existing = await db.delivery_tracking.find_one({"delivery_id": delivery_id}, {"_id": 0})
+        if not existing or existing.get("status") != "skipped":
+            raise HTTPException(status_code=400, detail="That day wasn't skipped.")
+        raise HTTPException(status_code=400, detail="A make-up meal has already been given for that day.")
+
+    # Then take one from the plan's allowance and move the end date on by one delivery day
+    makeup_date = _next_weekday(sub["end_date"])
+    entry = audit_entry(current_user, "makeup_meal", sub["end_date"], makeup_date, f"Make-up for skipped {date}")
+    update = {"end_date": makeup_date}
+    if sub.get("status") == "expired" and makeup_date >= today_str():
+        update["status"] = "active"
+    taken = await db.subscriptions.update_one(
+        {"id": sub_id, "end_date": sub["end_date"],
+         "$or": [{"makeup_meals_given": {"$lt": limit}}, {"makeup_meals_given": {"$exists": False}}] if limit > 0 else [{"id": None}]},
+        {"$set": update, "$inc": {"makeup_meals_given": 1},
+         "$unset": {"renewal_reminded_at": "", "expired_notified_at": ""},
+         "$push": {"audit_trail": entry}},
+    )
+    if not taken.modified_count:
+        await db.delivery_tracking.update_one({"delivery_id": delivery_id}, {"$set": {"made_up": False}})
+        raise HTTPException(
+            status_code=400,
+            detail=f"This {sub.get('plan')} plan has already had its {limit} make-up meal{'s' if limit != 1 else ''}.",
+        )
+    await db.delivery_tracking.update_one({"delivery_id": delivery_id}, {"$set": {"makeup_date": makeup_date}})
+
+    if sub.get("customer_email"):
+        name = sub.get("customer_name") or "there"
+        html = _wrap(
+            "We've added a meal for you",
+            f"<p>Hi {name}, you skipped your Dabba Wala on <b>{date}</b>, so we've added a meal on "
+            f"<b>{makeup_date}</b> to make up for it.</p><p>Your plan now runs until {makeup_date}.</p>",
+            "View My Plan", f"{SITE_URL}/dashboard",
+        )
+        send_email(sub["customer_email"], f"A make-up meal on {makeup_date}", html)
+    return await _skip_summary(await _get_sub_or_404(sub_id))
 
 
 # ─── Operations ───────────────────────────────────────────────────────────────

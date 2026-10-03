@@ -351,6 +351,7 @@ async def get_sub_deliveries(sub_id: str, current_user: dict = Depends(get_curre
             "status": status,
             "skipped_at": (t or {}).get("skipped_at"),
             "issue_description": (t or {}).get("issue_description"),
+            "makeup_date": (t or {}).get("makeup_date"),
         })
         # Any delivered past meal should have a review stub — catches days that
         # were auto-marked delivered without an admin patch.

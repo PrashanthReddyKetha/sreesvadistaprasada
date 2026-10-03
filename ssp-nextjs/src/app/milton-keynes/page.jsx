@@ -5,7 +5,7 @@ const BASE_URL = 'https://sreesvadistaprasada.com';
 
 export const metadata = {
   title: { absolute: 'South Indian Food Delivery Milton Keynes | Sree Svadista Prasada' },
-  description: 'Authentic South Indian food delivery across Milton Keynes — Wolverton, Stony Stratford, Bletchley and all MK postcodes. Dabba Wala tiffins from £12.50/meal.',
+  description: 'Authentic South Indian food delivery across Milton Keynes — Wolverton, Stony Stratford, Bletchley and all MK postcodes. Dabba Wala tiffins from £13.75/meal.',
   alternates: { canonical: `${BASE_URL}/milton-keynes` },
   openGraph: {
     title: 'South Indian Food Delivery Milton Keynes | Sree Svadista Prasada',
@@ -23,7 +23,7 @@ export const metadata = {
 const FAQS = [
   { q: 'What South Indian restaurants deliver in Milton Keynes?', a: 'Sree Svadista Prasada is a dedicated authentic Andhra South Indian kitchen in Milton Keynes. We deliver across all MK postcodes (MK1–MK19) including Wolverton, Stony Stratford, Bletchley, Newport Pagnell, Central MK, and surrounding areas.' },
   { q: 'How long does South Indian food delivery take in Milton Keynes?', a: 'Delivery across Milton Keynes takes 30–60 minutes from our Greenleys kitchen. Free delivery kicks in from £28–£40 depending on your zone.' },
-  { q: 'What is the Dabba Wala meal subscription in Milton Keynes?', a: 'Dabba Wala is our weekly South Indian tiffin subscription service — fresh home-style meals delivered to your door in Milton Keynes from £12.50 per meal. Choose from Prasada (pure veg), Svadista (non-veg), or Mixed boxes.' },
+  { q: 'What is the Dabba Wala meal subscription in Milton Keynes?', a: 'Dabba Wala is our weekly South Indian tiffin subscription service — fresh home-style meals delivered to your door in Milton Keynes from £13.75 per meal. Choose a Prasada (pure veg) or Svadista (non-veg) box.' },
   { q: 'Do you deliver South Indian food to Wolverton and Stony Stratford?', a: 'Yes — we deliver to all areas of Milton Keynes including Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley, Westcroft, Central MK, Emerson Valley, Shenley Brook End, Walnut Tree, Monkston, and more.' },
 ];
 

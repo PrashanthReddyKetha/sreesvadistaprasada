@@ -20,6 +20,9 @@ def quote(client, plan="weekly", headers=None, **kw):
     return client.post(f"{SUBS}/quote", json=body, headers=headers or {})
 
 
+WEEKLY_NEW = 80.22   # £75 + 3 charged deliveries at £1.74 (zone 1)
+
+
 def sub_body(pi_id, plan="weekly", **kw):
     body = {
         "customer_name": "Test User", "customer_email": "u1@example.com", "customer_phone": "+447000000001",
@@ -41,11 +44,14 @@ def subscribe(client, pay, headers, plan="weekly", **kw):
 
 def test_weekly_and_monthly_quotes_for_a_new_customer(client):
     weekly = quote(client).json()
-    assert weekly["plan_price"] == 75.00 and weekly["total"] == 75.00          # first 5 meals: free delivery
+    assert weekly["plan_price"] == 75.00
+    assert weekly["free_delivery_meals"] == 2 and weekly["charged_delivery_meals"] == 3   # welcome: 2 free deliveries
+    assert weekly["delivery_fee_per_meal"] == 1.74                                        # zone 1 fee £2.49 less 30%
+    assert weekly["total"] == 80.22
     monthly = quote(client, "monthly").json()
-    assert monthly["plan_price"] == 250.00
+    assert monthly["plan_price"] == 275.00
     assert monthly["free_delivery_meals"] == 5 and monthly["charged_delivery_meals"] == 15
-    assert monthly["total"] == round(250 + 15 * monthly["delivery_fee_per_meal"], 2)
+    assert monthly["total"] == 301.10
 
 
 def test_returning_customer_pays_delivery_on_every_meal(client, pay, user_headers):
@@ -77,7 +83,7 @@ def test_start_week_is_checked_before_payment(client):
 
 def test_plan_cannot_be_created_with_a_bad_start_date(client, pay, db):
     for value in ("garbage", (datetime.strptime(next_monday(), "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")):
-        r = client.post(SUBS, json=sub_body(pay(75.00, purpose="subscription"), start_date=value))
+        r = client.post(SUBS, json=sub_body(pay(WEEKLY_NEW, purpose="subscription"), start_date=value))
         assert r.status_code == 400, value
     assert run(db.subscriptions.count_documents({})) == 0
 
@@ -96,14 +102,14 @@ def test_end_date_is_the_last_paid_meal(client, pay, user_headers):
 
 def test_plan_needs_its_own_payment_of_the_right_amount(client, pay, db):
     assert client.post(SUBS, json=sub_body(None)).status_code == 400
-    assert client.post(SUBS, json=sub_body(pay(75.00, purpose="order"))).status_code == 400       # an order payment
+    assert client.post(SUBS, json=sub_body(pay(WEEKLY_NEW, purpose="order"))).status_code == 400       # an order payment
     assert client.post(SUBS, json=sub_body(pay(10.00, purpose="subscription"))).status_code == 400
-    assert client.post(SUBS, json=sub_body(pay(75.00, purpose="subscription", status="processing"))).status_code == 400
+    assert client.post(SUBS, json=sub_body(pay(WEEKLY_NEW, purpose="subscription", status="processing"))).status_code == 400
     assert run(db.subscriptions.count_documents({})) == 0
 
 
 def test_double_submit_returns_the_same_plan(client, pay, db, user_headers):
-    body = sub_body(pay(75.00, purpose="subscription"))
+    body = sub_body(pay(WEEKLY_NEW, purpose="subscription"))
     first = client.post(SUBS, json=body, headers=user_headers).json()
     again = client.post(SUBS, json=body, headers=user_headers)
     assert again.status_code == 200 and again.json()["id"] == first["id"]
@@ -113,7 +119,7 @@ def test_double_submit_returns_the_same_plan(client, pay, db, user_headers):
 
 def test_new_plan_is_active_and_confirmed(client, pay, user_headers, state):
     sub = subscribe(client, pay, user_headers)
-    assert sub["status"] == "active" and sub["user_id"] == "u1" and sub["price"] == 75.00
+    assert sub["status"] == "active" and sub["user_id"] == "u1" and sub["price"] == WEEKLY_NEW
     assert len(state.outbox.email) == 1 and len(state.outbox.admin) == 1
 
 
@@ -217,3 +223,69 @@ def test_cancelled_plan_days_are_not_shown_as_delivered(client, db, user_headers
     days = [d["status"] for d in client.get(f"{SUBS}/s1/deliveries", headers=user_headers).json()]
     assert days == ["delivered", "delivered", "cancelled", "cancelled", "cancelled"]
     assert run(db.delivery_reviews.count_documents({"type": "meal_day"})) == 2
+
+
+# ── Make-up meals for skipped days (admin) ────────────────────────────────────
+
+def _skip(client, sub, offset, headers):
+    day = (datetime.strptime(sub["start_date"], "%Y-%m-%d") + timedelta(days=offset)).strftime("%Y-%m-%d")
+    assert client.post(f"{SUBS}/{sub['id']}/deliveries/{day}/skip", headers=headers).status_code == 200
+    return day
+
+
+def test_skipping_gives_nothing_by_itself(client, pay, user_headers, db):
+    sub = subscribe(client, pay, user_headers)
+    _skip(client, sub, 1, user_headers)
+    doc = run(db.subscriptions.find_one({"id": sub["id"]}))
+    assert doc["end_date"] == sub["end_date"] and not doc.get("makeup_meals_given")
+
+
+def test_weekly_plan_gets_one_makeup_meal(client, pay, user_headers, admin_headers, db, state):
+    sub = subscribe(client, pay, user_headers)
+    tue, wed = _skip(client, sub, 1, user_headers), _skip(client, sub, 2, user_headers)
+    base = f"/api/admin/subscriptions/{sub['id']}/skips"
+    info = client.get(base, headers=admin_headers).json()
+    assert info["limit"] == 1 and info["remaining"] == 1 and [s["date"] for s in info["skips"]] == [tue, wed]
+
+    state.outbox.email.clear()
+    r = client.post(f"{base}/{tue}/make-up", headers=admin_headers)
+    assert r.status_code == 200, r.text
+    following_monday = (datetime.strptime(sub["start_date"], "%Y-%m-%d") + timedelta(days=7)).strftime("%Y-%m-%d")
+    assert r.json()["end_date"] == following_monday and r.json()["remaining"] == 0     # Friday → next Monday
+    assert len(state.outbox.email) == 1                                                # customer told about the extra day
+    doc = run(db.subscriptions.find_one({"id": sub["id"]}))
+    assert doc["makeup_meals_given"] == 1 and doc["audit_trail"][-1]["field"] == "makeup_meal"
+    days = client.get(f"{SUBS}/{sub['id']}/deliveries", headers=user_headers).json()
+    assert len(days) == 6 and days[-1]["date"] == following_monday
+    assert [d["makeup_date"] for d in days if d["date"] == tue] == [following_monday]
+
+    assert client.post(f"{base}/{tue}/make-up", headers=admin_headers).status_code == 400   # same day twice
+    over = client.post(f"{base}/{wed}/make-up", headers=admin_headers)                      # allowance used
+    assert over.status_code == 400 and "already had" in over.json()["detail"]
+    assert run(db.subscriptions.find_one({"id": sub["id"]}))["end_date"] == following_monday
+    assert run(db.delivery_tracking.find_one({"delivery_id": f"{sub['id']}_{wed}"})).get("made_up") is False
+
+
+def test_monthly_plan_gets_up_to_four_makeup_meals(client, pay, user_headers, admin_headers, db):
+    sub = subscribe(client, pay, user_headers, plan="monthly")
+    days = [_skip(client, sub, o, user_headers) for o in (0, 1, 2, 3, 4)]
+    base = f"/api/admin/subscriptions/{sub['id']}/skips"
+    codes = [client.post(f"{base}/{d}/make-up", headers=admin_headers).status_code for d in days]
+    assert codes == [200, 200, 200, 200, 400]
+    doc = run(db.subscriptions.find_one({"id": sub["id"]}))
+    assert doc["makeup_meals_given"] == 4
+    original_end = datetime.strptime(sub["end_date"], "%Y-%m-%d")                      # a Friday
+    assert doc["end_date"] == (original_end + timedelta(days=6)).strftime("%Y-%m-%d")  # Mon–Thu of the next week
+    assert len(client.get(f"{SUBS}/{sub['id']}/deliveries", headers=user_headers).json()) == 24
+
+
+def test_makeup_meal_rules(client, pay, user_headers, admin_headers):
+    sub = subscribe(client, pay, user_headers)
+    base = f"/api/admin/subscriptions/{sub['id']}/skips"
+    not_skipped = sub["start_date"]
+    assert client.post(f"{base}/{not_skipped}/make-up", headers=admin_headers).status_code == 400   # day wasn't skipped
+    day = _skip(client, sub, 1, user_headers)
+    assert client.post(f"{base}/{day}/make-up", headers=user_headers).status_code == 403            # customers can't
+    assert client.get(base, headers=user_headers).status_code == 403
+    client.put(f"{SUBS}/{sub['id']}/status", json={"status": "cancelled"}, headers=admin_headers)
+    assert client.post(f"{base}/{day}/make-up", headers=admin_headers).status_code == 400           # cancelled plan
