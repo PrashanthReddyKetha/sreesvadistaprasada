@@ -1,3 +1,4 @@
+import { dishSeo } from '@/lib/seo/pages';
 import { notFound, permanentRedirect } from 'next/navigation';
 import ItemDetailClient from './ItemDetailClient';
 import { buildItemUrl } from '@/lib/itemUrl';
@@ -85,6 +86,7 @@ export async function generateMetadata({ params }) {
   if (!item) return { title: { absolute: 'Dish Not Found | Sree Svadista Prasada' } };
 
   const catLabel = CATEGORY_LABELS[item.category] || 'South Indian Food';
+  const seo = dishSeo(item);
   const desc = item.seo_meta_description
     || `${item.name} — ${(item.description || '').slice(0, 130).trim()}. Order online in Milton Keynes from Sree Svadista Prasada.`;
   // Canonical comes from the item's real category/subcategory, never from the
@@ -94,7 +96,8 @@ export async function generateMetadata({ params }) {
   const images = item.image ? [{ url: item.image, width: 800, height: 600, alt: item.name }] : [];
 
   return {
-    title: { absolute: `${item.name} | Indian Takeaway Milton Keynes | Sree Svadista Prasada` },
+    title: { absolute: seo.title },
+    keywords: seo.keywords,
     description: desc,
     openGraph: {
       title: `${item.name} | ${catLabel} Milton Keynes | Sree Svadista Prasada`,
@@ -107,7 +110,7 @@ export async function generateMetadata({ params }) {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${item.name} | Indian Takeaway Milton Keynes | Sree Svadista Prasada`,
+      title: seo.title,
       description: desc,
       images: item.image ? [item.image] : [],
     },

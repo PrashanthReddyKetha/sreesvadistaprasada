@@ -1,3 +1,4 @@
+import SeoSection from '@/components/SeoSection';
 import { categorySeo } from '@/lib/categorySeo';
 import { notFound, permanentRedirect } from 'next/navigation';
 import PrasadaClient from '../PrasadaClient';
@@ -41,6 +42,7 @@ export async function generateMetadata({ params }) {
   return {
     title: seo?.title || `${clean} — Prasada Vegetarian Menu`,
     description: seo?.description || `Order authentic South Indian vegetarian ${clean.toLowerCase()}. Pure veg, freshly cooked in Milton Keynes.`,
+    keywords: seo?.keywords,
     alternates: { canonical: `https://sreesvadistaprasada.com/prasada/${params.subsection}` },
   };
 }
@@ -51,5 +53,11 @@ export default async function PrasadaSubsectionPage({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) notFound();
   const initialItems = await getItems();
-  return <PrasadaClient initialItems={initialItems} initialTab={tab} seoHeading={categorySeo('prasada', params.subsection)?.h1} />;
+  const seo = categorySeo('prasada', params.subsection);
+  return (
+    <>
+      <PrasadaClient initialItems={initialItems} initialTab={tab} seoHeading={seo?.h1} />
+      {seo?.body && <SeoSection paragraphs={[seo.body]} links={[['Full Prasada vegetarian menu', '/prasada'], ['Order online', '/order']]} />}
+    </>
+  );
 }

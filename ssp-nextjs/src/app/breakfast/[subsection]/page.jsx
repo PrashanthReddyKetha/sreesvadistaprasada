@@ -1,3 +1,4 @@
+import SeoSection from '@/components/SeoSection';
 import { categorySeo } from '@/lib/categorySeo';
 import { notFound } from 'next/navigation';
 import BreakfastClient from '../BreakfastClient';
@@ -33,6 +34,7 @@ export async function generateMetadata({ params }) {
   return {
     title: seo?.title || `${tab} — Breakfast Menu`,
     description: seo?.description || `Authentic ${tab.toLowerCase()} made fresh every morning in Milton Keynes. Order online.`,
+    keywords: seo?.keywords,
     alternates: { canonical: `https://sreesvadistaprasada.com/breakfast/${params.subsection}` },
   };
 }
@@ -41,5 +43,11 @@ export default async function BreakfastSubsectionPage({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) notFound();
   const initialItems = await getItems();
-  return <BreakfastClient initialItems={initialItems} initialTab={tab} seoHeading={categorySeo('breakfast', params.subsection)?.h1} />;
+  const seo = categorySeo('breakfast', params.subsection);
+  return (
+    <>
+      <BreakfastClient initialItems={initialItems} initialTab={tab} seoHeading={seo?.h1} />
+      {seo?.body && <SeoSection paragraphs={[seo.body]} links={[['Full breakfast menu', '/breakfast'], ['Order online', '/order']]} />}
+    </>
+  );
 }

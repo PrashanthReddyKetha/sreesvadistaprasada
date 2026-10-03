@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
 import { faqData } from '@/data/mockData';
 
-const FAQ = () => {
+const FAQ = ({ seoLine }) => {
   const [openItems, setOpenItems] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -31,6 +31,7 @@ const FAQ = () => {
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Frequently Asked Questions
+              {seoLine && <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">{seoLine}</span>}
             </h1>
             <p className="text-base text-gray-200 leading-relaxed">Everything you need to know about ordering, subscriptions, and more.</p>
           </div>

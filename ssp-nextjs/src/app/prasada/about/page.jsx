@@ -1,14 +1,7 @@
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'About Prasada — Pure Vegetarian South Indian Food, Milton Keynes',
-  description:
-    'The story behind Prasada: Gongura Pappu, Gutti Vankaya, Punugulu, ' +
-    'Naivedyam sacred rice and the full breadth of Andhra vegetarian cooking — ' +
-    'freshly made and delivered across Milton Keynes. ' +
-    'No other restaurant in MK offers these dishes.',
-  alternates: { canonical: 'https://sreesvadistaprasada.com/prasada/about' },
-};
+export const metadata = pageMeta('/prasada/about');
 
 export default function PrasadaAboutPage() {
   return (

@@ -1,14 +1,7 @@
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'What is Ragi Sangati? — The Only Ragi Delivery in the UK',
-  description:
-    'Ragi Sangati is the soul food of Andhra Pradesh — finger millet cooked into ' +
-    'a wholesome ball, served with curries, pappu and pulusu. ' +
-    'Sree Svadista Prasada is the only place in the UK where you can order ' +
-    'Ragi Sangati for delivery. Freshly made in Milton Keynes.',
-  alternates: { canonical: 'https://sreesvadistaprasada.com/ragi-specials/about' },
-};
+export const metadata = pageMeta('/ragi-specials/about');
 
 const faqSchema = {
   '@context': 'https://schema.org',

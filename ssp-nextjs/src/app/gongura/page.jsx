@@ -1,15 +1,12 @@
+import { PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
 const SITE = 'https://sreesvadistaprasada.com';
 
 export const metadata = {
-  title: { absolute: 'What Is Gongura? The Andhra Sorrel Leaf Guide | Sree Svadista Prasada' },
-  description: 'Gongura is the iconic tangy sorrel leaf of Andhra Pradesh — rich in iron, folate and calcium. Discover what gongura is, how it tastes, and where to eat authentic gongura dishes in the UK.',
-  keywords: [
-    'what is gongura', 'gongura leaf', 'gongura UK', 'gongura chicken UK',
-    'gongura mutton UK', 'Andhra sorrel', 'gongura pickle', 'Telugu food UK',
-    'South Indian food Milton Keynes', 'Andhra restaurant UK',
-  ],
+  title: { absolute: PAGE_SEO['/gongura'].title },
+  description: PAGE_SEO['/gongura'].description,
+  keywords: PAGE_SEO['/gongura'].keywords,
   openGraph: {
     title: 'What Is Gongura? The Andhra Sorrel Leaf Guide | Sree Svadista Prasada',
     description: 'The tangy sorrel leaf that defines Andhra cuisine. Rich in iron and folate, used in curries, chutneys, and pickles. Available at Sree Svadista Prasada in the UK.',

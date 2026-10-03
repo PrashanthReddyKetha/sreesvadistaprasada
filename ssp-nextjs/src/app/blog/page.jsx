@@ -1,27 +1,10 @@
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 import Image from 'next/image';
 
 const SITE = 'https://sreesvadistaprasada.com';
 
-export const metadata = {
-  title: { absolute: 'South Indian Food Blog | Andhra Cuisine Guides | Sree Svadista Prasada' },
-  description: 'Guides to South Indian and Andhra cuisine — what is Dabba Wala, ragi health benefits, South vs North Indian food, gongura and more.',
-  alternates: { canonical: `${SITE}/blog` },
-  openGraph: {
-    title: 'South Indian Food Blog | Sree Svadista Prasada',
-    description: 'Guides to South Indian and Andhra cuisine from the kitchen of Sree Svadista Prasada.',
-    type: 'website',
-    url: `${SITE}/blog`,
-    siteName: 'Sree Svadista Prasada',
-    locale: 'en_GB',
-    images: [{ url: 'https://images.unsplash.com/photo-1742281257687-092746ad6021?w=1200&q=80', width: 1200, height: 630, alt: 'South Indian food guides' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'South Indian Food Blog | Sree Svadista Prasada',
-    images: ['https://images.unsplash.com/photo-1742281257687-092746ad6021?w=1200&q=80'],
-  },
-};
+export const metadata = pageMeta('/blog', { image: 'https://images.unsplash.com/photo-1742281257687-092746ad6021?w=1200&q=80' });
 
 const POSTS = [
   {

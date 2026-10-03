@@ -1,11 +1,13 @@
+import { PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
 const SITE = 'https://sreesvadistaprasada.com';
 const HERO = 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?w=1200&q=80';
 
 export const metadata = {
-  title: { absolute: 'Biryani in Milton Keynes — The Andhra Way | Sree Svadista Prasada' },
-  description: 'Andhra-style chicken biryani in Milton Keynes from £8.99 — dum biryani, fry piece biryani, and the spiced rice plates that sit beside them. Order online.',
+  keywords: PAGE_SEO['/blog/biryani-milton-keynes'].keywords,
+  title: { absolute: PAGE_SEO['/blog/biryani-milton-keynes'].title },
+  description: PAGE_SEO['/blog/biryani-milton-keynes'].description,
   alternates: { canonical: `${SITE}/blog/biryani-milton-keynes` },
   openGraph: {
     title: 'Biryani in Milton Keynes — The Andhra Way',

@@ -1,11 +1,12 @@
+import { PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
 const SITE = 'https://sreesvadistaprasada.com';
 
 export const metadata = {
-  title: { absolute: 'Ragi: The Ancient South Indian Superfood | Health Benefits of Finger Millet | Sree Svadista Prasada' },
-  description: 'Ragi (finger millet) is a gluten-free ancient grain with more calcium than milk, a low glycaemic index, and exceptional fibre. Discover its nutritional profile, traditional uses in Andhra cooking, and how Sree Svadista Prasada uses it.',
-  keywords: ['ragi health benefits', 'finger millet benefits', 'ragi nutrition', 'ragi dosa', 'ragi gluten free', 'South Indian superfoods', 'ragi recipe UK', 'ragi Milton Keynes'],
+  title: { absolute: PAGE_SEO['/blog/ragi-health-benefits'].title },
+  description: PAGE_SEO['/blog/ragi-health-benefits'].description,
+  keywords: PAGE_SEO['/blog/ragi-health-benefits'].keywords,
   openGraph: {
     title: 'Ragi: The Ancient South Indian Superfood | Health Benefits of Finger Millet',
     description: 'More calcium than milk, low GI, naturally gluten-free. Ragi (finger millet) has been a staple of South Indian cooking for 4,000 years — here\'s why nutritionists are rediscovering it.',

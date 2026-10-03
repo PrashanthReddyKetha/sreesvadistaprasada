@@ -1,13 +1,7 @@
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'How the Dabba Wala Works — Weekly South Indian Meal Subscription',
-  description:
-    'The Dabba Wala is the only weekly home-cooked South Indian meal subscription ' +
-    'in Milton Keynes. Freshly made Andhra and Telugu food delivered daily — ' +
-    'not frozen, not reheated. Real ghar ka khana.',
-  alternates: { canonical: 'https://sreesvadistaprasada.com/subscriptions/about' },
-};
+export const metadata = pageMeta('/subscriptions/about');
 
 const faqSchema = {
   '@context': 'https://schema.org',

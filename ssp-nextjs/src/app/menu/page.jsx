@@ -1,29 +1,12 @@
+import SeoSection from '@/components/SeoSection';
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import MenuClient from './MenuClient';
 
 export const revalidate = 3600;
 
 const OG_IMAGE = 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80';
 
-export const metadata = {
-  title: 'Full South Indian Menu — 170+ Dishes',
-  description: 'Browse 170+ authentic South Indian dishes — Gongura Chicken, Natu Kodi Biryani, dosas, Pulihora and Ragi Specials. Order online in Milton Keynes.',
-  alternates: { canonical: 'https://sreesvadistaprasada.com/menu' },
-  openGraph: {
-    title: 'Full South Indian Menu — 170+ Dishes | Sree Svadista Prasada',
-    description: 'Browse 170+ authentic South Indian dishes — Gongura Chicken, Natu Kodi Biryani, dosas, Pulihora and Ragi Specials. Order online in Milton Keynes.',
-    type: 'website',
-    url: 'https://sreesvadistaprasada.com/menu',
-    siteName: 'Sree Svadista Prasada',
-    locale: 'en_GB',
-    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: 'Full South Indian menu — Sree Svadista Prasada' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Full South Indian Menu — 170+ Dishes | Sree Svadista Prasada',
-    description: 'Browse 170+ authentic South Indian dishes. Order online in Milton Keynes.',
-    images: [OG_IMAGE],
-  },
-};
+export const metadata = pageMeta('/menu');
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -69,7 +52,8 @@ export default async function FullMenuPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <MenuClient initialItems={initialItems} />
+      <MenuClient initialItems={initialItems} seoLine={PAGE_SEO['/menu'].h1} />
+      <SeoSection heading={PAGE_SEO['/menu'].content.heading} paragraphs={PAGE_SEO['/menu'].content.paragraphs} links={PAGE_SEO['/menu'].content.links} />
     </>
   );
 }

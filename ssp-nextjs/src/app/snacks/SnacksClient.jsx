@@ -12,7 +12,7 @@ const HIGHLIGHTS = [
   { icon: '🎁', title: 'Perfect For Gifting & Bulk', text: 'Stocking up for a festival, event or gift box? Bulk orders are handled directly on WhatsApp.' },
 ];
 
-const Snacks = () => {
+const Snacks = ({ seoLine }) => {
   const { openNotifyMe } = useNotifyMe();
   useEffect(() => { trackMenuCategoryView('snacks'); }, []);
 
@@ -30,6 +30,7 @@ const Snacks = () => {
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Hot, Sweet &amp; Pickles
+              {seoLine && <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">{seoLine}</span>}
             </h1>
             <p className="text-lg text-gray-100 leading-relaxed mb-2">Real taste, like never before.</p>
             <p className="text-sm sm:text-base text-gray-200 leading-relaxed max-w-xl mb-7">

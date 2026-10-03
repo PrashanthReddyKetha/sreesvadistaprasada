@@ -44,8 +44,7 @@ export const metadata: Metadata = {
     default: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery | Sree Svadista Prasada',
     template: '%s | Sree Svadista Prasada',
   },
-  description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
-  keywords: ['Indian takeaway Milton Keynes', 'Indian food delivery Milton Keynes', 'South Indian restaurant Milton Keynes', 'best Indian restaurant MK', 'South Indian food Milton Keynes'],
+  description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
   metadataBase: new URL('https://sreesvadistaprasada.com'),
   manifest: '/manifest.json',
   appleWebApp: {

@@ -1,28 +1,11 @@
+import SeoSection from '@/components/SeoSection';
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import PrasadaClient from './PrasadaClient';
 import FaqSection, { faqSchema } from '@/components/FaqSection';
 
 export const revalidate = 3600;
 
-export const metadata = {
-  title: { absolute: 'Pure Veg South Indian Food Milton Keynes | Sree Svadista Prasada' },
-  description: 'Vegetarian Indian food Milton Keynes — a fully vegetarian South Indian menu, cooked with separate utensils. Authentic Andhra temple-style cooking. Order now.',
-  openGraph: {
-    title: 'Pure Veg South Indian Food Milton Keynes | Sree Svadista Prasada',
-    description: 'Vegetarian Indian food Milton Keynes — a fully vegetarian South Indian menu, cooked with separate utensils. Authentic Andhra temple-style cooking. Order now.',
-    type: 'website',
-    url: 'https://sreesvadistaprasada.com/prasada',
-    siteName: 'Sree Svadista Prasada',
-    locale: 'en_GB',
-    images: [{ url: 'https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?w=1200&q=80', width: 1200, height: 630, alt: 'Pure Veg South Indian Food Milton Keynes' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Pure Veg South Indian Food Milton Keynes | Sree Svadista Prasada',
-    description: 'Vegetarian Indian food Milton Keynes — a fully vegetarian South Indian menu, cooked with separate utensils. Authentic Andhra temple-style cooking. Order now.',
-    images: ['https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?w=1200&q=80'],
-  },
-  alternates: { canonical: 'https://sreesvadistaprasada.com/prasada' },
-};
+export const metadata = pageMeta('/prasada', { image: 'https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?w=1200&q=80' });
 
 async function getItems() {
   const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';
@@ -58,6 +41,7 @@ export default async function PrasadaPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(FAQS)) }} />
       <PrasadaClient initialItems={initialItems} initialTab="Bites & Starters" />
+      <SeoSection heading={PAGE_SEO['/prasada'].content.heading} paragraphs={PAGE_SEO['/prasada'].content.paragraphs} />
       <FaqSection title="Prasada pure-veg menu — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse Prasada by section" />
     </>
   );

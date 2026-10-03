@@ -31,7 +31,7 @@ import { useNotifyMe } from '@/context/NotifyMeContext';
 import { isOrderable } from '@/config/softLaunch';
 import { buildItemUrl } from '@/lib/itemUrl';
 
-const Home = () => {
+const Home = ({ intro }) => {
   const { deliveryEnabled } = useKitchen();
   const trendingRef = useRef(null);
   const specialsRef = useRef(null);
@@ -161,6 +161,30 @@ const Home = () => {
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]">
         <HeroSlider />
       </section>
+
+      {/* What we are and where — the page's one visible H1 (copy lives in src/lib/seo/pages.js) */}
+      {intro && (
+        <section className="px-4 md:px-8 pt-10 md:pt-14" data-testid="home-intro">
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+              {intro.h1}
+            </h1>
+            {(intro.paragraphs || []).map((para, i) => (
+              <p key={i} className="text-sm md:text-base leading-relaxed" style={{ color: '#5C4B47' }}>{para}</p>
+            ))}
+            <ul className="flex flex-wrap justify-center gap-2 mt-5">
+              {(intro.links || []).map(([label, href]) => (
+                <li key={href}>
+                  <Link href={href} className="inline-block px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold transition-colors hover:bg-white"
+                    style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.25)' }}>
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* ============================================ */}
       {/* TWO WORLDS NAVIGATION CARDS */}

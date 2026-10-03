@@ -16,8 +16,13 @@ export async function generateMetadata({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) return {};
   return {
-    title: `${tab} — Hot, Sweet & Pickles — Coming Soon`,
-    description: `Authentic South Indian ${tab.toLowerCase()} — handmade with traditional recipes, coming soon to Milton Keynes, Edinburgh & Glasgow.`,
+    title: `Andhra ${tab} UK — Coming Soon`,
+    description: params.subsection === 'pickles'
+      ? 'Handmade Andhra pickles — mango avakaya, gongura pickle, lemon pickle and more — coming soon to order online in the UK. Tap Notify Me or WhatsApp us.'
+      : 'Handmade Andhra podis — kandi podi, nalla karam, karivepaku podi and more — coming soon to order online in the UK. Tap Notify Me or WhatsApp us.',
+    keywords: params.subsection === 'pickles'
+      ? ['Andhra pickles UK', 'Indian pickles online UK', 'mango avakaya', 'gongura pickle', 'Telugu pickles UK']
+      : ['Andhra podi UK', 'kandi podi', 'nalla karam', 'karivepaku podi', 'South Indian spice powders'],
     alternates: { canonical: `https://sreesvadistaprasada.com/snacks/${params.subsection}` },
   };
 }
@@ -25,5 +30,5 @@ export async function generateMetadata({ params }) {
 export default async function SnacksSubsectionPage({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) notFound();
-  return <SnacksClient />;
+  return <SnacksClient seoLine={`Andhra ${tab.toLowerCase()} — coming soon`} />;
 }

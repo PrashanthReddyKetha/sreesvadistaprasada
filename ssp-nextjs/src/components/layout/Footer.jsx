@@ -283,6 +283,23 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* Popular in Milton Keynes — descriptive links to the main menu and service pages */}
+        <nav aria-label="Popular in Milton Keynes" className="pb-6">
+          <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#F4C430' }}>Popular in Milton Keynes</p>
+          <ul className="flex flex-wrap gap-x-4 gap-y-2">
+            {[
+              ['Indian takeaway menu', '/menu'], ['South Indian breakfast', '/breakfast'], ['Dosa', '/breakfast/dosas'],
+              ['Idli & vada', '/breakfast/idli-vada'], ['Chicken biryani', '/svadista/biriyani'], ['Andhra chicken curry', '/svadista/curries'],
+              ['Veg thali', '/prasada/thalis-rice-bowls'], ['Vegetarian South Indian food', '/prasada'], ['Indian tiffin service', '/subscriptions'],
+              ['Indian catering', '/catering'], ['Indian food delivery', '/delivery'], ['South Indian restaurant Milton Keynes', '/milton-keynes'],
+            ].map(([label, href]) => (
+              <li key={href}>
+                <Link prefetch={false} href={href} className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>{label}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
         {/* Bottom Bar */}
         <div className="pt-6 flex flex-col md:flex-row justify-between items-center gap-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <p className="text-xs" style={{ color: '#A09890' }}>

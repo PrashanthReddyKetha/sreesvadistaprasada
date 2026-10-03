@@ -1,25 +1,7 @@
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import SubscriptionsClient from './SubscriptionsClient';
 
-export const metadata = {
-  title: { absolute: 'Indian Tiffin Delivery Milton Keynes | Sree Svadista Prasada' },
-  description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £75/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
-  openGraph: {
-    title: 'Indian Tiffin Delivery Milton Keynes | Dabba Wala | Sree Svadista Prasada',
-    description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £75/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
-    type: 'website',
-    url: 'https://sreesvadistaprasada.com/subscriptions',
-    siteName: 'Sree Svadista Prasada',
-    locale: 'en_GB',
-    images: [{ url: 'https://images.unsplash.com/photo-1727404679933-99daa2a7573a?w=1200&q=80', width: 1200, height: 630, alt: 'Indian Tiffin Delivery Milton Keynes — Dabba Wala' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Indian Tiffin Delivery Milton Keynes | Sree Svadista Prasada',
-    description: 'Indian tiffin service Milton Keynes — freshly cooked daily South Indian meals from £75/week. Veg & non-veg Andhra boxes delivered Mon–Fri. Subscribe now.',
-    images: ['https://images.unsplash.com/photo-1727404679933-99daa2a7573a?w=1200&q=80'],
-  },
-  alternates: { canonical: 'https://sreesvadistaprasada.com/subscriptions' },
-};
+export const metadata = pageMeta('/subscriptions', { image: 'https://images.unsplash.com/photo-1727404679933-99daa2a7573a?w=1200&q=80' });
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -69,6 +51,22 @@ export default function Page() {
               Indian meal, packed fresh and delivered hot. No MSG. No preservatives.
               Traditional Andhra and Telugu recipes, every day. Choose Prasada (pure veg)
               or Svadista (non-veg), weekly — or save with the monthly plan.
+            </p>
+          </div>
+          <div>
+            <h2 className="text-lg font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>Tiffin service prices</h2>
+            <p>
+              Weekly tiffin: £75 for five meals, Monday to Friday. Monthly tiffin: £275 for twenty meals.
+              Delivery is charged per meal from £1.74, depending on your Milton Keynes postcode, and is free
+              on your first 2 meals (weekly) or first 5 meals (monthly) as a new customer. One payment, no auto-renewal.
+            </p>
+          </div>
+          <div>
+            <h2 className="text-lg font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>Vegetarian or non-veg Indian tiffin</h2>
+            <p>
+              Choose the Prasada box for a vegetarian Indian tiffin, or the Svadista box for non-veg. Either way
+              it is a home-made tiffin — rice, dal, curry and sides cooked that morning — delivered as a lunch box
+              between 12 and 2pm, so it works as an Indian lunch at home or at the office.
             </p>
           </div>
           <div>

@@ -20,7 +20,7 @@ const TRUST_POINTS = [
 ];
 
 export default function CityPage({ data, jsonLd }) {
-  const { city, tagline, deliveryTime, minOrder, freeDeliveryThreshold, areas, isKitchen, faqs = [] } = data;
+  const { city, tagline, deliveryTime, minOrder, freeDeliveryThreshold, areas, isKitchen, faqs = [], heading } = data;
 
   return (
     <>
@@ -44,7 +44,7 @@ export default function CityPage({ data, jsonLd }) {
               className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight tracking-tight"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              South Indian Food Delivery in {city}
+              {heading || `South Indian Food Delivery in ${city}`}
             </h1>
             <p className="text-base md:text-lg text-gray-200 mb-8 leading-relaxed">
               {tagline}

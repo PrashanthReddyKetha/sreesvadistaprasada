@@ -1,11 +1,12 @@
+import { PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
 const SITE = 'https://sreesvadistaprasada.com';
 
 export const metadata = {
-  title: { absolute: 'South Indian Food vs North Indian Food — The Real Differences | Sree Svadista Prasada' },
-  description: 'Rice vs wheat. Tamarind vs cream. Guntur chilli vs Kashmiri. A definitive guide to what actually separates South Indian and North Indian cuisine — ingredients, cooking methods, spice profiles, and breakfast traditions.',
-  keywords: ['south indian vs north indian food', 'difference between south indian and north indian food', 'south indian food guide', 'Andhra cuisine', 'what is South Indian food', 'Indian food types UK'],
+  title: { absolute: PAGE_SEO['/blog/south-indian-vs-north-indian-food'].title },
+  description: PAGE_SEO['/blog/south-indian-vs-north-indian-food'].description,
+  keywords: PAGE_SEO['/blog/south-indian-vs-north-indian-food'].keywords,
   openGraph: {
     title: 'South Indian Food vs North Indian Food — The Real Differences',
     description: 'Rice vs wheat, tamarind vs cream, dosas vs parathas. The definitive guide to what separates these two completely different cuisines.',

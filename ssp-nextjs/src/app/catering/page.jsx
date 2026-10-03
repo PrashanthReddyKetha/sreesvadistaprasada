@@ -1,26 +1,8 @@
+import SeoSection from '@/components/SeoSection';
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import CateringClient from './CateringClient';
 
-export const metadata = {
-  title: { absolute: 'South Indian Catering Milton Keynes | Sree Svadista Prasada' },
-  description: 'Indian catering Milton Keynes — South Indian weddings, corporate events & family celebrations. Veg & non-veg menus tailored to your occasion. Get a quote.',
-  keywords: ['Indian catering Milton Keynes', 'South Indian wedding catering UK', 'Indian corporate catering MK', 'South Indian event catering Milton Keynes', 'Andhra catering UK', 'temple prasada catering', 'Indian buffet catering MK'],
-  openGraph: {
-    title: 'South Indian Catering Milton Keynes | Sree Svadista Prasada',
-    description: 'Indian catering Milton Keynes — South Indian weddings, corporate events & family celebrations. Veg & non-veg menus tailored to your occasion. Get a quote.',
-    type: 'website',
-    url: 'https://sreesvadistaprasada.com/catering',
-    siteName: 'Sree Svadista Prasada',
-    locale: 'en_GB',
-    images: [{ url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80', width: 1200, height: 630, alt: 'South Indian Catering Milton Keynes' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'South Indian Catering Milton Keynes | Sree Svadista Prasada',
-    description: 'Indian catering Milton Keynes — South Indian weddings, corporate events & family celebrations. Veg & non-veg menus tailored to your occasion. Get a quote.',
-    images: ['https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'],
-  },
-  alternates: { canonical: 'https://sreesvadistaprasada.com/catering' },
-};
+export const metadata = pageMeta('/catering', { image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80' });
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -47,6 +29,7 @@ export default function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <CateringClient />
+      <SeoSection heading={PAGE_SEO['/catering'].content.heading} paragraphs={PAGE_SEO['/catering'].content.paragraphs} links={PAGE_SEO['/catering'].content.links} />
     </>
   );
 }

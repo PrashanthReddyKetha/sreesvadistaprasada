@@ -1,13 +1,7 @@
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'About Svadista — Non-Veg South Indian Food, Milton Keynes',
-  description:
-    'The story behind Svadista: Gongura Chicken, Gongura Mutton, Whole Grilled Chicken, ' +
-    'authentic Andhra and Telugu non-vegetarian cooking freshly made and ' +
-    'delivered across Milton Keynes. The only Gongura kitchen in MK.',
-  alternates: { canonical: 'https://sreesvadistaprasada.com/svadista/about' },
-};
+export const metadata = pageMeta('/svadista/about');
 
 export default function SvadistaAboutPage() {
   return (

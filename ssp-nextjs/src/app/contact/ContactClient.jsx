@@ -5,7 +5,7 @@ import api from '@/api';
 import { useAuth } from '@/context/AuthContext';
 import { trackEnquirySubmit } from '@/lib/analytics';
 
-const Contact = () => {
+const Contact = ({ seoLine }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [status, setStatus] = useState(null); // 'loading' | 'success' | 'error'
@@ -33,6 +33,7 @@ const Contact = () => {
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Get in Touch
+              {seoLine && <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">{seoLine}</span>}
             </h1>
             <p className="text-lg text-gray-200 leading-relaxed" data-testid="contact-hero-subtitle">
               Questions, feedback, or just want to say hello? We'd love to hear from you.

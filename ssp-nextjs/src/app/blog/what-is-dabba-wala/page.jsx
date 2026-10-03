@@ -1,11 +1,12 @@
+import { PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
 const SITE = 'https://sreesvadistaprasada.com';
 
 export const metadata = {
-  title: { absolute: 'What Is Dabba Wala? The Complete Guide to Indian Tiffin Delivery | Sree Svadista Prasada' },
-  description: 'Dabba Wala (Dabbawala) — the legendary Mumbai tiffin delivery system with a 99.99% accuracy rate, studied by Harvard Business School. Discover the history, how it works, and how Sree Svadista Prasada brings this tradition to Milton Keynes.',
-  keywords: ['what is Dabba Wala', 'Dabbawala', 'Indian tiffin delivery', 'tiffin subscription UK', 'dabba wala Milton Keynes', 'Indian meal delivery subscription', 'South Indian tiffin UK'],
+  title: { absolute: PAGE_SEO['/blog/what-is-dabba-wala'].title },
+  description: PAGE_SEO['/blog/what-is-dabba-wala'].description,
+  keywords: PAGE_SEO['/blog/what-is-dabba-wala'].keywords,
   openGraph: {
     title: 'What Is Dabba Wala? The Complete Guide to Indian Tiffin Delivery',
     description: 'The story behind the legendary Mumbai tiffin delivery system and how Sree Svadista Prasada brings it to Milton Keynes.',

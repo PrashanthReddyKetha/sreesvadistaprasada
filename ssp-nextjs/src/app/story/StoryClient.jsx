@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Leaf, Flame, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { images } from '@/data/mockData';
 
-const OurStory = () => {
+const OurStory = ({ seoLine }) => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
@@ -21,6 +21,7 @@ const OurStory = () => {
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Our Story
+              {seoLine && <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">{seoLine}</span>}
             </h1>
             <p className="text-lg text-gray-200 leading-relaxed" data-testid="story-hero-subtitle">
               From Amma's Kitchen to the UK — A Journey of Love, Tradition, and Homely Food

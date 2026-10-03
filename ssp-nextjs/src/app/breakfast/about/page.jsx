@@ -1,13 +1,7 @@
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'About Our South Indian Breakfast — Dosas, Idli & Andhra Tiffins, Milton Keynes',
-  description:
-    'The story behind our South Indian breakfast: crispy dosas with fermented batter, ' +
-    'Nellore Ghee Karam Dosa, Uggani and Andhra tiffin classics ' +
-    'unavailable anywhere else in Milton Keynes. Freshly made daily.',
-  alternates: { canonical: 'https://sreesvadistaprasada.com/breakfast/about' },
-};
+export const metadata = pageMeta('/breakfast/about');
 
 export default function BreakfastAboutPage() {
   return (

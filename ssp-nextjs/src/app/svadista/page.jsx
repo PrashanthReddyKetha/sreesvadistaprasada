@@ -1,28 +1,11 @@
+import SeoSection from '@/components/SeoSection';
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import SvadistaClient from './SvadistaClient';
 import FaqSection, { faqSchema } from '@/components/FaqSection';
 
 export const revalidate = 3600;
 
-export const metadata = {
-  title: { absolute: 'Andhra Curries & Biryani Milton Keynes | Sree Svadista Prasada' },
-  description: 'Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, dum biryani & more. Bold South Indian flavours. Order now.',
-  openGraph: {
-    title: 'Andhra Curries & Biryani Milton Keynes | Sree Svadista Prasada',
-    description: 'Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, dum biryani & more. Bold South Indian flavours. Order now.',
-    type: 'website',
-    url: 'https://sreesvadistaprasada.com/svadista',
-    siteName: 'Sree Svadista Prasada',
-    locale: 'en_GB',
-    images: [{ url: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?w=1200&q=80', width: 1200, height: 630, alt: 'Andhra Curries & Biryani Milton Keynes' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Andhra Curries & Biryani Milton Keynes | Sree Svadista Prasada',
-    description: 'Non-veg Indian food Milton Keynes — slow-cooked Andhra curries, village-style chicken, dum biryani & more. Bold South Indian flavours. Order now.',
-    images: ['https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?w=1200&q=80'],
-  },
-  alternates: { canonical: 'https://sreesvadistaprasada.com/svadista' },
-};
+export const metadata = pageMeta('/svadista', { image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?w=1200&q=80' });
 
 async function getItems() {
   const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';
@@ -57,6 +40,7 @@ export default async function SvadistaPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(FAQS)) }} />
       <SvadistaClient initialItems={initialItems} initialTab="Starters" />
+      <SeoSection heading={PAGE_SEO['/svadista'].content.heading} paragraphs={PAGE_SEO['/svadista'].content.paragraphs} />
       <FaqSection title="Svadista non-veg menu — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse Svadista by section" />
     </>
   );

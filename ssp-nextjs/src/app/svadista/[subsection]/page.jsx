@@ -1,3 +1,4 @@
+import SeoSection from '@/components/SeoSection';
 import { categorySeo } from '@/lib/categorySeo';
 import { notFound } from 'next/navigation';
 import SvadistaClient from '../SvadistaClient';
@@ -34,6 +35,7 @@ export async function generateMetadata({ params }) {
   return {
     title: seo?.title || `${tab} — Svadista Non-Veg Menu`,
     description: seo?.description || `Order authentic South Indian ${tab.toLowerCase()}. Non-vegetarian specialities freshly cooked in Milton Keynes.`,
+    keywords: seo?.keywords,
     alternates: { canonical: `https://sreesvadistaprasada.com/svadista/${params.subsection}` },
   };
 }
@@ -42,5 +44,11 @@ export default async function SvadistaSubsectionPage({ params }) {
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) notFound();
   const initialItems = await getItems();
-  return <SvadistaClient initialItems={initialItems} initialTab={tab} seoHeading={categorySeo('svadista', params.subsection)?.h1} />;
+  const seo = categorySeo('svadista', params.subsection);
+  return (
+    <>
+      <SvadistaClient initialItems={initialItems} initialTab={tab} seoHeading={seo?.h1} />
+      {seo?.body && <SeoSection paragraphs={[seo.body]} links={[['Full Svadista non-veg menu', '/svadista'], ['Order online', '/order']]} />}
+    </>
+  );
 }

@@ -1,13 +1,10 @@
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import GalleryClient from './GalleryClient';
 import { buildItemUrl } from '@/lib/itemUrl';
 
 export const revalidate = 3600;
 
-export const metadata = {
-  title: 'South Indian Food Gallery — Dishes & Kitchen',
-  description: 'Every dish on our menu, photographed: biryanis, curries, dosas, and the kitchen that cooks them with love.',
-  alternates: { canonical: 'https://sreesvadistaprasada.com/gallery' },
-};
+export const metadata = pageMeta('/gallery');
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';
 

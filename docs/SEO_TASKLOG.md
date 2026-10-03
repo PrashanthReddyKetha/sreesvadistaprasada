@@ -74,6 +74,24 @@ Re-run Lighthouse mobile after a few days of edge-cache warmth to quantify the L
 
 Content facts policy held: posts reference only live menu items with API-verified names/prices; no allergen or certification claims; dietary questions deferred to per-dish labels.
 
+## Cycle 6 — 2026-10-03 — COMPLETED (accuracy, keyword research, full on-page pass; keyword set FROZEN)
+
+| ID | Task | Status |
+|----|------|--------|
+| A1 | Opening hours in structured data read from admin Collection Times via /api/opening-hours (were hard-coded and wrong) | Verified locally |
+| A2 | Vegetarian-kitchen claims corrected to "separate utensils, same kitchen"; unverifiable "only…" claims removed from descriptions; dishes not on sale removed from search text | Implemented |
+| R1 | Search Console (3 months), Keyword Planner export and Google UK suggestions analysed; keyword-to-page map written | Done |
+| S1 | Central SEO source of truth: `ssp-nextjs/src/lib/seo/pages.js` + `src/lib/categorySeo.js`; every page reads title, description, keywords and H1 line from there | Verified — 188 pages crawled |
+| S2 | Site-wide default meta keywords removed; each page has its own (0 pages on the default, was 178) | Verified |
+| T1 | 17 menu sub-pages: own title, H1 line, description, keywords and a paragraph each (were sharing the parent H1) | Verified |
+| T2 | 134 dish pages: title pattern `<Dish> in Milton Keynes` (was `<Dish> \| Indian Takeaway Milton Keynes`, which competed with the homepage); keyword line under the H1 | Verified — no duplicate titles |
+| T3 | Retitled: /menu, /subscriptions (tiffin *service*), /milton-keynes (South Indian restaurant & takeaway), /delivery, /catering, /story (Telugu & Andhra), /contact (Greenleys MK12), /faq, /snacks (Andhra pickles) | Verified locally |
+| T4 | Over-long titles/descriptions trimmed on 5 about pages, 3 blog posts, /gongura (titles >70: 74 → 10; descriptions >160: 20 → 5) | Verified |
+| C1 | Homepage: visible H1 and intro with keyword links (H1 was sr-only); supporting copy on /menu, /prasada, /svadista, /breakfast, /catering, /subscriptions | Implemented |
+| C2 | Footer "Popular in Milton Keynes" link block on every page; /what-is-gongura → /gongura redirect | Implemented |
+
+Keyword freeze: titles, primary keywords and H1 lines stay as set until at least 2026-12-01. Changes are recorded in the SEO status document. Review dates: 2026-10-17, 2026-10-31, 2026-12-01.
+
 ## Queue — next cycles (priority order)
 
 | ID | Task | Evidence / value | Effort | Can Claude do it? |

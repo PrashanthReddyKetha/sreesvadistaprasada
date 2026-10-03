@@ -1,11 +1,13 @@
+import { PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 
 const SITE = 'https://sreesvadistaprasada.com';
 const HERO = 'https://images.unsplash.com/photo-1742281258189-3b933879867a?w=1200&q=80';
 
 export const metadata = {
-  title: { absolute: 'Dosa in Milton Keynes — A Guide to Every Dosa We Make | Sree Svadista Prasada' },
-  description: 'Where to get proper dosa in Milton Keynes: 12 varieties from plain and ghee to Nellore karam, made from traditionally fermented batter. From £4.99.',
+  keywords: PAGE_SEO['/blog/dosa-milton-keynes'].keywords,
+  title: { absolute: PAGE_SEO['/blog/dosa-milton-keynes'].title },
+  description: PAGE_SEO['/blog/dosa-milton-keynes'].description,
   alternates: { canonical: `${SITE}/blog/dosa-milton-keynes` },
   openGraph: {
     title: 'Dosa in Milton Keynes — A Guide to Every Dosa We Make',

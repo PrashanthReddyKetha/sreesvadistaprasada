@@ -1,34 +1,11 @@
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import HomeClient from './HomeClient';
 import { getOpeningHoursSpec } from '@/lib/siteStatus';
 
 // Re-read the opening hours set in admin every 10 minutes
 export const revalidate = 600;
 
-const DESC_COLLECTION = 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food. Order online and collect.';
-const DESC_DELIVERY = 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.';
-
-export async function generateMetadata() {
-  // Owner decision: delivery is a core service on a temporary pause, so the search
-  // wording keeps it. The order pages show whether it is switched on right now.
-  const delivery = true;
-  const description = delivery ? DESC_DELIVERY : DESC_COLLECTION;
-  return {
-  title: { absolute: 'Indian Takeaway Milton Keynes | Sree Svadista Prasada' },
-  description,
-  openGraph: {
-    title: delivery
-      ? 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery'
-      : 'Indian Takeaway Milton Keynes | Authentic South Indian Food',
-    description,
-    type: 'website',
-    url: 'https://sreesvadistaprasada.com/',
-    siteName: 'Sree Svadista Prasada',
-    locale: 'en_GB',
-    images: [{ url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80', width: 1200, height: 630 }],
-  },
-  alternates: { canonical: 'https://sreesvadistaprasada.com' },
-  };
-}
+export const metadata = pageMeta('/', { image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80' });
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -93,7 +70,6 @@ const jsonLd = {
 };
 
 export default async function HomePage() {
-  const delivery = true;
   const hours = await getOpeningHoursSpec();
   // Opening hours come from the Collection Times set in admin; if they can't be
   // read, say nothing rather than publish hours that might be wrong.
@@ -108,12 +84,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...jsonLd, '@graph': graph }) }}
       />
-      <h1 className="sr-only">
-        {delivery
-          ? 'Indian Takeaway Milton Keynes — Authentic South Indian Food Delivery'
-          : 'Indian Takeaway Milton Keynes — Authentic South Indian Food'}
-      </h1>
-      <HomeClient />
+      <HomeClient intro={{ h1: PAGE_SEO['/'].h1, ...PAGE_SEO['/'].content }} />
     </>
   );
 }

@@ -1,23 +1,11 @@
+import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 import { getDeliveryEnabled } from '@/lib/siteStatus';
 import FaqSection, { faqSchema } from '@/components/FaqSection';
 
 const BASE_URL = 'https://sreesvadistaprasada.com';
 
-export const metadata = {
-  title: { absolute: 'Indian Food Delivery Milton Keynes — Zones, Fees & Times | Sree Svadista Prasada' },
-  description: 'South Indian food delivery across all MK postcodes in 30–60 minutes. Delivery fees from £2.49, free over £28, £15 minimum — or collect and save 10%.',
-  alternates: { canonical: `${BASE_URL}/delivery` },
-  openGraph: {
-    title: 'Indian Food Delivery Milton Keynes | Sree Svadista Prasada',
-    description: 'South Indian food delivery across all MK postcodes in 30–60 minutes. Fees from £2.49, free over £28 — or collect and save 10%.',
-    type: 'website',
-    url: `${BASE_URL}/delivery`,
-    siteName: 'Sree Svadista Prasada',
-    locale: 'en_GB',
-    images: [{ url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80', width: 1200, height: 630, alt: 'Indian food delivery Milton Keynes' }],
-  },
-};
+export const metadata = pageMeta('/delivery', { image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80' });
 
 // Mirrors backend/routes/orders.py POSTCODE_ZONES + fee tables — the checkout
 // engine is the source of truth; keep this page in sync when zones change.
@@ -67,7 +55,7 @@ export default async function DeliveryPage() {
             )}
             <div className="w-12 h-0.5 mb-4" style={{ backgroundColor: '#F4C430' }} />
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Food Delivery in Milton Keynes
+              {PAGE_SEO['/delivery'].h1}
             </h1>
             <p className="text-base md:text-lg text-gray-200 leading-relaxed max-w-2xl">
               Authentic Andhra food, cooked fresh in Greenleys and delivered across every MK postcode in 30–60 minutes.
