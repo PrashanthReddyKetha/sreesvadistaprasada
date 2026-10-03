@@ -72,7 +72,7 @@ class SavedAddress(BaseModel):
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
-    password: str
+    password: str = Field(min_length=8, max_length=128)
     phone: Optional[str] = None
     firebase_token: Optional[str] = None  # Firebase phone verification token
 

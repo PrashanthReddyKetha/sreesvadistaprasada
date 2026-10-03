@@ -881,17 +881,18 @@ async def create_admin_user():
         existing = await db.users.find_one({"email": adm_email})
         hashed = bcrypt.hashpw(adm_password.encode(), bcrypt.gensalt()).decode()
         if existing:
-            await db.users.update_one(
-                {"email": adm_email},
-                {"$set": {"role": "admin", "password": hashed}}
-            )
+            # Promote, but never overwrite a password the admin already uses
+            update = {"$set": {"role": "admin"}, "$unset": {"password": ""}}
+            if not existing.get("password_hash") and not existing.get("google_id"):
+                update["$set"]["password_hash"] = hashed
+            await db.users.update_one({"email": adm_email}, update)
             print(f"Admin user updated: {adm_email}")
         else:
             await db.users.insert_one({
                 "id": str(uuid.uuid4()),
                 "name": adm_name,
                 "email": adm_email,
-                "password": hashed,
+                "password_hash": hashed,
                 "role": "admin",
                 "created_at": datetime.utcnow().isoformat(),
             })

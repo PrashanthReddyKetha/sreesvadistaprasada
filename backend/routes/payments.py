@@ -9,6 +9,7 @@ from typing import Literal
 import time
 from pydantic import BaseModel
 from database import db
+from security import client_ip
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ PI_RATE_WINDOW = 60
 PI_RATE_MAX    = 10   # max 10 PaymentIntents per minute per IP
 
 def _check_pi_rate(request: Request):
-    ip = request.client.host if request.client else "unknown"
+    ip = client_ip(request)
     now = time.time()
     cutoff = now - PI_RATE_WINDOW
     _pi_rate_store[ip] = [t for t in _pi_rate_store[ip] if t > cutoff]

@@ -42,6 +42,22 @@ async def lifespan(app: FastAPI):
     await db.wa_optouts.create_index("phone", unique=True)
     await db.subscriptions.create_index("email_key", sparse=True)
     await db.payments.create_index("pi_id", unique=True)
+    # Lookups that run on every dashboard, kitchen and item page
+    for coll, keys in (
+        ("orders", "user_id"), ("orders", "status"), ("orders", "items.menu_item_id"),
+        ("subscriptions", "id"), ("subscriptions", "user_id"), ("subscriptions", [("status", 1), ("end_date", 1)]),
+        ("delivery_tracking", "delivery_id"), ("delivery_tracking", "sub_id"),
+        ("delivery_reviews", [("user_id", 1), ("type", 1), ("ref_id", 1)]),
+        ("notifications", [("user_id", 1), ("read", 1)]),
+        ("enquiry_messages", "enquiry_id"),
+        ("contact_messages", "user_id"), ("catering_enquiries", "user_id"),
+        ("menu_items", "slug"), ("reviews", "menu_item_id"), ("menu_likes", "menu_item_id"),
+        ("users", "phone"), ("users", "google_id"),
+    ):
+        try:
+            await getattr(db, coll).create_index(keys)
+        except Exception as e:
+            logger.warning("Index on %s %s not created: %s", coll, keys, e)
     await db.coupons.create_index("code", unique=True)
     await db.coupons.create_index("id", unique=True)
     await db.coupon_redemptions.create_index([("coupon_id", 1), ("user_id", 1)])
@@ -64,7 +80,13 @@ async def lifespan(app: FastAPI):
     client.close()
 
 
-app = FastAPI(title="Sree Svadista Prasada API", version="1.0.0", lifespan=lifespan)
+_PUBLIC_DOCS = os.environ.get("ENVIRONMENT") != "production"
+app = FastAPI(
+    title="Sree Svadista Prasada API", version="1.0.0", lifespan=lifespan,
+    docs_url="/docs" if _PUBLIC_DOCS else None,
+    redoc_url="/redoc" if _PUBLIC_DOCS else None,
+    openapi_url="/openapi.json" if _PUBLIC_DOCS else None,
+)
 
 ALLOWED_ORIGINS = [
     "https://sreesvadistaprasada.vercel.app",

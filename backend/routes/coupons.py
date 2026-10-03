@@ -30,7 +30,11 @@ async def available(
     if scope not in SCOPES:
         raise HTTPException(400, "scope must be orders or subscriptions")
     from coupons import available_for
-    return await available_for(scope, current_user["sub"] if current_user else None, email)
+    # A typed email proves nothing, so it never unlocks someone's exclusive codes here.
+    # (A guest can still enter a code they were given; it is checked at pricing.)
+    if current_user:
+        return await available_for(scope, current_user["sub"], current_user.get("email"))
+    return await available_for(scope, None, None)
 
 
 # ── Admin ─────────────────────────────────────────────────────────────────────

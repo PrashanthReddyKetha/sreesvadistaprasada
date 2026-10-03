@@ -4,6 +4,7 @@ from passlib.context import CryptContext
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
+import time
 
 SECRET_KEY = os.environ.get("JWT_SECRET")
 if not SECRET_KEY:
@@ -30,10 +31,13 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(user_id: str, role: str) -> str:
+    # Real epoch seconds — a naive utcnow().timestamp() is shifted by the server's UTC offset
+    issued = int(time.time())
     payload = {
         "sub": user_id,
         "role": role,
-        "exp": datetime.utcnow() + timedelta(hours=TOKEN_EXPIRE_HOURS),
+        "iat": issued,
+        "exp": issued + TOKEN_EXPIRE_HOURS * 3600,
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -45,25 +49,51 @@ def decode_token(token: str) -> dict:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+async def _authenticate(token: str) -> dict:
+    """
+    A token is only as good as the account behind it: the account must still
+    exist, the role comes from the database (so a demotion takes effect at once),
+    and a token issued before the last password change is refused.
+    """
+    from database import db
+    payload = decode_token(token)
+    user = await db.users.find_one(
+        {"id": payload.get("sub")},
+        {"_id": 0, "id": 1, "role": 1, "name": 1, "email": 1, "password_changed_at": 1},
+    )
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    changed = user.get("password_changed_at")
+    if changed and int(payload.get("iat") or 0) < int(changed):
+        raise HTTPException(status_code=401, detail="Please sign in again")
+    return {
+        "sub": user["id"],
+        "id": user["id"],
+        "role": user.get("role") or "customer",
+        "name": user.get("name"),
+        "email": user.get("email"),
+    }
+
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     if not credentials:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return decode_token(credentials.credentials)
+    return await _authenticate(credentials.credentials)
 
 
-def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict | None:
+async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict | None:
     if not credentials:
         return None
     try:
-        return decode_token(credentials.credentials)
+        return await _authenticate(credentials.credentials)
     except HTTPException:
         return None
 
 
-def require_admin(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+async def require_admin(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     if not credentials:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    payload = decode_token(credentials.credentials)
-    if payload.get("role") != "admin":
+    user = await _authenticate(credentials.credentials)
+    if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
-    return payload
+    return user

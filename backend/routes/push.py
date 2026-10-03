@@ -21,6 +21,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, Field
 
 from database import db
+from security import RateLimit
 from auth import require_admin, get_optional_user
 from web_push import ensure_vapid_keys, dispatch_campaign, new_campaign, LONDON
 
@@ -77,8 +78,11 @@ async def unsubscribe(body: UnsubscribeBody):
     return {"ok": True}
 
 
+_track_limit = RateLimit(60, 60)
+
+
 @router.post("/push/track")
-async def track(c: str = Query(max_length=64), e: str = Query(max_length=16)):
+async def track(c: str = Query(max_length=64), e: str = Query(max_length=16), _: None = Depends(_track_limit)):
     if e not in ("received", "clicked"):
         raise HTTPException(400, "Unknown event")
     await db.push_campaigns.update_one({"id": c}, {"$inc": {f"stats.{e}": 1}})

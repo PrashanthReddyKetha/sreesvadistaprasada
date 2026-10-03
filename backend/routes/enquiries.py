@@ -3,7 +3,8 @@ from typing import List, Optional
 from datetime import datetime
 from collections import defaultdict
 import time
-from database import db
+from database import db
+from security import client_ip, esc
 from models import (
     ContactMessage, ContactMessageCreate,
     CateringEnquiry, CateringEnquiryCreate,
@@ -23,7 +24,7 @@ ENQUIRY_RATE_WINDOW = 3600   # 1 hour
 ENQUIRY_RATE_MAX    = 5      # max 5 per hour per IP
 
 def _check_enquiry_rate(request: Request):
-    ip = request.client.host if request.client else "unknown"
+    ip = client_ip(request)
     now = time.time()
     cutoff = now - ENQUIRY_RATE_WINDOW
     _enquiry_rate_store[ip] = [t for t in _enquiry_rate_store[ip] if t > cutoff]
@@ -32,10 +33,25 @@ def _check_enquiry_rate(request: Request):
     _enquiry_rate_store[ip].append(now)
 
 
+async def _trusted_email(user_id: str):
+    """
+    Enquiries sent while signed out are matched to an account by email — but only
+    when that email is proven. Sign-up does not verify email ownership, so only
+    Google-verified accounts qualify; everyone else sees enquiries linked by id.
+    """
+    doc = await db.users.find_one({"id": user_id}, {"email": 1, "google_id": 1})
+    if doc and doc.get("google_id") and doc.get("email"):
+        return doc["email"]
+    return None
+
+
 # ── Contact ───────────────────────────────────────────────────────────────────
 
 @router.post("/contact", response_model=ContactMessage)
-async def submit_contact(request: Request, payload: ContactMessageCreate, _: None = Depends(_check_enquiry_rate)):
+async def submit_contact(request: Request, payload: ContactMessageCreate, _: None = Depends(_check_enquiry_rate),
+                         current_user: Optional[dict] = Depends(get_optional_user)):
+    # Only a signed-in customer's own token links an enquiry to an account
+    payload.user_id = current_user["sub"] if current_user else None
     msg = ContactMessage(**payload.model_dump())
     await db.contact_messages.insert_one(msg.model_dump())
     name = getattr(payload, "name", None) or "there"
@@ -44,9 +60,9 @@ async def submit_contact(request: Request, payload: ContactMessageCreate, _: Non
         send_email(payload.email, subj, html)
     notify_admin(
         f"New contact enquiry · {name}",
-        f"<p><b>From:</b> {name} ({getattr(payload,'email','—')} · {getattr(payload,'phone','—')})</p>"
-        f"<p><b>Subject:</b> {getattr(payload,'subject','—')}</p>"
-        f"<p>{getattr(payload,'message','')}</p>",
+        f"<p><b>From:</b> {esc(name)} ({esc(getattr(payload,'email','—'))} · {esc(getattr(payload,'phone','—'))})</p>"
+        f"<p><b>Subject:</b> {esc(getattr(payload,'subject','—'))}</p>"
+        f"<p>{esc(getattr(payload,'message',''))}</p>",
     )
     return msg
 
@@ -71,7 +87,9 @@ async def update_contact_status(msg_id: str, status: str, _: dict = Depends(requ
 # ── Catering ──────────────────────────────────────────────────────────────────
 
 @router.post("/catering", response_model=CateringEnquiry)
-async def submit_catering(request: Request, payload: CateringEnquiryCreate, _: None = Depends(_check_enquiry_rate)):
+async def submit_catering(request: Request, payload: CateringEnquiryCreate, _: None = Depends(_check_enquiry_rate),
+                          current_user: Optional[dict] = Depends(get_optional_user)):
+    payload.user_id = current_user["sub"] if current_user else None
     enquiry = CateringEnquiry(**payload.model_dump())
     await db.catering_enquiries.insert_one(enquiry.model_dump())
     name = getattr(payload, "name", None) or "there"
@@ -80,10 +98,10 @@ async def submit_catering(request: Request, payload: CateringEnquiryCreate, _: N
         send_email(payload.email, subj, html)
     notify_admin(
         f"Catering enquiry · {name}",
-        f"<p><b>From:</b> {name} ({getattr(payload,'email','—')} · {getattr(payload,'phone','—')})</p>"
-        f"<p><b>Event:</b> {getattr(payload,'event_type','—')} on {getattr(payload,'event_date','—')} · "
-        f"{getattr(payload,'guest_count','—')} guests</p>"
-        f"<p>{getattr(payload,'message','')}</p>",
+        f"<p><b>From:</b> {esc(name)} ({esc(getattr(payload,'email','—'))} · {esc(getattr(payload,'phone','—'))})</p>"
+        f"<p><b>Event:</b> {esc(getattr(payload,'event_type','—'))} on {esc(getattr(payload,'event_date','—'))} · "
+        f"{esc(getattr(payload,'guest_count','—'))} guests · {esc(getattr(payload,'food_preference','') or '')}</p>"
+        f"<p>{esc(getattr(payload,'additional_details','') or '')}</p>",
     )
     return enquiry
 
@@ -170,8 +188,7 @@ async def join_waitlist(request: Request, payload: WaitlistCreate, _: None = Dep
 @router.get("/my")
 async def get_my_enquiries(current_user: dict = Depends(get_current_user)):
     uid = current_user["sub"]
-    user_doc = await db.users.find_one({"id": uid}, {"email": 1})
-    email = user_doc["email"] if user_doc else None
+    email = await _trusted_email(uid)
 
     query = {"$or": [{"user_id": uid}, {"email": email}]} if email else {"user_id": uid}
 
@@ -258,9 +275,8 @@ async def get_messages(
         if not current_user:
             raise HTTPException(status_code=401, detail="Authentication required")
         uid = current_user["sub"]
-        user_doc = await db.users.find_one({"id": uid}, {"email": 1})
-        email = user_doc["email"] if user_doc else None
-        if enquiry.get("user_id") != uid and enquiry.get("email") != email:
+        email = await _trusted_email(uid)
+        if enquiry.get("user_id") != uid and not (email and enquiry.get("email") == email):
             raise HTTPException(status_code=403, detail="Access denied")
         # Mark admin messages as read by customer
         await db.enquiry_messages.update_many(
@@ -362,9 +378,9 @@ async def customer_reply(
 
     uid = current_user["sub"]
     user_doc = await db.users.find_one({"id": uid}, {"email": 1, "name": 1})
-    email = user_doc["email"] if user_doc else None
+    email = await _trusted_email(uid)
 
-    if enquiry.get("user_id") != uid and enquiry.get("email") != email:
+    if enquiry.get("user_id") != uid and not (email and enquiry.get("email") == email):
         raise HTTPException(status_code=403, detail="Access denied")
 
     # Reopen if resolved
@@ -383,7 +399,7 @@ async def customer_reply(
 
     notify_admin(
         f"Customer replied · {sender_name}",
-        f"<p><b>{sender_name}</b> replied on their {enq_type} enquiry.</p><p>{payload.text}</p>",
+        f"<p><b>{esc(sender_name)}</b> replied on their {enq_type} enquiry.</p><p>{esc(payload.text)}</p>",
     )
 
     return msg.model_dump()

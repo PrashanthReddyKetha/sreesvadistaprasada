@@ -8,7 +8,8 @@ import os
 import time
 import stripe
 from pymongo.errors import DuplicateKeyError
-from database import db
+from database import db
+from security import client_ip
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
@@ -124,7 +125,7 @@ SUB_RATE_WINDOW = 3600   # 1 hour
 SUB_RATE_MAX    = 5      # max 5 attempts per hour per IP
 
 def _check_sub_rate(request: Request):
-    ip = request.client.host if request.client else "unknown"
+    ip = client_ip(request)
     now = time.time()
     cutoff = now - SUB_RATE_WINDOW
     _sub_rate_store[ip] = [t for t in _sub_rate_store[ip] if t > cutoff]
@@ -137,7 +138,7 @@ _quote_rate_store: dict = defaultdict(list)
 QUOTE_RATE_MAX = 40      # quotes per hour per IP — enough for typing, too few to probe emails
 
 def _check_quote_rate(request: Request):
-    ip = request.client.host if request.client else "unknown"
+    ip = client_ip(request)
     now = time.time()
     cutoff = now - SUB_RATE_WINDOW
     _quote_rate_store[ip] = [t for t in _quote_rate_store[ip] if t > cutoff]

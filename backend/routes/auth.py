@@ -16,6 +16,23 @@ from models import (
 )
 from auth import hash_password, verify_password, create_access_token, get_current_user, require_admin
 from notifications import send_email, email_welcome, email_password_reset, create_notification, SITE_URL
+from security import client_ip
+import re
+
+
+def norm_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+
+async def find_user_by_email(email: str):
+    """Emails are stored lower-case from now on; older accounts may have mixed case."""
+    e = norm_email(email)
+    if not e:
+        return None
+    doc = await db.users.find_one({"email": e}, {"_id": 0})
+    if doc:
+        return doc
+    return await db.users.find_one({"email": {"$regex": f"^{re.escape(e)}$", "$options": "i"}}, {"_id": 0})
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +43,7 @@ RATE_MAX      = 10   # max attempts per window
 _rate_store: dict = defaultdict(list)  # ip -> [timestamp, ...]
 
 def _check_rate_limit(request: Request):
-    ip = request.client.host if request.client else "unknown"
+    ip = client_ip(request)
     now = time.time()
     window_start = now - RATE_WINDOW
     _rate_store[ip] = [t for t in _rate_store[ip] if t > window_start]
@@ -95,7 +112,7 @@ def verify_firebase_phone_token(token: str) -> str | None:
 @router.post("/register", response_model=TokenResponse)
 async def register(request: Request, payload: UserCreate):
     _check_rate_limit(request)
-    existing = await db.users.find_one({"email": payload.email}, {"_id": 0})
+    existing = await find_user_by_email(payload.email)
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -118,7 +135,7 @@ async def register(request: Request, payload: UserCreate):
 
     user = UserInDB(
         name=payload.name,
-        email=payload.email,
+        email=norm_email(payload.email),
         phone=payload.phone,
         phone_verified=True,
         password_hash=hash_password(payload.password),
@@ -147,7 +164,7 @@ async def register(request: Request, payload: UserCreate):
 @router.post("/login", response_model=TokenResponse)
 async def login(request: Request, payload: UserLogin):
     _check_rate_limit(request)
-    doc = await db.users.find_one({"email": payload.email}, {"_id": 0})
+    doc = await find_user_by_email(payload.email)
     if not doc:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
@@ -167,7 +184,7 @@ RESET_TOKEN_TTL_HOURS = 1
 
 @router.post("/forgot-password")
 async def forgot_password(request: Request, payload: PasswordResetRequest, _: None = Depends(_check_rate_limit)):
-    doc = await db.users.find_one({"email": payload.email.lower().strip()}, {"_id": 0})
+    doc = await find_user_by_email(payload.email)
     # Always return the same response whether or not the account exists —
     # otherwise this endpoint becomes a user-enumeration oracle.
     if doc and doc.get("password_hash"):
@@ -192,12 +209,22 @@ async def reset_password(request: Request, payload: PasswordResetConfirm, _: Non
         raise HTTPException(status_code=400, detail="This reset link is invalid or has already been used.")
     if record.get("expires_at", "") < datetime.utcnow().isoformat():
         raise HTTPException(status_code=400, detail="This reset link has expired. Please request a new one.")
+    # Claim the link first so it can only ever be used once
+    claimed = await db.password_resets.update_one(
+        {"token": payload.token, "used": False}, {"$set": {"used": True, "used_at": datetime.utcnow().isoformat()}}
+    )
+    if not claimed.modified_count:
+        raise HTTPException(status_code=400, detail="This reset link is invalid or has already been used.")
 
     await db.users.update_one(
         {"id": record["user_id"]},
-        {"$set": {"password_hash": hash_password(payload.new_password)}},
+        {"$set": {
+            "password_hash": hash_password(payload.new_password),
+            # Tokens issued before this moment stop working (auth._authenticate)
+            "password_changed_at": int(time.time()),
+        }},
     )
-    await db.password_resets.update_one({"token": payload.token}, {"$set": {"used": True}})
+    await db.password_resets.update_many({"user_id": record["user_id"], "used": False}, {"$set": {"used": True}})
     return {"message": "Password updated. You can now sign in with your new password."}
 
 
@@ -206,16 +233,18 @@ async def reset_password(request: Request, payload: PasswordResetConfirm, _: Non
 @router.post("/register/simple", response_model=TokenResponse)
 async def register_simple(request: Request, payload: UserCreate):
     """Mobile-only registration without phone/Firebase verification."""
+    _check_rate_limit(request)
     mobile_key = os.environ.get("MOBILE_API_KEY", "")
-    if mobile_key and request.headers.get("X-Mobile-Key") != mobile_key:
+    # No phone check on this route, so it only exists for the mobile app holding the key
+    if not mobile_key or not secrets.compare_digest(request.headers.get("X-Mobile-Key", ""), mobile_key):
         raise HTTPException(status_code=403, detail="Not authorised")
-    existing = await db.users.find_one({"email": payload.email}, {"_id": 0})
+    existing = await find_user_by_email(payload.email)
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user = UserInDB(
         name=payload.name,
-        email=payload.email,
+        email=norm_email(payload.email),
         password_hash=hash_password(payload.password),
     )
     await db.users.insert_one(user.model_dump())

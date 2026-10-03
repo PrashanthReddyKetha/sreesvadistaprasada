@@ -11,7 +11,8 @@ Set env vars on Render:
     SITE_URL (optional)           — used in email links, default https://sreesvadistaprasada.com
 """
 from __future__ import annotations
-import os
+import os
+from html import escape as html_escape
 import asyncio
 import logging
 from datetime import datetime
@@ -338,7 +339,7 @@ def email_enquiry_receipt(kind: str, name: str) -> tuple[str, str]:
     label = "catering enquiry" if kind == "catering" else "message"
     html = _wrap(
         "We've got your message",
-        f"<p>Hi {name}, thanks for your {label}. Our team usually replies within a few hours during business hours.</p>"
+        f"<p>Hi {html_escape(name)}, thanks for your {label}. Our team usually replies within a few hours during business hours.</p>"
         "<p>You'll see any reply in your dashboard under <b>Enquiries</b> — we'll email you too.</p>",
         "Open Dashboard", f"{SITE_URL}/dashboard",
     )

@@ -266,11 +266,13 @@ Return ONLY valid JSON with exactly these keys:
   ]
 }}"""
 
-        message = client.messages.create(
+        import asyncio
+        message = await asyncio.get_event_loop().run_in_executor(None, lambda: client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=800,
+            timeout=30,
             messages=[{"role": "user", "content": prompt}]
-        )
+        ))
         raw = message.content[0].text.strip()
         # Strip markdown fences if present
         if raw.startswith("```"):

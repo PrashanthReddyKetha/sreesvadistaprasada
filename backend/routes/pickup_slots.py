@@ -15,7 +15,8 @@ import uuid
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from database import db
+from database import db
+from security import RateLimit
 from auth import require_admin, get_optional_user
 
 logger = logging.getLogger(__name__)
@@ -269,7 +270,8 @@ class ReopenSubscribe(BaseModel):
 
 
 @router.post("/kitchen-status/notify-me")
-async def kitchen_reopen_subscribe(body: ReopenSubscribe, user: Optional[dict] = Depends(get_optional_user)):
+async def kitchen_reopen_subscribe(body: ReopenSubscribe, user: Optional[dict] = Depends(get_optional_user),
+                                   _: None = Depends(RateLimit(5, 3600, "Too many requests. Please try again later."))):
     """Customer asks to be told when the kitchen reopens. One row per email."""
     settings = await get_slot_settings()
     if not settings.get("paused"):

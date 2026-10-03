@@ -27,7 +27,10 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 import auth  # noqa: E402
 import notifications  # noqa: E402
-from routes import orders, payments, pickup_slots, reviews, subscriptions, coupons as coupon_routes, loyalty, admin_dabba_wala  # noqa: E402
+from routes import (  # noqa: E402
+    orders, payments, pickup_slots, reviews, subscriptions, coupons as coupon_routes, loyalty, admin_dabba_wala,
+    auth as auth_routes, enquiries,
+)
 
 _loop = asyncio.new_event_loop()
 
@@ -37,7 +40,7 @@ def run(coro):
 
 
 app = FastAPI()
-for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala):
+for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries):
     app.include_router(r.router, prefix="/api")
 
 
@@ -53,7 +56,8 @@ def fresh_state(monkeypatch):
     for name in run(db.list_collection_names()):
         run(db[name].delete_many({}))
     for limiter in (payments._pi_rate_store, getattr(subscriptions, "_sub_rate_store", None),
-                    getattr(subscriptions, "_quote_rate_store", None)):
+                    getattr(subscriptions, "_quote_rate_store", None), auth_routes._rate_store,
+                    enquiries._enquiry_rate_store):
         if limiter is not None:
             limiter.clear()
 
@@ -64,7 +68,7 @@ def fresh_state(monkeypatch):
         "notify_admin": lambda subject, html, *a, **k: box.admin.append(subject),
         "notify_customer": lambda event, phone, *a, **k: box.whatsapp.append((event, phone)),
     }
-    for mod in (orders, reviews, subscriptions, payments, notifications, pickup_slots, admin_dabba_wala):
+    for mod in (orders, reviews, subscriptions, payments, notifications, pickup_slots, admin_dabba_wala, auth_routes, enquiries):
         for fn, fake in fakes.items():
             if hasattr(mod, fn):
                 monkeypatch.setattr(mod, fn, fake)
@@ -105,6 +109,9 @@ def client():
 
 
 def token(user_id="u1", role="customer"):
+    """Auth header for an account. Tokens are checked against the database, so the account is created if missing."""
+    if not run(database.db.users.find_one({"id": user_id})):
+        run(database.db.users.insert_one({"id": user_id, "name": user_id, "email": f"{user_id}@example.com", "role": role}))
     return {"Authorization": "Bearer " + auth.create_access_token(user_id, role)}
 
 
