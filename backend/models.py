@@ -184,6 +184,7 @@ class MenuItemCreate(BaseModel):
     available: bool = True
     featured: bool = False
     allergens: List[str] = []
+    no_known_allergens: bool = False  # checked: none of the major allergens in the recipe
     tag: Optional[str] = None
     faqs: List[dict] = []
     pairs_with: List[str] = []
@@ -208,6 +209,7 @@ class MenuItemUpdate(BaseModel):
     available: Optional[bool] = None
     featured: Optional[bool] = None
     allergens: Optional[List[str]] = None
+    no_known_allergens: Optional[bool] = None
     tag: Optional[str] = None
     faqs: Optional[List[dict]] = None
     pairs_with: Optional[List[str]] = None

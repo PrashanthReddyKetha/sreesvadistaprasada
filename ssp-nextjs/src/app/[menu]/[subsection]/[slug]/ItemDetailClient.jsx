@@ -329,7 +329,9 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
 
               {!(item.allergens?.length > 0) && (
                 <p className="mb-4 text-xs flex items-center gap-1.5" style={{ color:'#8B6914' }}>
-                  <AlertTriangle size={13} /> Allergen details aren&apos;t listed for this dish yet — please ask us before ordering.
+                  <AlertTriangle size={13} /> {item.no_known_allergens
+                    ? 'No major allergens in this recipe. Our kitchen also handles nuts, dairy, gluten, eggs, sesame and mustard.'
+                    : "Allergen details aren't listed for this dish yet — please ask us before ordering."}
                 </p>
               )}
               {item.allergens?.length > 0 && (

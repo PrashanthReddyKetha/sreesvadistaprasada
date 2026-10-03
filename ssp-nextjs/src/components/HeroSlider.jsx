@@ -25,7 +25,7 @@ const HeroSlider = () => {
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(nextSlide, 3500);
+    timerRef.current = setInterval(nextSlide, 6000);
   }, [nextSlide]);
 
   useEffect(() => {

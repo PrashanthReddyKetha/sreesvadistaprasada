@@ -484,7 +484,7 @@ const AuthModal = () => {
       : 'Sign in — your orders and subscription are right where you left them.';
 
   return (
-    <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center p-4" onClick={close}>
+    <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center p-4">
       {/* Invisible reCAPTCHA container */}
       <div id="recaptcha-container" />
 

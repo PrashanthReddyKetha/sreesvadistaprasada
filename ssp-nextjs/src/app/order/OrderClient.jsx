@@ -61,7 +61,8 @@ export default function OrderClient({ initialItems = [] }) {
     cartItems, cartCount, cartTotal, addToCart, updateQuantity,
     deliveryType, setDeliveryType, pickupSlot, setPickupSlot,
   } = useCart();
-  const { deliveryEnabled } = useKitchen();
+  const { deliveryEnabled, open: kitchenOpen } = useKitchen();
+  const belowMinimum = cartTotal < 15;
   const [dishes, setDishes] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [search, setSearch] = useState('');
@@ -484,8 +485,9 @@ export default function OrderClient({ initialItems = [] }) {
       {cartCount > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4 animate-slide-up">
           <button
-            onClick={() => { setNavigating(true); router.push('/checkout'); }}
+            onClick={() => { if (!kitchenOpen || belowMinimum) return; setNavigating(true); router.push('/checkout'); }}
             disabled={navigating}
+            aria-disabled={!kitchenOpen || belowMinimum}
             className="w-full max-w-3xl mx-auto flex items-center gap-3 rounded-2xl px-5 py-4 text-white active:scale-[0.985] transition-transform"
             style={{ backgroundColor: navigating ? '#5C0017' : C.burgundy, boxShadow: '0 -6px 24px rgba(92,0,23,0.35)' }}>
             <ShoppingBag size={18} />
@@ -503,6 +505,10 @@ export default function OrderClient({ initialItems = [] }) {
                   <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                   Opening checkout…
                 </>
+              ) : !kitchenOpen ? (
+                <>Kitchen closed — not taking orders right now</>
+              ) : belowMinimum ? (
+                <>Add £{(15 - cartTotal).toFixed(2)} more · £15 minimum</>
               ) : (
                 <>Go to Checkout <ChevronRight size={16} /></>
               )}

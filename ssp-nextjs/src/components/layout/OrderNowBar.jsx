@@ -9,7 +9,7 @@ import { useCart } from '@/context/CartContext';
  * - /order, /checkout (own cart bars), /admin, /dashboard, /reset-password
  * - menu pages while the cart has items (TakeawayNudge owns the bottom there)
  */
-const HIDDEN_PREFIXES = ['/order', '/checkout', '/admin', '/dashboard', '/reset-password'];
+const HIDDEN_PREFIXES = ['/order', '/checkout', '/admin', '/dashboard', '/reset-password', '/subscriptions'];
 const MENU_PATHS = ['/svadista', '/prasada', '/menu', '/breakfast', '/street-food', '/ragi-specials', '/drinks', '/snacks'];
 
 export default function OrderNowBar() {

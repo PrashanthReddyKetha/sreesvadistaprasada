@@ -18,7 +18,7 @@ const STATUS_COLORS = {
   preparing:  { bg: '#FEF3C7', text: '#92400E', label: 'Preparing' },
   ready:      { bg: '#DCFCE7', text: '#166534', label: 'Ready to Collect' },
   out_for_delivery: { bg: '#DBEAFE', text: '#1E40AF', label: 'Out for Delivery' },
-  delivered:  { bg: '#DCFCE7', text: '#166534', label: 'Delivered' },
+  delivered:  { bg: '#DCFCE7', text: '#166534', label: 'Completed' },
   cancelled:  { bg: '#FEE2E2', text: '#991B1B', label: 'Cancelled' },
   active:     { bg: '#DCFCE7', text: '#166534', label: 'Active' },
   paused:     { bg: '#FEF9C3', text: '#854D0E', label: 'Paused' },
@@ -322,6 +322,7 @@ function OrdersTab({ orders, reload, expandedOrder, setExpandedOrder }) {
   const [cancelling, setCancelling] = useState(null);
 
   const cancel = async (id) => {
+    if (!window.confirm("Cancel this order? If you've already paid, message us and we'll sort it out with you.")) return;
     setCancelling(id);
     try {
       await api.delete(`/orders/${id}`);

@@ -196,18 +196,6 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
                 <span>🏷️ Coupon {coupon.code} <span className="text-xs font-normal text-gray-400">({coupon.label})</span></span><span>-{fmt(coupon.discount)}</span>
               </div>
             )}
-            {deliveryType === 'takeaway' && feeSaved > 0 && (
-              <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
-                <span>Delivery fee saved</span>
-                <span>-{fmt(feeSaved)}{feeSavedIsEstimate ? '+' : ''}</span>
-              </div>
-            )}
-            {deliveryType === 'takeaway' && smallFeeSaved > 0 && (
-              <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
-                <span>Small order fee saved <span className="text-xs font-normal text-gray-400">(orders under £20)</span></span>
-                <span>-{fmt(smallFeeSaved)}</span>
-              </div>
-            )}
             {deliveryType === 'delivery' && smallOrderFee > 0 && (
               <div className="flex justify-between text-sm" style={{ color: '#92400E' }}>
                 <span>Small order fee <span className="text-xs text-gray-400">(orders under £20, excl. delivery fee)</span></span>
@@ -267,6 +255,7 @@ function GuestPrompt({ onGuest, onSignIn, onSignUp }) {
         style={{ borderColor: '#E5E7EB', color: '#5C4B47' }}>
         Continue as Guest
       </button>
+      <p className="text-[11px] text-center" style={{ color: '#7A5C50' }}>Guest orders don&apos;t count towards your free 5th-order dish.</p>
     </div>
   );
 }
@@ -867,7 +856,8 @@ const CheckoutInner = () => {
       // what gets charged. handleOrder refuses to charge while this is null.
       setServerPricing(null);
       const detail = e.response?.status === 400 || e.response?.status === 404
-        ? e.response?.data?.detail : '';
+        ? e.response?.data?.detail
+        : "We couldn't confirm your total just now — please wait a moment and try again.";
       setCalcError(typeof detail === 'string' ? detail : '');
       // A stale cart item (deleted/hidden dish) blocks pricing entirely —
       // find exactly which items are gone so one tap can clear them
@@ -1518,7 +1508,7 @@ const CheckoutInner = () => {
                 <p className="text-xs leading-relaxed" style={{ color: '#5C4B47' }}>
                   🍛 <b style={{ color: '#800020' }}>Amma&apos;s rule: no one leaves without a little extra.</b>{' '}
                   With an account, every 5th order brings a <b style={{ color: '#8B6914' }}>FREE dish</b> of your choice —
-                  and this order counts as your first.
+                  and this order counts as your first if you sign in before paying.
                 </p>
                 <div className="flex gap-2">
                   <button onClick={() => openAuth('login')}

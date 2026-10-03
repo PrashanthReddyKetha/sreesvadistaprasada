@@ -1421,7 +1421,6 @@ const SubscriptionsInner = () => {
                   </InfoBox>
                   <div className="mt-4 flex items-center gap-2 mb-4">
                     <p className="text-sm" style={{ color: C.dark }}>Delivering to: <strong>{user.name}</strong> · {user.email}</p>
-                    <button onClick={() => { /* logout handled by auth */ }} className="text-xs ml-2 underline" style={{ color: C.muted }}>Not you? Sign out</button>
                   </div>
 
                   {/* Saved addresses — selecting one fills and verifies below */}
@@ -1719,7 +1718,7 @@ const SubscriptionsInner = () => {
                       <p className="text-xs leading-relaxed mb-3" style={{ color: C.dark, lineHeight: 1.8 }}>
                         This plan is paid in full today and doesn&apos;t auto-renew. If your plans change or something isn&apos;t right, just get in touch — we&apos;re flexible and will work it out with you.
                       </p>
-                      <Link href="/terms" className="text-xs font-semibold" style={{ color: C.primary }}>View full terms →</Link>
+                      <Link href="/terms" target="_blank" rel="noopener" className="text-xs font-semibold" style={{ color: C.primary }}>View full terms →</Link>
                     </div>
 
                     <label className="flex items-start gap-3 cursor-pointer">

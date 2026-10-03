@@ -31,6 +31,8 @@ async def lifespan(app: FastAPI):
     await migrate_slugs()
     await seed_slot_settings()
     await apply_menu_additions()
+    from allergen_fill import apply_allergen_fill
+    await apply_allergen_fill()
     await ensure_vapid_keys()
     from database import db
     await db.push_subs.create_index("endpoint", unique=True)

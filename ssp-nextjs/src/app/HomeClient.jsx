@@ -453,7 +453,9 @@ const Home = () => {
                   )}
                   <div className="flex justify-between items-center">
                     <p className="text-xl font-bold" style={{ color: '#800020' }}>{price}</p>
-                    {isOrderable(dish.category) ? (
+                    {dish.sold_out_today ? (
+                      <span className="px-3 py-2 text-xs font-semibold rounded-sm" style={{ backgroundColor: '#F3EDE2', color: '#5C4B47' }}>Sold out today</span>
+                    ) : isOrderable(dish.category) ? (
                       <button
                         onClick={(e) => { e.stopPropagation(); addToCart(dish); }}
                         className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md"
