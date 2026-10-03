@@ -14,7 +14,7 @@ const MENU_CATEGORIES = [
 const TRUST_POINTS = [
   'No MSG, no preservatives — traditional methods only',
   'Allergens clearly marked on every dish',
-  'Prasada kitchen is fully separate — zero cross-contamination',
+  'Vegetarian Prasada dishes cooked with separate utensils',
   'Spice levels 1–5: mild to fiery, your choice',
   'Same-day cooking — never reheated from the day before',
 ];

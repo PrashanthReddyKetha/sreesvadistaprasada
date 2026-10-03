@@ -132,8 +132,8 @@ const OurStory = () => {
                 </div>
                 <h3 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Sree Prasada</h3>
                 <p className="text-sm text-gray-200 leading-relaxed max-w-sm">
-                  100% pure vegetarian temple-style cooking. Separate utensils, different oils,
-                  no cross-contamination. Food prepared with complete devotion.
+                  100% vegetarian temple-style dishes, cooked with their own separate utensils
+                  and cookware. Food prepared with complete devotion.
                 </p>
               </div>
             </div>
@@ -156,7 +156,7 @@ const OurStory = () => {
             {[
               { title: 'Fresh Ingredients', desc: 'We source the finest ingredients, just like your grandmother would choose from the market.' },
               { title: 'No Shortcuts', desc: 'Every dish is cooked using traditional methods. No artificial flavors, no preservatives — just authentic taste.' },
-              { title: 'Temple-like Purity', desc: 'For our pure vegetarian prasada, we maintain separate kitchens, utensils, and cooking oils.' },
+              { title: 'Temple-like Purity', desc: 'Our vegetarian Prasada dishes are cooked with their own separate utensils and cookware.' },
               { title: 'Cooked with Devotion', desc: 'Every meal is prepared with the same love and care that your mother puts into her cooking.' },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-4 p-5 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>

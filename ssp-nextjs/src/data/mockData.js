@@ -422,7 +422,7 @@ export const faqData = [
   {
     category: 'Food & Dietary',
     items: [
-      { q: 'Is the Prasada menu truly 100% vegetarian?', a: 'Yes. Our Prasada kitchen is completely separate with different utensils, cooking oils, and preparation areas. No cross-contamination whatsoever. Suitable for strict vegetarians and Jain preferences.' },
+      { q: 'Is the Prasada menu truly 100% vegetarian?', a: 'Yes — every Prasada dish is vegetarian, with no meat, fish or eggs. Vegetarian dishes are cooked with their own separate utensils and cookware, in the same kitchen as our non-vegetarian food. If you follow a strict or Jain diet, or have an allergy, please tell us before ordering.' },
       { q: 'Do you cater for allergies?', a: 'We clearly mark allergens (nuts, dairy, gluten, sesame) on all our dishes. For severe allergies, please contact us directly and we will accommodate your needs.' },
       { q: 'Are your dishes spicy?', a: 'Spice levels vary. Each dish has a spice meter (1-5 flames). You can request "less spicy" in your subscription preferences or while ordering.' },
       { q: 'Do you use MSG or artificial flavours?', a: 'Never. All our food is cooked with fresh, natural ingredients using traditional methods. No preservatives, no shortcuts.' },
@@ -472,7 +472,7 @@ export const faqData = [
       },
       {
         q: 'What does "Prasada" mean?',
-        a: 'In Sanskrit and Telugu, "Prasada" (Prasad) means blessing or divine grace — specifically food offered to a deity and then distributed to devotees as a sacred gift. Our Prasada kitchen honours this tradition: it serves only pure vegetarian food, prepared in a completely separate kitchen with dedicated utensils and cooking oils, in the spirit of clean, wholesome, sattvic cooking. It is suitable for strict vegetarians, Jains, and those following temple dietary practices.',
+        a: 'In Sanskrit and Telugu, "Prasada" (Prasad) means blessing or divine grace — specifically food offered to a deity and then distributed to devotees as a sacred gift. Our Prasada kitchen honours this tradition: it is an entirely vegetarian menu, cooked with its own separate utensils and cookware, in the spirit of clean, wholesome, sattvic cooking. If you follow a strict, Jain or temple diet, please tell us before ordering so we can advise on each dish.',
       },
       {
         q: 'What does "Svadista" mean?',
@@ -488,7 +488,7 @@ export const faqData = [
       },
       {
         q: 'Is South Indian food vegan?',
-        a: 'The majority of our Prasada (vegetarian) menu is vegan. Traditional South Indian temple food is entirely plant-based — no dairy, no eggs, no onion, no garlic. Sambar, rasam, pulihora, all rice dishes, most dals, pickles, and podis are 100% vegan. Our Svadista (non-vegetarian) menu includes meat and some dairy-based preparations. We clearly mark vegan options across our menu, and our Prasada kitchen is entirely separate from the non-vegetarian kitchen.',
+        a: 'The whole Prasada menu is vegetarian, and many dishes are made without dairy. Several use ghee, yoghurt or butter, so they are not all vegan. Each dish lists its allergens, including dairy — please check there, and tell us before ordering if you need a dish made without dairy.',
       },
       {
         q: 'What is Chicken 65?',

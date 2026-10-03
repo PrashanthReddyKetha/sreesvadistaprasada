@@ -5,10 +5,10 @@ export const revalidate = 3600;
 
 export const metadata = {
   title: { absolute: 'Pure Veg South Indian Food Milton Keynes | Sree Svadista Prasada' },
-  description: 'Vegetarian Indian restaurant Milton Keynes — 100% pure veg kitchen. Vegan, Jain & gluten-free options. Authentic Andhra temple-style cooking. Order now.',
+  description: 'Vegetarian Indian food Milton Keynes — a fully vegetarian South Indian menu, cooked with separate utensils. Authentic Andhra temple-style cooking. Order now.',
   openGraph: {
     title: 'Pure Veg South Indian Food Milton Keynes | Sree Svadista Prasada',
-    description: 'Vegetarian Indian restaurant Milton Keynes — 100% pure veg kitchen. Vegan, Jain & gluten-free options. Authentic Andhra temple-style cooking. Order now.',
+    description: 'Vegetarian Indian food Milton Keynes — a fully vegetarian South Indian menu, cooked with separate utensils. Authentic Andhra temple-style cooking. Order now.',
     type: 'website',
     url: 'https://sreesvadistaprasada.com/prasada',
     siteName: 'Sree Svadista Prasada',
@@ -18,7 +18,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Pure Veg South Indian Food Milton Keynes | Sree Svadista Prasada',
-    description: 'Vegetarian Indian restaurant Milton Keynes — 100% pure veg kitchen. Vegan, Jain & gluten-free options. Authentic Andhra temple-style cooking. Order now.',
+    description: 'Vegetarian Indian food Milton Keynes — a fully vegetarian South Indian menu, cooked with separate utensils. Authentic Andhra temple-style cooking. Order now.',
     images: ['https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?w=1200&q=80'],
   },
   alternates: { canonical: 'https://sreesvadistaprasada.com/prasada' },
@@ -35,7 +35,7 @@ async function getItems() {
 
 // Rendered visibly below AND used for the FAQPage schema
 const FAQS = [
-  { q: 'Is the Prasada menu 100% vegetarian?', a: 'Yes. The Prasada menu is entirely plant-based — no meat, fish, or eggs. Every dish is cooked in a dedicated pure-veg kitchen using fresh vegetables, lentils, and traditional Andhra spices.' },
+  { q: 'Is the Prasada menu 100% vegetarian?', a: 'Yes. The Prasada menu is entirely vegetarian — no meat, fish, or eggs. Vegetarian dishes are cooked with their own separate utensils and cookware, in the same kitchen as our non-vegetarian food. Some dishes contain dairy; each dish lists its allergens.' },
   { q: 'Do you offer vegan options on the Prasada menu?', a: 'Yes, many Prasada dishes are naturally vegan. Items using ghee, yoghurt, or paneer are clearly labelled on the menu. Contact us if you need a fully vegan meal.' },
   { q: 'Can I order Prasada dishes for delivery in Milton Keynes?', a: 'Yes! We deliver pure veg South Indian food across Milton Keynes including Greenleys, Wolverton, Stony Stratford, Central MK, and Bletchley. Enter your postcode at checkout to confirm your delivery zone.' },
   { q: 'What makes Prasada food different from regular vegetarian Indian food?', a: "Prasada means divine offering. Our recipes follow the tradition of South Indian temple cooking — pure ingredients, slow-cooked dals, hand-ground chutneys, and grandmother's recipes with no shortcuts." },

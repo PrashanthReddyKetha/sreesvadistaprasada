@@ -1,14 +1,16 @@
 import HomeClient from './HomeClient';
-import { getDeliveryEnabled, getOpeningHoursSpec } from '@/lib/siteStatus';
+import { getOpeningHoursSpec } from '@/lib/siteStatus';
 
-// Re-read the admin settings (delivery switch, opening hours) every 10 minutes
+// Re-read the opening hours set in admin every 10 minutes
 export const revalidate = 600;
 
 const DESC_COLLECTION = 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food. Order online and collect.';
 const DESC_DELIVERY = 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.';
 
 export async function generateMetadata() {
-  const delivery = await getDeliveryEnabled();
+  // Owner decision: delivery is a core service on a temporary pause, so the search
+  // wording keeps it. The order pages show whether it is switched on right now.
+  const delivery = true;
   const description = delivery ? DESC_DELIVERY : DESC_COLLECTION;
   return {
   title: { absolute: 'Indian Takeaway Milton Keynes | Sree Svadista Prasada' },
@@ -91,7 +93,8 @@ const jsonLd = {
 };
 
 export default async function HomePage() {
-  const [delivery, hours] = await Promise.all([getDeliveryEnabled(), getOpeningHoursSpec()]);
+  const delivery = true;
+  const hours = await getOpeningHoursSpec();
   // Opening hours come from the Collection Times set in admin; if they can't be
   // read, say nothing rather than publish hours that might be wrong.
   const graph = jsonLd['@graph'].map(node => {

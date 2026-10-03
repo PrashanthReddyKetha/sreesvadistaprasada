@@ -13,7 +13,7 @@ export const CATEGORY_SEO = {
     'starters': {
       title: 'Chicken Starters Milton Keynes',
       h1: 'Andhra chicken starters in Milton Keynes — Chicken 65, lollipop & pepper chicken',
-      description: 'Andhra chicken starters in Milton Keynes — Chicken 65, chicken lollipop, pepper chicken and ghee roast, cooked fresh to order. Order online and collect.',
+      description: 'Andhra chicken starters in Milton Keynes — Chicken 65, chicken lollipop, pepper chicken and ghee roast, cooked fresh to order. Order online for delivery or collection.',
     },
     'indo-chinese': {
       title: 'Indo-Chinese Takeaway Milton Keynes',
@@ -23,7 +23,7 @@ export const CATEGORY_SEO = {
     'egg-specials': {
       title: 'Egg Dosa & Omelettes Milton Keynes',
       h1: 'Egg specials in Milton Keynes — egg dosa, omelettes & Andhra egg curry',
-      description: 'Egg dosa, bread omelette, egg bhurji and Andhra egg curry in Milton Keynes — home-style egg dishes cooked fresh. Order online and collect.',
+      description: 'Egg dosa, bread omelette, egg bhurji and Andhra egg curry in Milton Keynes — home-style egg dishes cooked fresh. Order online for delivery or collection.',
     },
     'curries': {
       title: 'Andhra Chicken Curry Milton Keynes',
@@ -38,14 +38,14 @@ export const CATEGORY_SEO = {
     'rice-bowls': {
       title: 'Chicken Rice Bowls Milton Keynes',
       h1: 'Rice bowls in Milton Keynes — rice, chicken curry, pickle & omelette',
-      description: 'A home-style Andhra meal in one bowl — rice, chicken curry, pickle and omelette. Fresh rice bowls in Milton Keynes. Order online and collect.',
+      description: 'A home-style Andhra meal in one bowl — rice, chicken curry, pickle and omelette. Fresh rice bowls in Milton Keynes. Order online for delivery or collection.',
     },
   },
   prasada: {
     'bites-starters': {
       title: 'Veg Starters & Chaat Milton Keynes',
       h1: 'Vegetarian starters in Milton Keynes — mirchi bhajji, punugulu & chaat',
-      description: 'Vegetarian Indian starters in Milton Keynes — mirchi bhajji, punugulu, crispy corn and chaat, fried fresh to order. Order online and collect.',
+      description: 'Vegetarian Indian starters in Milton Keynes — mirchi bhajji, punugulu, crispy corn and chaat, fried fresh to order. Order online for delivery or collection.',
     },
     'curries': {
       title: 'Vegetarian Curry Milton Keynes',
@@ -60,44 +60,44 @@ export const CATEGORY_SEO = {
     'thalis-rice-bowls': {
       title: 'Veg Thali Milton Keynes',
       h1: 'Veg thali in Milton Keynes — a full South Indian meal on one plate',
-      description: 'South Indian veg thali in Milton Keynes — rice, pappu, sambar, curries, fries, pickle and more on one plate. Pure vegetarian. Order online and collect.',
+      description: 'South Indian veg thali in Milton Keynes — rice, pappu, sambar, curries, fries, pickle and more on one plate. Pure vegetarian. Order online for delivery or collection.',
     },
     'indo-chinese': {
       title: 'Veg Indo-Chinese Milton Keynes',
       h1: 'Vegetarian Indo-Chinese in Milton Keynes',
-      description: 'Vegetarian Indo-Chinese in Milton Keynes — veg fried rice, wok-cooked to order in a pure veg kitchen. Order online and collect.',
+      description: 'Vegetarian Indo-Chinese in Milton Keynes — veg fried rice, wok-cooked to order with separate vegetarian utensils. Order online for delivery or collection.',
     },
     'naivedyam': {
       title: 'Naivedyam & Temple Food Milton Keynes',
       h1: 'Naivedyam in Milton Keynes — temple-style pulihora & pongal',
-      description: 'Naivedyam in Milton Keynes — temple-style pulihora and pongal, prepared without onion or garlic in the sattvic tradition. Order online and collect.',
+      description: 'Naivedyam in Milton Keynes — temple-style pulihora and pongal, prepared without onion or garlic in the sattvic tradition. Order online for delivery or collection.',
     },
   },
   breakfast: {
     'idli-vada': {
       title: 'Idli & Vada Milton Keynes',
       h1: 'Idli & vada in Milton Keynes — steamed idli, medu vada & sambar',
-      description: 'Idli and vada in Milton Keynes — soft steamed idli, crisp medu vada, sambar and chutneys, made fresh every morning. Order online and collect.',
+      description: 'Idli and vada in Milton Keynes — soft steamed idli, crisp medu vada, sambar and chutneys, made fresh every morning. Order online for delivery or collection.',
     },
     'dosas': {
       title: 'Dosa Milton Keynes — Masala, Ghee & Karam',
       h1: 'Dosa in Milton Keynes — masala, ghee, onion & Nellore karam dosa',
-      description: 'Dosa in Milton Keynes — masala dosa, ghee dosa, onion dosa and fiery Nellore karam dosa, from traditionally fermented batter. Order online and collect.',
+      description: 'Dosa in Milton Keynes — masala dosa, ghee dosa, onion dosa and fiery Nellore karam dosa, from traditionally fermented batter. Order online for delivery or collection.',
     },
     'chicken-curry-combos': {
       title: 'Dosa & Idli with Chicken Curry Milton Keynes',
       h1: 'Idli, vada & dosa with Andhra chicken curry in Milton Keynes',
-      description: 'The Andhra breakfast classic in Milton Keynes — idli, vada or dosa with a bowl of spicy chicken curry. Cooked fresh. Order online and collect.',
+      description: 'The Andhra breakfast classic in Milton Keynes — idli, vada or dosa with a bowl of spicy chicken curry. Cooked fresh. Order online for delivery or collection.',
     },
     'poori-others': {
       title: 'Poori, Upma & Poha Milton Keynes',
       h1: 'Poori, upma & poha in Milton Keynes',
-      description: 'Poori, upma and poha in Milton Keynes — light South Indian breakfast plates made fresh every morning. Order online and collect.',
+      description: 'Poori, upma and poha in Milton Keynes — light South Indian breakfast plates made fresh every morning. Order online for delivery or collection.',
     },
     'english-breakfast': {
       title: 'Bread Omelette & Breakfast Milton Keynes',
       h1: 'Bread omelette, avocado toast & overnight oats in Milton Keynes',
-      description: 'Bread omelette, cheese bread omelette, avocado toast and overnight oats in Milton Keynes — breakfast plates made fresh. Order online and collect.',
+      description: 'Bread omelette, cheese bread omelette, avocado toast and overnight oats in Milton Keynes — breakfast plates made fresh. Order online for delivery or collection.',
     },
   },
 };

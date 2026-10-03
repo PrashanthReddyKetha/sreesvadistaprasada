@@ -5,10 +5,10 @@ export const revalidate = 3600;
 
 export const metadata = {
   title: { absolute: 'South Indian Breakfast Milton Keynes | Sree Svadista Prasada' },
-  description: 'South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar & freshly fried vada, made to order. Light, fresh and authentic. Order now.',
+  description: 'South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar & freshly fried vada, delivered hot or ready to collect. Fresh and authentic. Order now.',
   openGraph: {
     title: 'South Indian Breakfast Milton Keynes | Dosa, Idli & Vada | Sree Svadista Prasada',
-    description: 'South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar & freshly fried vada, made to order. Light, fresh and authentic. Order now.',
+    description: 'South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar & freshly fried vada, delivered hot or ready to collect. Fresh and authentic. Order now.',
     type: 'website',
     url: 'https://sreesvadistaprasada.com/breakfast',
     siteName: 'Sree Svadista Prasada',
@@ -18,7 +18,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'South Indian Breakfast Milton Keynes | Sree Svadista Prasada',
-    description: 'South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar & freshly fried vada, made to order. Light, fresh and authentic. Order now.',
+    description: 'South Indian breakfast Milton Keynes — crispy masala dosa, idli sambar & freshly fried vada, delivered hot or ready to collect. Fresh and authentic. Order now.',
     images: ['https://images.unsplash.com/photo-1727404679933-99daa2a7573a?w=1200&q=80'],
   },
   alternates: { canonical: 'https://sreesvadistaprasada.com/breakfast' },

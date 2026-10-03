@@ -3,11 +3,11 @@ import { faqData } from '@/data/mockData';
 
 export const metadata = {
   title: { absolute: 'Indian Takeaway FAQs Milton Keynes | Sree Svadista Prasada' },
-  description: 'Indian takeaway FAQs Milton Keynes — pure veg kitchen, tiffin delivery zones, allergens & more. All your questions answered.',
-  keywords: ['Indian takeaway Milton Keynes postcodes', 'pure veg separate kitchens', 'how to pause tiffin subscription', 'best Indian food delivery app MK', 'South Indian restaurant opening hours', 'Indian meal delivery FAQ'],
+  description: 'Indian takeaway FAQs Milton Keynes — vegetarian menu, tiffin delivery zones, allergens & more. All your questions answered.',
+  keywords: ['Indian takeaway Milton Keynes postcodes', 'how to pause tiffin subscription', 'best Indian food delivery app MK', 'South Indian restaurant opening hours', 'Indian meal delivery FAQ'],
   openGraph: {
     title: 'Indian Takeaway FAQs Milton Keynes | Sree Svadista Prasada',
-    description: 'Indian takeaway FAQs Milton Keynes — pure veg kitchen, tiffin delivery zones, allergens & more. All your questions answered.',
+    description: 'Indian takeaway FAQs Milton Keynes — vegetarian menu, tiffin delivery zones, allergens & more. All your questions answered.',
     type: 'website',
     url: 'https://sreesvadistaprasada.com/faq',
     siteName: 'Sree Svadista Prasada',
@@ -17,7 +17,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Indian Takeaway FAQs Milton Keynes | Sree Svadista Prasada',
-    description: 'Indian takeaway FAQs Milton Keynes — pure veg kitchen, tiffin delivery zones, allergens & more. All your questions answered.',
+    description: 'Indian takeaway FAQs Milton Keynes — vegetarian menu, tiffin delivery zones, allergens & more. All your questions answered.',
     images: ['https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80'],
   },
   alternates: { canonical: 'https://sreesvadistaprasada.com/faq' },

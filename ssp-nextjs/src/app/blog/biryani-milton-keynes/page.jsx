@@ -38,7 +38,7 @@ const FAQS = [
   { q: 'Where can I get chicken biryani in Milton Keynes?', a: 'Sree Svadista Prasada cooks three Andhra-style chicken biryanis fresh to order in Greenleys — Chicken Biryani (£8.99), Chicken Dum Biryani (£10.99) and Chicken Fry Piece Biryani (£10.99) — with delivery across all MK postcodes and collection with 10% off.' },
   { q: 'What is the difference between dum biryani and regular biryani?', a: 'Dum biryani is sealed and finished over low heat so the part-cooked rice steams in the meat and masala, layering the flavour through every grain. A regular biryani is cooked more directly. Fry piece biryani takes a third route: the chicken is marinated and crisp-fried, then folded through the spiced rice.' },
   { q: 'How is Andhra biryani different from Hyderabadi biryani?', a: 'They are close cousins — both from Telugu-speaking South India. Andhra-style biryani generally runs hotter, leaning on Guntur chilli and home-style masala rather than the courtly, saffron-forward Hyderabadi dum tradition. Ours follows the Andhra home kitchen.' },
-  { q: 'Is there a vegetarian biryani option?', a: 'Our pure-veg Prasada kitchen makes traditional Andhra spiced rice dishes instead — Gongura Rice, Ghee Pappu Avakaya Rice, Sambar Rice and more, from £4.99. They are cooked in a dedicated vegetarian kitchen.' },
+  { q: 'Is there a vegetarian biryani option?', a: 'Our vegetarian Prasada menu has traditional Andhra spiced rice dishes instead — Gongura Rice, Ghee Pappu Avakaya Rice, Sambar Rice and more, from £4.99. They are cooked with separate vegetarian utensils and cookware.' },
 ];
 
 const jsonLd = [
@@ -112,9 +112,9 @@ export default function BiryaniGuide() {
             All three are cooked fresh to order in our Greenleys kitchen — nothing sits in a bain-marie waiting for you.
           </p>
 
-          <h2>From the pure-veg kitchen</h2>
+          <h2>From the vegetarian Prasada menu</h2>
           <p>
-            Traditional Andhra spiced rice plates come from our dedicated vegetarian Prasada kitchen:
+            Traditional Andhra spiced rice plates from our vegetarian Prasada menu, cooked with their own separate utensils:
           </p>
           <ul>
             {VEG_RICE.map(v => (
