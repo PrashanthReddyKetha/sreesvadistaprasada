@@ -1,4 +1,5 @@
 import { dishSeo } from '@/lib/seo/pages';
+import { dishContent, SUBPAGE_ALIAS } from '@/lib/seo/dishCopy';
 import { notFound, permanentRedirect } from 'next/navigation';
 import ItemDetailClient from './ItemDetailClient';
 import { buildItemUrl } from '@/lib/itemUrl';
@@ -196,7 +197,7 @@ export default async function ItemPage({ params }) {
         // Only menus that actually have /{menu}/{subsection} pages get that crumb
         const HAS_SUBSECTION_PAGES = new Set(['svadista', 'prasada', 'breakfast', 'snacks']);
         if (item.subcategory && HAS_SUBSECTION_PAGES.has(menuSeg)) {
-          crumbs.push({ '@type': 'ListItem', position: 3, name: item.subcategory.replace(/[^\w\s&-]/g, '').trim(), item: `${SITE}/${menuSeg}/${subSeg}` });
+          crumbs.push({ '@type': 'ListItem', position: 3, name: item.subcategory.replace(/[^\w\s&-]/g, '').trim(), item: `${SITE}/${menuSeg}/${SUBPAGE_ALIAS[subSeg] || subSeg}` });
         }
         crumbs.push({ '@type': 'ListItem', position: crumbs.length + 1, name: item.name, item: itemUrl });
         return crumbs;
@@ -239,7 +240,7 @@ export default async function ItemPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ItemDetailClient initialItem={item} initialGoesWith={initialGoesWith} />
+      <ItemDetailClient initialItem={item} initialGoesWith={initialGoesWith} seoCopy={dishContent(item)} />
     </>
   );
 }

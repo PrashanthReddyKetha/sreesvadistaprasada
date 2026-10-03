@@ -104,6 +104,16 @@ Keyword freeze: titles, primary keywords and H1 lines stay as set until at least
 
 Titles, descriptions and primary keywords unchanged (identical to live on all 188 pages).
 
+## Cycle 6c — 2026-10-03 — COMPLETED locally (dish pages: own paragraph for all 134 dishes)
+
+| ID | Task | Status |
+|----|------|--------|
+| D1 | `src/lib/seo/dishCopy.js`: a written paragraph per dish (what it is, how it is eaten, what to order with it) — 134 entries, 4,730 words | Verified locally — every key matches a dish on sale |
+| D2 | Dish page shows the paragraph, an ordering line and a link up to its section page; heading "About <dish>" | Verified locally — 134 pages, 21 link targets all load |
+| D3 | Breadcrumb data for the vegetarian starters pointed to a 404 address; fixed | Verified locally |
+
+Dish page length: median 220 → 286 words. Titles and descriptions unchanged.
+
 ## Queue — next cycles (priority order)
 
 | ID | Task | Evidence / value | Effort | Can Claude do it? |

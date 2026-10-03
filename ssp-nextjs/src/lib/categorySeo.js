@@ -28,7 +28,7 @@ export const CATEGORY_SEO = {
       h1: 'Indo-Chinese in Milton Keynes — chicken & egg fried rice',
       description: 'Indo-Chinese takeaway in Milton Keynes — chicken fried rice and Schezwan egg fried rice, wok-cooked to order. Order online from our Greenleys kitchen.',
       keywords: ['Indo-Chinese Milton Keynes', 'chicken fried rice Milton Keynes', 'egg fried rice near me', 'Schezwan fried rice'],
-      body: 'Indo-Chinese is the food of Indian street corners: rice tossed hard and fast in a hot wok with garlic, soy and chilli. We make chicken fried rice and a fiery Schezwan egg fried rice, cooked to order in Milton Keynes. Order chicken fried rice in Milton Keynes on its own, or beside Chicken 65 or pepper chicken from our starters — Indo-Chinese takeaway the way Indian street stalls make it, and Schezwan fried rice with real heat.',
+      body: 'Indo-Chinese is the food of Indian street corners: rice tossed hard and fast in a hot wok with garlic, soy and chilli. We make chicken fried rice and Schezwan egg fried rice, cooked to order in Milton Keynes. Order chicken fried rice in Milton Keynes on its own, or beside Chicken 65 or pepper chicken from our starters — Indo-Chinese takeaway the way Indian street stalls make it, with Schezwan fried rice alongside.',
     },
     'egg-specials': {
       title: 'Egg Dosa & Omelettes Milton Keynes',

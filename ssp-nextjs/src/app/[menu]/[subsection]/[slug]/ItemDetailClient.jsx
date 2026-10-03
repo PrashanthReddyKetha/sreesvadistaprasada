@@ -57,8 +57,8 @@ const CATEGORY_FAQS = {
     { q:'What sides go best with this?', a:'Our homemade pickles and podis pair beautifully. Check the "Goes Best With" section below.' },
   ],
   veg: [
-    { q:'Is this suitable for vegans?', a:'Most veg dishes use ghee. For vegan preparation, add a note at checkout and we\'ll accommodate you.' },
-    { q:'Are veg dishes cooked separately from non-veg?', a:'Yes — we use dedicated cookware and utensils for all vegetarian preparations.' },
+    { q:'Is this suitable for vegans?', a:'Several veg dishes use ghee, yoghurt or butter. Each dish lists its allergens, including dairy — tell us before ordering if you need it made without dairy.' },
+    { q:'Are veg dishes cooked separately from non-veg?', a:'Vegetarian dishes are cooked with their own separate utensils and cookware, in the same kitchen as our non-vegetarian food.' },
     { q:'Are the spices freshly ground?', a:'Yes, we grind our own masala blends fresh every morning using traditional stone grinding.' },
   ],
   breakfast: [
@@ -141,7 +141,7 @@ const MiniCard = ({ item }) => {
 };
 
 // ── main component ─────────────────────────────────────────────────────────
-export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) {
+export default function ItemDetailClient({ initialItem, initialGoesWith = [], seoCopy = null }) {
   const router = useRouter();
   const { user, setAuthOpen } = useAuth();
   const { addToCart } = useCart();
@@ -267,7 +267,9 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
           <Link href={MENU_PATHS[item.category] || '/menu'} className="hover:underline capitalize">
             {MENU_LABELS[item.category] || item.category}
           </Link>
-          {item.subcategory && <><span>/</span><span className="capitalize">{item.subcategory}</span></>}
+          {item.subcategory && <><span>/</span>{seoCopy?.parent && seoCopy.parent.href.split('/').length > 2
+            ? <Link href={seoCopy.parent.href} className="hover:underline capitalize">{item.subcategory}</Link>
+            : <span className="capitalize">{item.subcategory}</span>}</>}
           <span>/</span>
           <span style={{ color:'#3D2B1F' }}>{item.name}</span>
         </div>
@@ -447,8 +449,16 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
         {/* ── About Tab ── */}
         {activeTab === 'about' && (
           <div className="rounded-2xl p-6 mb-10 space-y-4" style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)' }}>
-            <h2 className="text-xl font-bold" style={{ fontFamily:"'Playfair Display',serif", color:'#800020' }}>About This Dish</h2>
+            <h2 className="text-xl font-bold" style={{ fontFamily:"'Playfair Display',serif", color:'#800020' }}>{seoCopy?.name ? `About ${seoCopy.name}` : 'About This Dish'}</h2>
             <p className="text-sm leading-relaxed" style={{ color:'#5C4B47' }}>{item.description}</p>
+            {/* The dish's own paragraph and how to order it — copy lives in src/lib/seo/dishCopy.js */}
+            {seoCopy?.about && <p className="text-sm leading-relaxed" style={{ color:'#5C4B47' }}>{seoCopy.about}</p>}
+            {seoCopy?.order && (
+              <p className="text-sm leading-relaxed" style={{ color:'#5C4B47' }}>
+                {seoCopy.order}{' '}
+                {seoCopy.parent && <Link href={seoCopy.parent.href} className="underline font-semibold" style={{ color:'#800020' }}>More: {seoCopy.parent.label}</Link>}
+              </p>
+            )}
             <div className="grid md:grid-cols-2 gap-4 pt-2">
               <div className="space-y-2">
                 {[
