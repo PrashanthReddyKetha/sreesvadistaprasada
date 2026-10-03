@@ -5,7 +5,7 @@ export const heroSlides = [
     id: 1,
     image: '/hero/slide-1.jpg',
     title: "Welcome Home.",
-    subtitle: "Authentic Andhra home cooking, made fresh in Milton Keynes — the taste you missed, carried forward with love.",
+    subtitle: "Authentic South Indian home cooking from Andhra, made fresh in Milton Keynes — the taste you missed, carried forward with love.",
     description: "Order in a few taps — collect in ~40 minutes and save 10%.",
     cta: "Order Now",
     link: "/order"

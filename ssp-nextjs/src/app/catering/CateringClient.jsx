@@ -124,7 +124,7 @@ const Catering = () => {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: Users, title: 'Any Size Event', desc: 'From 10 to 500+ guests' },
+              { icon: Users, title: 'Any Size Event', desc: 'From 10 to 100+ guests' },
               { icon: Sparkles, title: 'Pure Prasada', desc: 'Temple-style purity for sacred events' },
               { icon: Calendar, title: 'Flexible Menus', desc: 'Customized to your preferences' },
               { icon: Briefcase, title: 'Professional', desc: 'Experienced team, timely delivery' },

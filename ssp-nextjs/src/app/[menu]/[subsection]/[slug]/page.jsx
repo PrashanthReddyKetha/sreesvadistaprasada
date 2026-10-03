@@ -88,7 +88,11 @@ export async function generateMetadata({ params }) {
 
   const catLabel = CATEGORY_LABELS[item.category] || 'South Indian Food';
   const seo = dishSeo(item);
-  const desc = item.seo_meta_description
+  // Pickles and podis are not on sale yet: say so, whatever the stored description claims
+  const comingSoon = ['pickles', 'podis'].includes(item.category);
+  const desc = comingSoon
+    ? `${seo.name} — handmade Andhra ${item.category === 'pickles' ? 'pickle' : 'podi'}, coming soon with UK-wide delivery. Tap Notify Me and we will tell you when it launches.`
+    : item.seo_meta_description
     || `${item.name} — ${(item.description || '').slice(0, 130).trim()}. Order online in Milton Keynes from Sree Svadista Prasada.`;
   // Canonical comes from the item's real category/subcategory, never from the
   // request params — this route matches any /{menu}/{subsection}/ prefix, so a
@@ -175,7 +179,7 @@ export default async function ItemPage({ params }) {
       description: item.description,
       image: item.image || undefined,
       url: itemUrl,
-      offers: offerSchema,
+      offers: ['pickles', 'podis'].includes(item.category) ? undefined : offerSchema,
       suitableForDiet: item.is_veg ? 'https://schema.org/VegetarianDiet' : undefined,
       inMenu: { '@type': 'Menu', name: 'Sree Svadista Prasada Menu', url: `${SITE}/menu` },
       ...ratingSchema,

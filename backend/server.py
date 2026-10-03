@@ -33,6 +33,8 @@ async def lifespan(app: FastAPI):
     await apply_menu_additions()
     from allergen_fill import apply_allergen_fill
     await apply_allergen_fill()
+    from menu_text_fix import apply_menu_text_fix
+    await apply_menu_text_fix()
     await ensure_vapid_keys()
     from database import db
     await db.push_subs.create_index("endpoint", unique=True)

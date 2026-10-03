@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { trackAddToCart, trackRemoveFromCart } from '@/lib/analytics';
 import { useKitchen } from '@/context/KitchenContext';
+import { isOrderable } from '@/config/softLaunch';
 
 interface CartItem {
   id: string;
@@ -169,6 +170,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   }, 0);
 
   const addToCart = useCallback((item: Omit<CartItem, 'quantity'>) => {
+    // Sections that are still "coming soon" (pickles, podis) cannot be bought, whichever button was pressed
+    const category = (item as { category?: string }).category;
+    if (category && !isOrderable(category)) return;
     setCartItems(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {

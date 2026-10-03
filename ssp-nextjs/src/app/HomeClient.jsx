@@ -446,7 +446,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
               const isLive = liveItems.length > 0;
               const isVeg = isLive ? dish.is_veg : dish.category !== 'Non-Veg';
               const spice = isLive ? (dish.spice_level || 0) : (dish.spiceLevel || 0);
-              const price = isLive ? `£${dish.price?.toFixed(2)}` : dish.price;
+              const price = !isLive ? dish.price : isOrderable(dish.category) ? `£${dish.price?.toFixed(2)}` : 'Coming soon';
               const itemPath = isLive ? buildItemUrl(dish) : null;
               return (
               <div

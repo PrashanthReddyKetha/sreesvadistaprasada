@@ -59,21 +59,24 @@ const CATEGORY_FAQS = {
   veg: [
     { q:'Is this suitable for vegans?', a:'Several veg dishes use ghee, yoghurt or butter. Each dish lists its allergens, including dairy — tell us before ordering if you need it made without dairy.' },
     { q:'Are veg dishes cooked separately from non-veg?', a:'Vegetarian dishes are cooked with their own separate utensils and cookware, in the same kitchen as our non-vegetarian food.' },
-    { q:'Are the spices freshly ground?', a:'Yes, we grind our own masala blends fresh every morning using traditional stone grinding.' },
   ],
   breakfast: [
-    { q:'Can I order breakfast items for lunch or dinner?', a:'Absolutely! Our breakfast items are made fresh throughout the day.' },
     { q:'Are the dosas made to order?', a:'Yes — all dosas and idlis are made fresh when your order is placed.' },
   ],
   pickles: [
-    { q:'How long do the pickles last?', a:'Our pickles have a shelf life of 3–6 months when refrigerated. Best consumed within 30 days once opened.' },
-    { q:'Are the pickles very spicy?', a:'Spice levels vary by variety. Check the spice indicator on each item. We also offer mild versions on request.' },
+    { q:'Are the pickles very spicy?', a:'Spice levels vary by variety. Check the spice indicator on each item.' },
   ],
   podis: [
     { q:'What is podi used for?', a:'Podi (gunpowder) is a dry chutney mixed with ghee or oil and served alongside dosas, idlis, rice, or used as a seasoning.' },
-    { q:'How much podi do I need per serving?', a:'Typically 1–2 teaspoons per serving. A 100g jar lasts a household of 4 about 2–3 weeks.' },
   ],
 };
+
+/* On hold (owner, 2026-10-04) — not shown until each answer has been confirmed:
+   veg:       'Are the spices freshly ground?' — 'Yes, we grind our own masala blends fresh every morning using traditional stone grinding.'
+   breakfast: 'Can I order breakfast items for lunch or dinner?' — 'Absolutely! Our breakfast items are made fresh throughout the day.'
+   pickles:   'How long do the pickles last?' — 'Our pickles have a shelf life of 3–6 months when refrigerated. Best consumed within 30 days once opened.'
+   pickles:   '…We also offer mild versions on request.'
+   podis:     'How much podi do I need per serving?' — 'Typically 1–2 teaspoons per serving. A 100g jar lasts a household of 4 about 2–3 weeks.' */
 
 const GENERAL_FAQS = [
   { q:'How do I get my order?', a:'Order online and collect from our kitchen in Greenleys, Milton Keynes (MK12) — usually ready in about 40 minutes, and collection saves 10%. When delivery is switched on you can choose it at checkout.' },
@@ -120,7 +123,9 @@ const MiniCard = ({ item }) => {
       <div className="p-3">
         <p className="text-xs font-semibold text-gray-800 line-clamp-1">{item.name}</p>
         <div className="flex items-center justify-between mt-1.5">
-          <span className="text-sm font-bold" style={{ color:'#800020' }}>£{item.price?.toFixed(2)}</span>
+          {isOrderable(item.category)
+            ? <span className="text-sm font-bold" style={{ color:'#800020' }}>£{item.price?.toFixed(2)}</span>
+            : <span className="text-[11px] font-semibold" style={{ color:'#8B6914' }}>Coming soon</span>}
           {isOrderable(item.category) ? (
             <button onClick={e => { e.preventDefault(); addToCart({ ...item, price:`£${item.price.toFixed(2)}` }); }}
               className="w-6 h-6 rounded-full flex items-center justify-center text-white"
@@ -248,6 +253,8 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
     </div>
   );
 
+  // The dish offered alongside in "Pair it perfectly": the first suggestion that can be ordered today
+  const comboWith = goesWith.find(g => isOrderable(g.category) && !g.sold_out_today);
   const avgRating = reviews.length ? reviews.reduce((s,r) => s+r.rating, 0) / reviews.length : 0;
   const ratingDist = [5,4,3,2,1].map(n => ({ n, count: reviews.filter(r => r.rating === n).length }));
   const faqs = [
@@ -357,8 +364,17 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
             <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.25)' }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold" style={{ color:'#800020' }}>£{item.price.toFixed(2)}</p>
-                  <p className="text-xs" style={{ color:'#7A5C50' }}>per serving</p>
+                  {isOrderable(item.category) ? (
+                    <>
+                      <p className="text-3xl font-bold" style={{ color:'#800020' }}>£{item.price.toFixed(2)}</p>
+                      <p className="text-xs" style={{ color:'#7A5C50' }}>per serving</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-2xl font-bold" style={{ color:'#8B6914' }}>Coming soon</p>
+                      <p className="text-xs" style={{ color:'#7A5C50' }}>UK-wide delivery when it launches</p>
+                    </>
+                  )}
                 </div>
                 <button onClick={handleLike} disabled={liking} aria-label="Like this dish"
                   className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
@@ -432,7 +448,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
         {/* ── Quick Info Bar ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
           {[
-            { icon: Clock,   label:'Prep Time',    value:'30–45 min' },
+            { icon: Clock,   label:'Order Prep Time', value:'30–45 min' },
             { icon: Users,   label:'Serves',       value:'1 person' },
             { icon: Award,   label:'Authenticity', value:'Village Recipe' },
             { icon: Package, label:'Packaging',    value:'Eco-friendly' },
@@ -638,8 +654,8 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
           </div>
         )}
 
-        {/* ── Combo Deal ── */}
-        {goesWith.length > 0 && (
+        {/* ── Combo Deal ── only between two dishes that can be ordered today */}
+        {isOrderable(item.category) && comboWith && (
           <div className="rounded-2xl p-6 mb-10" style={{ background:'linear-gradient(135deg, #800020 0%, #5C0015 100%)' }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color:'rgba(244,196,48,0.8)' }}>Pairs Well</p>
             <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily:"'Playfair Display',serif" }}>
@@ -655,21 +671,21 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
               </div>
               <Plus size={20} style={{ color:'rgba(244,196,48,0.8)', flexShrink:0 }} />
               <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3">
-                {goesWith[0]?.image && <Image src={goesWith[0].image} alt={goesWith[0].name} width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />}
+                {comboWith.image && <Image src={comboWith.image} alt={comboWith.name} width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />}
                 <div>
-                  <p className="text-white text-sm font-semibold">{goesWith[0]?.name}</p>
-                  <p className="text-white/70 text-xs">£{goesWith[0]?.price?.toFixed(2)}</p>
+                  <p className="text-white text-sm font-semibold">{comboWith.name}</p>
+                  <p className="text-white/70 text-xs">£{comboWith.price?.toFixed(2)}</p>
                 </div>
               </div>
               <div className="ml-auto text-right">
-                <p className="text-2xl font-bold" style={{ color:'#F4C430' }}>£{(item.price + (goesWith[0]?.price||0)).toFixed(2)}</p>
+                <p className="text-2xl font-bold" style={{ color:'#F4C430' }}>£{(item.price + (comboWith.price||0)).toFixed(2)}</p>
                 <p className="text-xs" style={{ color:'rgba(244,196,48,0.7)' }}>Together</p>
               </div>
             </div>
             {isOrderable(item.category) ? (
               <button onClick={() => {
                 addToCart({ ...item, price:`£${item.price.toFixed(2)}`, preorder: !!item.preorder_only });
-                if (goesWith[0]) addToCart({ ...goesWith[0], price:`£${goesWith[0].price.toFixed(2)}` });
+                addToCart({ ...comboWith, price:`£${comboWith.price.toFixed(2)}` });
               }} className="mt-4 w-full py-3 rounded-xl font-semibold text-sm transition-all hover:shadow-lg"
                 style={{ backgroundColor:'#F4C430', color:'#3D2B1F' }}>
                 Add Both to Cart

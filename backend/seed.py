@@ -275,7 +275,7 @@ MENU_ITEMS = [
      "seo_meta_description": "Get rich, creamy Paneer Butter Masala delivered hot in Milton Keynes. Soft paneer in a velvety cashew tomato butter sauce. Order online now!"},
     {"name": "Aloo Kurma", "price": 6.99, "category": "veg", "subcategory": "Curries", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": ["nuts"], "image": IMG["curry"], "available": True, "extra_categories": [],
      "description": "Golden potatoes simmered in a mild coconut-cashew kurma sauce with whole spices.",
-     "seo_meta_description": "Aloo Kurma delivery Milton Keynes — golden potatoes in mild coconut-cashew korma sauce. Vegan-friendly South Indian comfort food. Order now."},
+     "seo_meta_description": "Aloo Kurma delivery Milton Keynes — golden potatoes in mild coconut-cashew korma sauce. South Indian comfort food. Order now."},
     {"name": "Saag Aloo", "price": 6.99, "category": "veg", "subcategory": "Curries", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["curry"], "available": True, "extra_categories": [],
      "description": "Tender potatoes cooked with fresh spinach, garlic and green chillies. Earthy, nutritious and deeply satisfying.",
      "seo_meta_description": "Saag Aloo delivery Milton Keynes — tender potatoes with fresh spinach, garlic and green chillies. Earthy, nutritious and satisfying. Order now."},
@@ -505,7 +505,7 @@ MENU_ITEMS = [
     # ── RAGI SPECIALS (also cross-listed under Svadista/Prasada Ragi Specials) ─
     {"name": "Ragi Sangati with Chicken Curry", "price": 10.99, "category": "ragiSpecials", "subcategory": None, "spice_level": 2, "is_veg": False, "featured": True, "tag": "Traditional", "allergens": [], "image": IMG["ragi"], "available": True,
      "extra_categories": [{"category": "nonVeg", "subcategory": "Ragi Specials"}],
-     "description": "Firm balls of pearl millet, the traditional Telugu way, served with spicy Andhra chicken curry. Nutritious, filling and deeply rooted.",
+     "description": "Firm balls of ragi millet, the traditional Telugu way, served with spicy Andhra chicken curry. Nutritious, filling and deeply rooted.",
      "seo_meta_description": "Wholesome, iron-rich Ragi Sangati (finger millet balls) delivered fresh in Milton Keynes. Perfectly paired with spicy country chicken or dal pulusu."},
     {"name": "Ragi Sangati with Mutton Curry", "price": 10.99, "category": "ragiSpecials", "subcategory": None, "spice_level": 2, "is_veg": False, "featured": False, "tag": "Traditional", "allergens": [], "image": IMG["ragi"], "available": True, "extra_categories": [],
      "description": "Hearty ragi balls paired with slow-cooked mutton curry. A rustic Andhra combination that has sustained generations.",
