@@ -22,7 +22,7 @@ const SpecialImage = ({ src, alt }) => {
   );
 };
 import { useRouter } from 'next/navigation';
-import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin, Bell } from 'lucide-react';
+import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin, Bell, Clock } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '@/data/mockData';
 import HeroSlider from '@/components/HeroSlider';
 import api from '@/api';
@@ -31,8 +31,19 @@ import { useNotifyMe } from '@/context/NotifyMeContext';
 import { isOrderable } from '@/config/softLaunch';
 import { buildItemUrl } from '@/lib/itemUrl';
 
-const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) => {
-  const { deliveryEnabled } = useKitchen();
+const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, hoursByDay = null }) => {
+  const { deliveryEnabled, open: kitchenOpen, loaded: kitchenLoaded } = useKitchen();
+  // "Open today 8am – 8:30pm", from the hours set in admin. Worked out in the browser so it is right for today.
+  const [todayLine, setTodayLine] = useState(null);
+  useEffect(() => {
+    if (kitchenLoaded && !kitchenOpen) { setTodayLine('Not taking orders right now'); return; }
+    if (!hoursByDay) return;
+    const day = new Intl.DateTimeFormat('en-GB', { weekday: 'short', timeZone: 'Europe/London' }).format(new Date()).toLowerCase().slice(0, 3);
+    const d = hoursByDay[day];
+    if (!d) return;
+    const fmt = (t) => { const [h, m] = t.split(':').map(Number); return `${h % 12 === 0 ? 12 : h % 12}${m ? ':' + String(m).padStart(2, '0') : ''}${h < 12 ? 'am' : 'pm'}`; };
+    setTodayLine(d.closed || !d.open || !d.close ? 'Closed today' : `Open today ${fmt(d.open)} – ${fmt(d.close)}`);
+  }, [hoursByDay, kitchenLoaded, kitchenOpen]);
   const trendingRef = useRef(null);
   const specialsRef = useRef(null);
   const trendingPausedRef = useRef(false);
@@ -163,25 +174,29 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
         <HeroSlider images={art.hero || []} />
       </section>
 
-      {/* What we are and where — the page's one visible H1 (copy lives in src/lib/seo/pages.js) */}
+      {/* At a glance — the page's one H1, one line on who we are, and the facts a first-time
+          visitor needs. The longer description sits at the foot of the page (copy: src/lib/seo/pages.js) */}
       {intro && (
-        <section className="px-4 md:px-8 pt-10 md:pt-14" data-testid="home-intro">
+        <section className="px-4 md:px-8 pt-8 md:pt-12" data-testid="home-intro">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+            <h1 className="text-xl sm:text-2xl md:text-4xl font-bold tracking-tight mb-2.5" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
               {intro.h1}
             </h1>
-            {(intro.paragraphs || []).map((para, i) => (
-              <p key={i} className={`text-sm md:text-base leading-relaxed ${i ? 'mt-3' : ''}`} style={{ color: '#5C4B47' }}>{para}</p>
-            ))}
-            <ul className="flex flex-wrap justify-center gap-2 mt-5">
-              {(intro.links || []).map(([label, href]) => (
-                <li key={href}>
-                  <Link href={href} className="inline-block px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold transition-colors hover:bg-white"
-                    style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.25)' }}>
-                    {label}
-                  </Link>
+            {intro.summary && <p className="text-sm md:text-base leading-relaxed" style={{ color: '#5C4B47' }}>{intro.summary}</p>}
+            <ul className="flex flex-wrap justify-center gap-2 mt-4" data-testid="home-facts">
+              {todayLine && (
+                <li className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white" style={{ color: '#2D2422', border: '1px solid rgba(128,0,32,0.18)' }}>
+                  <Clock size={13} style={{ color: '#800020' }} /> {todayLine}
                 </li>
-              ))}
+              )}
+              <li className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white" style={{ color: '#2D2422', border: '1px solid rgba(128,0,32,0.18)' }}>
+                <MapPin size={13} style={{ color: '#800020' }} /> Collect in Greenleys, MK12 · save 10%
+              </li>
+              {deliveryEnabled && (
+                <li className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white" style={{ color: '#2D2422', border: '1px solid rgba(128,0,32,0.18)' }}>
+                  <Truck size={13} style={{ color: '#800020' }} /> Delivery across Milton Keynes
+                </li>
+              )}
             </ul>
           </div>
         </section>
@@ -190,9 +205,9 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
       {/* ============================================ */}
       {/* TWO WORLDS NAVIGATION CARDS */}
       {/* ============================================ */}
-      <section id="two-worlds" className="py-16 md:py-24 px-4 md:px-8" data-testid="two-worlds-section">
+      <section id="two-worlds" className="pt-10 pb-8 md:py-24 px-4 md:px-8" data-testid="two-worlds-section">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12 md:mb-16">
+          <div className="text-center mb-6 md:mb-16">
             <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
               Two kitchens, one soul
             </p>
@@ -202,10 +217,10 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
             <div className="section-divider mt-4" />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 gap-3 md:gap-8">
             {/* Svadista Card */}
             <Link href="/svadista" className="group" data-testid="svadista-world-card">
-              <div className="relative overflow-hidden rounded-lg h-[230px] md:h-[420px]">
+              <div className="relative overflow-hidden rounded-lg h-[190px] md:h-[420px]">
                 <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
                   src={art.svadista || images.svadista}
                   alt="Sree Svadista Non-Veg Specialties"
@@ -214,19 +229,19 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
                 <div className="absolute inset-0" style={{
                   background: 'linear-gradient(to top, rgba(139, 58, 58, 0.95) 0%, rgba(139, 58, 58, 0.6) 40%, rgba(139, 58, 58, 0.15) 100%)'
                 }} />
-                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-10">
+                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-10">
                   <div className="flex items-center gap-2 mb-3">
                     <Flame size={18} className="text-red-300" />
-                    <span className="text-xs uppercase tracking-[0.2em] text-red-200 font-medium">Non-Vegetarian</span>
+                    <span className="text-[9px] md:text-xs uppercase tracking-[0.12em] md:tracking-[0.2em] text-red-200 font-medium">Non-Vegetarian</span>
                   </div>
-                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  <h3 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
                     Sree Svadista
                   </h3>
-                  <p className="text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
+                  <p className="hidden md:block text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
                     Bold, rustic, village-style. The spicy heart of Telugu non-veg cooking.
                   </p>
                   <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
-                    Explore Non-Veg Specialties <ArrowRight size={16} />
+                    <span className="md:hidden">Explore</span><span className="hidden md:inline">Explore Non-Veg Specialties</span> <ArrowRight size={16} />
                   </span>
                 </div>
               </div>
@@ -234,7 +249,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
 
             {/* Prasada Card */}
             <Link href="/prasada" className="group" data-testid="prasada-world-card">
-              <div className="relative overflow-hidden rounded-lg h-[230px] md:h-[420px]">
+              <div className="relative overflow-hidden rounded-lg h-[190px] md:h-[420px]">
                 <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
                   src={art.prasada || images.prasada}
                   alt="Sree Prasada Pure Veg Bliss"
@@ -243,19 +258,19 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
                 <div className="absolute inset-0" style={{
                   background: 'linear-gradient(to top, rgba(74, 124, 89, 0.95) 0%, rgba(74, 124, 89, 0.6) 40%, rgba(74, 124, 89, 0.15) 100%)'
                 }} />
-                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-10">
+                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-10">
                   <div className="flex items-center gap-2 mb-3">
                     <Leaf size={18} className="text-green-300" />
-                    <span className="text-xs uppercase tracking-[0.2em] text-green-200 font-medium">Pure Vegetarian</span>
+                    <span className="text-[9px] md:text-xs uppercase tracking-[0.12em] md:tracking-[0.2em] text-green-200 font-medium">Pure Vegetarian</span>
                   </div>
-                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  <h3 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
                     Sree Prasada
                   </h3>
-                  <p className="text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
+                  <p className="hidden md:block text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
                     Divine, sattvic, temple-style. Pure food prepared with complete devotion.
                   </p>
                   <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
-                    Explore Pure Veg Bliss <ArrowRight size={16} />
+                    <span className="md:hidden">Explore</span><span className="hidden md:inline">Explore Pure Veg Bliss</span> <ArrowRight size={16} />
                   </span>
                 </div>
               </div>
@@ -263,6 +278,28 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
           </div>
         </div>
       </section>
+
+      {/* Quick picks — straight to the food people come for; photos are the kitchen's own */}
+      {art.rail?.length > 0 && (
+        <section className="px-4 md:px-8 pb-10 md:pb-16" data-testid="quick-picks">
+          <div className="max-w-5xl mx-auto">
+            <p className="text-sm uppercase tracking-[0.25em] mb-4 text-center" style={{ color: '#8B6914' }}>What are you hungry for?</p>
+            <ul className="flex gap-3 md:gap-6 overflow-x-auto pb-2 md:justify-center" style={{ scrollbarWidth: 'none' }}>
+              {art.rail.map(r => (
+                <li key={r.href} className="flex-none text-center" style={{ width: 76 }}>
+                  <Link href={r.href} className="group block">
+                    <span className="relative block mx-auto rounded-full overflow-hidden transition-shadow duration-300 group-hover:shadow-lg"
+                      style={{ width: 68, height: 68, border: '2px solid rgba(244, 196, 48, 0.55)' }}>
+                      <Image fill src={r.image} alt="" sizes="68px" className="object-cover" />
+                    </span>
+                    <span className="block text-[11px] font-semibold leading-tight mt-2" style={{ color: '#800020' }}>{r.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* ============================================ */}
       {/* TODAY'S SPECIALS (horizontal scroll strip) */}
@@ -589,7 +626,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
             </div>
 
             {/* Explore by Meal Moment - 2 columns */}
-            <div className="lg:col-span-2">
+            <div className="hidden lg:block lg:col-span-2">
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>
                 Pick a time of day
               </p>
@@ -829,6 +866,32 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
           </div>
         </div>
       </section>
+
+      {/* About — the longer description and the keyword links, for search engines and the curious */}
+      {intro && intro.paragraphs?.length > 0 && (
+        <section className="px-4 md:px-8 py-12 md:py-16" data-testid="home-about">
+          <div className="max-w-3xl mx-auto text-center">
+            {intro.heading && (
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                {intro.heading}
+              </h2>
+            )}
+            {intro.paragraphs.map((para, i) => (
+              <p key={i} className={`text-sm md:text-base leading-relaxed ${i ? 'mt-3' : ''}`} style={{ color: '#5C4B47' }}>{para}</p>
+            ))}
+            <ul className="flex flex-wrap justify-center gap-2 mt-5">
+              {(intro.links || []).map(([label, href]) => (
+                <li key={href}>
+                  <Link href={href} className="inline-block px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold transition-colors hover:bg-white"
+                    style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.25)' }}>
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
     </div>
   );

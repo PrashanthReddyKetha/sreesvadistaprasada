@@ -39,6 +39,12 @@ export async function getOpeningHoursSpec(): Promise<object[] | null> {
   })
 }
 
+/** Opening hours by day ("mon" … "sun") as set in admin; null if they can't be read. */
+export async function getOpeningDays(): Promise<Record<string, DayHours> | null> {
+  const data = await getJson('/opening-hours')
+  return data?.days || null
+}
+
 /** Opening hours as short lines ("Mon – Thu: 8am – 8:30pm") from the hours set in admin; null if they can't be read. */
 export async function getOpeningHoursText(): Promise<string[] | null> {
   const data = await getJson('/opening-hours')

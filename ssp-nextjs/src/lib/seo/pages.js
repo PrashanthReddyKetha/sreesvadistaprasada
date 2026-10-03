@@ -32,6 +32,9 @@ export const PAGE_SEO = {
     keywords: ['Indian takeaway Milton Keynes', 'South Indian food Milton Keynes', 'South Indian restaurant Milton Keynes', 'Indian food delivery Milton Keynes', 'Andhra food Milton Keynes', 'Telugu restaurant Milton Keynes'],
     h1: 'Indian Takeaway in Milton Keynes — Authentic South Indian Food Delivery',
     content: {
+      // One line under the H1 at the top of the page; the paragraphs below sit lower down as "about"
+      summary: 'A South Indian takeaway kitchen in Greenleys, Milton Keynes — Telugu and Andhra home cooking, made fresh to order.',
+      heading: 'South Indian food in Milton Keynes, cooked the way it is at home',
       paragraphs: [
         'Sree Svadista Prasada is a South Indian takeaway kitchen in Greenleys, Milton Keynes. We cook the Telugu and Andhra food we grew up on — dosas and idli from slow-fermented batter, home-style curries, dum biryani and a full vegetarian Prasada menu — fresh to order, for delivery across Milton Keynes or collection near Wolverton and Stony Stratford.',
         'Looking for a South Indian restaurant in Milton Keynes, or a Telugu restaurant that cooks Andhra food the way it is made at home? We are a takeaway kitchen rather than a dine-in restaurant, so you order online: South Indian food in Milton Keynes to collect, Indian food delivery across Milton Keynes, or a weekly tiffin from our Dabba Wala service.',

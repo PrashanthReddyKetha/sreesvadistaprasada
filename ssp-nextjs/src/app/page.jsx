@@ -1,6 +1,6 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import HomeClient from './HomeClient';
-import { getOpeningHoursSpec, getFeaturedItems, getChefSpecialItem, getDishPhotos } from '@/lib/siteStatus';
+import { getOpeningHoursSpec, getOpeningDays, getFeaturedItems, getChefSpecialItem, getDishPhotos } from '@/lib/siteStatus';
 
 // Re-read the opening hours set in admin every 10 minutes
 export const revalidate = 600;
@@ -70,16 +70,23 @@ const jsonLd = {
 };
 
 export default async function HomePage() {
-  const [hours, featured, special, photos] = await Promise.all([getOpeningHoursSpec(), getFeaturedItems(), getChefSpecialItem(), getDishPhotos()]);
+  const [hours, hoursByDay, featured, special, photos] = await Promise.all([getOpeningHoursSpec(), getOpeningDays(), getFeaturedItems(), getChefSpecialItem(), getDishPhotos()]);
   // The kitchen's own dish photos for the banner, the two menu cards, the time-of-day
   // circles and the photo grid. A missing photo falls back to the picture already in place.
   const pic = (slug) => photos[slug]?.image;
   const art = {
     // Welcome Home · Two Kitchens (Prasada + Svadista) · the Dabba Wala
     hero: [pic('chicken-fry-piece-biryani'), [pic('pulihora'), pic('gongura-chicken-curry')], pic('veg-thali')],
-    svadista: pic('chicken-dum-biryani'),
+    svadista: pic('spicy-andhra-chicken-curry'),
     prasada: pic('prasadam-pulihora'),
-    moments: { 1: pic('masala-dosa'), 2: pic('aloo-kurma'), 3: pic('spicy-andhra-chicken-curry'), 4: pic('punugulu') },
+    moments: { 1: pic('vada-3-pcs'), 2: pic('aloo-kurma'), 3: pic('andhra-egg-curry'), 4: pic('punugulu') },
+    // "What are you hungry for?" — straight to the food people come for
+    rail: [
+      ['Breakfast', '/breakfast', 'idli-3-pcs'], ['Dosa', '/breakfast/dosas', 'masala-dosa'], ['Biryani', '/svadista/biriyani', 'chicken-dum-biryani'],
+      ['Chicken curry', '/svadista/curries', 'chicken-curry-2'], ['Veg curries', '/prasada/curries', 'gongura-pappu'],
+      ['Veg thali', '/prasada/thalis-rice-bowls', 'pappu-pappadam-roti-pachadi-rice-yogurt'], ['Street food', '/street-food', 'pani-puri-8-pcs'],
+      ['Tiffin service', '/subscriptions', 'sambar-rice'],
+    ].map(([label, href, slug]) => ({ label, href, image: pic(slug) })).filter(r => r.image),
     // Photos taken on the wooden table or in the garden, so the grid reads as one set
     gallery: ['fish-pulusu-2', 'tomato-pappu', 'tandoori-chicken-1pcs', 'gutti-vankaya-masala', 'mulakkada-tomato-curry', 'whole-grilled-chicken', 'egg-fry', 'poori-2pcs']
       .filter(s => photos[s]).map(s => ({ id: s, src: photos[s].image, alt: photos[s].name })),
@@ -97,7 +104,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...jsonLd, '@graph': graph }) }}
       />
-      <HomeClient intro={{ h1: PAGE_SEO['/'].h1, ...PAGE_SEO['/'].content }} initialFeatured={featured} initialSpecial={special} art={art} />
+      <HomeClient intro={{ h1: PAGE_SEO['/'].h1, ...PAGE_SEO['/'].content }} initialFeatured={featured} initialSpecial={special} art={art} hoursByDay={hoursByDay} />
     </>
   );
 }
