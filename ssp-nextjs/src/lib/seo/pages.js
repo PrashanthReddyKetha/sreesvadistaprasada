@@ -211,11 +211,11 @@ export const PAGE_SEO = {
   },
 
   '/milton-keynes': {
-    primary: 'south indian restaurant milton keynes',
-    title: `South Indian Restaurant & Takeaway Milton Keynes${B}`,
-    description: 'South Indian takeaway kitchen in Greenleys, Milton Keynes — authentic Andhra food delivered to Wolverton, Stony Stratford, Bletchley and all MK postcodes.',
+    primary: 'south indian food milton keynes',
+    title: `South Indian Home Kitchen Milton Keynes${B}`,
+    description: 'South Indian home kitchen in Greenleys, Milton Keynes — authentic Andhra food delivered to Wolverton, Stony Stratford, Bletchley and all MK postcodes.',
     keywords: ['South Indian restaurant Milton Keynes', 'South Indian food Milton Keynes', 'Indian takeaway Wolverton', 'Indian takeaway Stony Stratford', 'Telugu restaurant Milton Keynes', 'Andhra food Milton Keynes'],
-    h1: 'South Indian Restaurant & Takeaway in Milton Keynes',
+    h1: 'South Indian Home Kitchen in Milton Keynes',
   },
 
   '/story': {
