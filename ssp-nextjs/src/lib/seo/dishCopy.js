@@ -21,7 +21,7 @@ export const DISH_COPY = {
   'vada-3-pcs-chicken-curry': "Medu vada — garelu in Telugu — is the crisp urad dal fritter that Andhra families pair with chicken curry at festivals and Sunday breakfasts. Here the vadas come with a bowl of our spicy Andhra chicken curry: crunch outside, soft inside, and a gravy made for dipping.",
 
   // ── Breakfast: dosas ──────────────────────────────────────────────────────
-  'beetroot-dosa-2-pcs': "A dosa made on our fermented rice-and-lentil batter with beetroot worked in, which turns it a vivid pink and adds a gentle, earthy sweetness. It is one of the milder dosas on the menu. Two to a plate — good with sambar and allam pachadi, or beside a masala dosa if you are sharing.",
+  'beetroot-dosa-2-pcs': "A dosa made on our fermented rice-and-lentil batter with beetroot worked in, which turns it a vivid pink and adds a gentle, earthy sweetness. It is one of the milder dosas on the menu. Two to a plate — good with sambar, or beside a masala dosa if you are sharing.",
   'butter-dosa-2-pcs': "The plain dosa's richer cousin: the same fermented batter, roasted on the tawa with butter until golden and fragrant. Softer and rounder in flavour than a ghee dosa, and a favourite with children. Two dosas per plate, with sambar and chutneys.",
   'carrot-dosa-2-pcs': "Grated carrot and mild spices are mixed through the dosa batter, giving a lightly sweet, colourful dosa that stays crisp at the edges. A gentle option if you prefer little heat. Two per plate with sambar and chutneys — and a good partner for the beetroot dosa.",
   'cheese-dosa': "A crisp dosa folded around melted cheese and spiced potato — the crossover order that children ask for and adults finish. The tang of the fermented batter still comes through underneath the richness. Have it with sambar, or with a mango lassi on the side.",
@@ -29,9 +29,9 @@ export const DISH_COPY = {
   'masala-dosa': "The most famous dosa of all: a thin, crisp crepe of fermented rice and urad dal batter wrapped around a mildly spiced potato masala. Ours comes two to a plate with sambar and chutneys. If this is your first South Indian breakfast in Milton Keynes, start here.",
   'nellore-ghee-karam-dosa-2-pcs': "Nellore, on the Andhra coast, is known for the heat of its food, and this is its dosa: spread with fiery red karam — a chilli and garlic paste — and finished with ghee as it roasts. Rich, hot and aromatic. Choose a plain or ghee dosa instead if you like things mild.",
   'onion-dosa': "Chopped onion and a little green chilli are pressed into the dosa as it cooks, so the onion caramelises against the hot tawa while the dosa crisps underneath. Sweet, savoury and a touch sharp. Good with sambar and coconut chutney.",
-  'paneer-dosa': "A crisp dosa filled with crumbled paneer cooked with spices and green chillies — more substantial than a masala dosa, with soft cheese against the crackle of the crepe. Good with sambar, and with allam pachadi if you like a sweet-sour kick.",
+  'paneer-dosa': "A crisp dosa filled with crumbled paneer cooked with spices and green chillies — more substantial than a masala dosa, with soft cheese against the crackle of the crepe. Comes with sambar and chutneys.",
   'plain-dosa-2-pcs': "The dosa by which any South Indian kitchen is judged: nothing but fermented rice and urad dal batter, spread thin on a hot tawa until golden and crisp at the edges. Two per plate, with sambar and coconut chutney. Add a bowl of chicken curry for the Andhra version of breakfast.",
-  'upma-dosa': "Two tiffin classics in one: a crisp dosa carrying a layer of soft, savoury semolina upma. The contrast is the point — crunch first, then the gentle, spiced upma. Good with sambar and allam pachadi.",
+  'upma-dosa': "Two tiffin classics in one: a crisp dosa carrying a layer of soft, savoury semolina upma. The contrast is the point — crunch first, then the gentle, spiced upma. Comes with sambar and chutneys.",
 
   // ── Breakfast: lighter plates ─────────────────────────────────────────────
   'avocado-toast': "Not everything on our breakfast menu is South Indian. This is toasted sourdough with smashed avocado, chilli flakes and a squeeze of lemon — a lighter plate for the mornings you want something familiar, alongside the dosas and idli everyone else is ordering.",
@@ -53,7 +53,7 @@ export const DISH_COPY = {
   'poha': "Poha is flattened rice, softened and sautéed with mustard seeds, turmeric, onion and green chilli, then finished with lime. Light and quick, it is a breakfast eaten across much of India. A good choice when a dosa feels like too much.",
   'poori-2pcs': "Poori is whole-wheat dough rolled thin and deep-fried until it puffs into a golden balloon. Ours come two to a plate with potato kurma for scooping. A festive, filling South Indian breakfast.",
   'uggani': "Uggani comes from Rayalaseema in southern Andhra: puffed rice softened and stir-fried with onion, green chilli, peanuts and lemon. It is savoury, a little crunchy and quick to eat — and its traditional partner is mirchi bhajji, which is also on our menu.",
-  'upma': "Upma is semolina roasted and cooked with mustard seeds, onion, green chilli and vegetables into a soft, savoury porridge. A South Indian morning staple — plain, warming and quick to eat. Good with allam pachadi or a spoon of sambar.",
+  'upma': "Upma is semolina roasted and cooked with mustard seeds, onion, green chilli and vegetables into a soft, savoury porridge. A South Indian morning staple — plain, warming and quick to eat. Good with a spoon of sambar.",
 
   // ── Drinks ────────────────────────────────────────────────────────────────
   'abc-juice': "ABC stands for apple, beetroot and carrot — blended fresh into a deep red juice that is naturally sweet. A popular juice-stall order across India, and a mild counterpoint to a spicy meal.",
@@ -186,7 +186,7 @@ export const DISH_COPY = {
   'onion-mirchi-bhajji-2pcs': "Thick slices of onion and green chilli dipped in spiced gram-flour batter and fried until golden. Crunchy and fiery — a rainy-day snack in Andhra, and very good with tea.",
   'peanut-chat': "Roasted peanuts tossed with onion, tomato, coriander, lemon and chaat masala. A quick, crunchy snack from Indian street stalls.",
   'potato-fry': "Aloo vepudu: cubes of potato pan-fried with mustard seeds, curry leaves and turmeric. A simple side dish from Andhra home cooking — good with sambar rice or rasam rice.",
-  'punugulu': "Punugulu are a street snack from coastal Andhra: small spoonfuls of idli batter fried until puffed and golden, then tossed with curry leaves and chilli powder. Crisp outside and soft inside. Good with allam pachadi.",
+  'punugulu': "Punugulu are a street snack from coastal Andhra: small spoonfuls of idli batter fried until puffed and golden, then tossed with curry leaves and chilli powder. Crisp outside and soft inside. Good with sambar or a masala buttermilk.",
   'zucchini-fritters': "Grated zucchini bound with gram flour and Andhra spices and fried into crisp fritters — a lighter take on the pakora.",
 
   // ── Prasada: thalis ───────────────────────────────────────────────────────
