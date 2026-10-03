@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -14,6 +14,19 @@ const Gallery = ({ dishImages = [] }) => {
 
   const allImages = dishImages;
 
+  // A fresh random order for every visitor and every reload. The page is built once and
+  // shared, so the shuffle happens in the browser; until it has, the grid shows empty
+  // tiles, so nobody sees the photos jump from one order to another.
+  const [shuffled, setShuffled] = useState(null);
+  useEffect(() => {
+    const pool = [...dishImages];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    setShuffled(pool);
+  }, [dishImages]);
+
   // Filters follow whatever categories actually have photos
   const categories = useMemo(() => {
     const present = [...new Set(allImages.map(i => i.category))];
@@ -21,9 +34,10 @@ const Gallery = ({ dishImages = [] }) => {
     return ['All', ...order.filter(c => present.includes(c)), ...present.filter(c => !order.includes(c))];
   }, [allImages]);
 
+  const ordered = shuffled || [];
   const filtered = activeFilter === 'All'
-    ? allImages
-    : allImages.filter(img => img.category === activeFilter);
+    ? ordered
+    : ordered.filter(img => img.category === activeFilter);
 
   const current = lightboxIdx !== null ? filtered[lightboxIdx] : null;
 
@@ -69,7 +83,10 @@ const Gallery = ({ dishImages = [] }) => {
       {/* Image Grid */}
       <section className="py-12 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4" data-testid="gallery-grid">
+            {shuffled === null && Array.from({ length: 8 }).map((_, i) => (
+              <div key={`placeholder-${i}`} className="aspect-square rounded-lg" style={{ backgroundColor: '#F3EDE2' }} aria-hidden="true" />
+            ))}
             {filtered.map((img, idx) => (
               <button
                 key={img.id}
