@@ -188,6 +188,83 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
       )}
 
       {/* ============================================ */}
+      {/* TWO WORLDS NAVIGATION CARDS */}
+      {/* ============================================ */}
+      <section id="two-worlds" className="py-16 md:py-24 px-4 md:px-8" data-testid="two-worlds-section">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12 md:mb-16">
+            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
+              Two kitchens, one soul
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+              Choose Your World
+            </h2>
+            <div className="section-divider mt-4" />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+            {/* Svadista Card */}
+            <Link href="/svadista" className="group" data-testid="svadista-world-card">
+              <div className="relative overflow-hidden rounded-lg h-[230px] md:h-[420px]">
+                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
+                  src={art.svadista || images.svadista}
+                  alt="Sree Svadista Non-Veg Specialties"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0" style={{
+                  background: 'linear-gradient(to top, rgba(139, 58, 58, 0.95) 0%, rgba(139, 58, 58, 0.6) 40%, rgba(139, 58, 58, 0.15) 100%)'
+                }} />
+                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Flame size={18} className="text-red-300" />
+                    <span className="text-xs uppercase tracking-[0.2em] text-red-200 font-medium">Non-Vegetarian</span>
+                  </div>
+                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Sree Svadista
+                  </h3>
+                  <p className="text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
+                    Bold, rustic, village-style. The spicy heart of Telugu non-veg cooking.
+                  </p>
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
+                    Explore Non-Veg Specialties <ArrowRight size={16} />
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            {/* Prasada Card */}
+            <Link href="/prasada" className="group" data-testid="prasada-world-card">
+              <div className="relative overflow-hidden rounded-lg h-[230px] md:h-[420px]">
+                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
+                  src={art.prasada || images.prasada}
+                  alt="Sree Prasada Pure Veg Bliss"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0" style={{
+                  background: 'linear-gradient(to top, rgba(74, 124, 89, 0.95) 0%, rgba(74, 124, 89, 0.6) 40%, rgba(74, 124, 89, 0.15) 100%)'
+                }} />
+                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Leaf size={18} className="text-green-300" />
+                    <span className="text-xs uppercase tracking-[0.2em] text-green-200 font-medium">Pure Vegetarian</span>
+                  </div>
+                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Sree Prasada
+                  </h3>
+                  <p className="text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
+                    Divine, sattvic, temple-style. Pure food prepared with complete devotion.
+                  </p>
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
+                    Explore Pure Veg Bliss <ArrowRight size={16} />
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
       {/* TODAY'S SPECIALS (horizontal scroll strip) */}
       {/* ============================================ */}
       {dailySpecials.length > 0 && (
@@ -554,83 +631,6 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
       </section>
 
       {/* ============================================ */}
-      {/* TWO WORLDS NAVIGATION CARDS */}
-      {/* ============================================ */}
-      <section id="two-worlds" className="py-16 md:py-24 px-4 md:px-8" data-testid="two-worlds-section">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12 md:mb-16">
-            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
-              Two kitchens, one soul
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-              Choose Your World
-            </h2>
-            <div className="section-divider mt-4" />
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-            {/* Svadista Card */}
-            <Link href="/svadista" className="group" data-testid="svadista-world-card">
-              <div className="relative overflow-hidden rounded-lg h-[230px] md:h-[420px]">
-                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
-                  src={art.svadista || images.svadista}
-                  alt="Sree Svadista Non-Veg Specialties"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0" style={{
-                  background: 'linear-gradient(to top, rgba(139, 58, 58, 0.95) 0%, rgba(139, 58, 58, 0.6) 40%, rgba(139, 58, 58, 0.15) 100%)'
-                }} />
-                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Flame size={18} className="text-red-300" />
-                    <span className="text-xs uppercase tracking-[0.2em] text-red-200 font-medium">Non-Vegetarian</span>
-                  </div>
-                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    Sree Svadista
-                  </h3>
-                  <p className="text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
-                    Bold, rustic, village-style. The spicy heart of Telugu non-veg cooking.
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
-                    Explore Non-Veg Specialties <ArrowRight size={16} />
-                  </span>
-                </div>
-              </div>
-            </Link>
-
-            {/* Prasada Card */}
-            <Link href="/prasada" className="group" data-testid="prasada-world-card">
-              <div className="relative overflow-hidden rounded-lg h-[230px] md:h-[420px]">
-                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
-                  src={art.prasada || images.prasada}
-                  alt="Sree Prasada Pure Veg Bliss"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0" style={{
-                  background: 'linear-gradient(to top, rgba(74, 124, 89, 0.95) 0%, rgba(74, 124, 89, 0.6) 40%, rgba(74, 124, 89, 0.15) 100%)'
-                }} />
-                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Leaf size={18} className="text-green-300" />
-                    <span className="text-xs uppercase tracking-[0.2em] text-green-200 font-medium">Pure Vegetarian</span>
-                  </div>
-                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    Sree Prasada
-                  </h3>
-                  <p className="text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
-                    Divine, sattvic, temple-style. Pure food prepared with complete devotion.
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
-                    Explore Pure Veg Bliss <ArrowRight size={16} />
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================ */}
       {/* DABBA WALA EXPLAINED */}
       {/* ============================================ */}
       <section className="py-12 md:py-20 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: '#800020' }} data-testid="dabba-wala-section">
@@ -826,54 +826,6 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) 
             <Link href="/gallery" className="inline-flex items-center gap-2 text-sm font-semibold tracking-wide transition-colors duration-200 hover:gap-3" style={{ color: '#800020' }} data-testid="view-gallery-link">
               View Full Gallery <ArrowRight size={16} />
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================ */}
-      {/* SNACKS & PICKLES (UK-WIDE) */}
-      {/* ============================================ */}
-      <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }} data-testid="snacks-pickles-section">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="relative rounded-lg overflow-hidden h-[180px] md:h-[380px]">
-              <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
-                src={images.picklesShelf}
-                alt="Traditional pickles and spices"
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-              <span className="absolute bottom-4 left-4 px-3 py-1.5 rounded-sm text-xs font-semibold text-white" style={{ backgroundColor: '#4A7C59' }}>
-                Coming soon
-              </span>
-            </div>
-            <div>
-              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
-                Small jars · big memories
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                Avakaya, Podis &amp; Sweet Things
-              </h2>
-              <p className="text-base text-gray-600 leading-relaxed mb-6">
-                Hand-stirred Andhra pickles. Dry-roasted podis ground in small batches. Sweets folded the way grandmothers fold them — slow and smiling. From tangy gongura pickle to fiery mango avakaya and kandi podi, each jar carries a noisy Sunday kitchen inside it. Coming soon — tap through and we will tell you when they launch.
-              </p>
-              <div className="flex flex-wrap gap-3 mb-8">
-                {['Avakaya', 'Gongura', 'Kandi Podi', 'Sweets', 'Podis'].map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium"
-                    style={{ backgroundColor: 'rgba(74, 124, 89, 0.1)', color: '#4A7C59' }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <Link href="/snacks">
-                <button className="btn-outlined" data-testid="shop-snacks-btn">
-                  Open the Pantry <ArrowRight size={16} />
-                </button>
-              </Link>
-            </div>
           </div>
         </div>
       </section>

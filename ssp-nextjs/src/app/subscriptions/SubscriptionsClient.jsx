@@ -960,7 +960,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ minHeight: 'min(42vh, 340px)' }}>
         <Image fill priority src={art.hero || 'https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920'}
-          alt="A home-style South Indian meal from our kitchen" className="absolute inset-0 object-cover" sizes="100vw" />
+          alt="A packed lunch box with rice, curry and sides" className="absolute inset-0 object-cover" sizes="100vw" />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(58,10,22,0.9) 0%, rgba(58,10,22,0.74) 38%, rgba(58,10,22,0.4) 72%, rgba(58,10,22,0.22) 100%)` }} />
         <div className="relative h-full w-full px-4 md:px-8 flex items-center pt-[calc(32px+4rem+1.25rem)] md:pt-[calc(32px+5rem+1.5rem)] pb-8">
           <div className="max-w-7xl mx-auto w-full">
