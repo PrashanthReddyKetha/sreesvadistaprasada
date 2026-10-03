@@ -49,7 +49,7 @@ const jsonLd = [
     mainEntity: [
       { '@type': 'Question', name: 'What is a Dabba Wala?', acceptedAnswer: { '@type': 'Answer', text: 'A Dabba Wala (also spelled Dabbawala) is a delivery worker who collects home-cooked food in a tiffin box (dabba) and delivers it to offices or homes. The system originated in Mumbai, India, and is famous for its extraordinary accuracy — handling 200,000 lunches daily with only one error per every 6 million deliveries.' } },
       { '@type': 'Question', name: 'How does the Dabba Wala subscription work at Sree Svadista Prasada?', acceptedAnswer: { '@type': 'Answer', text: 'Choose a Weekly or Monthly plan (Prasada vegetarian, Svadista non-veg, or Mixed), select your start date, and freshly cooked South Indian meals are delivered to your door in Milton Keynes on your chosen days. Plans start from £12.50 per meal.' } },
-      { '@type': 'Question', name: 'Can I pause or cancel my Dabba Wala subscription?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — you can pause, resume, or cancel anytime with 24 hours notice. No cancellation penalty.' } },
+      { '@type': 'Question', name: 'Can I pause or cancel my Dabba Wala subscription?', acceptedAnswer: { '@type': 'Answer', text: 'You can skip individual delivery days from your Dashboard. If you need to pause, change or cancel your plan, get in touch — we are flexible and will work it out with you. Plans do not auto-renew.' } },
     ],
   },
 ];
@@ -133,7 +133,7 @@ export default function DabbaWalaArticle() {
             <li><strong>Mixed box</strong> — alternating veg and non-veg across your subscription period</li>
           </ul>
           <p>
-            Plans start from <strong>£12.50 per meal</strong> on a weekly or monthly subscription. You can pause or cancel anytime with 24 hours&apos; notice.
+            Plans start from <strong>£12.50 per meal</strong> on a weekly or monthly subscription. Plans don&apos;t auto-renew, and if your plans change you can simply get in touch — we&apos;re flexible.
           </p>
 
           <div className="not-prose bg-amber-800 text-white rounded-2xl p-8 text-center my-8">

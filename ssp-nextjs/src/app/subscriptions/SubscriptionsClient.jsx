@@ -11,7 +11,7 @@ import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import CouponPanel from '@/components/CouponPanel';
 import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase, trackSubscriptionStepView } from '@/lib/analytics';
 
-const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 const CARD_STYLE = {
@@ -315,7 +315,7 @@ function LandingMenuPeek({ weekCfg }) {
 
 const LANDING_FAQS = [
   { q: "What if I'm not home when the meal arrives?", a: 'You choose at checkout — we can call you on arrival, leave it at your door, with a neighbour, or in your safe place.' },
-  { q: 'Can I pause or skip a week?', a: 'Yes. Going on holiday or need a break? Just message us and we pause your deliveries — no fuss, no charge.' },
+  { q: 'Can I pause or skip a week?', a: 'You can skip individual days from your Dashboard. Going on holiday or need a longer break? Message us — we\'re flexible and will sort it out with you.' },
   { q: 'How does the food stay hot?', a: 'Every meal is cooked that morning, packed and sealed hot, and delivered between 12–2pm — it arrives ready to eat.' },
   { q: 'Is there a contract or auto-renewal?', a: 'No. Plans never auto-renew and there is nothing to cancel — you are always in control.' },
   { q: 'Can you handle dietary preferences?', a: 'Yes — no onion/garlic, less or extra spice, Jain, gluten-free where possible and more. You set your preferences during sign-up.' },
@@ -671,7 +671,7 @@ const SubscriptionsInner = () => {
       // 1. Re-price at the moment of payment so the charge always matches what the server will verify
       const fresh = await fetchQuote();
       setQuote(fresh);
-      const intentRes = await api.post('/payments/create-intent', { amount: fresh.total });
+      const intentRes = await api.post('/payments/create-intent', { amount: fresh.total, purpose: 'subscription' });
       const { client_secret, payment_intent_id } = intentRes.data;
       // 2. Confirm card payment with individual elements
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
@@ -1717,7 +1717,7 @@ const SubscriptionsInner = () => {
                     {/* Terms */}
                     <div className="rounded-2xl p-5" style={{ backgroundColor: C.surface, border: '1px solid rgba(128,0,32,0.1)' }}>
                       <p className="text-xs leading-relaxed mb-3" style={{ color: C.dark, lineHeight: 1.8 }}>
-                        This subscription is paid in full today. You have <strong>48 hours</strong> from the moment you subscribe to cancel for a full refund — as long as your first meal has not entered preparation. After that, all sales are final.
+                        This plan is paid in full today and doesn&apos;t auto-renew. If your plans change or something isn&apos;t right, just get in touch — we&apos;re flexible and will work it out with you.
                       </p>
                       <Link href="/terms" className="text-xs font-semibold" style={{ color: C.primary }}>View full terms →</Link>
                     </div>

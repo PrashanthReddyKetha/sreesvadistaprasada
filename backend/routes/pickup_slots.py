@@ -31,6 +31,8 @@ DEFAULT_SETTINGS = {
     "enabled": True,
     "paused": False,
     "paused_message": "",
+    # Single-order delivery on/off (admin toggle). Off = collection only.
+    "delivery_enabled": False,
     "slot_minutes": 15,
     # Minimum prep time: every order needs 40 minutes before collection/delivery
     "lead_time_minutes": 40,
@@ -66,6 +68,7 @@ class PickupSlotSettingsUpdate(BaseModel):
     enabled: Optional[bool] = None
     paused: Optional[bool] = None
     paused_message: Optional[str] = Field(None, max_length=200)
+    delivery_enabled: Optional[bool] = None
     slot_minutes: Optional[int] = None
     lead_time_minutes: Optional[int] = Field(None, ge=0, le=240)
     max_orders_per_slot: Optional[int] = Field(None, ge=1, le=100)
@@ -255,6 +258,7 @@ async def kitchen_status():
     settings = await get_slot_settings()
     return {
         "open": not settings.get("paused"),
+        "delivery_enabled": bool(settings.get("delivery_enabled")),
         "message": settings.get("paused_message") or "Our kitchen is closed today — we're not taking orders right now. Please check back soon.",
     }
 

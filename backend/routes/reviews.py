@@ -75,8 +75,9 @@ async def _ensure_stub(
     return doc
 
 
-async def ensure_order_review_stub(order: dict):
-    """Called when an order transitions to 'delivered'."""
+async def ensure_order_review_stub(order: dict, notify: bool = True):
+    """Called when an order transitions to 'delivered'.
+    notify=False for backfills on read paths — those must never message anyone."""
     user_id = order.get("user_id")
     if not user_id:
         return
@@ -89,12 +90,13 @@ async def ensure_order_review_stub(order: dict):
         menu_item_ids=[i.get("menu_item_id") or i.get("id") for i in items if i],
         menu_item_names=[i.get("name") for i in items if i and i.get("name")],
     )
-    # Log SMS reminder (actual dispatch is a TODO – see send_sms_reminder).
-    await _schedule_sms_reminder(user_id, "order", order["id"])
+    if notify:
+        await _schedule_sms_reminder(user_id, "order", order["id"])
 
 
-async def ensure_meal_day_review_stub(sub: dict, date: str, menu_doc: Optional[dict]):
-    """Called when a Dabba Wala meal_day delivery is marked 'delivered'."""
+async def ensure_meal_day_review_stub(sub: dict, date: str, menu_doc: Optional[dict], notify: bool = True):
+    """Called when a Dabba Wala meal_day delivery is marked 'delivered'.
+    notify=False for backfills on read paths — those must never message anyone."""
     user_id = sub.get("user_id")
     if not user_id:
         return
@@ -131,7 +133,8 @@ async def ensure_meal_day_review_stub(sub: dict, date: str, menu_doc: Optional[d
             )
     except ValueError:
         pass
-    await _schedule_sms_reminder(user_id, "meal_day", ref_id)
+    if notify:
+        await _schedule_sms_reminder(user_id, "meal_day", ref_id)
 
 
 async def _schedule_sms_reminder(user_id: str, review_type: str, ref_id: str):
@@ -140,10 +143,14 @@ async def _schedule_sms_reminder(user_id: str, review_type: str, ref_id: str):
     if not user:
         return
     now = datetime.utcnow().isoformat()
-    await db.delivery_reviews.update_one(
-        {"user_id": user_id, "type": review_type, "ref_id": ref_id},
+    # Claim the reminder atomically — one prompt per review, ever
+    claimed = await db.delivery_reviews.update_one(
+        {"user_id": user_id, "type": review_type, "ref_id": ref_id,
+         "status": "pending", "reminder_sent_at": None},
         {"$set": {"reminder_sent_at": now}},
     )
+    if claimed.modified_count == 0:
+        return
     name = user.get("name") or "there"
     when_label = {
         "order": "your order",
@@ -190,7 +197,7 @@ async def _backfill_meal_stubs(user_id: str):
                     menu_doc = await db.weekly_menu_days.find_one(
                         {"date": dt, "box_type": sub.get("box_type", "prasada")}, {"_id": 0}
                     )
-                    await ensure_meal_day_review_stub(sub, dt, menu_doc)
+                    await ensure_meal_day_review_stub(sub, dt, menu_doc, notify=False)
             d += timedelta(days=1)
 
 
@@ -199,7 +206,7 @@ async def _backfill_order_stubs(user_id: str):
         {"user_id": user_id, "status": "delivered"}, {"_id": 0}
     ).to_list(200)
     for o in delivered:
-        await ensure_order_review_stub(o)
+        await ensure_order_review_stub(o, notify=False)
 
 
 @router.get("/pending")

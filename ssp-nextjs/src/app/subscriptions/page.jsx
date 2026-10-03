@@ -75,7 +75,7 @@ export default function Page() {
             <h2 className="text-lg font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>How it works</h2>
             <p>
               Choose your plan, pick your delivery days, and we cook fresh and deliver to
-              your door. Pause or cancel anytime — no lock-in, no penalties.
+              your door. No auto-renewal — and if your plans change, just get in touch. We&apos;re flexible.
             </p>
           </div>
         </div>

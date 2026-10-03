@@ -240,19 +240,38 @@ async def _verify_google_token(credential: str) -> dict:
     or ID token verification as fallback.
     """
     import httpx
+    # Comma-separated so the web and mobile OAuth clients can both be allowed
+    allowed_ids = [c.strip() for c in os.environ.get("GOOGLE_CLIENT_ID", "").split(",") if c.strip()]
     try:
         async with httpx.AsyncClient() as client:
-            r = await client.get(
-                "https://www.googleapis.com/oauth2/v3/userinfo",
-                headers={"Authorization": f"Bearer {credential}"},
-                timeout=10,
+            # An access token is only ours if Google issued it to one of our client IDs —
+            # otherwise a token granted to any other app could sign in here.
+            ti = await client.get(
+                "https://oauth2.googleapis.com/tokeninfo",
+                params={"access_token": credential}, timeout=10,
             )
-            if r.status_code == 200:
-                return r.json()
+            if ti.status_code == 200:
+                info = ti.json()
+                if allowed_ids and info.get("aud") not in allowed_ids and info.get("azp") not in allowed_ids:
+                    raise HTTPException(status_code=401, detail="Invalid Google credentials.")
+                if not allowed_ids:
+                    logger.warning("GOOGLE_CLIENT_ID not set — Google token audience not checked")
+                r = await client.get(
+                    "https://www.googleapis.com/oauth2/v3/userinfo",
+                    headers={"Authorization": f"Bearer {credential}"},
+                    timeout=10,
+                )
+                if r.status_code == 200:
+                    profile = r.json()
+                    if profile.get("email_verified") is False:
+                        raise HTTPException(status_code=401, detail="Google email is not verified.")
+                    return profile
+    except HTTPException:
+        raise
     except Exception:
         pass
 
-    client_id = os.environ.get("GOOGLE_CLIENT_ID")
+    client_id = allowed_ids or None
     if not client_id:
         raise HTTPException(status_code=500, detail="Google sign-in is not configured.")
     try:

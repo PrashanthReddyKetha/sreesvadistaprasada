@@ -42,7 +42,7 @@ const faqSchema = {
       name: 'Can I pause or cancel my subscription?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'You can skip individual delivery days from your Dashboard, and cancel within 48 hours of signing up for a full refund. Plans are a fixed term and don\'t auto-renew, so there\'s no ongoing subscription to cancel — no lock-in, no recurring fees.',
+        text: 'You can skip individual delivery days from your Dashboard. If you need to pause, change or cancel your plan, get in touch on WhatsApp, phone or email — we\'re flexible and will work it out with you. Plans don\'t auto-renew, so there are no recurring charges.',
       },
     },
   ],
@@ -124,7 +124,7 @@ export default function SubscriptionsAboutPage() {
         <div className="space-y-3 mb-10">
           {[
             ['What areas do you deliver to?', 'Hot daily dabbas across all MK postcodes MK1–MK19 including Wolverton, Stony Stratford, Greenleys, Newport Pagnell and Bletchley. Edinburgh and Glasgow are coming soon — join the waitlist.'],
-            ['Can I pause or cancel?', 'Skip individual days anytime, or cancel within 48 hours of signing up for a full refund. Fixed-term plans, no auto-renewal, no lock-in.'],
+            ['Can I pause or cancel?', 'Skip individual days from your Dashboard. Need to pause, change or cancel? Get in touch — we\'re flexible and will work it out with you. No auto-renewal.'],
             ['Can I customise my dabba?', 'Yes. Contact us on WhatsApp with any dietary requirements or preferences and we will plan accordingly.'],
             ['How is the dabba delivered?', 'Delivered hot in insulated packaging to your door. You do not need to be home — leave delivery instructions at checkout.'],
           ].map(([q, a]) => (

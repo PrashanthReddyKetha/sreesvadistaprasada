@@ -22,7 +22,7 @@ import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import AddToHomeScreen from '@/components/AddToHomeScreen';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackPurchase } from '@/lib/analytics';
-import { isOrderable, DELIVERY_LOCKED } from '@/config/softLaunch';
+import { isOrderable } from '@/config/softLaunch';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 import CouponPanel from '@/components/CouponPanel';
 
@@ -968,7 +968,7 @@ const CheckoutInner = () => {
           }
         }
 
-        const intentRes = await api.post('/payments/create-intent', { amount: ctx.validPricing.grand_total });
+        const intentRes = await api.post('/payments/create-intent', { amount: ctx.validPricing.grand_total, purpose: 'order' });
         const { client_secret, payment_intent_id } = intentRes.data;
         capturedPI = payment_intent_id;
 
@@ -1082,7 +1082,7 @@ const CheckoutInner = () => {
 
       // Server-verified total only — never fall back to a client-guessed amount
       const chargeAmount = validPricing.grand_total;
-      const intentRes = await api.post('/payments/create-intent', { amount: chargeAmount });
+      const intentRes = await api.post('/payments/create-intent', { amount: chargeAmount, purpose: 'order' });
       const { client_secret, payment_intent_id } = intentRes.data;
       capturedPI = payment_intent_id;
 
@@ -1332,7 +1332,7 @@ const CheckoutInner = () => {
               <p className="text-xs font-semibold" style={{ color: '#5C4B47' }}>
                 How would you like to receive your order?
               </p>
-              {DELIVERY_LOCKED ? <DeliveryLockedNotice /> : (
+              {!kitchen.deliveryEnabled ? <DeliveryLockedNotice /> : (
                 <div className="flex gap-2">
                   {[
                     { id: 'delivery', label: '🚚 Delivery' },

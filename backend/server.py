@@ -39,6 +39,7 @@ async def lifespan(app: FastAPI):
     await db.wa_messages.create_index("sid", sparse=True)
     await db.wa_optouts.create_index("phone", unique=True)
     await db.subscriptions.create_index("email_key", sparse=True)
+    await db.payments.create_index("pi_id", unique=True)
     await db.coupons.create_index("code", unique=True)
     await db.coupons.create_index("id", unique=True)
     await db.coupon_redemptions.create_index([("coupon_id", 1), ("user_id", 1)])
@@ -48,10 +49,13 @@ async def lifespan(app: FastAPI):
     from whatsapp import renewal_reminder_loop
     push_scheduler = asyncio.create_task(scheduler_loop())
     renewal_scheduler = asyncio.create_task(renewal_reminder_loop())
+    from routes.payments import orphan_payment_loop
+    orphan_watchdog = asyncio.create_task(orphan_payment_loop())
     yield
     logger.info("Shutting down...")
     push_scheduler.cancel()
     renewal_scheduler.cancel()
+    orphan_watchdog.cancel()
     client.close()
 
 

@@ -905,7 +905,7 @@ FAQ_SEED = [
     ]},
     {"order": 1, "category": "Subscriptions (Dabba Wala)", "items": [
         {"q": "How does the Dabba Wala subscription work?", "a": "Choose your plan (Weekly/Monthly/Family), select your box type (Prasada/Svadista/Mixed), set any dietary preferences, and pick your start date. Freshly cooked meals are delivered to your door on your chosen days."},
-        {"q": "Can I pause or cancel my subscription?", "a": "Yes! You can pause, resume, or cancel anytime with 24 hours notice. No penalty."},
+        {"q": "Can I pause or cancel my subscription?", "a": "You can skip individual days from your Dashboard. If you need to pause, change or cancel, get in touch and we will work it out with you — we're flexible."},
         {"q": "What comes in a typical dabba (tiffin)?", "a": "Each meal includes rice/roti, a main curry, dal or sambar, a side dish, pickle/chutney, and papad. Portions are generous for one adult."},
         {"q": "Can I switch between Prasada and Svadista boxes?", "a": "Absolutely. With the Mixed Box option, we alternate between veg and non-veg meals. You can also switch your box type at any time."},
     ]},

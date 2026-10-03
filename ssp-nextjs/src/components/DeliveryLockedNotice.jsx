@@ -3,8 +3,8 @@ import { Lock } from 'lucide-react';
 import { DELIVERY_LOCKED_MESSAGE } from '@/config/softLaunch';
 
 /**
- * Drop-in replacement for the old Delivery/Takeaway toggle while
- * DELIVERY_LOCKED is on (src/config/softLaunch.ts) — same two-segment
+ * Drop-in replacement for the Delivery/Takeaway toggle while the admin
+ * has delivery switched off (useKitchen().deliveryEnabled) — same two-segment
  * shape, but Delivery is shown disabled with a lock + "soon" instead of
  * being removed, and Takeaway sits selected as the only working option.
  */

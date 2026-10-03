@@ -570,7 +570,7 @@ function SubsTab({ subs, reload }) {
           {[
             { icon: Leaf,    text: '100% fresh daily' },
             { icon: Clock,   text: 'Delivered 12–2pm' },
-            { icon: Shield,  text: '48hr cancellation window' },
+            { icon: Shield,  text: 'Flexible — just message us' },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex flex-col items-center gap-1.5 text-xs" style={{ color: '#7A5C50' }}>
               <Icon size={18} style={{ color: '#800020' }} /> {text}

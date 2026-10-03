@@ -97,13 +97,12 @@ const TermsAndServices = () => (
 
       <Section title="7. Cancellations and Refunds">
         <ul className="list-disc ml-5 space-y-1">
-          <li><strong>Before preparation starts:</strong> You may cancel your order for a full refund by contacting us within 15 minutes of placing the order.</li>
-          <li><strong>After preparation starts:</strong> We cannot accept cancellations once your order is being prepared. This is because food is prepared fresh to order.</li>
-          <li><strong>Defective or incorrect items:</strong> If you receive an incorrect or unsatisfactory item, please contact us within 2 hours of delivery with a description and photograph. We will offer a replacement or full/partial refund at our discretion.</li>
+          <li><strong>Changing or cancelling an order:</strong> Food is prepared fresh to order. If you need to change or cancel, contact us as soon as you can and we will do our best to help. Each request is looked at individually.</li>
+          <li><strong>Something not right:</strong> If you receive an incorrect or unsatisfactory item, please contact us as soon as possible with a description and, where you can, a photograph. We will look into it and respond with a fair resolution.</li>
           <li><strong>Allergies:</strong> We take allergen information seriously. However, our food is prepared in kitchens where allergens are present. If you have a severe allergy, please contact us before ordering. We cannot accept liability for allergic reactions where allergen information was provided at the time of ordering.</li>
         </ul>
         <p>
-          Refunds are processed to the original payment method within 5–10 business days.
+          Where a refund is agreed, it is made to the original payment method. Nothing in these terms affects your statutory rights.
         </p>
       </Section>
 
@@ -111,7 +110,7 @@ const TermsAndServices = () => (
         <ul className="list-disc ml-5 space-y-1">
           <li>The Dabba Wala plan is a fixed-term meal plan (weekly or monthly) delivering home-cooked South Indian meals on your chosen schedule, paid in full at sign-up.</li>
           <li>Plans do not auto-renew. When your plan ends, you can start a new one from your Dashboard — there is nothing to cancel to stop future billing.</li>
-          <li>You may <strong>cancel</strong> your plan within <strong>48 hours</strong> of sign-up for a full refund, as long as your first meal has not yet entered preparation. After that, or after 48 hours, the plan runs to its end date and is non-refundable — mid-week or mid-month cancellations are not refunded. In exceptional circumstances (for example, repeated failed deliveries on our side), contact us and we will review a partial refund at our discretion.</li>
+          <li>If you need to pause, change or cancel your plan, contact us. We are flexible: each request is looked at individually and we will respond with what we can do.</li>
           <li>You may skip individual delivery days from your Dashboard with reasonable notice.</li>
           <li>We reserve the right to modify the subscription menu with reasonable notice.</li>
           <li>Subscriptions are personal and non-transferable.</li>

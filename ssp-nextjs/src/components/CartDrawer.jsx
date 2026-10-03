@@ -9,7 +9,7 @@ import { useKitchen } from '@/context/KitchenContext';
 import KitchenClosedNotify from '@/components/KitchenClosedNotify';
 import api from '../api';
 import { trackViewCart, trackBeginCheckout } from '@/lib/analytics';
-import { isOrderable, DELIVERY_LOCKED } from '@/config/softLaunch';
+import { isOrderable } from '@/config/softLaunch';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 
 const MINIMUM_ORDER = 15.00;
@@ -382,7 +382,7 @@ const CartDrawer = () => {
           <>
             {/* Delivery / Takeaway toggle */}
             <div className="px-6 py-3 border-b" style={{ borderColor: 'rgba(128,0,32,0.08)', backgroundColor: '#FDFBF7' }}>
-              {DELIVERY_LOCKED ? <DeliveryLockedNotice compact /> : (
+              {!kitchen.deliveryEnabled ? <DeliveryLockedNotice compact /> : (
                 <div className="flex gap-2">
                   {[
                     { id: 'delivery', label: '🚚 Delivery' },

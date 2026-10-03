@@ -9,6 +9,7 @@ import re
 import stripe
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError
 from database import db
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
@@ -361,6 +362,10 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
             slot_settings.get("paused_message")
             or "We're not taking orders right now — please check back soon."
         ))
+    if body.order_type == "delivery" and not slot_settings.get("delivery_enabled"):
+        raise HTTPException(status_code=400, detail=(
+            "Delivery isn't available right now — please choose collection."
+        ))
 
     from restock import is_sold_out_today, london_today
     items_data = []
@@ -421,6 +426,15 @@ async def create_order(
     # only a verified JWT can attribute an order to a user.
     user_id = current_user["sub"] if current_user else None
 
+    # Same payment submitted twice (double click, retry after a timeout) —
+    # hand back the order that already exists instead of failing.
+    if payload.payment_intent_id:
+        existing = await db.orders.find_one({"payment_intent_id": payload.payment_intent_id}, {"_id": 0})
+        if existing:
+            if existing.get("user_id") != user_id:
+                raise HTTPException(400, "This payment has already been used")
+            return Order(**existing)
+
     # Validate loyalty redemption before pricing
     free_item_price = 0.0
     if payload.is_loyalty_redemption:
@@ -435,6 +449,8 @@ async def create_order(
                 raise HTTPException(404, "Free item not available")
             # Discount comes from the DB, never the client-supplied price
             free_item_price = float(item["price"])
+            payload.loyalty_free_item_name = item.get("name") or payload.loyalty_free_item_name
+            payload.loyalty_free_item_original_price = free_item_price
 
     # Server-side pricing — look up each item price from the DB, never trust the client
     from restock import is_sold_out_today, london_today
@@ -443,12 +459,15 @@ async def create_order(
     for i in payload.items:
         doc = await db.menu_items.find_one(
             {"id": i.menu_item_id, "available": True},
-            {"price": 1, "sold_out_until": 1, "preorder_only": 1, "_id": 0})
+            {"name": 1, "price": 1, "sold_out_until": 1, "preorder_only": 1, "_id": 0})
         if not doc or is_sold_out_today(doc):
             raise HTTPException(404, detail=f"Item '{i.menu_item_id}' is not available")
         if doc.get("preorder_only"):
             has_preorder = True
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
+        # The stored order line is what the kitchen cooks from — take it from the DB too
+        i.name = doc.get("name") or i.name
+        i.price = float(doc["price"])
 
     if has_preorder and (
         payload.delivery_type != "takeaway"
@@ -481,6 +500,9 @@ async def create_order(
         raise HTTPException(400, "Invalid payment — please try again")
     if pi.status != "succeeded":
         raise HTTPException(400, "Payment was not completed — please try again")
+    from routes.payments import intent_purpose
+    if intent_purpose(pi) != "order":
+        raise HTTPException(400, "This payment can't be used for an order")
     expected_pence = round(totals["grand_total"] * 100)
     if pi.amount != expected_pence:
         raise HTTPException(400, "Payment amount does not match order total")
@@ -517,12 +539,20 @@ async def create_order(
         total=totals["grand_total"],
         user_id=user_id,
         is_loyalty_qualifying=is_qualifying,
+        payment_status="paid",  # verified as succeeded with Stripe above
     )
     order.coupon_code = totals["coupon_code"]
     # Server-authoritative: assigned here, never accepted from the client
     order.order_number = await next_order_number()
     order.scheduled_slot_final = scheduled_final
-    await db.orders.insert_one(order.model_dump())
+    try:
+        await db.orders.insert_one(order.model_dump())
+    except DuplicateKeyError:
+        # Lost a race with an identical submit — the other request made the order
+        existing = await db.orders.find_one({"payment_intent_id": payload.payment_intent_id}, {"_id": 0})
+        if existing and existing.get("user_id") == user_id:
+            return Order(**existing)
+        raise HTTPException(400, "This payment has already been used")
 
     if totals["coupon"]:
         ok = await redeem_coupon(

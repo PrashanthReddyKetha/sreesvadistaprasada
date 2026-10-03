@@ -328,7 +328,7 @@ def email_subscription_confirmation(sub: dict, name: str) -> tuple[str, str]:
         f"<b>Starts:</b> {sub.get('start_date','—')}<br>"
         f"<b>Ends:</b> {sub.get('end_date','—')}<br>"
         f"<b>Price:</b> £{sub.get('price',0):.2f}</p>"
-        "<p>You can pause or skip any day from your dashboard up to 12 hours before delivery.</p>",
+        "<p>You can skip any day from your dashboard. Need to pause or change your plan? Just reply or message us — we're flexible.</p>",
         "Manage My Subscription", f"{SITE_URL}/dashboard",
     )
     return "Your Dabba Wala subscription is live", html

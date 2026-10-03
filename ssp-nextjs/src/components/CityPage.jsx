@@ -180,7 +180,7 @@ export default function CityPage({ data, jsonLd }) {
                 Rice, curry, dal, sambar, pickle, papad — the whole meal, every time.
               </p>
               <ul className="space-y-1.5 mb-6">
-                {['Starting from £12.50 per meal', 'Weekly & monthly plans', 'Veg (Prasada) or non-veg (Svadista)', 'Pause or cancel anytime'].map(pt => (
+                {['Starting from £12.50 per meal', 'Weekly & monthly plans', 'Veg (Prasada) or non-veg (Svadista)', 'Flexible — just message us'].map(pt => (
                   <li key={pt} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>
                     <span style={{ color: '#F4C430' }}>✓</span> {pt}
                   </li>

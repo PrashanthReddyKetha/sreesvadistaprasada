@@ -1,7 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { trackAddToCart, trackRemoveFromCart } from '@/lib/analytics';
-import { DELIVERY_LOCKED } from '@/config/softLaunch';
+import { useKitchen } from '@/context/KitchenContext';
 
 interface CartItem {
   id: string;
@@ -85,15 +85,14 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [pickupSlot, setPickupSlotRaw]     = useState<PickupSlot | null>(null);
   const [hydrated, setHydrated]            = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { deliveryEnabled, loaded: kitchenLoaded } = useKitchen();
 
   // Hydrate from storage once on mount
   useEffect(() => {
     setCartItems(loadCart());
     try {
       const dt = sessionStorage.getItem(DT_KEY);
-      // Delivery is paused — never restore a stale 'delivery' choice from
-      // before the lock, even from an open tab or old session storage.
-      if (!DELIVERY_LOCKED && (dt === 'delivery' || dt === 'takeaway')) setDeliveryTypeRaw(dt);
+      if (dt === 'delivery' || dt === 'takeaway') setDeliveryTypeRaw(dt);
     } catch {}
     try {
       const zi = localStorage.getItem(ZONE_KEY);
@@ -123,13 +122,22 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const setDeliveryType = useCallback((type: string) => {
-    // Delivery is paused site-wide — this is the one place that can never
-    // be routed around, no matter which screen calls it.
-    const next = DELIVERY_LOCKED ? 'takeaway' : type;
+    // While the admin has delivery switched off this is the one place that
+    // can never be routed around, no matter which screen calls it.
+    const next = deliveryEnabled ? type : 'takeaway';
     setDeliveryTypeRaw(next);
     try { sessionStorage.setItem(DT_KEY, next); } catch {}
     if (next !== 'takeaway') setPickupSlot(null);
-  }, [setPickupSlot]);
+  }, [setPickupSlot, deliveryEnabled]);
+
+  // Delivery switched off (or a stale 'delivery' choice restored from an old
+  // session) — fall back to collection as soon as the server has told us.
+  useEffect(() => {
+    if (kitchenLoaded && !deliveryEnabled && deliveryType === 'delivery') {
+      setDeliveryTypeRaw('takeaway');
+      try { sessionStorage.setItem(DT_KEY, 'takeaway'); } catch {}
+    }
+  }, [kitchenLoaded, deliveryEnabled, deliveryType]);
 
   const setZoneInfo = useCallback((info: ZoneInfo | null) => {
     setZoneInfoRaw(info);

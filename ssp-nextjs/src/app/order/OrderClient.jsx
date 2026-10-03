@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Flame, ShoppingBag, ChevronRight, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { isOrderable, DELIVERY_LOCKED } from '@/config/softLaunch';
+import { isOrderable } from '@/config/softLaunch';
+import { useKitchen } from '@/context/KitchenContext';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 import { buildItemUrl } from '@/lib/itemUrl';
 import api from '@/api';
@@ -60,6 +61,7 @@ export default function OrderClient({ initialItems = [] }) {
     cartItems, cartCount, cartTotal, addToCart, updateQuantity,
     deliveryType, setDeliveryType, pickupSlot, setPickupSlot,
   } = useCart();
+  const { deliveryEnabled } = useKitchen();
   const [dishes, setDishes] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [search, setSearch] = useState('');
@@ -247,7 +249,7 @@ export default function OrderClient({ initialItems = [] }) {
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-3">
           {/* Collection / Delivery toggle */}
           <div className={searchMode || controlsCollapsed ? 'hidden' : ''}>
-            {DELIVERY_LOCKED ? <DeliveryLockedNotice compact /> : (
+            {!deliveryEnabled ? <DeliveryLockedNotice compact /> : (
               <div className="flex rounded-xl p-1 gap-1" style={{ backgroundColor: '#F3EDE2' }}>
                 {[['delivery', '🚚 Delivery'], ['takeaway', '🛵 Collection · save 10%']].map(([val, label]) => (
                   <button key={val} onClick={() => setDeliveryType(val)}

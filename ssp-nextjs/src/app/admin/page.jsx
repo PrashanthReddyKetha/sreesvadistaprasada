@@ -11,7 +11,7 @@ import {
   TrendingUp, Clock, CheckCircle, XCircle, RefreshCw,
   ChevronDown, ChevronRight, LayoutDashboard,
   ArrowLeft, Send, CheckCheck, AlertCircle,
-  Calendar, Utensils, Star, Sparkles, Gift, Power, Tag
+  Calendar, Utensils, Star, Sparkles, Gift, Power, Tag, Truck
 } from 'lucide-react';
 import DabbaWalaTab from '@/components/admin/DabbaWalaTab';
 import MenuTab from '@/components/admin/MenuTab';
@@ -864,6 +864,40 @@ const KitchenToggle = () => {
   );
 };
 
+/* ── Delivery On/Off toggle ─────────────────────────────────────────────── */
+const DeliveryToggle = () => {
+  const kitchen = useKitchen();
+  const [busy, setBusy] = useState(false);
+  const on = kitchen.deliveryEnabled;
+
+  const toggle = async () => {
+    if (busy) return;
+    const ok = window.confirm(on
+      ? 'Turn delivery OFF? Customers will only be able to order for collection. Orders already placed are not affected.'
+      : 'Turn delivery ON? Customers in your Milton Keynes delivery zones will be able to order for delivery straight away.');
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await api.put('/admin/settings/pickup-slots', { delivery_enabled: !on });
+      await kitchen.refresh();
+    } catch (e) {
+      alert(e.response?.data?.detail || 'Could not update delivery status.');
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <button onClick={toggle} disabled={busy || !kitchen.loaded} data-testid="delivery-toggle"
+      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-60"
+      style={on
+        ? { backgroundColor: '#2E7D32', color: 'white' }
+        : { backgroundColor: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.35)' }}
+      title={on ? 'Click to switch delivery off (collection only)' : 'Click to switch delivery on'}>
+      <Truck size={14} className={busy ? 'animate-pulse' : ''} />
+      {on ? 'Delivery: ON' : 'Delivery: OFF'}
+    </button>
+  );
+};
+
 const TABS = [
   { id:'kitchen',       label:'Kitchen',       icon:Utensils     },
   { id:'overview',      label:'Overview',      icon:TrendingUp   },
@@ -954,6 +988,7 @@ const Admin = () => {
         </div>
         <div className="flex items-center gap-3">
           <KitchenToggle />
+          <DeliveryToggle />
           <Link href="/dashboard"
             className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
             style={{ backgroundColor:'rgba(255,255,255,0.15)', color:'white' }}>

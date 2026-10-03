@@ -6,6 +6,7 @@ import asyncio
 import os
 import time
 import stripe
+from pymongo.errors import DuplicateKeyError
 from database import db
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
@@ -94,6 +95,15 @@ async def create_subscription(
     _: None = Depends(_check_sub_rate),
 ):
     user_id = current_user["sub"] if current_user else None
+
+    # Same payment submitted twice — return the plan that already exists
+    if payload.payment_intent_id:
+        existing = await db.subscriptions.find_one({"payment_intent_id": payload.payment_intent_id}, {"_id": 0})
+        if existing:
+            if existing.get("user_id") != user_id:
+                raise HTTPException(400, "This payment has already been used")
+            return Subscription(**existing)
+
     try:
         pricing = await quote_subscription(
             payload.plan, payload.customer_email, payload.delivery_address.postcode, user_id,
@@ -116,6 +126,9 @@ async def create_subscription(
         raise HTTPException(400, "Invalid payment — please try again")
     if pi.status != "succeeded":
         raise HTTPException(400, "Payment was not completed — please try again")
+    from routes.payments import intent_purpose
+    if intent_purpose(pi) != "subscription":
+        raise HTTPException(400, "This payment can't be used for a subscription")
     if pi.amount != pricing["total_pence"]:
         raise HTTPException(400, "Payment amount does not match plan price")
 
@@ -146,7 +159,13 @@ async def create_subscription(
         cancellation_window_expires=cancellation_window,
     )
     subscription.coupon_code = pricing["coupon_code"]
-    await db.subscriptions.insert_one(subscription.model_dump())
+    try:
+        await db.subscriptions.insert_one(subscription.model_dump())
+    except DuplicateKeyError:
+        existing = await db.subscriptions.find_one({"payment_intent_id": payload.payment_intent_id}, {"_id": 0})
+        if existing and existing.get("user_id") == user_id:
+            return Subscription(**existing)
+        raise HTTPException(400, "This payment has already been used")
     if pricing["coupon"]:
         ok = await redeem_coupon(
             pricing["coupon"], scope="subscriptions", ref_id=subscription.id, user_id=user_id,
@@ -269,7 +288,7 @@ async def get_sub_deliveries(sub_id: str, current_user: dict = Depends(get_curre
             menu_doc = await db.weekly_menu_days.find_one(
                 {"date": dt, "box_type": sub.get("box_type", "prasada")}, {"_id": 0}
             )
-            await ensure_meal_day_review_stub(sub, dt, menu_doc)
+            await ensure_meal_day_review_stub(sub, dt, menu_doc, notify=False)
     return result
 
 
