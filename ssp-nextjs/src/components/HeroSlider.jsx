@@ -57,18 +57,35 @@ const HeroSlider = ({ images = [] }) => {
           className={`absolute inset-0 ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
           style={{ transition: 'opacity 700ms ease-in-out, transform 700ms ease-in-out' }}
         >
-          <div className="absolute inset-0">
-            <Image
-              src={images[index] || slide.image}
-              alt={slide.title.replace(/\n/g, ' ')}
-              fill
-              className="object-cover object-center"
-              priority={index === 0}
-              sizes="100vw"
-              quality={80}
-            />
-          </div>
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.92) 0%, rgba(45, 36, 34, 0.8) 35%, rgba(45, 36, 34, 0.5) 65%, rgba(45, 36, 34, 0.3) 100%)' }} />
+          {Array.isArray(images[index]) && images[index].filter(Boolean).length === 2 ? (
+            <>
+              {/* Two photos, one per kitchen: stacked on phones, side by side on wider screens */}
+              <div className="absolute inset-0 grid grid-rows-2 md:grid-rows-1 md:grid-cols-2">
+                {images[index].map((src, k) => (
+                  <div key={k} className="relative">
+                    <Image src={src} alt={k === 0 ? 'Prasada — vegetarian' : 'Svadista — non-vegetarian'} fill
+                      className="object-cover object-center" priority={index === 0} sizes="(max-width: 768px) 100vw, 50vw" quality={80} />
+                  </div>
+                ))}
+              </div>
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.86) 0%, rgba(45, 36, 34, 0.66) 40%, rgba(45, 36, 34, 0.42) 75%, rgba(45, 36, 34, 0.3) 100%)' }} />
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0">
+                <Image
+                  src={(Array.isArray(images[index]) ? images[index].find(Boolean) : images[index]) || slide.image}
+                  alt={slide.title.replace(/\n/g, ' ')}
+                  fill
+                  className="object-cover object-center"
+                  priority={index === 0}
+                  sizes="100vw"
+                  quality={80}
+                />
+              </div>
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.92) 0%, rgba(45, 36, 34, 0.8) 35%, rgba(45, 36, 34, 0.5) 65%, rgba(45, 36, 34, 0.3) 100%)' }} />
+            </>
+          )}
           <div className="absolute inset-0 grain-overlay" />
           <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
             <div

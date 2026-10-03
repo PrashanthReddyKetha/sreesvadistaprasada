@@ -293,7 +293,7 @@ function LandingMenuPeek({ weekCfg, art = {} }) {
       <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 md:gap-10 items-center">
         <div className="relative min-w-0 rounded-2xl overflow-hidden" style={{ aspectRatio: '4/3', boxShadow: '0 10px 28px rgba(45,36,34,0.18)' }}>
           <Image fill src={art.meal || 'https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800'}
-            alt="A home-style South Indian meal: rice, pappu, pachadi, pappadam and yoghurt" className="object-cover" sizes="(max-width: 768px) 100vw, 480px" />
+            alt="A South Indian veg thali on a banana leaf" className="object-cover" sizes="(max-width: 768px) 100vw, 480px" />
         </div>
         <div className="min-w-0">
           <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: C.darkGold }}>Open the dabba</p>
@@ -960,11 +960,11 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ minHeight: 'min(42vh, 340px)' }}>
         <Image fill priority src={art.hero || 'https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920'}
-          alt="A South Indian thali from our kitchen" className="absolute inset-0 object-cover" sizes="100vw" />
-        <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)` }} />
+          alt="A home-style South Indian meal from our kitchen" className="absolute inset-0 object-cover" sizes="100vw" />
+        <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(58,10,22,0.9) 0%, rgba(58,10,22,0.74) 38%, rgba(58,10,22,0.4) 72%, rgba(58,10,22,0.22) 100%)` }} />
         <div className="relative h-full w-full px-4 md:px-8 flex items-center pt-[calc(32px+4rem+1.25rem)] md:pt-[calc(32px+5rem+1.5rem)] pb-8">
           <div className="max-w-7xl mx-auto w-full">
-            <div className="max-w-xl">
+            <div className="max-w-xl" style={{ textShadow: '0 1px 10px rgba(60,0,15,0.75)' }}>
               <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service</p>
               <h2 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Your Daily Dose of Home<span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Dabba Wala — Indian tiffin subscription in Milton Keynes</span></h2>
               <p className="text-sm text-gray-200">Fresh South Indian meals delivered Mon–Fri. No cooking required.</p>
