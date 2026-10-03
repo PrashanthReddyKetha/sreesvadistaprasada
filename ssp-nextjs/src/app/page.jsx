@@ -1,6 +1,6 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import HomeClient from './HomeClient';
-import { getOpeningHoursSpec, getFeaturedItems, getChefSpecialItem } from '@/lib/siteStatus';
+import { getOpeningHoursSpec, getFeaturedItems, getChefSpecialItem, getDishPhotos } from '@/lib/siteStatus';
 
 // Re-read the opening hours set in admin every 10 minutes
 export const revalidate = 600;
@@ -70,7 +70,18 @@ const jsonLd = {
 };
 
 export default async function HomePage() {
-  const [hours, featured, special] = await Promise.all([getOpeningHoursSpec(), getFeaturedItems(), getChefSpecialItem()]);
+  const [hours, featured, special, photos] = await Promise.all([getOpeningHoursSpec(), getFeaturedItems(), getChefSpecialItem(), getDishPhotos()]);
+  // The kitchen's own dish photos for the banner, the two menu cards, the time-of-day
+  // circles and the photo grid. A missing photo falls back to the picture already in place.
+  const pic = (slug) => photos[slug]?.image;
+  const art = {
+    hero: [pic('veg-thali'), pic('chicken-fry-piece-biryani'), pic('pappu-pappadam-roti-pachadi-rice-yogurt')],
+    svadista: pic('chicken-dum-biryani'),
+    prasada: pic('pulihora'),
+    moments: { 1: pic('masala-dosa'), 2: pic('gutti-vankaya-masala'), 3: pic('spicy-andhra-chicken-curry'), 4: pic('punugulu') },
+    gallery: ['masala-dosa', 'chicken-dum-biryani', 'gutti-vankaya-masala', 'idli-3-pcs', 'gongura-chicken-curry', 'pulihora', 'punugulu', 'chicken-65']
+      .filter(s => photos[s]).map(s => ({ id: s, src: photos[s].image, alt: photos[s].name })),
+  };
   // Opening hours come from the Collection Times set in admin; if they can't be
   // read, say nothing rather than publish hours that might be wrong.
   const graph = jsonLd['@graph'].map(node => {
@@ -84,7 +95,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...jsonLd, '@graph': graph }) }}
       />
-      <HomeClient intro={{ h1: PAGE_SEO['/'].h1, ...PAGE_SEO['/'].content }} initialFeatured={featured} initialSpecial={special} />
+      <HomeClient intro={{ h1: PAGE_SEO['/'].h1, ...PAGE_SEO['/'].content }} initialFeatured={featured} initialSpecial={special} art={art} />
     </>
   );
 }

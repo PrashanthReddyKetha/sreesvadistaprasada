@@ -80,6 +80,20 @@ export async function getChefSpecialItem(): Promise<any | null> {
   return Array.isArray(data) && data[0] ? slimItem(data[0]) : null
 }
 
+/** The kitchen's own photos of dishes on sale, by dish address — so marketing sections show the real food, not stock pictures. */
+export async function getDishPhotos(): Promise<Record<string, { name: string; image: string }>> {
+  const data = await getJson('/menu?available=true')
+  const out: Record<string, { name: string; image: string }> = {}
+  if (Array.isArray(data)) {
+    for (const i of data) {
+      if (i.slug && typeof i.image === 'string' && i.image.startsWith('http') && !i.image.includes('unsplash.com')) {
+        out[i.slug] = { name: i.name, image: i.image }
+      }
+    }
+  }
+  return out
+}
+
 /** True only when the admin Delivery switch is on. Unknown counts as off. */
 export async function getDeliveryEnabled(): Promise<boolean> {
   const data = await getJson('/kitchen-status')

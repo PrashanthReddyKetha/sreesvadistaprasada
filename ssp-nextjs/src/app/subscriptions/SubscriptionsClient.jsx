@@ -214,15 +214,6 @@ function daysFromNow(iso) {
 const WEEKDAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
 const WEEKDAY_FULL   = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-/* Day food images (South Indian) */
-const DAY_FOOD_IMGS = [
-  'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=240&q=75',
-  'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=240&q=75',
-  'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=240&q=75',
-  'https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=240&q=75',
-  'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=240&q=75',
-];
-
 /* ── localStorage ─────────────────────────────────────── */
 function loadSaved() {
   try {
@@ -277,7 +268,10 @@ function DeadlineCountdown({ weekCfg }) {
   );
 }
 
-function LandingMenuPeek({ weekCfg }) {
+/* "A different meal every day" — what is always in the box and what changes.
+   Shows the real Mon–Fri menu once it is published in admin; until then, dishes
+   from the kitchen's own menu stand in as examples (no invented days). */
+function LandingMenuPeek({ weekCfg, art = {} }) {
   const [dishes, setDishes] = useState(null);
   useEffect(() => {
     const week = isoDate(weekCfg.weeks[0].monday);
@@ -293,26 +287,59 @@ function LandingMenuPeek({ weekCfg }) {
       })
       .catch(() => {});
   }, [weekCfg]);
+  const examples = art.rotation || [];
   return (
-    <section className="py-10 md:py-14 px-4 md:px-8" style={{ backgroundColor: C.surface }}>
-      <div className="max-w-5xl mx-auto">
-        <p className="text-sm uppercase tracking-[0.25em] mb-2 text-center" style={{ color: C.darkGold }}>This week in the dabba</p>
-        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-2" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>A different meal every day</h2>
-        <p className="text-sm text-center mb-8" style={{ color: C.muted }}>Mon–Fri, a rotating South Indian menu — never the same lunch twice in a week.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {WEEKDAY_LABELS.map((day, i) => (
-            <div key={day} className={`rounded-xl overflow-hidden bg-white ${i === 4 ? 'col-span-2 sm:col-span-1' : ''}`} style={{ border: '0.5px solid #e0d9d0' }}>
-              <div className="relative w-full" style={{ aspectRatio: '4/3' }}>
-                <Image fill src={DAY_FOOD_IMGS[i]} alt={dishes?.[i] || `South Indian meal — ${day}`} className="object-cover" sizes="(max-width: 640px) 50vw, 200px" />
-              </div>
-              <div className="px-3 py-2">
-                <p className="text-[10px] font-bold tracking-wider" style={{ color: C.darkGold }}>{day}</p>
-                <p className="text-xs font-semibold truncate" style={{ color: C.dark }}>{dishes?.[i] || "Chef's choice"}</p>
+    <section className="py-10 md:py-14 px-4 md:px-8" style={{ backgroundColor: C.surface }} data-testid="open-the-dabba">
+      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 md:gap-10 items-center">
+        <div className="relative min-w-0 rounded-2xl overflow-hidden" style={{ aspectRatio: '4/3', boxShadow: '0 10px 28px rgba(45,36,34,0.18)' }}>
+          <Image fill src={art.meal || 'https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800'}
+            alt="A home-style South Indian meal: rice, pappu, pachadi, pappadam and yoghurt" className="object-cover" sizes="(max-width: 768px) 100vw, 480px" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: C.darkGold }}>Open the dabba</p>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>A different meal every day</h2>
+          <p className="text-sm mb-5" style={{ color: C.muted }}>
+            Six parts in every box. What fills them changes Monday to Friday — never the same lunch twice in a week.
+          </p>
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            <div className="rounded-xl px-4 py-3 bg-white" style={{ border: '0.5px solid #e0d9d0' }}>
+              <p className="text-[10px] font-bold tracking-wider uppercase mb-1" style={{ color: C.darkGold }}>Always in the box</p>
+              <p className="text-sm font-semibold" style={{ color: C.dark }}>Rice · Pickle · Papad</p>
+            </div>
+            <div className="rounded-xl px-4 py-3 bg-white" style={{ border: `0.5px solid ${C.primary}` }}>
+              <p className="text-[10px] font-bold tracking-wider uppercase mb-1" style={{ color: C.primary }}>Changes every day</p>
+              <p className="text-sm font-semibold" style={{ color: C.dark }}>Dal · Curry · Sabzi</p>
+            </div>
+          </div>
+          {dishes ? (
+            <div className="mb-4">
+              <p className="text-[10px] font-bold tracking-wider uppercase mb-2" style={{ color: C.darkGold }}>This week</p>
+              <ul className="space-y-1.5">
+                {WEEKDAY_LABELS.map((day, i) => (
+                  <li key={day} className="flex items-baseline gap-3 text-sm">
+                    <span className="w-9 text-[10px] font-bold tracking-wider" style={{ color: C.darkGold }}>{day}</span>
+                    <span className="font-semibold" style={{ color: C.dark }}>{dishes[i] || "Chef's choice"}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : examples.length > 0 && (
+            <div className="mb-4">
+              <p className="text-[10px] font-bold tracking-wider uppercase mb-2" style={{ color: C.darkGold }}>From the same kitchen as our menu — dishes like these</p>
+              <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {examples.map(e => (
+                  <div key={e.name} className="flex-none text-center" style={{ width: 72 }}>
+                    <div className="relative rounded-full overflow-hidden mx-auto" style={{ width: 64, height: 64, border: '2px solid rgba(244,196,48,0.5)' }}>
+                      <Image fill src={e.image} alt={e.name} className="object-cover" sizes="64px" />
+                    </div>
+                    <p className="text-[10px] leading-tight mt-1.5" style={{ color: C.dark }}>{e.name}</p>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          )}
+          <p className="text-xs" style={{ color: C.muted }}>You&apos;ll see the full week&apos;s menu before you pay — nothing is a surprise.</p>
         </div>
-        <p className="text-xs text-center mt-4" style={{ color: C.muted }}>You'll see the full week's menu before you pay — nothing is a surprise.</p>
       </div>
     </section>
   );
@@ -423,7 +450,7 @@ const NavButtons = ({ step, onBack, onNext, nextDisabled, nextLabel }) => (
 );
 
 /* ══════════════════════════════════════════════════════ */
-const SubscriptionsInner = ({ onNeedStripe }) => {
+const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   const stripe = useStripe();
   const elements = useElements();
   const { user, setAuthOpen } = useAuth();
@@ -885,8 +912,8 @@ const SubscriptionsInner = ({ onNeedStripe }) => {
     <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ minHeight: 'min(42vh, 340px)' }}>
-        <Image fill priority src="https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920"
-          alt="Dabba Wala" className="absolute inset-0 object-cover" sizes="100vw" />
+        <Image fill priority src={art.hero || 'https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920'}
+          alt="A South Indian thali from our kitchen" className="absolute inset-0 object-cover" sizes="100vw" />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)` }} />
         <div className="relative h-full w-full px-4 md:px-8 flex items-center pt-[calc(32px+4rem+1.25rem)] md:pt-[calc(32px+5rem+1.5rem)] pb-8">
           <div className="max-w-7xl mx-auto w-full">
@@ -908,6 +935,9 @@ const SubscriptionsInner = ({ onNeedStripe }) => {
         </div>
       </section>
 
+      {/* This week's menu peek */}
+      {pageState === 'wizard' && step === 1 && <LandingMenuPeek weekCfg={weekCfg} art={art} />}
+
       {/* Quick trust strip */}
       {pageState === 'wizard' && step === 1 && (
         <section className="py-5 px-4 md:px-8" style={{ backgroundColor: C.surface, borderBottom: '0.5px solid rgba(128,0,32,0.1)' }}>
@@ -923,74 +953,6 @@ const SubscriptionsInner = ({ onNeedStripe }) => {
                 <span className="text-xs font-semibold" style={{ color: C.dark }}>{row.text}</span>
               </div>
             ))}
-          </div>
-        </section>
-      )}
-
-      {/* Why Dabba Wala — freshly cooked, not pre-cooked */}
-      {pageState === 'wizard' && step === 1 && (
-        <section className="py-10 md:py-16 px-4 md:px-8" style={{ backgroundColor: C.primary }}>
-          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="relative rounded-xl overflow-hidden order-1 md:order-none" style={{ aspectRatio: '4/3', boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}>
-              <Image fill src="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800"
-                alt="Fresh South Indian curry being cooked the same morning it's delivered" className="object-cover" sizes="(max-width: 768px) 100vw, 480px" />
-              <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[11px] font-semibold text-white" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
-                Cooked this morning, not last week
-              </span>
-            </div>
-            <div>
-              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>Why Dabba Wala</p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
-                Not a meal-prep box. A hot meal, cooked today.
-              </h2>
-              <p className="text-sm text-gray-200 mb-6">
-                Many meal services batch-cook and reheat. We don't. Every dabba is cooked fresh that morning in our own kitchen and delivered hot — to your home, your office, anywhere in MK.
-              </p>
-              <p className="text-sm italic mb-6" style={{ color: '#F4C430' }}>
-                Cooked in our own kitchen in Milton Keynes — the same hands, every single day.
-              </p>
-              <div className="space-y-4">
-                {[
-                  { icon: Flame, text: 'Freshly cooked every morning — never frozen, never reheated' },
-                  { icon: Clock, text: 'Made to order for that day, not batch-prepped for the week' },
-                  { icon: Truck, text: 'Delivered hot, straight to your door, office or anywhere in MK' },
-                ].map((row, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border" style={{ borderColor: '#F4C430' }}>
-                      <row.icon size={16} style={{ color: '#F4C430' }} />
-                    </div>
-                    <p className="text-sm text-white">{row.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* This week's menu peek */}
-      {pageState === 'wizard' && step === 1 && <LandingMenuPeek weekCfg={weekCfg} />}
-
-      {/* How it works */}
-      {pageState === 'wizard' && step === 1 && (
-        <section className="py-10 md:py-14 px-4 md:px-8" style={{ backgroundColor: C.cream }}>
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>How it works</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {[
-                { icon: Package, title: 'Pick your dabba', desc: 'Prasada (veg) or Svadista (non-veg). Weekly trial or monthly saver.' },
-                { icon: Calendar, title: 'Tell us your week', desc: 'Pick a start date, any dietary preferences, and where to deliver.' },
-                { icon: Truck, title: 'Open it warm', desc: 'Cooked that morning and delivered hot, Mon–Fri, straight to you.' },
-              ].map((row, i) => (
-                <div key={i} className="text-center">
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: C.surface, border: `2px solid ${C.primary}` }}>
-                    <row.icon size={20} style={{ color: C.primary }} />
-                  </div>
-                  <h3 className="font-bold mb-1" style={{ color: C.dark }}>{row.title}</h3>
-                  <p className="text-sm" style={{ color: C.muted }}>{row.desc}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
       )}
@@ -1870,6 +1832,71 @@ const SubscriptionsInner = ({ onNeedStripe }) => {
         </div>
       </section>
 
+      {/* How it works */}
+      {pageState === 'wizard' && step === 1 && (
+        <section className="py-10 md:py-14 px-4 md:px-8" style={{ backgroundColor: C.cream }}>
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>How it works</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {[
+                { icon: Package, title: 'Pick your dabba', desc: 'Prasada (veg) or Svadista (non-veg). Weekly trial or monthly saver.' },
+                { icon: Calendar, title: 'Tell us your week', desc: 'Pick a start date, any dietary preferences, and where to deliver.' },
+                { icon: Truck, title: 'Open it warm', desc: 'Cooked that morning and delivered hot, Mon–Fri, straight to you.' },
+              ].map((row, i) => (
+                <div key={i} className="text-center">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: C.surface, border: `2px solid ${C.primary}` }}>
+                    <row.icon size={20} style={{ color: C.primary }} />
+                  </div>
+                  <h3 className="font-bold mb-1" style={{ color: C.dark }}>{row.title}</h3>
+                  <p className="text-sm" style={{ color: C.muted }}>{row.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Why Dabba Wala — freshly cooked, not pre-cooked */}
+      {pageState === 'wizard' && step === 1 && (
+        <section className="py-10 md:py-16 px-4 md:px-8" style={{ backgroundColor: C.primary }}>
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="relative rounded-xl overflow-hidden order-1 md:order-none" style={{ aspectRatio: '4/3', boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}>
+              <Image fill src={art.why || 'https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800'}
+                alt="A home-style dal from our kitchen, cooked the morning it is delivered" className="object-cover" sizes="(max-width: 768px) 100vw, 480px" />
+              <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[11px] font-semibold text-white" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
+                Cooked this morning, not last week
+              </span>
+            </div>
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>Why Dabba Wala</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Not a meal-prep box. A hot meal, cooked today.
+              </h2>
+              <p className="text-sm text-gray-200 mb-6">
+                Many meal services batch-cook and reheat. We don't. Every dabba is cooked fresh that morning in our own kitchen and delivered hot — to your home, your office, anywhere in MK.
+              </p>
+              <p className="text-sm italic mb-6" style={{ color: '#F4C430' }}>
+                Cooked in our own kitchen in Milton Keynes — the same hands, every single day.
+              </p>
+              <div className="space-y-4">
+                {[
+                  { icon: Flame, text: 'Freshly cooked every morning — never frozen, never reheated' },
+                  { icon: Clock, text: 'Made to order for that day, not batch-prepped for the week' },
+                  { icon: Truck, text: 'Delivered hot, straight to your door, office or anywhere in MK' },
+                ].map((row, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border" style={{ borderColor: '#F4C430' }}>
+                      <row.icon size={16} style={{ color: '#F4C430' }} />
+                    </div>
+                    <p className="text-sm text-white">{row.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* FAQ + sticky CTA — landing extras on step 1 */}
       {pageState === 'wizard' && step === 1 && <LandingFaq />}
       {pageState === 'wizard' && step === 1 && <StickyMobileCta />}
@@ -1877,13 +1904,13 @@ const SubscriptionsInner = ({ onNeedStripe }) => {
   );
 };
 
-const Subscriptions = () => {
+const Subscriptions = ({ art = {} }) => {
   // null until the customer is past the plan/box steps; Elements accepts null → promise once
   const [stripe, setStripe] = useState(null);
   const needStripe = useCallback(() => setStripe(prev => prev || getStripe()), []);
   return (
     <Elements stripe={stripe}>
-      <SubscriptionsInner onNeedStripe={needStripe} />
+      <SubscriptionsInner onNeedStripe={needStripe} art={art} />
     </Elements>
   );
 };

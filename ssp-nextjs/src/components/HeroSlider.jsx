@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { heroSlides } from '../data/mockData';
 
-const HeroSlider = () => {
+const HeroSlider = ({ images = [] }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const touchStartX = useRef(null);
@@ -59,7 +59,7 @@ const HeroSlider = () => {
         >
           <div className="absolute inset-0">
             <Image
-              src={slide.image}
+              src={images[index] || slide.image}
               alt={slide.title.replace(/\n/g, ' ')}
               fill
               className="object-cover object-center"

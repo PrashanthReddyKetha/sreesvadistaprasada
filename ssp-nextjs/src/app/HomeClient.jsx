@@ -31,7 +31,7 @@ import { useNotifyMe } from '@/context/NotifyMeContext';
 import { isOrderable } from '@/config/softLaunch';
 import { buildItemUrl } from '@/lib/itemUrl';
 
-const Home = ({ intro, initialFeatured = [], initialSpecial = null }) => {
+const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {} }) => {
   const { deliveryEnabled } = useKitchen();
   const trendingRef = useRef(null);
   const specialsRef = useRef(null);
@@ -160,7 +160,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null }) => {
 
       {/* Hero Slider */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]">
-        <HeroSlider />
+        <HeroSlider images={art.hero || []} />
       </section>
 
       {/* What we are and where — the page's one visible H1 (copy lives in src/lib/seo/pages.js) */}
@@ -186,83 +186,6 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null }) => {
           </div>
         </section>
       )}
-
-      {/* ============================================ */}
-      {/* TWO WORLDS NAVIGATION CARDS */}
-      {/* ============================================ */}
-      <section id="two-worlds" className="py-16 md:py-24 px-4 md:px-8" data-testid="two-worlds-section">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12 md:mb-16">
-            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
-              Two kitchens, one soul
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-              Choose Your World
-            </h2>
-            <div className="section-divider mt-4" />
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-            {/* Svadista Card */}
-            <Link href="/svadista" className="group" data-testid="svadista-world-card">
-              <div className="relative overflow-hidden rounded-lg" style={{ height: '420px' }}>
-                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
-                  src={images.svadista}
-                  alt="Sree Svadista Non-Veg Specialties"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0" style={{
-                  background: 'linear-gradient(to top, rgba(139, 58, 58, 0.95) 0%, rgba(139, 58, 58, 0.6) 40%, rgba(139, 58, 58, 0.15) 100%)'
-                }} />
-                <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Flame size={18} className="text-red-300" />
-                    <span className="text-xs uppercase tracking-[0.2em] text-red-200 font-medium">Non-Vegetarian</span>
-                  </div>
-                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    Sree Svadista
-                  </h3>
-                  <p className="text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
-                    Bold, rustic, village-style. The spicy heart of Telugu non-veg cooking.
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
-                    Explore Non-Veg Specialties <ArrowRight size={16} />
-                  </span>
-                </div>
-              </div>
-            </Link>
-
-            {/* Prasada Card */}
-            <Link href="/prasada" className="group" data-testid="prasada-world-card">
-              <div className="relative overflow-hidden rounded-lg" style={{ height: '420px' }}>
-                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
-                  src={images.prasada}
-                  alt="Sree Prasada Pure Veg Bliss"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0" style={{
-                  background: 'linear-gradient(to top, rgba(74, 124, 89, 0.95) 0%, rgba(74, 124, 89, 0.6) 40%, rgba(74, 124, 89, 0.15) 100%)'
-                }} />
-                <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Leaf size={18} className="text-green-300" />
-                    <span className="text-xs uppercase tracking-[0.2em] text-green-200 font-medium">Pure Vegetarian</span>
-                  </div>
-                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    Sree Prasada
-                  </h3>
-                  <p className="text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
-                    Divine, sattvic, temple-style. Pure food prepared with complete devotion.
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
-                    Explore Pure Veg Bliss <ArrowRight size={16} />
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* ============================================ */}
       {/* TODAY'S SPECIALS (horizontal scroll strip) */}
@@ -353,11 +276,11 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null }) => {
             </div>
             <div className="text-center mt-5">
               <Link
-                href="/breakfast"
+                href="/menu"
                 className="inline-flex items-center gap-2 text-sm font-semibold tracking-wide transition-colors duration-200 hover:gap-3"
                 style={{ color: '#800020' }}
               >
-                View Breakfast Menu <ArrowRight size={16} />
+                View Full Menu <ArrowRight size={16} />
               </Link>
             </div>
           </div>
@@ -508,12 +431,200 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null }) => {
 
           <div className="text-center mt-8">
             <Link
-              href="/breakfast"
+              href="/menu"
               className="inline-flex items-center gap-2 text-sm font-semibold tracking-wide transition-colors duration-200 hover:gap-3"
               style={{ color: '#800020' }}
               data-testid="view-all-menu-link"
             >
-              View Breakfast Menu <ArrowRight size={16} />
+              View Full Menu <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* CHEF'S SPECIAL + MEAL MOMENTS (Split Layout) */}
+      {/* ============================================ */}
+      <section className="py-16 md:py-24 px-4 md:px-8" data-testid="chef-special-section">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-5 gap-8 md:gap-12">
+            {/* Chef's Special - 3 columns */}
+            <div className="lg:col-span-3">
+              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>
+                Cooked slow · served with both hands
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                This Week's Favourite
+              </h2>
+
+              <div className="relative rounded-lg overflow-hidden group" style={{ boxShadow: '0 8px 32px rgba(128, 0, 32, 0.08)' }}>
+                <Link href={chefSpecialItem ? buildItemUrl(chefSpecialItem) : '/breakfast'} className="block">
+                <div className="relative h-44 md:h-80 overflow-hidden">
+                  <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
+                    src={chefSpecialItem?.image || chefSpecial.image}
+                    alt={chefSpecial.name}
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  <span
+                    className="absolute top-4 left-4 px-3 py-1.5 text-xs font-semibold text-white rounded-sm"
+                    style={{ backgroundColor: '#F4C430', color: '#2D2422' }}
+                  >
+                    Chef's Special
+                  </span>
+                </div>
+                <div className="p-6 md:p-8 bg-white">
+                  <h3 className="text-2xl md:text-3xl font-bold mb-2 hover:underline" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                    {chefSpecial.name}
+                  </h3>
+                  <p className="text-sm italic mb-3" style={{ color: '#8B6914' }}>
+                    "{chefSpecial.tagline}"
+                  </p>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                    {chefSpecial.description}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-bold" style={{ color: '#800020' }}>{chefSpecialItem?.price ? `£${Number(chefSpecialItem.price).toFixed(2)}` : chefSpecial.price}</span>
+                    {isOrderable(chefSpecialItem?.category) ? (
+                      <button
+                        onClick={(e) => { e.preventDefault(); if (chefSpecialItem) addToCart(chefSpecialItem); }}
+                        disabled={!chefSpecialItem}
+                        className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md"
+                        style={{ backgroundColor: '#800020' }}
+                        data-testid="chef-special-add-btn"
+                      >
+                        <ShoppingCart size={15} /> Order Now
+                      </button>
+                    ) : (
+                      <button
+                        onClick={e => { e.preventDefault(); openNotifyMe(chefSpecial.name, chefSpecialItem?.category || ''); }}
+                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm border transition-all hover:opacity-90"
+                        style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.45)', backgroundColor: 'rgba(139,105,20,0.06)' }}
+                        data-testid="chef-special-notify-btn"
+                      >
+                        <Bell size={15} /> Notify Me
+                      </button>
+                    )}
+                  </div>
+                </div>
+                </Link>
+              </div>
+            </div>
+
+            {/* Explore by Meal Moment - 2 columns */}
+            <div className="lg:col-span-2">
+              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>
+                Pick a time of day
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                By the Hour
+              </h2>
+
+              <div className="grid grid-cols-4 lg:grid-cols-2 gap-3 md:gap-5">
+                {mealMoments.map((moment) => {
+                  const isAvailable = true; // all four moments order live from /order
+                  return isAvailable ? (
+                    <Link key={moment.id} href={moment.link} className="group text-center" data-testid={`meal-moment-${moment.id}`}>
+                      <div className="relative w-full aspect-square rounded-full overflow-hidden mb-3 transition-all duration-300 group-hover:shadow-lg"
+                        style={{ border: '3px solid rgba(244, 196, 48, 0.3)' }}>
+                        <Image fill loading="lazy" sizes="(max-width: 768px) 33vw, 15vw" src={art.moments?.[moment.id] || moment.image} alt={moment.name} className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/65 to-transparent flex items-end justify-center pb-4 transition-colors duration-300 group-hover:from-[#800020]/70">
+                          <span className="hidden lg:block text-[11px] font-bold text-white tracking-widest uppercase">Order Now →</span>
+                        </div>
+                      </div>
+                      <p className="text-[11px] md:text-sm leading-tight font-semibold tracking-wide" style={{ color: '#800020' }}>{moment.name}</p>
+                    </Link>
+                  ) : (
+                    <div key={moment.id} className="text-center opacity-80" data-testid={`meal-moment-${moment.id}`}>
+                      <div className="relative w-full aspect-square rounded-full overflow-hidden mb-3"
+                        style={{ border: '3px solid rgba(0,0,0,0.08)' }}>
+                        <Image fill loading="lazy" sizes="(max-width: 768px) 33vw, 15vw" src={art.moments?.[moment.id] || moment.image} alt={moment.name} className="object-cover grayscale-[30%]" />
+                        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                          <span className="text-[11px] font-bold text-white/90 tracking-widest uppercase">Coming Soon</span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-semibold tracking-wide" style={{ color: '#9CA3AF' }}>{moment.name}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* TWO WORLDS NAVIGATION CARDS */}
+      {/* ============================================ */}
+      <section id="two-worlds" className="py-16 md:py-24 px-4 md:px-8" data-testid="two-worlds-section">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12 md:mb-16">
+            <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
+              Two kitchens, one soul
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+              Choose Your World
+            </h2>
+            <div className="section-divider mt-4" />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+            {/* Svadista Card */}
+            <Link href="/svadista" className="group" data-testid="svadista-world-card">
+              <div className="relative overflow-hidden rounded-lg h-[230px] md:h-[420px]">
+                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
+                  src={art.svadista || images.svadista}
+                  alt="Sree Svadista Non-Veg Specialties"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0" style={{
+                  background: 'linear-gradient(to top, rgba(139, 58, 58, 0.95) 0%, rgba(139, 58, 58, 0.6) 40%, rgba(139, 58, 58, 0.15) 100%)'
+                }} />
+                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Flame size={18} className="text-red-300" />
+                    <span className="text-xs uppercase tracking-[0.2em] text-red-200 font-medium">Non-Vegetarian</span>
+                  </div>
+                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Sree Svadista
+                  </h3>
+                  <p className="text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
+                    Bold, rustic, village-style. The spicy heart of Telugu non-veg cooking.
+                  </p>
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
+                    Explore Non-Veg Specialties <ArrowRight size={16} />
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            {/* Prasada Card */}
+            <Link href="/prasada" className="group" data-testid="prasada-world-card">
+              <div className="relative overflow-hidden rounded-lg h-[230px] md:h-[420px]">
+                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
+                  src={art.prasada || images.prasada}
+                  alt="Sree Prasada Pure Veg Bliss"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0" style={{
+                  background: 'linear-gradient(to top, rgba(74, 124, 89, 0.95) 0%, rgba(74, 124, 89, 0.6) 40%, rgba(74, 124, 89, 0.15) 100%)'
+                }} />
+                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Leaf size={18} className="text-green-300" />
+                    <span className="text-xs uppercase tracking-[0.2em] text-green-200 font-medium">Pure Vegetarian</span>
+                  </div>
+                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Sree Prasada
+                  </h3>
+                  <p className="text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
+                    Divine, sattvic, temple-style. Pure food prepared with complete devotion.
+                  </p>
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
+                    Explore Pure Veg Bliss <ArrowRight size={16} />
+                  </span>
+                </div>
+              </div>
             </Link>
           </div>
         </div>
@@ -579,115 +690,43 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null }) => {
       </section>
 
       {/* ============================================ */}
-      {/* CHEF'S SPECIAL + MEAL MOMENTS (Split Layout) */}
+      {/* OUR STORY TEASER */}
       {/* ============================================ */}
-      <section className="py-16 md:py-24 px-4 md:px-8" data-testid="chef-special-section">
+      <section className="py-16 md:py-24 px-4 md:px-8" data-testid="story-teaser-section">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-5 gap-8 md:gap-12">
-            {/* Chef's Special - 3 columns */}
-            <div className="lg:col-span-3">
-              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>
-                Cooked slow · served with both hands
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="order-2 md:order-1">
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
+                Not just food · a feeling we kept chasing
               </p>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                This Week's Favourite
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                Why We Lit This Stove
               </h2>
-
-              <div className="relative rounded-lg overflow-hidden group" style={{ boxShadow: '0 8px 32px rgba(128, 0, 32, 0.08)' }}>
-                <Link href={chefSpecialItem ? buildItemUrl(chefSpecialItem) : '/breakfast'} className="block">
-                <div className="relative h-64 md:h-80 overflow-hidden">
-                  <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
-                    src={chefSpecialItem?.image || chefSpecial.image}
-                    alt={chefSpecial.name}
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  <span
-                    className="absolute top-4 left-4 px-3 py-1.5 text-xs font-semibold text-white rounded-sm"
-                    style={{ backgroundColor: '#F4C430', color: '#2D2422' }}
-                  >
-                    Chef's Special
-                  </span>
-                </div>
-                <div className="p-6 md:p-8 bg-white">
-                  <h3 className="text-2xl md:text-3xl font-bold mb-2 hover:underline" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                    {chefSpecial.name}
-                  </h3>
-                  <p className="text-sm italic mb-3" style={{ color: '#8B6914' }}>
-                    "{chefSpecial.tagline}"
-                  </p>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                    {chefSpecial.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold" style={{ color: '#800020' }}>{chefSpecialItem?.price ? `£${Number(chefSpecialItem.price).toFixed(2)}` : chefSpecial.price}</span>
-                    {isOrderable(chefSpecialItem?.category) ? (
-                      <button
-                        onClick={(e) => { e.preventDefault(); if (chefSpecialItem) addToCart(chefSpecialItem); }}
-                        disabled={!chefSpecialItem}
-                        className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white rounded-sm transition-all duration-200 hover:shadow-md"
-                        style={{ backgroundColor: '#800020' }}
-                        data-testid="chef-special-add-btn"
-                      >
-                        <ShoppingCart size={15} /> Order Now
-                      </button>
-                    ) : (
-                      <button
-                        onClick={e => { e.preventDefault(); openNotifyMe(chefSpecial.name, chefSpecialItem?.category || ''); }}
-                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm border transition-all hover:opacity-90"
-                        style={{ color: '#8B6914', borderColor: 'rgba(139,105,20,0.45)', backgroundColor: 'rgba(139,105,20,0.06)' }}
-                        data-testid="chef-special-notify-btn"
-                      >
-                        <Bell size={15} /> Notify Me
-                      </button>
-                    )}
-                  </div>
-                </div>
-                </Link>
-              </div>
+              <p className="text-base text-gray-600 leading-relaxed mb-4">
+                Somewhere between a UK winter and a long video call home, we missed something no menu was naming — the smell of tadka hitting hot ghee, the hiss of mustard seeds, and a plate placed in front of us without being asked for.
+              </p>
+              <p className="text-base text-gray-600 leading-relaxed mb-8">
+                So we lit our own stove. Two kitchens, one quiet promise —
+                <em className="font-medium" style={{ color: '#800020' }}> taste for your heart.</em>
+              </p>
+              <Link href="/story">
+                <button className="btn-outlined" data-testid="read-story-btn">
+                  Sit With Us a While <ArrowRight size={16} />
+                </button>
+              </Link>
             </div>
-
-            {/* Explore by Meal Moment - 2 columns */}
-            <div className="lg:col-span-2">
-              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>
-                Pick a time of day
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                By the Hour
-              </h2>
-
-              <div className="grid grid-cols-2 gap-4 md:gap-5">
-                {mealMoments.map((moment) => {
-                  const isAvailable = true; // all four moments order live from /order
-                  return isAvailable ? (
-                    <Link key={moment.id} href={moment.link} className="group text-center" data-testid={`meal-moment-${moment.id}`}>
-                      <div className="relative w-full aspect-square rounded-full overflow-hidden mb-3 transition-all duration-300 group-hover:shadow-lg"
-                        style={{ border: '3px solid rgba(244, 196, 48, 0.3)' }}>
-                        <Image fill loading="lazy" sizes="(max-width: 768px) 33vw, 15vw" src={moment.image} alt={moment.name} className="object-cover transition-transform duration-500 group-hover:scale-110" />
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/65 to-transparent flex items-end justify-center pb-4 transition-colors duration-300 group-hover:from-[#800020]/70">
-                          <span className="text-[11px] font-bold text-white tracking-widest uppercase">Order Now →</span>
-                        </div>
-                      </div>
-                      <p className="text-sm font-semibold tracking-wide" style={{ color: '#800020' }}>{moment.name}</p>
-                    </Link>
-                  ) : (
-                    <div key={moment.id} className="text-center opacity-80" data-testid={`meal-moment-${moment.id}`}>
-                      <div className="relative w-full aspect-square rounded-full overflow-hidden mb-3"
-                        style={{ border: '3px solid rgba(0,0,0,0.08)' }}>
-                        <Image fill loading="lazy" sizes="(max-width: 768px) 33vw, 15vw" src={moment.image} alt={moment.name} className="object-cover grayscale-[30%]" />
-                        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
-                          <span className="text-[11px] font-bold text-white/90 tracking-widest uppercase">Coming Soon</span>
-                        </div>
-                      </div>
-                      <p className="text-sm font-semibold tracking-wide" style={{ color: '#9CA3AF' }}>{moment.name}</p>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="order-1 md:order-2 relative rounded-lg overflow-hidden h-[220px] md:h-[400px]">
+              <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
+                src={images.storyTeaser}
+                alt="Traditional Indian cooking"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 rounded-lg" style={{ border: '1px solid rgba(244, 196, 48, 0.2)' }} />
             </div>
           </div>
         </div>
       </section>
+
 
       {/* ============================================ */}
       {/* DELIVERY POSTCODE CHECKER */}
@@ -770,14 +809,14 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null }) => {
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }} data-testid="gallery-preview-section">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
-            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>A peek into our kitchen</p>
+            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>Straight from the menu</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
               From Our Kitchen
             </h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            {galleryImages.slice(0, 8).map(img => (
-              <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden group">
+            {(art.gallery?.length ? art.gallery : galleryImages).slice(0, 8).map((img, gi) => (
+              <div key={img.id} className={`relative aspect-square rounded-lg overflow-hidden group ${gi >= 4 ? 'hidden md:block' : ''}`}>
                 <Image fill src={img.src} alt={img.alt} className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
               </div>
@@ -792,44 +831,12 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null }) => {
       </section>
 
       {/* ============================================ */}
-      {/* OFFERS & SPECIALS */}
-      {/* ============================================ */}
-      <section className="py-12 md:py-16 px-4 md:px-8" data-testid="offers-section">
-        <div className="max-w-7xl mx-auto">
-          <div
-            className="rounded-lg p-8 md:p-12 text-center relative overflow-hidden"
-            style={{ backgroundColor: '#FDF5E6', border: '1px solid rgba(244, 196, 48, 0.3)' }}
-          >
-            <div className="absolute top-0 left-0 w-24 h-24 rounded-full opacity-10" style={{ backgroundColor: '#F4C430', transform: 'translate(-50%, -50%)' }} />
-            <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full opacity-10" style={{ backgroundColor: '#800020', transform: 'translate(50%, 50%)' }} />
-
-            <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#8B6914' }}>A little welcome gift</p>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-              Dabba Wala
-            </h2>
-            <p className="text-lg mb-6" style={{ color: '#800020' }}>
-              Home-cooked South Indian meals, delivered to your door Monday to Friday
-            </p>
-            <Link href="/subscriptions">
-              <button
-                className="px-8 py-3 text-sm font-semibold tracking-wide uppercase text-white rounded-sm transition-all duration-300 hover:shadow-lg"
-                style={{ backgroundColor: '#800020' }}
-                data-testid="offer-cta-btn"
-              >
-                Bring It Home
-              </button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================ */}
       {/* SNACKS & PICKLES (UK-WIDE) */}
       {/* ============================================ */}
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }} data-testid="snacks-pickles-section">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="relative rounded-lg overflow-hidden" style={{ height: '380px' }}>
+            <div className="relative rounded-lg overflow-hidden h-[180px] md:h-[380px]">
               <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
                 src={images.picklesShelf}
                 alt="Traditional pickles and spices"
@@ -866,44 +873,6 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null }) => {
                   Open the Pantry <ArrowRight size={16} />
                 </button>
               </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================ */}
-      {/* OUR STORY TEASER */}
-      {/* ============================================ */}
-      <section className="py-16 md:py-24 px-4 md:px-8" data-testid="story-teaser-section">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="order-2 md:order-1">
-              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
-                Not just food · a feeling we kept chasing
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-                Why We Lit This Stove
-              </h2>
-              <p className="text-base text-gray-600 leading-relaxed mb-4">
-                Somewhere between a UK winter and a long video call home, we missed something no menu was naming — the smell of tadka hitting hot ghee, the hiss of mustard seeds, and a plate placed in front of us without being asked for.
-              </p>
-              <p className="text-base text-gray-600 leading-relaxed mb-8">
-                So we lit our own stove. Two kitchens, one quiet promise —
-                <em className="font-medium" style={{ color: '#800020' }}> taste for your heart.</em>
-              </p>
-              <Link href="/story">
-                <button className="btn-outlined" data-testid="read-story-btn">
-                  Sit With Us a While <ArrowRight size={16} />
-                </button>
-              </Link>
-            </div>
-            <div className="order-1 md:order-2 relative rounded-lg overflow-hidden" style={{ height: '400px' }}>
-              <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
-                src={images.storyTeaser}
-                alt="Traditional Indian cooking"
-                className="object-cover"
-              />
-              <div className="absolute inset-0 rounded-lg" style={{ border: '1px solid rgba(244, 196, 48, 0.2)' }} />
             </div>
           </div>
         </div>

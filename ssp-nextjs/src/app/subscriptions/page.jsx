@@ -1,5 +1,8 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import SubscriptionsClient from './SubscriptionsClient';
+import { getDishPhotos } from '@/lib/siteStatus';
+
+export const revalidate = 600;
 
 export const metadata = pageMeta('/subscriptions', { image: 'https://images.unsplash.com/photo-1727404679933-99daa2a7573a?w=1200&q=80' });
 
@@ -22,14 +25,23 @@ const jsonLd = {
   ],
 };
 
-export default function Page() {
+export default async function Page() {
+  // The kitchen's own dish photos stand in for the stock pictures
+  const photos = await getDishPhotos();
+  const art = {
+    hero: photos['veg-thali']?.image,
+    meal: photos['pappu-pappadam-roti-pachadi-rice-yogurt']?.image,
+    why: photos['tomato-pappu']?.image,
+    rotation: ['tomato-pappu', 'gutti-vankaya-masala', 'sambar', 'gongura-chicken-curry', 'pulihora', 'spicy-andhra-chicken-curry']
+      .filter(s => photos[s]).map(s => photos[s]),
+  };
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <SubscriptionsClient />
+      <SubscriptionsClient art={art} />
       {/* Server-rendered content — visible twin of what used to be sr-only */}
       <section className="py-12 px-4 md:px-8" style={{ backgroundColor: '#F9F6EE' }}>
         <div className="max-w-3xl mx-auto space-y-8 text-sm leading-relaxed" style={{ color: '#5C4B47' }}>
