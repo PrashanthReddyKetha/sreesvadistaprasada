@@ -368,7 +368,7 @@ export const faqData = [
     category: 'Catering & Events',
     items: [
       { q: 'How far in advance should I book catering?', a: 'We recommend at least 7 days for small events and 2-3 weeks for large functions (50+ guests). For temple poojas, 3-5 days notice is usually sufficient.' },
-      { q: 'Do you provide utensils and serving?', a: 'Yes, we offer full-service catering including crockery, serving staff, and setup. This can be discussed when you submit your enquiry.' },
+      { q: 'Do you provide utensils and serving?', a: 'No — we cook and supply the food. We do not provide crockery, serving staff or setup. Tell us your date, numbers and menu when you enquire and we will plan the food with you.' },
       { q: 'What is the minimum guest count for catering?', a: 'We cater for events starting from 10 guests. No event is too small or too large.' },
     ]
   },

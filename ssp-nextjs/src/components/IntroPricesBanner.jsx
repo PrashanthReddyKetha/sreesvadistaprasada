@@ -3,6 +3,9 @@
 /**
  * Introductory-pricing note — premium, quiet, confident. No countdowns,
  * no flashing: scarcity stated once, in the brand's voice.
+ * The owner has confirmed these are opening prices that will rise. The note
+ * speaks only about our own food and prices — nothing about other kitchens,
+ * which could not be backed up.
  */
 export default function IntroPricesBanner({ compact = false }) {
   return (
@@ -15,9 +18,9 @@ export default function IntroPricesBanner({ compact = false }) {
         Introductory prices · limited period
       </p>
       <p className={`${compact ? 'text-xs' : 'text-sm'} leading-relaxed`} style={{ color: '#F9EFDD' }}>
-        Premium ingredients, true Andhra spices, everything cooked fresh to order —
-        at prices no kitchen in Milton Keynes can hold for long. Ours won&apos;t either.
-        <span className="font-semibold" style={{ color: '#F4C430' }}> Taste the real thing while they last.</span>
+        Every dish is cooked fresh to order, with premium ingredients and true Andhra spices —
+        food we believe is worth more than we are asking. These are our opening prices, and they will rise.
+        <span className="font-semibold" style={{ color: '#F4C430' }}> Taste it at today&apos;s price while it lasts.</span>
       </p>
     </div>
   );
