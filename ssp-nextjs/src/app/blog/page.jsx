@@ -51,7 +51,7 @@ const POSTS = [
     slug: 'gongura',
     href: '/gongura',
     title: 'What Is Gongura? The Andhra Sorrel Leaf Guide',
-    excerpt: 'The tangy sorrel leaf that defines Andhra Pradesh cooking — rich in iron and folate, and the star ingredient behind Gongura Chicken and Gongura Mutton.',
+    excerpt: 'The tangy sorrel leaf that defines Andhra Pradesh cooking — rich in iron and folate, and the star ingredient behind Gongura Chicken and Gongura Pappu.',
     category: 'Food Guide',
     readTime: '5 min read',
     image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?w=600&q=80',
@@ -92,7 +92,7 @@ export default function BlogPage() {
             South Indian Food Guides
           </h1>
           <p className="text-xl text-amber-200 max-w-2xl">
-            Deep dives into Andhra cuisine, ingredient stories, cultural history, and the food traditions behind everything we cook.
+            Deep dives into Andhra cuisine and Telugu food, ingredient stories, cultural history, and the food traditions behind everything we cook.
           </p>
         </div>
       </section>

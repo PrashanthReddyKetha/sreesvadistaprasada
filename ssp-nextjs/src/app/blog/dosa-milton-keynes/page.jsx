@@ -111,7 +111,7 @@ export default function DosaGuide() {
             The batter is two ingredients: rice and urad dal (black gram). They are soaked separately, ground, combined and fermented naturally — the wild fermentation is what gives dosa its faint tang and its lacy, crisp texture. Skip the fermentation and you get something flat and doughy; that is the difference between a dosa made fresh and one made from an instant mix. Every dosa below is cooked to order and served with sambar and chutneys.
           </p>
 
-          <h2>The twelve dosas, mild to wild</h2>
+          <h2>Types of dosa: the twelve we make, mild to wild</h2>
           <ul>
             {DOSAS.map(d => (
               <li key={d.slug}>
@@ -123,7 +123,7 @@ export default function DosaGuide() {
           <h2>How to order dosa in Milton Keynes</h2>
           <p>
             Everything above is on our <Link href="/breakfast/dosas">dosa menu</Link> — order online for{' '}
-            <Link href="/delivery">delivery across all MK postcodes</Link> (30–60 minutes from Greenleys) or collect and save 10%. Dosas travel packed with their chutneys and sambar separately so they arrive as crisp as we can make them. Breakfast runs from 8am at weekends and 11am on weekdays.
+            <Link href="/delivery">delivery across all MK postcodes</Link> (30–60 minutes from Greenleys) or collect and save 10%. Dosas travel packed with their chutneys and sambar separately so they arrive as crisp as we can make them. Today&rsquo;s opening and collection times are shown when you order.
           </p>
           <p>
             Dietary notes: each dish page shows its veg/non-veg marker and spice level — check the individual item for anything allergen-related, or ask us in the order notes.

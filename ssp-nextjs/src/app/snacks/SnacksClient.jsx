@@ -8,7 +8,7 @@ import { trackMenuCategoryView } from '@/lib/analytics';
 
 const HIGHLIGHTS = [
   { icon: '🌶️', title: 'Real Andhra Recipes', text: 'Handmade Gongura, Avakaya, Nalla Karam & more — no shortcuts, no preservatives.' },
-  { icon: '📦', title: 'Now In Your City', text: 'No need to have jars carried over from home anymore — made fresh here and delivered to your door.' },
+  { icon: '📦', title: 'Soon In Your City', text: 'No need to have jars carried over from home anymore — made fresh here, and coming soon.' },
   { icon: '🎁', title: 'Perfect For Gifting & Bulk', text: 'Stocking up for a festival, event or gift box? Bulk orders are handled directly on WhatsApp.' },
 ];
 
@@ -59,10 +59,10 @@ const Snacks = ({ seoLine }) => {
             <Sparkles size={14} /> Worth the wait
           </p>
           <h2 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-            The Taste You&rsquo;ve Been Missing — Finally Here
+            The Taste You&rsquo;ve Been Missing — Nearly Here
           </h2>
           <p className="text-gray-600 leading-relaxed max-w-2xl mx-auto mb-10 text-base">
-            You don&rsquo;t have to order from your home country anymore. Every jar of pickle, every pinch of podi and every bite of sweet is made small-batch, with no preservatives and no shortcuts. We&rsquo;re perfecting the recipes and packaging before launch, so the first jar you open tastes exactly like home — now available right here in your city.
+            You don&rsquo;t have to order from your home country anymore. Every jar of pickle, every pinch of podi and every bite of sweet is made small-batch, with no preservatives and no shortcuts. We&rsquo;re perfecting the recipes and packaging before launch, so the first jar you open tastes exactly like home.
           </p>
           <div className="grid sm:grid-cols-3 gap-6 mb-10">
             {HIGHLIGHTS.map(f => (

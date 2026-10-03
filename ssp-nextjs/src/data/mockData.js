@@ -30,79 +30,15 @@ export const heroSlides = [
   }
 ];
 
+// Fallback only — the home page normally shows the live featured dishes from the API.
+// Keep this list to dishes that are really on the menu, at their real prices.
 export const featuredDishes = [
-  {
-    id: 1,
-    name: "Andhra Kodi Pulusu",
-    category: "Non-Veg",
-    type: "svadista",
-    description: "Slow-cooked country chicken simmered in roasted coriander and red chillies. The aroma will remind you of Sunday lunches at your grandmother's house.",
-    price: "£12.99",
-    spiceLevel: 3,
-    image: "https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
-    tag: "Bestseller",
-    allergens: ["none"]
-  },
-  {
-    id: 2,
-    name: "Pulihora (Tamarind Rice)",
-    category: "Prasada",
-    type: "prasada",
-    description: "Temple-style tangy tamarind rice, prepared with hand-pounded spices and pure devotion.",
-    price: "£8.99",
-    spiceLevel: 1,
-    image: "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
-    tag: "Chef's Pick",
-    allergens: ["nuts"]
-  },
-  {
-    id: 3,
-    name: "Natu Kodi Biriyani",
-    category: "Non-Veg",
-    type: "svadista",
-    description: "Country chicken biriyani with aromatic basmati rice, slow-cooked in earthen pots the village way.",
-    price: "£15.99",
-    spiceLevel: 3,
-    image: "https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
-    tag: "Popular",
-    allergens: ["dairy"]
-  },
-  {
-    id: 4,
-    name: "Masala Dosa",
-    category: "Breakfast",
-    type: "prasada",
-    description: "Crispy rice crepe with spiced potato filling, served with sambar and three chutneys on a banana leaf.",
-    price: "£8.99",
-    spiceLevel: 2,
-    image: "https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
-    tag: "Morning Favourite",
-    allergens: ["none"]
-  },
-  {
-    id: 5,
-    name: "Gutti Vankaya",
-    category: "Veg",
-    type: "prasada",
-    description: "Stuffed brinjal curry with peanut and sesame paste, a treasured Andhra delicacy.",
-    price: "£9.99",
-    spiceLevel: 2,
-    image: "https://images.unsplash.com/photo-1680529672551-16132239d69b?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
-    tag: "",
-    allergens: ["nuts", "sesame"]
-  },
-  {
-    id: 6,
-    name: "Sakkarai Pongal",
-    category: "Prasada",
-    type: "prasada",
-    description: "Sweet rice with jaggery, ghee and cashews — the divine offering that melts on your tongue.",
-    price: "£7.99",
-    spiceLevel: 0,
-    image: "https://images.unsplash.com/photo-1666251214695-405f673b396a?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600",
-    tag: "Divine",
-    allergens: ["dairy", "nuts"]
-  }
+  { id: 1, name: "Gongura Chicken Curry", category: "Non-Veg", type: "svadista", description: "Chicken slow-cooked with tangy gongura (sorrel) leaves and Andhra spices.", price: "£9.99", spiceLevel: 3, image: "https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600", tag: "Bestseller", allergens: [] },
+  { id: 2, name: "Pulihora", category: "Prasada", type: "prasada", description: "Temple-style tangy tamarind rice.", price: "£4.99", spiceLevel: 1, image: "https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600", tag: "Chef's Pick", allergens: [] },
+  { id: 3, name: "Chicken Dum Biryani", category: "Non-Veg", type: "svadista", description: "Chicken and basmati layered and slow-finished on dum, the Andhra way.", price: "£10.99", spiceLevel: 3, image: "https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600", tag: "Popular", allergens: [] },
+  { id: 4, name: "Masala Dosa (2 pcs)", category: "Breakfast", type: "prasada", description: "Crisp rice crepe with spiced potato filling, served with sambar and chutneys.", price: "£6.99", spiceLevel: 2, image: "https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600", tag: "Morning Favourite", allergens: [] },
+  { id: 5, name: "Gutti Vankaya Masala", category: "Veg", type: "prasada", description: "Stuffed brinjal curry with peanut and sesame paste, a treasured Andhra delicacy.", price: "£8.99", spiceLevel: 2, image: "https://images.unsplash.com/photo-1680529672551-16132239d69b?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600", tag: "", allergens: [] },
+  { id: 6, name: "Veg Thali", category: "Prasada", type: "prasada", description: "Rice, pappu, sambar, curries, fries and pickle — a full South Indian meal on one plate.", price: "£14.99", spiceLevel: 1, image: "https://images.unsplash.com/photo-1666251214695-405f673b396a?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600", tag: "", allergens: [] },
 ];
 
 export const mealMoments = [
@@ -376,7 +312,7 @@ export const chefSpecial = {
   name: "Nellore Ghee Karam Dosa",
   tagline: "Crispy, fiery, and finished with hand-churned ghee — this is the dosa Nellore is famous for.",
   description: "Thin, lacy rice crepe slathered in Nellore's legendary red karam chutney and finished generously with hand-churned ghee. Served with coconut chutney, sambar, and butter. The kind of breakfast that makes you close your eyes on the first bite.",
-  price: "£8.99",
+  price: "£6.99",
   link: "/breakfast",
   category: "breakfast",
   image: "https://firebasestorage.googleapis.com/v0/b/sreesvadistaprasada.firebasestorage.app/o/nellore%20ghee%20karam%20dosa.jpg?alt=media&token=2c6b53e2-0474-4345-82c0-ef7c5a9c0e35"
@@ -403,11 +339,11 @@ export const faqData = [
   {
     category: 'Ordering & Delivery',
     items: [
-      { q: 'Where do you deliver?', a: 'We deliver full meals and subscriptions across Milton Keynes. Snacks, pickles, and podis ship UK-wide. Edinburgh and Glasgow are coming soon — join the waitlist.' },
-      { q: 'What are the delivery charges?', a: 'Delivery is free for orders over £30 in Milton Keynes. Below £30, a flat delivery fee applies depending on your zone. UK-wide snack shipping is free over £25.' },
-      { q: 'What is the minimum order?', a: '£15 for meal delivery in Milton Keynes. £10 for UK-wide snack orders.' },
-      { q: 'How long does delivery take?', a: '30-60 minutes in Milton Keynes. UK-wide snack orders arrive in 2-3 business days.' },
-      { q: 'What are your delivery hours?', a: 'Mon-Fri: 11am-10pm, Sat-Sun: 10am-11pm.' },
+      { q: 'Where do you deliver?', a: 'We deliver full meals and Dabba Wala tiffin plans across Milton Keynes (postcodes MK1–MK19) from our Greenleys kitchen, and you can always collect. The order page shows whether delivery is running today. Andhra pickles and podis are coming soon, and Edinburgh and Glasgow are planned — join the waitlist.' },
+      { q: 'What are the delivery charges?', a: 'Delivery is charged by distance from our Greenleys kitchen, from £2.49, and is free once your order passes the threshold for your zone (from £28). Your exact fee shows at checkout. Collection is free and saves 10%.' },
+      { q: 'What is the minimum order?', a: '£15, for delivery and for collection.' },
+      { q: 'How long does delivery take?', a: '30–60 minutes across Milton Keynes. Collection orders are ready from about 40 minutes — you pick a slot at checkout.' },
+      { q: 'What are your opening hours?', a: 'We are open seven days a week. Opening and closing times are set by the kitchen and shown live on the order page and on our Contact page.' },
     ]
   },
   {
@@ -423,7 +359,7 @@ export const faqData = [
     category: 'Food & Dietary',
     items: [
       { q: 'Is the Prasada menu truly 100% vegetarian?', a: 'Yes — every Prasada dish is vegetarian, with no meat, fish or eggs. Vegetarian dishes are cooked with their own separate utensils and cookware, in the same kitchen as our non-vegetarian food. If you follow a strict or Jain diet, or have an allergy, please tell us before ordering.' },
-      { q: 'Do you cater for allergies?', a: 'We clearly mark allergens (nuts, dairy, gluten, sesame) on all our dishes. For severe allergies, please contact us directly and we will accommodate your needs.' },
+      { q: 'Do you cater for allergies?', a: 'Each dish page lists the allergens we know it contains; a few dishes are marked "ask us" while we confirm the recipe. Vegetarian and non-vegetarian food is cooked in the same kitchen, so if you have a severe allergy please contact us before you order.' },
       { q: 'Are your dishes spicy?', a: 'Spice levels vary. Each dish has a spice meter (1-5 flames). You can request "less spicy" in your subscription preferences or while ordering.' },
       { q: 'Do you use MSG or artificial flavours?', a: 'Never. All our food is cooked with fresh, natural ingredients using traditional methods. No preservatives, no shortcuts.' },
     ]
@@ -456,7 +392,7 @@ export const faqData = [
       },
       {
         q: 'What are the health benefits of ragi (finger millet)?',
-        a: 'Ragi (finger millet / Eleusine coracana) is one of the most nutritious grains in South India. It contains more calcium than milk gram-for-gram, is exceptionally high in dietary fibre, has a low glycaemic index making it suitable for diabetics, and is naturally gluten-free. It is rich in the amino acid methionine and has been a dietary staple in rural Andhra and Karnataka for centuries. At Sree Svadista Prasada, ragi features in our Ragi Dosa, Ragi Sangati, and Ragi Laddu.',
+        a: 'Ragi (finger millet / Eleusine coracana) is one of the most nutritious grains in South India. It contains more calcium than milk gram-for-gram, is exceptionally high in dietary fibre, has a low glycaemic index, and is naturally gluten-free. It is rich in the amino acid methionine and has been a dietary staple in rural Andhra and Karnataka for centuries. At Sree Svadista Prasada, ragi features in our Ragi Sangati, Ragi Jaava (malt) and Ragi Buttermilk.',
       },
       {
         q: 'What is sambar?',
@@ -472,11 +408,11 @@ export const faqData = [
       },
       {
         q: 'What does "Prasada" mean?',
-        a: 'In Sanskrit and Telugu, "Prasada" (Prasad) means blessing or divine grace — specifically food offered to a deity and then distributed to devotees as a sacred gift. Our Prasada kitchen honours this tradition: it is an entirely vegetarian menu, cooked with its own separate utensils and cookware, in the spirit of clean, wholesome, sattvic cooking. If you follow a strict, Jain or temple diet, please tell us before ordering so we can advise on each dish.',
+        a: 'In Sanskrit and Telugu, "Prasada" (Prasad) means blessing or divine grace — specifically food offered to a deity and then distributed to devotees as a sacred gift. Our Prasada menu honours this tradition: it is entirely vegetarian, cooked with its own separate utensils and cookware, in the spirit of clean, wholesome, sattvic cooking. If you follow a strict, Jain or temple diet, please tell us before ordering so we can advise on each dish.',
       },
       {
         q: 'What does "Svadista" mean?',
-        a: '"Svadista" (Sanskrit: स्वादिष्ट) means delicious or tasty — literally "having good taste". Our Svadista kitchen represents the full, bold flavour range of Andhra non-vegetarian cooking: Chicken 65, Gongura Chicken Curry, Gongura Mutton, Pesarattu, and slow-cooked biryani. The name reflects our commitment to genuine Andhra flavour — no shortcuts, no shortcuts to heat, no watered-down spicing for mass-market appeal.',
+        a: '"Svadista" (Sanskrit: स्वादिष्ट) means delicious or tasty — literally "having good taste". Our Svadista menu represents the full, bold flavour range of Andhra non-vegetarian cooking: Chicken 65, Gongura Chicken Curry, Fish Pulusu and slow-cooked dum biryani. The name reflects our commitment to genuine Andhra flavour — no shortcuts, no shortcuts to heat, no watered-down spicing for mass-market appeal.',
       },
       {
         q: 'What is a Dabba Wala?',
@@ -484,7 +420,7 @@ export const faqData = [
       },
       {
         q: 'Is South Indian food gluten-free?',
-        a: 'Most traditional South Indian food is naturally gluten-free. The primary grains are rice, ragi (finger millet), and jowar (sorghum) — all gluten-free. Idli, dosa, vada, sambar, rasam, most chutneys, rice-based curries, pickles, and podis contain no wheat. The exceptions are dishes using wheat flour (paratha, maida-based items) or semolina (rava dosa, upma). At Sree Svadista Prasada, the majority of our menu is naturally gluten-free — allergens including gluten are clearly marked on every dish.',
+        a: 'Most traditional South Indian food is naturally gluten-free. The primary grains are rice, ragi (finger millet), and jowar (sorghum) — all gluten-free. Idli, dosa, vada, sambar, rasam, most chutneys, rice-based curries, pickles, and podis contain no wheat. The exceptions are dishes using wheat flour (paratha, maida-based items) or semolina (rava dosa, upma). At Sree Svadista Prasada many dishes are made without wheat, and each dish page lists its allergens. Our kitchen also cooks with wheat, so tell us before ordering if you need to avoid gluten strictly.',
       },
       {
         q: 'Is South Indian food vegan?',
@@ -492,15 +428,15 @@ export const faqData = [
       },
       {
         q: 'What is Chicken 65?',
-        a: 'Chicken 65 is one of India\'s most beloved fried chicken dishes, originating in Chennai in 1965 (hence the name). Bite-sized chicken pieces are marinated in yoghurt, red chilli, ginger-garlic paste, and South Indian spices, then deep-fried until crispy and tossed with curry leaves, green chillies, and lime. The result is a fiery, aromatic starter — crunchy outside, juicy inside. It is the most-ordered starter on our Svadista menu and one of the defining dishes of South Indian restaurant cooking worldwide.',
+        a: 'Chicken 65 is one of India\'s most beloved fried chicken dishes, originating in Chennai in 1965 (hence the name). Bite-sized chicken pieces are marinated in yoghurt, red chilli, ginger-garlic paste, and South Indian spices, then deep-fried until crispy and tossed with curry leaves, green chillies, and lime. The result is a fiery, aromatic starter — crunchy outside, juicy inside. It is a favourite on our Svadista menu and one of the defining dishes of South Indian restaurant cooking worldwide.',
       },
       {
         q: 'What is Gutti Vankaya?',
-        a: 'Gutti Vankaya Kura is a classic Andhra stuffed baby aubergine curry. Small, tender brinjals are slit and stuffed with a dry masala paste made from roasted peanuts, sesame seeds, coconut, tamarind, and Andhra spices, then slow-cooked in a rich gravy. It is considered one of the signature dishes of Telugu cuisine and a vegetarian centrepiece. "Gutti" means stuffed and "vankaya" means brinjal/aubergine in Telugu. It is entirely vegan and a staple of festive Andhra meals.',
+        a: 'Gutti Vankaya Kura is a classic Andhra stuffed baby aubergine curry. Small, tender brinjals are slit and stuffed with a dry masala paste made from roasted peanuts, sesame seeds, coconut, tamarind, and Andhra spices, then slow-cooked in a rich gravy. It is considered one of the signature dishes of Telugu cuisine and a vegetarian centrepiece. "Gutti" means stuffed and "vankaya" means brinjal/aubergine in Telugu. It is a staple of festive Andhra meals.',
       },
       {
         q: 'What is Avakaya pickle?',
-        a: 'Avakaya (Avakai) is the most iconic pickle of Andhra Pradesh — a raw mango pickle made with coarsely ground mustard seeds, Guntur red chilli powder, salt, and sesame or groundnut oil. Unlike North Indian mango pickles, Avakaya uses large pieces of unripe green mango, giving it a chunky texture and an intensely sour-spicy-pungent flavour. It is a daily fixture on every Andhra dining table, eaten with plain rice and ghee or yoghurt rice. Our Avakaya is made using traditional stone-ground mustard and whole spices.',
+        a: 'Avakaya (Avakai) is the most iconic pickle of Andhra Pradesh — a raw mango pickle made with coarsely ground mustard seeds, Guntur red chilli powder, salt, and sesame or groundnut oil. Unlike North Indian mango pickles, Avakaya uses large pieces of unripe green mango, giving it a chunky texture and an intensely sour-spicy-pungent flavour. It is a daily fixture on every Andhra dining table, eaten with plain rice and ghee or yoghurt rice. Our Avakaya is made using traditional stone-ground mustard and whole spices, and is coming soon with our Andhra pickles.',
       },
       {
         q: 'What is the difference between South Indian and North Indian food?',
@@ -508,7 +444,7 @@ export const faqData = [
       },
       {
         q: 'What is a dosa?',
-        a: 'A dosa is a thin, crisp South Indian crepe made from a fermented batter of rice and urad dal (split black gram), cooked on a hot griddle until golden and lacy. It is naturally gluten-free and vegan in its plain form. The classic Masala Dosa is filled with spiced potato masala and served with coconut chutney and sambar. Variants include Rava Dosa (semolina, crispier and lighter), Pesarattu (green gram, an Andhra speciality), and our Ragi Ghee Karam Dosa, finished with hand-churned ghee and fiery red chutney.',
+        a: 'A dosa is a thin, crisp South Indian crepe made from a fermented batter of rice and urad dal (split black gram), cooked on a hot griddle until golden and lacy. It is naturally gluten-free and vegan in its plain form. The classic Masala Dosa is filled with spiced potato masala and served with coconut chutney and sambar. Variants include Rava Dosa (semolina, crispier and lighter), Pesarattu (green gram, an Andhra speciality), and our Nellore Ghee Karam Dosa, finished with ghee and fiery red karam.',
       },
       {
         q: 'What is idli?',
@@ -520,19 +456,19 @@ export const faqData = [
       },
       {
         q: 'What is a tiffin?',
-        a: 'In South Indian usage, "tiffin" refers to a light meal — traditionally breakfast or a mid-day snack — and also to the stacked metal lunchbox (tiffin carrier) it is often packed in. A typical South Indian tiffin includes idli, dosa, vada, upma, or pongal alongside chutney and sambar. Our Dabba Wala subscription is a modern take on the tiffin tradition — full home-style meals delivered daily in reusable containers.',
+        a: 'In South Indian usage, "tiffin" refers to a light meal — traditionally breakfast or a mid-day snack — and also to the stacked metal lunchbox (tiffin carrier) it is often packed in. A typical South Indian tiffin includes idli, dosa, vada, upma, or pongal alongside chutney and sambar. Our Dabba Wala tiffin service is a modern take on the tiffin tradition — full home-style meals delivered Monday to Friday.',
       },
       {
         q: 'What is podi?',
-        a: 'Podi is a dry, roasted spice-and-lentil powder — sometimes called "gunpowder" — mixed with sesame oil or ghee and eaten with idli, dosa, or plain rice. Recipes vary by household and typically combine roasted urad dal, chana dal, dried red chillies, curry leaves, and sesame seeds, ground to a coarse powder. It is naturally vegan (or vegetarian with ghee), shelf-stable, and one of the easiest ways to add authentic South Indian flavour to any meal. Our handmade podis ship UK-wide.',
+        a: 'Podi is a dry, roasted spice-and-lentil powder — sometimes called "gunpowder" — mixed with sesame oil or ghee and eaten with idli, dosa, or plain rice. Recipes vary by household and typically combine roasted urad dal, chana dal, dried red chillies, curry leaves, and sesame seeds, ground to a coarse powder. It is naturally vegan (or vegetarian with ghee), shelf-stable, and one of the easiest ways to add authentic South Indian flavour to any meal. Our handmade Andhra podis are coming soon.',
       },
       {
         q: 'What is naivedyam?',
-        a: 'Naivedyam is food prepared specifically as an offering to a deity before being shared as prasada (blessed food). In South Indian temple tradition, naivedyam is cooked without onion or garlic, using pure ingredients and dedicated utensils, in a spirit of cleanliness and devotion. Our Prasada kitchen\'s Naivedyam section follows this same tradition — sattvic, pure-vegetarian dishes suitable for pujas and religious occasions.',
+        a: 'Naivedyam is food prepared specifically as an offering to a deity before being shared as prasada (blessed food). In South Indian temple tradition, naivedyam is cooked without onion or garlic, using pure ingredients and dedicated utensils, in a spirit of cleanliness and devotion. Our Prasada menu\'s Naivedyam section follows this same tradition — sattvic, pure-vegetarian dishes suitable for pujas and religious occasions.',
       },
       {
         q: 'What is biryani?',
-        a: 'Biryani is a layered rice dish made by par-cooking fragrant basmati rice and a spiced meat or vegetable base separately, then slow-cooking them together (dum) so the rice absorbs the aromatics without becoming mushy. South Indian biryani, particularly Andhra-style Natu Kodi Biryani, uses bolder spicing and country chicken compared to the milder, Mughal-influenced biryanis of North India. It is typically served with raita and a boiled egg or salan (gravy).',
+        a: 'Biryani is a layered rice dish made by par-cooking fragrant basmati rice and a spiced meat or vegetable base separately, then slow-cooking them together (dum) so the rice absorbs the aromatics without becoming mushy. South Indian biryani, particularly the Andhra style, uses bolder spicing than the milder, Mughal-influenced biryanis of North India. We cook chicken dum biryani and chicken fry piece biryani.',
       },
       {
         q: 'Do you have nut-free options?',

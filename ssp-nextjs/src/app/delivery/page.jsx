@@ -19,7 +19,7 @@ const ZONES = [
 const FAQS = [
   { q: 'Which Milton Keynes postcodes do you deliver to?', a: 'We deliver to every MK district — MK1 to MK19 — from our Greenleys kitchen (MK12). That covers Wolverton, Stony Stratford, Bletchley, Newport Pagnell, Central MK, Furzton, Walnut Tree and everywhere in between. Enter your postcode at checkout to see your exact fee.' },
   { q: 'How much does delivery cost?', a: 'Delivery fees are distance-based, from £2.49 in Zone 1 (MK8, MK11, MK12, MK13, MK19) to £4.99 in Zone 4 (MK1, MK17, MK18). Delivery is free once your order passes the zone threshold — from £28 in Zone 1.' },
-  { q: 'How long does delivery take?', a: 'Delivery across Milton Keynes takes 30–60 minutes — every dish is cooked fresh to order, never held under a heat lamp.' },
+  { q: 'How long does delivery take?', a: 'Indian takeaway delivery across Milton Keynes takes 30–60 minutes — every dish is cooked fresh to order, never held under a heat lamp.' },
   { q: 'Is there a minimum order?', a: 'Yes, £15 for both delivery and collection. Delivery orders between £15 and £19.99 also carry a £1.50 small-order fee — collection never does.' },
   { q: 'Can I collect instead and save money?', a: 'Yes — collection orders get 10% off and skip the delivery and small-order fees. Pick a 15-minute collection slot at checkout and your food is ready when you arrive.' },
   { q: 'Do you deliver to Edinburgh or Glasgow?', a: 'Not yet — Edinburgh and Glasgow are coming soon. Register your interest on our city pages and we will tell you the moment we launch.' },
@@ -58,7 +58,7 @@ export default async function DeliveryPage() {
               {PAGE_SEO['/delivery'].h1}
             </h1>
             <p className="text-base md:text-lg text-gray-200 leading-relaxed max-w-2xl">
-              Authentic Andhra food, cooked fresh in Greenleys and delivered across every MK postcode in 30–60 minutes.
+              South Indian food delivery across Milton Keynes: authentic Andhra food, cooked fresh in Greenleys and delivered to every MK postcode in 30–60 minutes.
               Prefer to swing by? Collection saves you 10%.
             </p>
             <div className="flex flex-wrap gap-3 mt-7">

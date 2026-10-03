@@ -92,6 +92,18 @@ Content facts policy held: posts reference only live menu items with API-verifie
 
 Keyword freeze: titles, primary keywords and H1 lines stay as set until at least 2026-12-01. Changes are recorded in the SEO status document. Review dates: 2026-10-17, 2026-10-31, 2026-12-01.
 
+## Cycle 6b — 2026-10-03 — COMPLETED locally (content pass: page text read, corrected, keyworded)
+
+| ID | Task | Status |
+|----|------|--------|
+| K1 | New check `content_check`: for every page, is each keyword actually in the page's own text (header/footer excluded) | Done — 13 of 48 pages lacked the main keyword as a phrase; 39 of 232 secondary keywords absent |
+| K2 | Missing phrases written into the body of home, tiffin, pickles, ragi, street food, drinks, story, contact, delivery, catering, menu, Prasada, Svadista, FAQ, blog index and 12 menu sub-pages | Verified locally — 228 of 232 secondary keywords now in body text |
+| F1 | Contact page hours read from admin Collection Times (were hard-coded and wrong); FAQ and guides no longer state fixed hours | Verified locally |
+| F2 | Home page server-renders the live featured dishes and prices (first HTML used to carry sample dishes that are not sold) | Verified locally |
+| F3 | Dishes not on sale, wrong prices, "only in MK/UK" claims, "ships UK-wide", "free over £30", health/diet claims removed from body copy, FAQ data and structured data | Verified locally — scan of 22 pages clean |
+
+Titles, descriptions and primary keywords unchanged (identical to live on all 188 pages).
+
 ## Queue — next cycles (priority order)
 
 | ID | Task | Evidence / value | Effort | Can Claude do it? |

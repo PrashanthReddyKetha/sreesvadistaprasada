@@ -39,7 +39,7 @@ const Gallery = ({ dishImages = [] }) => {
               Gallery
             </h1>
             <p className="text-base text-gray-200 leading-relaxed">
-              Every dish on the menu, and the kitchen behind it — {allImages.length} photos and counting.
+              South Indian food photos from our Milton Keynes kitchen — every dish on the menu, {allImages.length} photos and counting.
             </p>
           </div>
         </div>

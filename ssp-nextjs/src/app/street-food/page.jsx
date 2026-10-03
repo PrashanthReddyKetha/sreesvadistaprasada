@@ -28,8 +28,10 @@ export default async function StreetFoodPage() {
           </h2>
           <p className="mb-3">
             Evening in an Indian town has its own menu — hot, quick, unapologetically savoury.
-            This page is our version of that hour: street-style snacks and evening bites cooked
-            fresh in Greenleys, not reheated under a lamp.
+            This page is our version of that hour: Indian street food in Milton Keynes, cooked
+            fresh in Greenleys, not reheated under a lamp. Looking for pani puri or momos in
+            Milton Keynes? They are here — pani puri, chicken momos and veg momos — beside Indian
+            chaat such as channa chat and peanut chat, crisp bhajji and punugulu, wraps and burgers.
           </p>
           <p>
             Order them alongside the <Link href="/menu" className="underline font-semibold" style={{ color: '#800020' }}>full menu</Link> for

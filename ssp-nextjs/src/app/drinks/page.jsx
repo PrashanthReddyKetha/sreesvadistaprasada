@@ -27,9 +27,10 @@ export default async function DrinksPage() {
             Traditional Indian drinks, made in Milton Keynes
           </h2>
           <p className="mb-3">
-            The drinks on this page come from the same kitchen as everything else we cook — fresh
-            lassis and traditional South Indian beverages made to order, not poured from a carton.
-            They ride along with any food order across Milton Keynes.
+            The drinks on this page come from the same kitchen as everything else we cook — mango
+            lassi and sweet lassi, masala buttermilk, fresh juice and lemon water, made to order,
+            not poured from a carton. If you are after a mango lassi in Milton Keynes, add one to
+            any food order for delivery or collection.
           </p>
           <p>
             Pair them with a <Link href="/breakfast/dosas" className="underline font-semibold" style={{ color: '#800020' }}>crispy dosa</Link>,

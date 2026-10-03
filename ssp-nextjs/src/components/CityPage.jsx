@@ -3,17 +3,17 @@ import { MapPin, Clock, ShoppingBag, CheckCircle } from 'lucide-react';
 import FaqSection from '@/components/FaqSection';
 
 const MENU_CATEGORIES = [
-  { label: 'Prasada — Pure Vegetarian', sub: 'Curries, biryani, dosas & more', href: '/prasada', emoji: '🌿' },
-  { label: 'Svadista — Non-Veg', sub: 'Gongura chicken, Natu Kodi biryani & more', href: '/svadista', emoji: '🍗' },
+  { label: 'Prasada — Pure Vegetarian', sub: 'Andhra curries, veg thali, rice dishes & more', href: '/prasada', emoji: '🌿' },
+  { label: 'Svadista — Non-Veg', sub: 'Gongura chicken, dum biryani & more', href: '/svadista', emoji: '🍗' },
   { label: 'Breakfast', sub: 'Idli, vada, dosas, poori — fresh every morning', href: '/breakfast', emoji: '🌅' },
-  { label: "Lucky's Pantry", sub: 'Handmade podis, pickles & nibbles', href: '/snacks', emoji: '🫙' },
-  { label: 'Dabba Wala Subscriptions', sub: 'Weekly meal plans from £13.75 per meal', href: '/subscriptions', emoji: '🥡' },
+  { label: 'Andhra Pickles & Podis', sub: 'Handmade in small batches — coming soon', href: '/snacks', emoji: '🫙' },
+  { label: 'Dabba Wala Subscriptions', sub: 'Weekly & monthly tiffin plans from £13.75 a meal', href: '/subscriptions', emoji: '🥡' },
   { label: 'Catering', sub: 'Events, temple prasada, corporate', href: '/catering', emoji: '🎊' },
 ];
 
 const TRUST_POINTS = [
   'No MSG, no preservatives — traditional methods only',
-  'Allergens clearly marked on every dish',
+  'Allergen information on each dish — ask us if you are unsure',
   'Vegetarian Prasada dishes cooked with separate utensils',
   'Spice levels 1–5: mild to fiery, your choice',
   'Same-day cooking — never reheated from the day before',
@@ -77,8 +77,8 @@ export default function CityPage({ data, jsonLd }) {
           {[
             { icon: <Clock size={16} />, label: 'Delivery Time', value: deliveryTime },
             { icon: <ShoppingBag size={16} />, label: 'Minimum Order', value: minOrder },
-            { icon: <MapPin size={16} />, label: 'Free Delivery', value: `Orders over ${freeDeliveryThreshold}` },
-            { icon: <CheckCircle size={16} />, label: 'UK-wide Shipping', value: 'Snacks & pickles' },
+            { icon: <MapPin size={16} />, label: 'Free Delivery', value: freeDeliveryThreshold },
+            { icon: <CheckCircle size={16} />, label: 'Collection', value: 'Save 10% at Greenleys' },
           ].map(({ icon, label, value }) => (
             <div key={label} className="flex items-start gap-3">
               <span className="mt-0.5 flex-shrink-0" style={{ color: '#800020' }}>{icon}</span>
@@ -176,7 +176,7 @@ export default function CityPage({ data, jsonLd }) {
                 Dabba Wala in {city}
               </h3>
               <p className="text-sm leading-relaxed mb-4" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                A fresh, home-style South Indian dabba delivered to your door every day or every week.
+                A fresh, home-style South Indian dabba delivered to your door, Monday to Friday.
                 Rice, curry, dal, sambar, pickle, papad — the whole meal, every time.
               </p>
               <ul className="space-y-1.5 mb-6">

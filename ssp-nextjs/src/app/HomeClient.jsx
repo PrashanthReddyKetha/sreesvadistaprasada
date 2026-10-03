@@ -31,7 +31,7 @@ import { useNotifyMe } from '@/context/NotifyMeContext';
 import { isOrderable } from '@/config/softLaunch';
 import { buildItemUrl } from '@/lib/itemUrl';
 
-const Home = ({ intro }) => {
+const Home = ({ intro, initialFeatured = [], initialSpecial = null }) => {
   const { deliveryEnabled } = useKitchen();
   const trendingRef = useRef(null);
   const specialsRef = useRef(null);
@@ -43,13 +43,14 @@ const Home = ({ intro }) => {
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const { addToCart } = useCart();
   const { openNotifyMe } = useNotifyMe();
-  const [liveItems, setLiveItems] = useState([]);
-  const [chefSpecialItem, setChefSpecialItem] = useState(null);
+  // Server-rendered with the live featured dishes; the effects below refresh them in the browser
+  const [liveItems, setLiveItems] = useState(initialFeatured);
+  const [chefSpecialItem, setChefSpecialItem] = useState(initialSpecial);
   const [dailySpecials, setDailySpecials] = useState([]);
 
   useEffect(() => {
     api.get('/menu?available=true&featured=true')
-      .then(r => setLiveItems(r.data))
+      .then(r => { if (Array.isArray(r.data) && r.data.length) setLiveItems(r.data); })
       .catch(() => {});
     api.get('/daily-specials')
       .then(r => setDailySpecials(r.data || []))
@@ -170,7 +171,7 @@ const Home = ({ intro }) => {
               {intro.h1}
             </h1>
             {(intro.paragraphs || []).map((para, i) => (
-              <p key={i} className="text-sm md:text-base leading-relaxed" style={{ color: '#5C4B47' }}>{para}</p>
+              <p key={i} className={`text-sm md:text-base leading-relaxed ${i ? 'mt-3' : ''}`} style={{ color: '#5C4B47' }}>{para}</p>
             ))}
             <ul className="flex flex-wrap justify-center gap-2 mt-5">
               {(intro.links || []).map(([label, href]) => (
@@ -619,7 +620,7 @@ const Home = ({ intro }) => {
                     {chefSpecial.description}
                   </p>
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold" style={{ color: '#800020' }}>{chefSpecial.price}</span>
+                    <span className="text-2xl font-bold" style={{ color: '#800020' }}>{chefSpecialItem?.price ? `£${Number(chefSpecialItem.price).toFixed(2)}` : chefSpecial.price}</span>
                     {isOrderable(chefSpecialItem?.category) ? (
                       <button
                         onClick={(e) => { e.preventDefault(); if (chefSpecialItem) addToCart(chefSpecialItem); }}
@@ -738,10 +739,10 @@ const Home = ({ intro }) => {
               <h3 className="text-lg font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Delivery Areas</h3>
               <div className="space-y-3">
                 {[
-                  { city: 'Milton Keynes', postcodes: 'MK1–MK19', deliveryFee: 'Free over £30', timing: '45–60 min' },
+                  { city: 'Milton Keynes', postcodes: 'MK1–MK19', deliveryFee: 'Free from £28, by zone', timing: '30–60 min' },
                   { city: 'Edinburgh', postcodes: 'EH1–EH17', deliveryFee: 'Coming soon', timing: '—' },
                   { city: 'Glasgow', postcodes: 'G1–G46', deliveryFee: 'Coming soon', timing: '—' },
-                  { city: 'Rest of UK', postcodes: 'Snacks & Pickles only', deliveryFee: 'Free over £25', timing: '2–3 days' },
+                  { city: 'Rest of UK', postcodes: 'Andhra pickles & podis', deliveryFee: 'Coming soon', timing: '—' },
                 ].map((area) => (
                   <div key={area.city} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: area.city === 'Milton Keynes' ? 'rgba(128,0,32,0.04)' : '#fafafa' }} data-testid={`delivery-area-${area.city.toLowerCase().replace(/\s/g, '-')}`}>
                     <div>
@@ -807,7 +808,7 @@ const Home = ({ intro }) => {
               Dabba Wala
             </h2>
             <p className="text-lg mb-6" style={{ color: '#800020' }}>
-              Home-cooked South Indian meals, delivered daily to your door
+              Home-cooked South Indian meals, delivered to your door Monday to Friday
             </p>
             <Link href="/subscriptions">
               <button
@@ -836,7 +837,7 @@ const Home = ({ intro }) => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               <span className="absolute bottom-4 left-4 px-3 py-1.5 rounded-sm text-xs font-semibold text-white" style={{ backgroundColor: '#4A7C59' }}>
-                Ships UK-Wide
+                Coming soon
               </span>
             </div>
             <div>
@@ -847,7 +848,7 @@ const Home = ({ intro }) => {
                 Avakaya, Podis &amp; Sweet Things
               </h2>
               <p className="text-base text-gray-600 leading-relaxed mb-6">
-                Hand-stirred pickles. Dry-roasted podis ground in small batches. Sweets folded the way grandmothers fold them — slow and smiling. From tangy Gongura to fiery Mango Avakaya, each jar carries a noisy Sunday kitchen inside it.
+                Hand-stirred Andhra pickles. Dry-roasted podis ground in small batches. Sweets folded the way grandmothers fold them — slow and smiling. From tangy gongura pickle to fiery mango avakaya and kandi podi, each jar carries a noisy Sunday kitchen inside it. Coming soon — tap through and we will tell you when they launch.
               </p>
               <div className="flex flex-wrap gap-3 mb-8">
                 {['Avakaya', 'Gongura', 'Kandi Podi', 'Sweets', 'Podis'].map((tag) => (

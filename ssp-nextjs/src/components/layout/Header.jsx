@@ -333,7 +333,7 @@ const Header = () => {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               onKeyDown={e => e.key === 'Escape' && setSearchOpen(false)}
-              placeholder="Search 170+ dishes — dosa, biryani, gongura…"
+              placeholder="Search 130+ dishes — dosa, biryani, gongura…"
               className="flex-1 bg-transparent text-sm py-1.5 focus:outline-none"
               style={{ color: '#2D2422' }}
               aria-label="Search the menu"

@@ -123,15 +123,14 @@ export default function DabbaWalaArticle() {
 
           <h2>The Sree Svadista Prasada Dabba Wala</h2>
           <p>
-            Our Dabba Wala subscription translates this spirit to Milton Keynes. We cannot pretend our delivery system matches the legendary Mumbai network&apos;s scale — but the principle is identical: fresh, home-style South Indian food delivered regularly to your door, removing the daily question of &ldquo;what&apos;s for dinner.&rdquo;
+            Our Dabba Wala subscription translates this spirit to Milton Keynes. We cannot pretend our delivery system matches the legendary Mumbai network&apos;s scale — but the principle is identical: fresh, home-style South Indian food delivered regularly to your door, removing the daily question of &ldquo;what&apos;s for lunch.&rdquo;
           </p>
           <p>
             Each dabba includes rice, a main curry, dal or sambar, a side dish, pickle or chutney, and papad — a complete South Indian home meal, cooked on the day of delivery with no reheating, no preservatives, and no shortcuts.
           </p>
           <ul>
-            <li><strong>Prasada box</strong> — pure vegetarian, same-day cooked, temple-kitchen standards</li>
+            <li><strong>Prasada box</strong> — vegetarian, same-day cooked, with its own separate utensils</li>
             <li><strong>Svadista box</strong> — non-vegetarian, Andhra-style curries and rice dishes</li>
-            <li><strong>Mixed box</strong> — alternating veg and non-veg across your subscription period</li>
           </ul>
           <p>
             Plans start from <strong>£13.75 per meal</strong> on a weekly or monthly subscription. Plans don&apos;t auto-renew, and if your plans change you can simply get in touch — we&apos;re flexible.
@@ -153,7 +152,7 @@ export default function DabbaWalaArticle() {
             <p>Yes. You can note dietary preferences (low spice, no onion/garlic, specific allergens to avoid) when setting up your subscription. We will accommodate these within the constraints of our menu.</p>
           </details>
           <details><summary><strong>Is Dabba Wala available outside Milton Keynes?</strong></summary>
-            <p>Hot meal delivery is currently available in Milton Keynes only. UK-wide shipping is available for our snack boxes, pickle jars, and podis. Edinburgh and Glasgow delivery is planned — register your interest via WhatsApp.</p>
+            <p>The Dabba Wala tiffin service is available in Milton Keynes only. Edinburgh and Glasgow are planned — register your interest via WhatsApp.</p>
           </details>
 
         </article>

@@ -39,6 +39,47 @@ export async function getOpeningHoursSpec(): Promise<object[] | null> {
   })
 }
 
+/** Opening hours as short lines ("Mon – Thu: 8am – 8:30pm") from the hours set in admin; null if they can't be read. */
+export async function getOpeningHoursText(): Promise<string[] | null> {
+  const data = await getJson('/opening-hours')
+  const days: Record<string, DayHours> | undefined = data?.days
+  if (!days) return null
+  const fmt = (t: string) => {
+    const [h, m] = t.split(':').map(Number)
+    return `${h % 12 === 0 ? 12 : h % 12}${m ? ':' + String(m).padStart(2, '0') : ''}${h < 12 ? 'am' : 'pm'}`
+  }
+  const runs: { first: string; last: string; label: string }[] = []
+  for (const key of DAY_ORDER) {
+    const d = days[key]
+    if (!d) continue
+    const label = d.closed || !d.open || !d.close ? 'Closed' : `${fmt(d.open)} – ${fmt(d.close)}`
+    const prev = runs[runs.length - 1]
+    if (prev && prev.label === label) prev.last = key
+    else runs.push({ first: key, last: key, label })
+  }
+  const short = (key: string) => DAY_NAMES[key].slice(0, 3)
+  return runs.length ? runs.map(r => `${short(r.first)}${r.last !== r.first ? ` – ${short(r.last)}` : ''}: ${r.label}`) : null
+}
+
+// Only the fields the home page cards render
+const slimItem = (i: any) => ({
+  id: i.id, name: i.name, slug: i.slug, description: i.description, price: i.price, image: i.image,
+  is_veg: i.is_veg, spice_level: i.spice_level, category: i.category, subcategory: i.subcategory,
+  allergens: i.allergens, tag: i.tag, sold_out_today: i.sold_out_today, preorder_only: i.preorder_only,
+})
+
+/** Featured dishes from the live menu, so the home page's first HTML shows real dishes and prices. */
+export async function getFeaturedItems(): Promise<any[]> {
+  const data = await getJson('/menu?available=true&featured=true')
+  return Array.isArray(data) ? data.map(slimItem) : []
+}
+
+/** The dish behind the home page's "This Week's Favourite" card (live price and link). */
+export async function getChefSpecialItem(): Promise<any | null> {
+  const data = await getJson('/menu?available=true&search=Karam+Dosa')
+  return Array.isArray(data) && data[0] ? slimItem(data[0]) : null
+}
+
 /** True only when the admin Delivery switch is on. Unknown counts as off. */
 export async function getDeliveryEnabled(): Promise<boolean> {
   const data = await getJson('/kitchen-status')

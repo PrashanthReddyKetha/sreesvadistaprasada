@@ -17,8 +17,12 @@ export default function SnacksPage() {
             Handmade Andhra pickles & podis — nearly here
           </h2>
           <p className="mb-3">
-            Avakaya cut in the traditional way, podis stone-ground in small batches — the jars every
-            Andhra household guards are being prepared for launch. They will ship UK-wide when they land.
+            Andhra pickles and podis, handmade in small batches — the jars every Andhra household
+            guards. The pickles: mango avakaya cut the traditional way, gongura pickle, lemon pickle,
+            tomato pickle, allam pachadi and velluli pachadi. The podis: kandi podi, nalla karam,
+            karivepaku podi, kobbari podi, nuvvula podi and palli podi. They are being prepared for
+            launch, and we plan to offer these Telugu pickles — Indian pickles online, sent across
+            the UK — once they are ready.
           </p>
           <p>
             Until then, the <Link href="/menu" className="underline font-semibold" style={{ color: '#800020' }}>full cooked menu</Link> is

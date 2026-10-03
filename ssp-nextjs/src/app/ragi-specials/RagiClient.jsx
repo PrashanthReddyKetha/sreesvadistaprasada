@@ -11,7 +11,7 @@ import { trackMenuCategoryView } from '@/lib/analytics';
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
-const RagiSpecials = ({ initialItems = [] }) => {
+const RagiSpecials = ({ initialItems = [], seoLine }) => {
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [search, setSearch] = useState('');
@@ -43,11 +43,11 @@ const RagiSpecials = ({ initialItems = [] }) => {
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               Ragi Specials
-              <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Healthy millet dishes, unique to our Milton Keynes kitchen</span>
+              <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">{seoLine || 'Ragi sangati & finger millet dishes in Milton Keynes'}</span>
             </h1>
             <p className="text-lg text-amber-100 leading-relaxed mb-1">Ancient grain. Timeless nourishment.</p>
             <p className="text-sm text-amber-200 leading-relaxed max-w-md">
-              Pearl millet the way it was always meant to be — Ragi Sangati, malts and buttermilk rooted in Telugu tradition.
+              Finger millet the way it was always meant to be — Ragi Sangati, malts and buttermilk rooted in Telugu tradition.
             </p>
           </div>
         </div>

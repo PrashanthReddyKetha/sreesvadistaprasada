@@ -50,7 +50,7 @@ const jsonLd = [
     '@type': 'FAQPage',
     mainEntity: [
       { '@type': 'Question', name: 'What is ragi?', acceptedAnswer: { '@type': 'Answer', text: 'Ragi is finger millet (Eleusine coracana), a small-seeded cereal grain grown widely in South India, East Africa, and South Asia. It is one of the most nutritionally dense grains available, with exceptionally high calcium, fibre, and a low glycaemic index. It is naturally gluten-free.' } },
-      { '@type': 'Question', name: 'What are the health benefits of ragi?', acceptedAnswer: { '@type': 'Answer', text: 'Ragi contains more calcium than milk gram-for-gram, has a low glycaemic index (ideal for diabetics and weight management), is high in dietary fibre, rich in iron and B vitamins, and is naturally gluten-free. It also contains the amino acid methionine and polyphenol antioxidants.' } },
+      { '@type': 'Question', name: 'What are the health benefits of ragi?', acceptedAnswer: { '@type': 'Answer', text: 'Ragi contains more calcium than milk gram-for-gram, has a low glycaemic index, is high in dietary fibre, rich in iron and B vitamins, and is naturally gluten-free. It also contains the amino acid methionine and polyphenol antioxidants.' } },
       { '@type': 'Question', name: 'Is ragi gluten-free?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. Ragi (finger millet) is naturally gluten-free and suitable for people with coeliac disease or gluten sensitivity. It is also suitable for those following a wheat-free diet.' } },
     ],
   },
@@ -174,12 +174,12 @@ export default function RagiArticle() {
 
           <h2>Try Ragi at Sree Svadista Prasada</h2>
           <p>
-            Our dedicated <Link href="/ragi-specials" className="text-amber-700 font-semibold hover:underline">Ragi Specials</Link> menu features ragi prepared in traditional Andhra style — not as a health food novelty but as the grain has always been eaten in South Indian homes. All ragi dishes are naturally gluten-free and suitable for diabetics and those on a low-GI diet.
+            Our dedicated <Link href="/ragi-specials" className="text-amber-700 font-semibold hover:underline">Ragi Specials</Link> menu features ragi prepared in traditional Andhra style — not as a health food novelty but as the grain has always been eaten in South Indian homes: ragi sangati with chicken curry or with pappu and pachi pulusu, ragi malt and ragi buttermilk. Ragi itself is gluten-free; our kitchen also cooks with wheat, so tell us before ordering if you need to avoid gluten strictly.
           </p>
 
           <div className="not-prose bg-amber-800 text-white rounded-2xl p-8 text-center my-8">
             <h3 className="text-2xl font-bold mb-2">Try Our Ragi Specials</h3>
-            <p className="text-amber-200 mb-6">Ragi Dosa, Ragi Sangati, Ragi Laddu — traditional Andhra recipes delivered in Milton Keynes.</p>
+            <p className="text-amber-200 mb-6">Ragi Sangati, Ragi Malt and Ragi Buttermilk — traditional Andhra recipes delivered in Milton Keynes.</p>
             <Link href="/ragi-specials" className="inline-block bg-amber-400 text-gray-900 font-bold px-8 py-3 rounded-full hover:bg-amber-300 transition-colors">
               View Ragi Menu
             </Link>

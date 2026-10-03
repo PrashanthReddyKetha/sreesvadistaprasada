@@ -33,7 +33,7 @@ const FAQ = ({ seoLine }) => {
               Frequently Asked Questions
               {seoLine && <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">{seoLine}</span>}
             </h1>
-            <p className="text-base text-gray-200 leading-relaxed">Everything you need to know about ordering, subscriptions, and more.</p>
+            <p className="text-base text-gray-200 leading-relaxed">Indian takeaway FAQs for Milton Keynes — ordering, delivery postcodes, the tiffin service, and vegetarian and allergen information.</p>
           </div>
         </div>
       </section>

@@ -18,10 +18,10 @@ async function getItems() {
 
 // Rendered visibly below AND used for the FAQPage schema
 const FAQS = [
-  { q: 'What are the most popular non-veg dishes?', a: 'Our most loved dishes are Natu Kodi Biryani (slow-cooked country chicken in basmati), Gongura Chicken (tangy sorrel leaf curry), Rayalaseema Mutton Curry, and Chicken 65. Every recipe is authentic Andhra home-style cooking.' },
+  { q: 'What are the most popular non-veg dishes?', a: 'Favourites include Chicken Dum Biryani and Chicken Fry Piece Biryani, Gongura Chicken Curry (tangy sorrel leaf curry), Spicy Andhra Chicken Curry and Chicken 65. Every recipe is authentic Andhra home-style cooking.' },
   { q: 'How spicy is Andhra food?', a: 'Andhra cuisine is known for bold, fiery flavours. Our dishes are prepared to traditional spice levels. You can request a milder preparation in the special instructions when ordering.' },
   { q: 'Do you deliver non-veg Indian food to Edinburgh and Glasgow?', a: 'Not yet — we currently deliver across Milton Keynes only. Edinburgh and Glasgow are coming soon; join the waitlist to be notified when we launch there.' },
-  { q: 'What makes Svadista different from other Indian takeaways?', a: 'Svadista means delicious in Sanskrit. Unlike generic Indian takeaways, every Svadista dish uses regional Andhra Telugu recipes — slow-cooked gravies, whole spice tadkas, and cuts of meat specific to traditional preparations like natu kodi (country chicken).' },
+  { q: 'What makes Svadista different from other Indian takeaways?', a: 'Svadista means delicious in Sanskrit. Unlike generic Indian takeaways, every Svadista dish uses regional Andhra Telugu recipes — slow-cooked gravies, whole spice tadkas, and chicken cooked on the bone.' },
 ];
 
 // Crawlable links to the subsection pages (the tab bar navigates by hash only)

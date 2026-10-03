@@ -91,7 +91,7 @@ export default function SouthVsNorthArticle() {
             Most people in the UK think of Indian food as a single cuisine. Chicken tikka masala. Naan bread. Rich, creamy curries with butter and Kashmiri chilli. This is the food that arrived via Punjab and the British Indian restaurant tradition. It is one very specific regional cuisine — and it represents perhaps 10% of what Indian food actually is.
           </p>
           <p>
-            South Indian food is not a variation of North Indian food. It is a completely different culinary tradition with different grains, different fats, different souring agents, different spice philosophies, and completely different breakfast dishes. The two cuisines share a country and not much else.
+            The difference between South and North Indian food starts here: South Indian food is not a variation of North Indian food. It is a completely different culinary tradition with different grains, different fats, different souring agents, different spice philosophies, and completely different breakfast dishes. The two cuisines share a country and not much else.
           </p>
 
           <h2>The Basic Split: Geography and History</h2>
@@ -152,7 +152,7 @@ export default function SouthVsNorthArticle() {
             Within South India, Andhra Pradesh and Telangana (the Telugu-speaking states) have the most distinctive cuisine. Andhra food is arguably the spiciest in all of India — Guntur district is the world&apos;s largest producer of red chillies, and the local cuisine uses them with extraordinary generosity.
           </p>
           <p>
-            The signature ingredient nobody else uses: <strong>gongura</strong> — the tangy sorrel leaf that appears in chutneys, curries (gongura chicken, gongura mutton), pickles, and dals. No other regional cuisine in India uses gongura. It is the flavour that immediately identifies a dish as Andhra.
+            The signature ingredient nobody else uses: <strong>gongura</strong> — the tangy sorrel leaf that appears in chutneys, curries (gongura chicken, gongura mutton), pickles, and dals. No other regional cuisine in India leans on gongura the same way. It is the flavour that immediately identifies a dish as Andhra.
           </p>
           <p>
             This is what Sree Svadista Prasada specialises in: specifically Andhra-Telugu cooking, not the generic &ldquo;Indian&rdquo; food that most UK restaurants serve.
@@ -182,7 +182,7 @@ export default function SouthVsNorthArticle() {
 
           <div className="not-prose bg-amber-800 text-white rounded-2xl p-8 text-center my-8">
             <h3 className="text-2xl font-bold mb-2">Experience Authentic Andhra Cuisine</h3>
-            <p className="text-amber-200 mb-6">Gongura curries, dosas, biryanis and more — delivered in Milton Keynes or shipped UK-wide.</p>
+            <p className="text-amber-200 mb-6">Gongura curries, dosas, biryanis and more — cooked fresh and delivered in Milton Keynes.</p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/svadista" className="inline-block bg-amber-400 text-gray-900 font-bold px-6 py-3 rounded-full hover:bg-amber-300 transition-colors">
                 Svadista Menu

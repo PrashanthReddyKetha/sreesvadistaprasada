@@ -33,7 +33,8 @@ export const PAGE_SEO = {
     h1: 'Indian Takeaway in Milton Keynes — Authentic South Indian Food Delivery',
     content: {
       paragraphs: [
-        'Sree Svadista Prasada is a family-run South Indian takeaway kitchen in Greenleys, Milton Keynes. We cook the Telugu and Andhra food we grew up on — dosas and idli from slow-fermented batter, home-style curries, dum biryani and a full vegetarian Prasada menu — fresh to order, for delivery across Milton Keynes or collection near Wolverton and Stony Stratford.',
+        'Sree Svadista Prasada is a South Indian takeaway kitchen in Greenleys, Milton Keynes. We cook the Telugu and Andhra food we grew up on — dosas and idli from slow-fermented batter, home-style curries, dum biryani and a full vegetarian Prasada menu — fresh to order, for delivery across Milton Keynes or collection near Wolverton and Stony Stratford.',
+        'Looking for a South Indian restaurant in Milton Keynes, or a Telugu restaurant that cooks Andhra food the way it is made at home? We are a takeaway kitchen rather than a dine-in restaurant, so you order online: South Indian food in Milton Keynes to collect, Indian food delivery across Milton Keynes, or a weekly tiffin from our Dabba Wala service.',
       ],
       links: [
         ['South Indian breakfast', '/breakfast'], ['Dosa', '/breakfast/dosas'], ['Chicken biryani', '/svadista/biriyani'],
@@ -53,6 +54,7 @@ export const PAGE_SEO = {
       heading: 'Our Indian takeaway menu in Milton Keynes',
       paragraphs: [
         'This is the full South Indian menu from our Greenleys kitchen — more than 130 dishes, each cooked to order. Start the day with a South Indian breakfast of dosa, idli and vada; choose from the vegetarian Prasada menu or the non-veg Svadista menu of Andhra curries and chicken biryani; or try pani puri, momos and ragi specials. Order online for delivery in Milton Keynes or collection.',
+        'If you are looking for an Indian food menu in Milton Keynes that goes beyond the usual curry-house list, this is it: a South Indian food menu, and an Andhra food menu of home-style dishes.',
       ],
       links: [['South Indian breakfast', '/breakfast'], ['Vegetarian menu', '/prasada'], ['Non-veg menu', '/svadista'], ['Indian street food', '/street-food'], ['Ragi specials', '/ragi-specials'], ['Drinks & lassi', '/drinks']],
     },
@@ -67,6 +69,7 @@ export const PAGE_SEO = {
       heading: 'Vegetarian South Indian food in Milton Keynes',
       paragraphs: [
         'Prasada is our fully vegetarian South Indian menu — no meat, fish or eggs — cooked with its own separate utensils. If you are looking for a vegetarian South Indian restaurant or a veg Indian takeaway in Milton Keynes, this is the menu for you: Andhra pappu and sambar, gutti vankaya, veg pulao and rice dishes such as gongura rice and curd rice, crisp bhajji and punugulu, a full South Indian veg thali, and temple-style naivedyam made without onion or garlic.',
+        'Order South Indian veg meals online from a vegetarian Indian takeaway in Milton Keynes — to collect from Greenleys or for delivery across MK. Vegetarian and non-vegetarian food is cooked in the same kitchen, with separate utensils for Prasada dishes, and each dish page lists its allergens.',
       ],
       links: [['Veg thali', '/prasada/thalis-rice-bowls'], ['Vegetarian curries', '/prasada/curries'], ['Veg pulao & rice', '/prasada/biriyanis-rice'], ['Veg starters & chaat', '/prasada/bites-starters'], ['Naivedyam', '/prasada/naivedyam'], ['About Prasada', '/prasada/about']],
     },
@@ -81,6 +84,7 @@ export const PAGE_SEO = {
       heading: 'Non-veg South Indian food in Milton Keynes',
       paragraphs: [
         'Svadista is our non-vegetarian menu: Andhra chicken curries cooked on the bone, gongura chicken, dum biryani and fry piece biryani, Chicken 65 and ghee roast, plus egg dosa and omelettes. It is the bold, village-style side of South Indian cooking, made fresh to order for delivery in Milton Keynes or collection from our Greenleys kitchen.',
+        'Looking for Andhra chicken curry or chicken biryani in Milton Keynes? This is Andhra food as a Telugu home cooks it — the menu you would want from a South Indian non-veg restaurant, cooked to order as takeaway.',
       ],
       links: [['Chicken biryani', '/svadista/biriyani'], ['Andhra chicken curry', '/svadista/curries'], ['Chicken starters', '/svadista/starters'], ['Egg specials', '/svadista/egg-specials'], ['Rice bowls', '/svadista/rice-bowls'], ['About Svadista', '/svadista/about']],
     },
@@ -95,7 +99,7 @@ export const PAGE_SEO = {
       heading: 'Indian breakfast in Milton Keynes, the South Indian way',
       paragraphs: [
         'Looking for an Indian breakfast near you in Milton Keynes? Ours is the South Indian kind: dosas from batter we ferment ourselves, soft steamed idli, crisp medu vada with sambar and chutneys, plus poori, upma, poha and uggani. Everything is made fresh each morning in our Greenleys kitchen, close to Wolverton and Stony Stratford.',
-        'Order your South Indian breakfast online for collection or delivery across Milton Keynes. The breakfast menu also pairs idli, vada and dosa with Andhra chicken curry, for those who like to start the day strong.',
+        'Order your South Indian breakfast online — dosa, idli and vada in Milton Keynes, for collection or delivery. The breakfast menu also pairs idli, vada and dosa with Andhra chicken curry, for those who like to start the day strong.',
       ],
       links: [['Dosa in Milton Keynes', '/breakfast/dosas'], ['Idli & vada', '/breakfast/idli-vada'], ['Poori, upma & poha', '/breakfast/poori-others'], ['Dosa & idli with chicken curry', '/breakfast/chicken-curry-combos'], ['About our breakfast', '/breakfast/about']],
     },
@@ -113,6 +117,15 @@ export const PAGE_SEO = {
     title: `Ragi & Millet Specials Milton Keynes${B}`,
     description: 'Ragi specials in Milton Keynes — ragi sangati with chicken curry or pappu, ragi malt and ragi buttermilk. Traditional Andhra finger millet dishes. Order online.',
     keywords: ['ragi sangati Milton Keynes', 'ragi food UK', 'finger millet dishes', 'ragi malt', 'South Indian millet food'],
+    h1: 'Ragi sangati & finger millet dishes in Milton Keynes',
+    content: {
+      heading: 'Ragi sangati in Milton Keynes',
+      paragraphs: [
+        'Ragi is finger millet — the everyday grain of rural Andhra. Our ragi specials are the dishes it is eaten as at home: ragi sangati (the finger millet ball some know as ragi mudde) with chicken curry or with pappu and pachi pulusu, warm ragi malt (ragi jaava), and ragi buttermilk.',
+        'Ragi food is hard to find in the UK, and South Indian millet food rarely makes it onto a takeaway menu. We cook these finger millet dishes fresh in Milton Keynes — order ragi sangati online for delivery or collection.',
+      ],
+      links: [['What is ragi sangati?', '/ragi-specials/about'], ['Ragi health benefits', '/blog/ragi-health-benefits'], ['Order online', '/order']],
+    },
   },
 
   '/drinks': {
@@ -180,7 +193,7 @@ export const PAGE_SEO = {
     content: {
       heading: 'An Indian catering service for Milton Keynes',
       paragraphs: [
-        'We cater South Indian food for weddings, corporate lunches, house-warmings, temple functions and family celebrations in and around Milton Keynes. Menus can be fully vegetarian — including no onion and no garlic for religious events — or non-veg, with Andhra curries and biryani. Tell us your date, guest numbers and budget and we will send a quote.',
+        'We cater South Indian food for weddings, corporate lunches, house-warmings, temple functions and family celebrations in and around Milton Keynes. For Indian wedding catering in Milton Keynes we build the menu with you; for Indian corporate catering we can bring lunch for a whole team; and Indian vegetarian catering can be made without onion or garlic for religious events. Non-veg menus bring Andhra curries and biryani. Tell us your date, guest numbers and budget and we will send a quote.',
       ],
       links: [['Vegetarian menu', '/prasada'], ['Non-veg menu', '/svadista'], ['Contact us', '/contact']],
     },

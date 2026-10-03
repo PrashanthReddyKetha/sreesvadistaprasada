@@ -25,7 +25,7 @@ export default function SvadistaAboutPage() {
           Authentic Non-Veg South Indian Food in Milton Keynes
         </h2>
         <p className="leading-relaxed mb-4" style={{ color: '#2D2422' }}>
-          All meat served at Sree Svadista Prasada is carefully sourced from trusted suppliers. Svadista brings bold, authentic Andhra and Telugu non-vegetarian cooking to Milton Keynes — made fresh every day, the way it is made back home.
+          All meat served at Sree Svadista Prasada is carefully sourced from trusted suppliers. Svadista brings bold, authentic Andhra non-veg food and Telugu non-veg cooking to Milton Keynes — made fresh every day, the way it is made back home.
         </p>
 
         <h2 className="text-2xl font-bold mt-10 mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
@@ -35,22 +35,21 @@ export default function SvadistaAboutPage() {
           Gongura is the sorrel leaf. In Telugu, the word for it is gongura. In Andhra Pradesh, it is the defining ingredient of an entire cuisine — used in pickles, dal, curries and chutneys. It has a natural tartness that no other ingredient replicates. It tenderises meat as it cooks. It transforms a standard chicken curry into something completely distinctive.
         </p>
         <p className="leading-relaxed mb-4" style={{ color: '#2D2422' }}>
-          Our <strong>Gongura Chicken Curry</strong> slow-cooks chicken with fresh sorrel leaves and Andhra spices for over an hour — until the tang of the gongura and the richness of the chicken become a single, indivisible flavour. Our <strong>Gongura Mutton</strong> braises mutton in the same way, for even longer. The result is a dish from the Krishna delta of coastal Andhra that the Telugu diaspora in the UK has been making at home because no restaurant was offering it. In Milton Keynes, we are the only kitchen making and delivering genuine Gongura food.
+          Our <strong>Gongura Chicken Curry</strong> slow-cooks chicken with fresh sorrel leaves and Andhra spices for over an hour — until the tang of the gongura and the richness of the chicken become a single, indivisible flavour. The result is a dish from the Krishna delta of coastal Andhra that the Telugu diaspora in the UK has mostly had to make at home. We cook gongura chicken fresh in Milton Keynes — read <Link href="/gongura" className="underline hover:text-[#800020]">what gongura is</Link> if it is new to you.
         </p>
 
         <h2 className="text-2xl font-bold mt-10 mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-          Dishes Unavailable at Any Other MK Restaurant
+          Andhra Non-Veg Dishes You Rarely See on a Menu
         </h2>
         <p className="leading-relaxed mb-5" style={{ color: '#2D2422' }}>
-          Beyond Gongura, Svadista carries the dishes that define Telugu non-vegetarian cooking and appear on no other delivery menu in Milton Keynes:
+          Beyond Gongura, Svadista carries the dishes that define Telugu non-vegetarian cooking — South Indian non-veg food that is hard to find on a takeaway menu in Milton Keynes:
         </p>
         <div className="space-y-4 mb-8">
           {[
             ['Whole Grilled Chicken', 'A whole bird marinated overnight in Andhra spices and slow-grilled until the skin is charred and the meat falls from the bone. The showstopper of our menu.'],
             ['Chicken Ghee Roast', 'Chicken lacquered in a dark, tamarind-and-ghee masala — concentrated, deeply spiced, the dish regulars reorder every time.'],
-            ['Liver Fry', 'Chicken liver with curry leaves and Andhra spices — earthy, rich, unapologetic. Not on any other MK menu.'],
-            ['Fish Pulusu', 'Fish in a coastal Andhra tamarind gravy — the only Fish Pulusu available for delivery in Milton Keynes.'],
-            ['Prawns Iguru', 'Prawns in a thick, dry Andhra masala — intense, concentrated, the prawn curry for serious eaters.'],
+            ['Fish Pulusu', 'Fish in a coastal Andhra tamarind gravy — sharp, hot and made to be eaten with rice.'],
+            ['Chicken Fry Piece Biryani', 'Crisp-fried marinated chicken over spiced rice — the Andhra favourite, alongside our chicken dum biryani.'],
             ['Prawns Ghee Roast', 'Prawns in the Ghee Roast masala — sweet from the prawn, fierce from the spice. Distinctive.'],
           ].map(([name, desc]) => (
             <div key={name} className="flex gap-3">

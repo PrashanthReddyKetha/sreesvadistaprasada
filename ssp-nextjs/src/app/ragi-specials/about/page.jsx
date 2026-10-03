@@ -26,9 +26,9 @@ const faqSchema = {
       acceptedAnswer: {
         '@type': 'Answer',
         text:
-          'Sree Svadista Prasada in Milton Keynes is the only restaurant in the ' +
-          'UK currently offering Ragi Sangati for delivery. Order online at ' +
-          'sreesvadistaprasada.com for delivery across all Milton Keynes postcodes.',
+          'Sree Svadista Prasada in Milton Keynes cooks Ragi Sangati fresh to order. ' +
+          'Order online at sreesvadistaprasada.com for delivery across Milton Keynes ' +
+          'or collection from our Greenleys kitchen.',
       },
     },
     {
@@ -39,9 +39,8 @@ const faqSchema = {
         text:
           'Yes. Finger millet (ragi) is one of the most nutritious grains available. ' +
           'It is naturally gluten-free, high in calcium, iron, dietary fibre and ' +
-          'protein. It has a low glycaemic index, making it suitable for those ' +
-          'managing blood sugar. It has been a staple food in Andhra Pradesh ' +
-          'and Karnataka for centuries.',
+          'protein, with a low glycaemic index. It has been a staple food in ' +
+          'Andhra Pradesh and Karnataka for centuries.',
       },
     },
     {
@@ -51,8 +50,8 @@ const faqSchema = {
         '@type': 'Answer',
         text:
           'In Andhra tradition, Ragi Sangati is served with Kodi Kura (chicken curry), ' +
-          'Mutton Curry, or Pappu (toor dal) and Pachi Pulusu (raw tamarind sauce). ' +
-          'At Sree Svadista Prasada we offer all three combinations.',
+          'or Pappu (toor dal) and Pachi Pulusu (raw tamarind sauce). ' +
+          'At Sree Svadista Prasada we serve it both ways.',
       },
     },
     {
@@ -89,7 +88,7 @@ export default function RagiAboutPage() {
           What is Ragi Sangati?
         </h1>
         <p className="text-lg mb-10" style={{ color: '#5C4B47' }}>
-          The traditional Andhra superfood — and the only Ragi Sangati delivery in the United Kingdom.
+          The traditional Andhra finger millet meal — cooked fresh in our Milton Keynes kitchen.
         </p>
 
         {/* Section 1 */}
@@ -105,7 +104,7 @@ export default function RagiAboutPage() {
           What is Ragi Sangati?
         </h2>
         <p className="leading-relaxed mb-4" style={{ color: '#2D2422' }}>
-          Ragi Sangati is finger millet flour cooked in water until it forms a soft, dense, smooth ball — earthy in flavour, heavy with nutrition, and completely satisfying in a way that lighter food is not. It is the evening meal of coastal Andhra villages. In Rayalaseema, it is comfort. For the Telugu diaspora in the UK, it is memory made edible — the taste of a grandmother&apos;s kitchen, of a village in Andhra Pradesh, of a childhood that no London restaurant has ever tried to recreate.
+          Ragi Sangati is finger millet flour cooked in water until it forms a soft, dense, smooth ball — the finger millet ball known across the border in Karnataka as ragi mudde — earthy in flavour, heavy with nutrition, and completely satisfying in a way that lighter food is not. It is the evening meal of coastal Andhra villages. In Rayalaseema, it is comfort. For the Telugu diaspora in the UK, it is memory made edible — the taste of a grandmother&apos;s kitchen, of a village in Andhra Pradesh, of a childhood that no London restaurant has ever tried to recreate.
         </p>
         <p className="leading-relaxed mb-4" style={{ color: '#2D2422' }}>
           It is served alongside curries, pappu and pulusu — not as a side dish but as the centrepiece of the meal. You take a piece of the Sangati, dip it into the curry or dal, and eat it in one go. There is a rhythm to eating it. Once you understand the rhythm, you understand why Andhra swears by it.
@@ -113,10 +112,10 @@ export default function RagiAboutPage() {
 
         {/* Section 3 */}
         <h2 className="text-2xl font-bold mt-10 mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-          The Only Ragi Sangati Delivery in the UK
+          Ragi Sangati in Milton Keynes
         </h2>
         <p className="leading-relaxed mb-4" style={{ color: '#2D2422' }}>
-          Search for Ragi Sangati delivery in the UK and you will find results from Hyderabad on Zomato and Swiggy. Nothing from a UK restaurant. Nothing from a UK delivery service. Sree Svadista Prasada in Milton Keynes is the only place in the United Kingdom where you can order Ragi Sangati for delivery. Freshly made every day — not frozen, not reheated. Made from finger millet cooked the Andhra way, paired with slow-cooked curries made from scratch.
+          Andhra ragi food is hard to find on a menu in Britain. We make Ragi Sangati in our Greenleys kitchen in Milton Keynes — freshly made, not frozen, not reheated. Finger millet cooked the Andhra way, paired with slow-cooked curries made from scratch. Order it online for delivery across Milton Keynes or collection.
         </p>
 
         {/* Menu */}
@@ -125,20 +124,19 @@ export default function RagiAboutPage() {
         </h2>
         <div className="space-y-4 mb-8">
           {[
-            { name: 'Ragi Sangati with Chicken Curry', price: '£9.99', desc: 'Fresh Ragi Sangati with slow-cooked Andhra Kodi Kura (country chicken curry). The traditional coastal Andhra meal.' },
-            { name: 'Ragi Sangati with Mutton Curry', price: '£10.99', desc: 'Ragi Sangati with slow-braised mutton curry. The richer, more indulgent version. The mutton is cooked long — the extra time shows.' },
-            { name: 'Ragi Sangati with Pappu and Pachi Pulusu', price: '£7.99', desc: 'The traditional vegetarian way — with toor dal (pappu) and raw tamarind sauce (pachi pulusu). Simple, clean, entirely authentic.' },
-            { name: 'Ragi Jaava / Malt', price: '£6.99', desc: 'A warm finger millet drink — lightly sweetened, high in calcium and iron. An Andhra morning ritual for generations.' },
-            { name: 'Ragi Butter Milk', price: '£5.99', desc: 'Fermented buttermilk with cooked Ragi, ginger and cumin. Cooling, probiotic, the drink of the Rayalaseema countryside.' },
+            { name: 'Ragi Sangati with Chicken Curry', desc: 'Fresh Ragi Sangati with slow-cooked Andhra Kodi Kura (chicken curry). The traditional Andhra meal.' },
+            { name: 'Ragi Sangati with Pappu and Pachi Pulusu', desc: 'The traditional vegetarian way — with toor dal (pappu) and raw tamarind sauce (pachi pulusu). Simple, clean, entirely authentic.' },
+            { name: 'Ragi Jaava / Malt', desc: 'A warm finger millet drink (ragi malt) — lightly sweetened. An Andhra morning ritual for generations.' },
+            { name: 'Ragi Butter Milk', desc: 'Buttermilk with cooked ragi, ginger and cumin. Cooling — the drink of the Rayalaseema countryside.' },
           ].map(item => (
             <div key={item.name} className="rounded-lg p-5" style={{ border: '1px solid rgba(244,196,48,0.4)', backgroundColor: '#FDFBF7' }}>
-              <div className="flex justify-between items-start mb-1">
-                <h3 className="font-semibold" style={{ color: '#800020' }}>{item.name}</h3>
-                <span className="font-medium flex-shrink-0 ml-4" style={{ color: '#5C4B47' }}>{item.price}</span>
-              </div>
+              <h3 className="font-semibold mb-1" style={{ color: '#800020' }}>{item.name}</h3>
               <p className="text-sm leading-relaxed" style={{ color: '#5C4B47' }}>{item.desc}</p>
             </div>
           ))}
+          <p className="text-sm" style={{ color: '#5C4B47' }}>
+            Today&apos;s prices and availability are on the <Link href="/ragi-specials" className="underline hover:text-[#800020]">Ragi Specials menu</Link>.
+          </p>
         </div>
 
         {/* FAQ */}
@@ -147,10 +145,10 @@ export default function RagiAboutPage() {
         </h2>
         <div className="space-y-3 mb-10">
           {[
-            ['Is Ragi Sangati gluten-free?', 'Yes. Finger millet is naturally gluten-free. Ragi Sangati contains no wheat, barley or rye.'],
+            ['Is Ragi Sangati gluten-free?', 'Finger millet is naturally gluten-free, and Ragi Sangati itself is made without wheat, barley or rye. Our kitchen also cooks with wheat, so if you need to avoid gluten strictly, please tell us before you order.'],
             ['Is Ragi Sangati healthy?', 'Finger millet is one of the most nutritious grains available — high in calcium, iron and fibre, low on the glycaemic index. It has been a dietary staple in Andhra Pradesh for over four thousand years.'],
             ['What does Ragi Sangati taste like?', 'Earthy, slightly nutty, with a density that lighter grains do not have. It is not a strong flavour on its own — the character comes from the curries and dal it is served with. The combination is greater than either alone.'],
-            ['Can I add Ragi Sangati to my Dabba Wala subscription?', 'Yes. Add Ragi Sangati to any weekly or monthly Dabba Wala plan. Contact us via WhatsApp or the ordering app to customise your subscription.'],
+            ['Can I have Ragi Sangati with my Dabba Wala plan?', 'Message us on WhatsApp with your plan and we will tell you what we can do.'],
           ].map(([q, a]) => (
             <details key={q} className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(244,196,48,0.4)' }}>
               <summary className="px-5 py-4 cursor-pointer font-medium flex justify-between items-center hover:bg-[#F4C430]/10" style={{ color: '#2D2422', listStyle: 'none' }}>
@@ -173,7 +171,7 @@ export default function RagiAboutPage() {
           </Link>
           <Link href="/subscriptions">
             <button className="px-7 py-3 rounded-sm text-sm font-semibold border transition-all hover:bg-[#800020]/5" style={{ borderColor: '#800020', color: '#800020' }}>
-              Add to Dabba Wala
+              See Dabba Wala plans
             </button>
           </Link>
         </div>

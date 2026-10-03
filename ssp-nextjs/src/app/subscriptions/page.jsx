@@ -7,7 +7,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Product',
   name: 'Dabba Wala — Weekly South Indian Meal Subscription',
-  description: 'Weekly home-cooked South Indian meal plan delivered to your door in Milton Keynes. Fresh Andhra and Telugu cooking — rice, dal, curry, pickle and papad every day.',
+  description: 'Weekly home-cooked South Indian meal plan delivered to your door in Milton Keynes. Fresh Andhra and Telugu cooking — rice, dal, curry, pickle and papad, Monday to Friday.',
   brand: { '@type': 'Brand', name: 'Sree Svadista Prasada' },
   offers: {
     '@type': 'Offer',
@@ -38,7 +38,8 @@ export default function Page() {
               Dabba Wala — Indian tiffin service in Milton Keynes
             </h1>
             <p>
-              Fresh Andhra and Telugu dishes delivered to your door every week across
+              An Indian tiffin service near you in Milton Keynes: fresh Andhra and Telugu dishes
+              delivered to your door, Monday to Friday, across
               Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley,
               Westcroft, Emerson Valley and all MK postcodes (MK1–MK19).
               Edinburgh and Glasgow subscriptions are coming soon — join the waitlist.
@@ -64,16 +65,16 @@ export default function Page() {
           <div>
             <h2 className="text-lg font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>Vegetarian or non-veg Indian tiffin</h2>
             <p>
-              Choose the Prasada box for a vegetarian Indian tiffin, or the Svadista box for non-veg. Either way
-              it is a home-made tiffin — rice, dal, curry and sides cooked that morning — delivered as a lunch box
-              between 12 and 2pm, so it works as an Indian lunch at home or at the office.
+              Choose the Prasada box for an Indian vegetarian tiffin service, or the Svadista box for non-veg. Either way
+              it is a home-made tiffin service — rice, dal, curry and sides cooked that morning — delivered as a tiffin box
+              between 12 and 2pm, so it works as Indian lunch delivery in Milton Keynes, at home or at the office.
             </p>
           </div>
           <div>
             <h2 className="text-lg font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>How it works</h2>
             <p>
-              Choose your plan and start week, and we cook fresh and deliver Monday to Friday to
-              your door. No auto-renewal — and if your plans change, just get in touch. We&apos;re flexible.
+              Our dabba service in Milton Keynes is simple: choose your plan and start week, and we cook
+              fresh and deliver Monday to Friday to your door. No auto-renewal — and if your plans change, just get in touch. We&apos;re flexible.
             </p>
           </div>
         </div>

@@ -175,14 +175,19 @@ const OurStory = ({ seoLine }) => {
       {/* Serving Across the UK */}
       <section className="py-16 md:py-24 px-4 md:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>More than a restaurant</p>
+          <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>More than a takeaway</p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-            Serving Across the UK
+            Serving Milton Keynes
           </h2>
           <p className="text-base text-gray-600 leading-relaxed mb-4">
-            Sree Svadista Prasada is not just a restaurant — it's a gateway back home. Whether you're
+            Sree Svadista Prasada is more than a takeaway — it's a gateway back home. Whether you're
             a student missing Amma's cooking, a professional craving authentic flavors, or a family
             looking for pure prasada for your pooja, we're here for you.
+          </p>
+          <p className="text-base text-gray-600 leading-relaxed mb-4">
+            If you are looking for a Telugu restaurant in Milton Keynes, this is Telugu food and Andhra food
+            as it is cooked at home — authentic South Indian food from a takeaway kitchen in Greenleys,
+            rather than a dine-in restaurant.
           </p>
           <p className="text-base text-gray-600 leading-relaxed mb-8">
             Now serving <strong className="font-bold" style={{ color: '#800020' }}>Milton Keynes</strong> — Edinburgh and Glasgow coming soon — with delivery, collection,

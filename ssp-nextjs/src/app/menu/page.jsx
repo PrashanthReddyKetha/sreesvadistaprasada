@@ -17,9 +17,9 @@ const jsonLd = {
     { '@type': 'MenuSection', name: 'Prasada', description: 'Pure vegetarian South Indian dishes', url: 'https://sreesvadistaprasada.com/prasada' },
     { '@type': 'MenuSection', name: 'Svadista', description: 'Non-vegetarian South Indian dishes', url: 'https://sreesvadistaprasada.com/svadista' },
     { '@type': 'MenuSection', name: 'Breakfast', description: 'South Indian breakfast — idli, vada, dosas, poori', url: 'https://sreesvadistaprasada.com/breakfast' },
-    { '@type': 'MenuSection', name: 'Street Food', description: 'South Indian street food and chaat', url: 'https://sreesvadistaprasada.com/street-food' },
-    { '@type': 'MenuSection', name: 'Ragi Specials', description: 'Ragi-based health foods unique to our menu', url: 'https://sreesvadistaprasada.com/ragi-specials' },
-    { '@type': 'MenuSection', name: 'Hot, Sweet & Pickles', description: 'Handmade pickles, podis and snacks — ships UK-wide', url: 'https://sreesvadistaprasada.com/snacks' },
+    { '@type': 'MenuSection', name: 'Street Food', description: 'Indian street food — pani puri, momos, chaat, wraps and burgers', url: 'https://sreesvadistaprasada.com/street-food' },
+    { '@type': 'MenuSection', name: 'Ragi Specials', description: 'Ragi sangati, ragi malt and ragi buttermilk', url: 'https://sreesvadistaprasada.com/ragi-specials' },
+    { '@type': 'MenuSection', name: 'Hot, Sweet & Pickles', description: 'Handmade Andhra pickles and podis — coming soon', url: 'https://sreesvadistaprasada.com/snacks' },
     { '@type': 'MenuSection', name: 'Drinks', description: 'South Indian drinks and beverages', url: 'https://sreesvadistaprasada.com/drinks' },
   ],
 };

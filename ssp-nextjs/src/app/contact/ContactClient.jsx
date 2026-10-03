@@ -5,7 +5,7 @@ import api from '@/api';
 import { useAuth } from '@/context/AuthContext';
 import { trackEnquirySubmit } from '@/lib/analytics';
 
-const Contact = ({ seoLine }) => {
+const Contact = ({ seoLine, hours, deliveryEnabled }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [status, setStatus] = useState(null); // 'loading' | 'success' | 'error'
@@ -64,6 +64,10 @@ const Contact = ({ seoLine }) => {
                     <p className="text-sm text-gray-600 leading-relaxed">
                       <strong style={{ color: '#800020' }}>Milton Keynes</strong><br />
                       24 Oxman Ln, Greenleys, MK12 6LF<br /><br />
+                      <span className="block mb-3">
+                        An Indian takeaway in Greenleys, MK12 — a few minutes from Wolverton and Stony Stratford.
+                        Order online and collect from the kitchen, or have it delivered across Milton Keynes.
+                      </span>
                       <span className="text-xs italic" style={{ color: '#8B6914' }}>Edinburgh &amp; Glasgow coming soon</span>
                     </p>
                   </div>
@@ -103,9 +107,13 @@ const Contact = ({ seoLine }) => {
                   <div>
                     <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Hours</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      Mon – Fri: 11am – 10pm<br />
-                      Sat – Sun: 10am – 11pm<br />
-                      <span className="text-xs italic" style={{ color: '#8B6914' }}>Delivery available during all hours</span>
+                      {/* Hours come from Admin → Collection Times */}
+                      {hours && hours.length
+                        ? hours.map(line => <React.Fragment key={line}>{line}<br /></React.Fragment>)
+                        : <>Today&apos;s collection times are shown when you order<br /></>}
+                      <span className="text-xs italic" style={{ color: '#8B6914' }}>
+                        {deliveryEnabled ? 'Collection and delivery during these hours' : 'Collection during these hours — delivery is paused at the moment'}
+                      </span>
                     </p>
                   </div>
                 </div>

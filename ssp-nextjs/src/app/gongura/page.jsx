@@ -93,7 +93,7 @@ const jsonLd = [
         name: 'Where can I eat gongura dishes in the UK?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Sree Svadista Prasada serves authentic Gongura Chicken Curry and Gongura Mutton Curry in Milton Keynes (Edinburgh and Glasgow coming soon) — one of the very few restaurants in the UK offering authentic Andhra gongura preparations.',
+          text: 'Sree Svadista Prasada cooks Gongura Chicken Curry, Gongura Pappu and Gongura Rice in Milton Keynes (Edinburgh and Glasgow coming soon). Gongura dishes are rare on UK menus; order online for delivery in Milton Keynes or collection.',
         },
       },
     ],
@@ -206,11 +206,10 @@ export default function GonguraPage() {
           <p>
             Genuine gongura dishes are rare in the UK. Most Indian restaurants serve Punjabi or
             generic &ldquo;Indian&rdquo; food that has little connection to Andhra cuisine. At
-            Sree Svadista Prasada, we prepare both{' '}
+            Sree Svadista Prasada, we cook{' '}
             <Link href="/svadista/curries/gongura-chicken-curry" className="text-amber-700 font-semibold hover:underline">
               Gongura Chicken Curry
-            </Link>{' '}
-            and Gongura Mutton using fresh gongura leaves sourced specifically for the authentic
+            </Link>, Gongura Pappu and Gongura Rice with gongura leaves sourced specifically for the authentic
             flavour — not substituted with tamarind or other souring agents.
           </p>
           <p>

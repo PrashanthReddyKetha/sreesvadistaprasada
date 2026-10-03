@@ -1,6 +1,6 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import HomeClient from './HomeClient';
-import { getOpeningHoursSpec } from '@/lib/siteStatus';
+import { getOpeningHoursSpec, getFeaturedItems, getChefSpecialItem } from '@/lib/siteStatus';
 
 // Re-read the opening hours set in admin every 10 minutes
 export const revalidate = 600;
@@ -21,7 +21,7 @@ const jsonLd = {
       image: 'https://sreesvadistaprasada.com/logo.png',
       logo: 'https://sreesvadistaprasada.com/logo.png',
       priceRange: '££',
-      servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan'],
+      servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian'],
       knowsAbout: ['Gongura', 'Andhra cuisine', 'Telugu food', 'Dabba Wala', 'Ragi', 'Pulihora', 'Avakaya', 'Chicken 65', 'Gutti Vankaya'],
       hasMap: 'https://maps.google.com/?q=24+Oxman+Ln,+Greenleys,+Milton+Keynes+MK12+6LF',
       address: {
@@ -70,7 +70,7 @@ const jsonLd = {
 };
 
 export default async function HomePage() {
-  const hours = await getOpeningHoursSpec();
+  const [hours, featured, special] = await Promise.all([getOpeningHoursSpec(), getFeaturedItems(), getChefSpecialItem()]);
   // Opening hours come from the Collection Times set in admin; if they can't be
   // read, say nothing rather than publish hours that might be wrong.
   const graph = jsonLd['@graph'].map(node => {
@@ -84,7 +84,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...jsonLd, '@graph': graph }) }}
       />
-      <HomeClient intro={{ h1: PAGE_SEO['/'].h1, ...PAGE_SEO['/'].content }} />
+      <HomeClient intro={{ h1: PAGE_SEO['/'].h1, ...PAGE_SEO['/'].content }} initialFeatured={featured} initialSpecial={special} />
     </>
   );
 }

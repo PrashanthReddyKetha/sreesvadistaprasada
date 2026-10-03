@@ -188,7 +188,7 @@ const Footer = () => {
               ))}
               <li className="pt-1">
                 <p className="text-xs" style={{ color: '#A09890' }}>
-                  Snacks & pickles ship UK-wide
+                  Andhra pickles &amp; podis — coming soon
                 </p>
               </li>
             </ul>

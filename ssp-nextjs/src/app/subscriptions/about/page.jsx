@@ -28,7 +28,7 @@ const faqSchema = {
       name: 'What areas does the Dabba Wala deliver to?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Hot daily dabbas are delivered across all Milton Keynes postcodes MK1 to MK19, including Bletchley, Newport Pagnell, Central MK, Stony Stratford, Wolverton and Greenleys. Edinburgh and Glasgow subscriptions are coming soon — join the waitlist to be first in line.',
+        text: 'Hot dabbas are delivered Monday to Friday across all Milton Keynes postcodes MK1 to MK19, including Bletchley, Newport Pagnell, Central MK, Stony Stratford, Wolverton and Greenleys. Edinburgh and Glasgow subscriptions are coming soon — join the waitlist to be first in line.',
       },
     },
     {
@@ -62,7 +62,7 @@ export default function SubscriptionsAboutPage() {
           The Dabba Wala — How It Works
         </h1>
         <p className="text-lg mb-10" style={{ color: '#5C4B47' }}>
-          Milton Keynes&apos; only weekly home-cooked South Indian meal subscription. Not frozen. Not reheated. Real ghar ka khana.
+          A weekly Indian meal plan, home-cooked in Milton Keynes. Not frozen. Not reheated. Real ghar ka khana.
         </p>
 
         <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
@@ -72,14 +72,14 @@ export default function SubscriptionsAboutPage() {
           The Dabba Wala tradition originates in Mumbai, where for over a century a network of delivery workers carried fresh home-cooked lunches in dabba (tiffin) boxes from homes to offices across the city — with a precision that Harvard Business School studied. The dabba is not fast food. It is home food. Cooked that morning. Delivered hot.
         </p>
         <p className="leading-relaxed mb-4" style={{ color: '#2D2422' }}>
-          Sree Svadista Prasada brings this tradition to Milton Keynes — delivering fresh Andhra and Telugu home cooking to your door, daily. Rice, dal, sabzi, curry, pickle, papad. A complete South Indian meal, made from scratch every morning.
+          Sree Svadista Prasada brings this tradition to Milton Keynes: Dabba Wala is home-cooked Indian meals delivered to your door, Monday to Friday. Fresh Andhra and Telugu home cooking — rice, dal, sabzi, curry, pickle, papad. A complete South Indian meal, made from scratch every morning.
         </p>
 
         <h2 className="text-2xl font-bold mt-10 mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
           Why Not a Ready Meal Service?
         </h2>
         <p className="leading-relaxed mb-4" style={{ color: '#2D2422' }}>
-          Other Indian meal delivery services in the UK produce food in factories, freeze it, and ship it to you ready to microwave in three minutes. The food may be Indian in name — but it was cooked weeks ago, frozen at scale, and reheated in your kitchen. It is not home cooking. It is factory food.
+          Many meal delivery services cook in bulk, chill or freeze the food, and send it to be reheated at home. That has its place — but it is not home cooking.
         </p>
         <p className="leading-relaxed mb-4" style={{ color: '#2D2422' }}>
           Our Dabba is different. Every morning, our kitchen cooks fresh. The Gongura curry in your box was slow-cooked today. The dal was tempered this morning. The rice was cooked fresh. We do not freeze. We do not reheat. We cook and deliver. That is the difference between a meal delivery service and a real kitchen.
@@ -97,7 +97,7 @@ export default function SubscriptionsAboutPage() {
             },
             {
               name: 'Svadista Dabba — Non-Vegetarian',
-              desc: 'Rice, chicken or mutton curry, pickle, omelette and papad. Bold Andhra flavour, every day.',
+              desc: 'Rice, chicken curry, pickle, omelette and papad. Bold Andhra flavour, every day.',
             },
           ].map(plan => (
             <div key={plan.name} className="rounded-lg p-5" style={{ border: '1px solid rgba(244,196,48,0.4)', backgroundColor: '#FDFBF7' }}>
@@ -113,7 +113,7 @@ export default function SubscriptionsAboutPage() {
         </h2>
         <div className="space-y-3 mb-10">
           {[
-            ['What areas do you deliver to?', 'Hot daily dabbas across all MK postcodes MK1–MK19 including Wolverton, Stony Stratford, Greenleys, Newport Pagnell and Bletchley. Edinburgh and Glasgow are coming soon — join the waitlist.'],
+            ['What areas do you deliver to?', 'Hot dabbas, Monday to Friday, across all MK postcodes MK1–MK19 including Wolverton, Stony Stratford, Greenleys, Newport Pagnell and Bletchley. Edinburgh and Glasgow are coming soon — join the waitlist.'],
             ['Can I pause or cancel?', 'Skip individual days from your Dashboard. Need to pause, change or cancel? Get in touch — we\'re flexible and will work it out with you. No auto-renewal.'],
             ['Can I customise my dabba?', 'Yes. Contact us on WhatsApp with any dietary requirements or preferences and we will plan accordingly.'],
             ['How is the dabba delivered?', 'Delivered hot in insulated packaging to your door. You do not need to be home — leave delivery instructions at checkout.'],

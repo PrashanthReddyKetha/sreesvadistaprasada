@@ -1,5 +1,6 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import RagiClient from './RagiClient';
+import SeoSection from '@/components/SeoSection';
 
 export const revalidate = 3600;
 
@@ -18,7 +19,8 @@ export default async function RagiPage() {
   const initialItems = await getItems();
   return (
     <>
-      <RagiClient initialItems={initialItems} />
+      <RagiClient initialItems={initialItems} seoLine={PAGE_SEO['/ragi-specials'].h1} />
+      <SeoSection {...PAGE_SEO['/ragi-specials'].content} />
     </>
   );
 }

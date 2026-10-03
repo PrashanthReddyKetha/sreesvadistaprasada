@@ -21,10 +21,10 @@ const FAQS = [
 const data = {
   city: 'Milton Keynes',
   heading: PAGE_SEO['/milton-keynes'].h1,
-  tagline: 'A South Indian takeaway kitchen in Greenleys, between Wolverton and Stony Stratford — authentic Andhra food cooked fresh and delivered across Milton Keynes in 30–60 minutes, or ready to collect.',
+  tagline: 'A South Indian takeaway kitchen in Greenleys, between Wolverton and Stony Stratford — authentic Andhra food in Milton Keynes, cooked fresh and delivered across the city in 30–60 minutes, or ready to collect.',
   deliveryTime: '30–60 minutes',
   minOrder: '£15',
-  freeDeliveryThreshold: '£30',
+  freeDeliveryThreshold: 'From £28, by zone',
   isKitchen: true,
   areas: [
     'Wolverton', 'Stony Stratford', 'Greenleys', 'Newport Pagnell',
@@ -46,7 +46,7 @@ const baseJsonLd = [
     email: 'info@sreesvadistaprasada.com',
     image: `${BASE_URL}/logo.png`,
     priceRange: '££',
-    servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian', 'Vegan'],
+    servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian'],
     address: {
       '@type': 'PostalAddress',
       streetAddress: '24 Oxman Ln',

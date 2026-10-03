@@ -23,7 +23,6 @@ export const metadata = {
 
 // Live menu items only — names, prices and slugs verified against the API
 const BIRYANIS = [
-  { name: 'Chicken Biryani', price: '£8.99', slug: '/svadista/biriyani/chicken-biryani', note: 'The everyday order — spiced basmati and tender chicken, cooked the Andhra home way.' },
   { name: 'Chicken Dum Biryani', price: '£10.99', slug: '/svadista/biriyani/chicken-dum-biryani', note: 'Sealed and slow-finished on dum so the rice steams in the masala — deeper, layered flavour.' },
   { name: 'Chicken Fry Piece Biryani', price: '£10.99', slug: '/svadista/biriyani/chicken-fry-piece-biryani', note: 'Crisp-fried marinated chicken folded through the rice — the Andhra street favourite.' },
 ];
@@ -37,8 +36,8 @@ const VEG_RICE = [
 ];
 
 const FAQS = [
-  { q: 'Where can I get chicken biryani in Milton Keynes?', a: 'Sree Svadista Prasada cooks three Andhra-style chicken biryanis fresh to order in Greenleys — Chicken Biryani (£8.99), Chicken Dum Biryani (£10.99) and Chicken Fry Piece Biryani (£10.99) — with delivery across all MK postcodes and collection with 10% off.' },
-  { q: 'What is the difference between dum biryani and regular biryani?', a: 'Dum biryani is sealed and finished over low heat so the part-cooked rice steams in the meat and masala, layering the flavour through every grain. A regular biryani is cooked more directly. Fry piece biryani takes a third route: the chicken is marinated and crisp-fried, then folded through the spiced rice.' },
+  { q: 'Where can I get chicken biryani in Milton Keynes?', a: 'Sree Svadista Prasada cooks two Andhra-style chicken biryanis fresh to order in Greenleys — Chicken Dum Biryani (£10.99) and Chicken Fry Piece Biryani (£10.99) — with delivery across all MK postcodes and collection with 10% off.' },
+  { q: 'What is the difference between dum biryani and regular biryani?', a: 'Dum biryani is sealed and finished over low heat so the part-cooked rice steams in the meat and masala, layering the flavour through every grain. A regular biryani is cooked more directly. Fry piece biryani takes another route: the chicken is marinated and crisp-fried, then folded through the spiced rice.' },
   { q: 'How is Andhra biryani different from Hyderabadi biryani?', a: 'They are close cousins — both from Telugu-speaking South India. Andhra-style biryani generally runs hotter, leaning on Guntur chilli and home-style masala rather than the courtly, saffron-forward Hyderabadi dum tradition. Ours follows the Andhra home kitchen.' },
   { q: 'Is there a vegetarian biryani option?', a: 'Our vegetarian Prasada menu has traditional Andhra spiced rice dishes instead — Gongura Rice, Ghee Pappu Avakaya Rice, Sambar Rice and more, from £4.99. They are cooked with separate vegetarian utensils and cookware.' },
 ];
@@ -102,7 +101,7 @@ export default function BiryaniGuide() {
             Most biryani in Britain descends from the Mughlai north — creamy, saffron-scented, gently spiced. Andhra biryani is a different animal: hotter, more rustic, built on Guntur chilli and home-style masala rather than courtly restraint. If you have only ever had takeaway biryani from a curry-house menu, the Andhra version is worth crossing town for.
           </p>
 
-          <h2>The three biryanis we cook</h2>
+          <h2>The two biryanis we cook</h2>
           <ul>
             {BIRYANIS.map(b => (
               <li key={b.slug}>
@@ -111,7 +110,7 @@ export default function BiryaniGuide() {
             ))}
           </ul>
           <p>
-            All three are cooked fresh to order in our Greenleys kitchen — nothing sits in a bain-marie waiting for you.
+            Both are cooked fresh to order in our Greenleys kitchen — nothing sits in a bain-marie waiting for you.
           </p>
 
           <h2>From the vegetarian Prasada menu</h2>
@@ -143,7 +142,7 @@ export default function BiryaniGuide() {
           ))}
 
           <p>
-            <Link href="/order">Order biryani now</Link> — or explore the full <Link href="/menu">170-dish menu</Link>.
+            <Link href="/order">Order biryani now</Link> — or explore the full <Link href="/menu">menu of 130+ dishes</Link>.
           </p>
         </article>
       </main>
