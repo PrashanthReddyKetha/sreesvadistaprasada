@@ -580,9 +580,10 @@ const SubscriptionsInner = () => {
       delivery_address: { line1: customer.line1, line2: customer.line2 || undefined, city: customer.city || 'Milton Keynes', postcode: customer.postcode },
       coupon_code: couponCode || undefined,
       box_type: selectedBox || undefined,
+      start_date: selectedStartWeek || undefined,
     });
     return res.data;
-  }, [selectedPlan, selectedBox, couponCode, customer.email, customer.line1, customer.line2, customer.city, customer.postcode]);
+  }, [selectedPlan, selectedBox, selectedStartWeek, couponCode, customer.email, customer.line1, customer.line2, customer.city, customer.postcode]);
 
   useEffect(() => {
     if (step < 5 || !postcodeStatus?.ok || !customer.line1 || !customer.postcode) { setQuote(null); return; }

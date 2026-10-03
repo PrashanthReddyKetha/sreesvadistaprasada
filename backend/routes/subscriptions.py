@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time as dtime
 from collections import defaultdict
+from zoneinfo import ZoneInfo
 import asyncio
 import os
 import time
@@ -24,6 +25,87 @@ from coupons import redeem as redeem_coupon
 from whatsapp import notify_customer, whatsapp_enabled, tracking_link, first_name
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
+
+LONDON = ZoneInfo("Europe/London")
+MAX_START_DAYS_AHEAD = 35
+
+# Who may move a plan between states. Customers cannot change status themselves —
+# they contact the kitchen (no self-service pause/cancel, by the owner's decision).
+STATUS_TRANSITIONS = {
+    "active":    {"cancelled", "expired"},
+    "cancelled": {"active"},
+    "expired":   {"active"},
+}
+
+
+def london_today() -> str:
+    return datetime.now(LONDON).strftime("%Y-%m-%d")
+
+
+def validate_start_date(start_date: str, *, allow_today: bool = False) -> datetime:
+    """Plans start on a Monday, not in the past and not absurdly far ahead."""
+    try:
+        start = datetime.strptime(start_date or "", "%Y-%m-%d")
+    except ValueError:
+        raise ValueError("Please choose a start date for your plan.")
+    if start.weekday() != 0:
+        raise ValueError("Dabba Wala plans start on a Monday — please pick a start week.")
+    today = datetime.strptime(london_today(), "%Y-%m-%d")
+    if start < today or (start == today and not allow_today):
+        raise ValueError("That start week has already begun — please pick a later one.")
+    if start > today + timedelta(days=MAX_START_DAYS_AHEAD):
+        raise ValueError("That start date is too far ahead — please pick one within the next five weeks.")
+    return start
+
+
+def plan_delivery_dates(sub: dict) -> list:
+    """Every weekday from the plan's start to its end date."""
+    try:
+        start = datetime.strptime(sub["start_date"], "%Y-%m-%d")
+    except (KeyError, TypeError, ValueError):
+        return []
+    try:
+        end = datetime.strptime(sub.get("end_date") or "", "%Y-%m-%d")
+    except ValueError:
+        end = start + timedelta(days=4)
+    dates, d = [], start
+    while d <= end:
+        if d.weekday() < 5:
+            dates.append(d.strftime("%Y-%m-%d"))
+        d += timedelta(days=1)
+    return dates
+
+
+async def expire_finished_plans(extra: Optional[dict] = None) -> int:
+    """Active plans whose last meal day has passed become 'expired' and get one email."""
+    query = {"status": "active", "end_date": {"$lt": london_today()}}
+    query.update(extra or {})
+    expired = 0
+    async for s in db.subscriptions.find(query, {"_id": 0}):
+        claimed = await db.subscriptions.update_one(
+            {"id": s["id"], "status": "active"},
+            {"$set": {"status": "expired", "expired_notified_at": datetime.utcnow().isoformat()}},
+        )
+        if not claimed.modified_count:
+            continue
+        expired += 1
+        if s.get("customer_email") and not s.get("expired_notified_at"):
+            subj, html = email_subscription_expired(s.get("customer_name") or "there", s)
+            send_email(s["customer_email"], subj, html)
+    return expired
+
+
+async def subscription_maintenance_loop():
+    """Expiry used to happen only when a customer opened their dashboard."""
+    while True:
+        try:
+            await expire_finished_plans()
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            print(f"subscription maintenance failed: {e}")
+        await asyncio.sleep(900)
+
 
 def plan_end_date(start: datetime, meals: int) -> datetime:
     """Date of the last paid meal: the Nth weekday counting from the start date.
@@ -70,6 +152,7 @@ class SubscriptionQuoteRequest(BaseModel):
     delivery_address: Address
     coupon_code: Optional[str] = None
     box_type: Optional[str] = None
+    start_date: Optional[str] = None
 
 
 @router.post("/quote")
@@ -83,6 +166,8 @@ async def quote(
     welcome applied or not. Same function create_subscription charges against.
     """
     try:
+        if payload.start_date is not None:
+            validate_start_date(payload.start_date)
         result = await quote_subscription(
             payload.plan, payload.customer_email, payload.delivery_address.postcode,
             current_user["sub"] if current_user else None,
@@ -111,6 +196,9 @@ async def create_subscription(
             return Subscription(**existing)
 
     try:
+        # The quote step already refused a bad start week before payment; today is
+        # tolerated here so a payment that lands just after midnight is not rejected.
+        start = validate_start_date(payload.start_date, allow_today=True)
         pricing = await quote_subscription(
             payload.plan, payload.customer_email, payload.delivery_address.postcode, user_id,
             coupon_code=payload.coupon_code, box_type=payload.box_type,
@@ -137,13 +225,7 @@ async def create_subscription(
     if pi.amount != pricing["total_pence"]:
         raise HTTPException(400, "Payment amount does not match plan price")
 
-    # Calculate end_date and cancellation window
-    try:
-        start = datetime.strptime(payload.start_date, "%Y-%m-%d")
-        end   = plan_end_date(start, PLAN_MEALS[plan])
-        end_date_str = end.strftime("%Y-%m-%d")
-    except Exception:
-        end_date_str = None
+    end_date_str = plan_end_date(start, PLAN_MEALS[plan]).strftime("%Y-%m-%d")
 
     cancellation_window = (datetime.utcnow() + timedelta(hours=48)).isoformat()
 
@@ -218,21 +300,8 @@ async def get_subscriptions(
     if status:
         query["status"] = status.value
 
+    await expire_finished_plans({"user_id": query["user_id"]} if "user_id" in query else None)
     subs = await db.subscriptions.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
-
-    # Auto-expire subscriptions whose end_date has passed
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    for s in subs:
-        if s.get("status") == "active" and s.get("end_date") and s["end_date"] < today:
-            s["status"] = "expired"
-            update = {"status": "expired"}
-            if not s.get("expired_notified_at"):
-                update["expired_notified_at"] = datetime.utcnow().isoformat()
-                if s.get("customer_email"):
-                    subj, html = email_subscription_expired(s.get("customer_name") or "there", s)
-                    send_email(s["customer_email"], subj, html)
-            await db.subscriptions.update_one({"id": s["id"]}, {"$set": update})
-
     return subs
 
 
@@ -257,30 +326,26 @@ async def get_sub_deliveries(sub_id: str, current_user: dict = Depends(get_curre
     if current_user.get("role") != "admin" and sub.get("user_id") != current_user["sub"]:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    start = datetime.strptime(sub["start_date"], "%Y-%m-%d")
-    end = datetime.strptime(sub["end_date"], "%Y-%m-%d") if sub.get("end_date") else start + timedelta(days=4)
-
-    # Build weekday-only date list
-    dates = []
-    d = start
-    while d <= end:
-        if d.weekday() < 5:
-            dates.append(d.strftime("%Y-%m-%d"))
-        d += timedelta(days=1)
+    dates = plan_delivery_dates(sub)
+    # Days after a plan was cancelled were never delivered
+    cancelled_from = (sub.get("cancelled_at") or "")[:10] if sub.get("status") == "cancelled" else ""
 
     tracking = {
         t["delivery_id"]: t
         async for t in db.delivery_tracking.find({"delivery_id": {"$in": [f"{sub_id}_{dt}" for dt in dates]}}, {"_id": 0})
     }
 
-    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+    today_str = london_today()
     from routes.reviews import ensure_meal_day_review_stub
     result = []
     for dt in dates:
         t = tracking.get(f"{sub_id}_{dt}")
         status = (t or {}).get("status")
         if not status:
-            status = "upcoming" if dt >= today_str else "delivered"
+            if cancelled_from and dt > cancelled_from:
+                status = "cancelled"
+            else:
+                status = "upcoming" if dt >= today_str else "delivered"
         result.append({
             "date": dt,
             "status": status,
@@ -310,12 +375,24 @@ async def skip_delivery(sub_id: str, date: str, current_user: dict = Depends(get
         delivery_day = datetime.strptime(date, "%Y-%m-%d")
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date")
+    if sub.get("status") != "active":
+        raise HTTPException(status_code=400, detail="This plan isn't active, so there is nothing to skip.")
+    if date not in plan_delivery_dates(sub):
+        raise HTTPException(status_code=400, detail="That isn't one of your delivery days.")
 
-    now = datetime.utcnow()
-    hours_until = (delivery_day.replace(hour=12) - now).total_seconds() / 3600
+    # Cut-off is midday UK time on the day itself
+    cutoff = datetime.combine(delivery_day.date(), dtime(12, 0), tzinfo=LONDON)
+    hours_until = (cutoff - datetime.now(LONDON)).total_seconds() / 3600
     if hours_until < 0:
         raise HTTPException(status_code=400, detail="Cannot skip a past delivery")
 
+    existing = await db.delivery_tracking.find_one({"delivery_id": f"{sub_id}_{date}"}, {"_id": 0})
+    if existing and existing.get("status") == "skipped":
+        return {"ok": True, "short_notice": bool(existing.get("short_notice")), "already_skipped": True}
+    if existing and existing.get("status") in ("out_for_delivery", "delivered"):
+        raise HTTPException(status_code=400, detail="That meal is already on its way or delivered.")
+
+    now = datetime.utcnow()
     short_notice = hours_until < 12
     await db.delivery_tracking.update_one(
         {"delivery_id": f"{sub_id}_{date}"},
@@ -359,15 +436,26 @@ async def update_subscription_status(
     if not doc:
         raise HTTPException(status_code=404, detail="Subscription not found")
 
-    if current_user.get("role") != "admin" and doc.get("user_id") != current_user["sub"]:
-        raise HTTPException(status_code=403, detail="Access denied")
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="To change or cancel your plan, please get in touch — we're flexible and will sort it out with you.",
+        )
 
     old_status = doc.get("status")
     new_status = payload.status.value
-    await db.subscriptions.update_one(
-        {"id": sub_id}, {"$set": {"status": new_status}}
-    )
-    doc["status"] = new_status
+    if new_status == old_status:
+        return doc
+    if new_status not in STATUS_TRANSITIONS.get(old_status, set()):
+        raise HTTPException(status_code=400, detail=f"A plan that is {old_status} can't be changed to {new_status}.")
+    update = {"status": new_status}
+    if new_status == "cancelled":
+        update["cancelled_at"] = datetime.utcnow().isoformat()
+    ops = {"$set": update}
+    if new_status == "active":
+        ops["$unset"] = {"cancelled_at": ""}
+    await db.subscriptions.update_one({"id": sub_id}, ops)
+    doc.update(update)
 
     if old_status != new_status and new_status == "cancelled":
         name = doc.get("customer_name") or "there"

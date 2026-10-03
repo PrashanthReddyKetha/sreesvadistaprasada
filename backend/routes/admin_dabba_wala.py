@@ -233,11 +233,16 @@ async def force_update_status(sub_id: str, payload: dict, current_user: dict = D
     doc = await _get_sub_or_404(sub_id)
     old = doc.get("status")
     new = payload.get("status")
+    if new not in ("active", "cancelled", "expired"):
+        raise HTTPException(status_code=400, detail="Status must be active, cancelled or expired.")
     entry = audit_entry(current_user, "status", old, new, payload.get("reason"))
     entry["forced_by_admin"] = payload.get("forced_by_admin", False)
+    update = {"status": new}
+    if new == "cancelled" and old != "cancelled":
+        update["cancelled_at"] = datetime.utcnow().isoformat()
     await db.subscriptions.update_one(
         {"id": sub_id},
-        {"$set": {"status": new}, "$push": {"audit_trail": entry}}
+        {"$set": update, "$push": {"audit_trail": entry}}
     )
     if old != new and new == "cancelled":
         name = doc.get("customer_name") or "there"

@@ -104,7 +104,7 @@ async def ensure_meal_day_review_stub(sub: dict, date: str, menu_doc: Optional[d
     item_names: List[str] = []
     item_ids: List[str] = []
     if menu_doc:
-        for m in menu_doc.get("meals", []) or []:
+        for m in (menu_doc.get("items") or menu_doc.get("meals") or []):
             if isinstance(m, dict):
                 if m.get("id"): item_ids.append(m["id"])
                 if m.get("name"): item_names.append(m["name"])
@@ -193,6 +193,8 @@ async def _backfill_meal_stubs(user_id: str):
                     {"delivery_id": f"{sub['id']}_{dt}"}, {"_id": 0}
                 )
                 status = (t or {}).get("status") or "delivered"
+                if sub.get("status") == "cancelled" and sub.get("cancelled_at") and dt > sub["cancelled_at"][:10]:
+                    status = "cancelled"
                 if status == "delivered":
                     menu_doc = await db.weekly_menu_days.find_one(
                         {"date": dt, "box_type": sub.get("box_type", "prasada")}, {"_id": 0}

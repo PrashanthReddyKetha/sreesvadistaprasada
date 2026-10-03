@@ -147,7 +147,7 @@ async def get_weekly_preview(
                 "is_placeholder": True,
             }
 
-    notes_doc = await db.weekly_menu_notes.find_one({"week_start": week, "box_type": box_type}, {"_id": 0})
+    notes_doc = await db.weekly_menu_notes.find_one({"week_start": week}, {"_id": 0})
     dietary_notes = notes_doc.get("notes") if notes_doc else None
 
     return {"days": results, "dietary_notes": dietary_notes}

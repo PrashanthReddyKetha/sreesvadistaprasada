@@ -53,11 +53,14 @@ async def lifespan(app: FastAPI):
     renewal_scheduler = asyncio.create_task(renewal_reminder_loop())
     from routes.payments import orphan_payment_loop
     orphan_watchdog = asyncio.create_task(orphan_payment_loop())
+    from routes.subscriptions import subscription_maintenance_loop
+    sub_maintenance = asyncio.create_task(subscription_maintenance_loop())
     yield
     logger.info("Shutting down...")
     push_scheduler.cancel()
     renewal_scheduler.cancel()
     orphan_watchdog.cancel()
+    sub_maintenance.cancel()
     client.close()
 
 

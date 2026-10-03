@@ -27,7 +27,7 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 import auth  # noqa: E402
 import notifications  # noqa: E402
-from routes import orders, payments, pickup_slots, reviews, subscriptions, coupons as coupon_routes, loyalty  # noqa: E402
+from routes import orders, payments, pickup_slots, reviews, subscriptions, coupons as coupon_routes, loyalty, admin_dabba_wala  # noqa: E402
 
 _loop = asyncio.new_event_loop()
 
@@ -37,7 +37,7 @@ def run(coro):
 
 
 app = FastAPI()
-for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty):
+for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala):
     app.include_router(r.router, prefix="/api")
 
 
@@ -64,7 +64,7 @@ def fresh_state(monkeypatch):
         "notify_admin": lambda subject, html, *a, **k: box.admin.append(subject),
         "notify_customer": lambda event, phone, *a, **k: box.whatsapp.append((event, phone)),
     }
-    for mod in (orders, reviews, subscriptions, payments, notifications, pickup_slots):
+    for mod in (orders, reviews, subscriptions, payments, notifications, pickup_slots, admin_dabba_wala):
         for fn, fake in fakes.items():
             if hasattr(mod, fn):
                 monkeypatch.setattr(mod, fn, fake)

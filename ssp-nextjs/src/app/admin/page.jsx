@@ -297,7 +297,7 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
 // ─── Subscriptions ────────────────────────────────────────────────────────────
 const SubscriptionsTab = ({ subscriptions, onStatusUpdate }) => {
   const [updatingId, setUpdatingId] = useState(null);
-  const SUB_STATUSES = ['active','paused','completed','cancelled'];
+  const SUB_STATUSES = ['active','cancelled','expired'];
   const handle = async (id, status) => {
     setUpdatingId(id);
     await onStatusUpdate('subscriptions', id, status);
