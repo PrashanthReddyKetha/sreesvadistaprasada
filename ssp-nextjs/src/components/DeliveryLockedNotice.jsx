@@ -27,7 +27,7 @@ export default function DeliveryLockedNotice({ compact = false }) {
           className={`flex-1 ${pad} rounded-xl font-semibold text-center text-white`}
           style={{ backgroundColor: '#800020' }}
         >
-          🛵 Takeaway — save 10%
+          🛵 Collection — save 10%
         </div>
       </div>
       <p className={compact ? 'text-[10px] leading-snug' : 'text-[11px] leading-snug'} style={{ color: '#8B6914' }}>

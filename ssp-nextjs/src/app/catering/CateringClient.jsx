@@ -107,7 +107,7 @@ const Catering = () => {
                   </li>
                 ))}
               </ul>
-              <p className="text-xs text-gray-500 leading-relaxed">Keep your team energized with nutritious, home-style meals.</p>
+              <p className="text-xs text-gray-500 leading-relaxed">Keep your team energised with nutritious, home-style meals.</p>
             </div>
           </div>
         </div>
@@ -126,7 +126,7 @@ const Catering = () => {
             {[
               { icon: Users, title: 'Any Size Event', desc: 'From 10 to 100+ guests' },
               { icon: Sparkles, title: 'Pure Prasada', desc: 'Temple-style purity for sacred events' },
-              { icon: Calendar, title: 'Flexible Menus', desc: 'Customized to your preferences' },
+              { icon: Calendar, title: 'Flexible Menus', desc: 'Customised to your preferences' },
               { icon: Briefcase, title: 'Professional', desc: 'Experienced team, timely delivery' },
             ].map(({ icon: Icon, title, desc }, i) => (
               <div key={i} className="text-center">

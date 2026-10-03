@@ -28,7 +28,7 @@ export default function TakeawayNudge() {
         className="ml-3 flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold"
         style={{ backgroundColor: '#800020', color: '#F4C430' }}
       >
-        View Cart →
+        View Basket →
       </button>
     </div>
   );

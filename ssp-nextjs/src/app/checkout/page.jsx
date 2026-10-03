@@ -193,7 +193,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
             )}
             {takeawayDiscount > 0 && (
               <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
-                <span>Takeaway 10% off</span><span>-{fmt(takeawayDiscount)}</span>
+                <span>Collection 10% off</span><span>-{fmt(takeawayDiscount)}</span>
               </div>
             )}
             {coupon && coupon.discount_type !== 'free_delivery' && (

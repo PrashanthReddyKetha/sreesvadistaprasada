@@ -20,7 +20,7 @@ async function getItems() {
 const FAQS = [
   { q: 'Is the Prasada menu 100% vegetarian?', a: 'Yes. The Prasada menu is entirely vegetarian — no meat, fish, or eggs. Vegetarian dishes are cooked with their own separate utensils and cookware, in the same kitchen as our non-vegetarian food. Some dishes contain dairy; each dish lists its allergens.' },
   { q: 'Do you offer vegan options on the Prasada menu?', a: 'Many Prasada dishes are made without dairy, but several use ghee, yoghurt, butter or paneer. Each dish lists its allergens, including dairy — please check there, and tell us before ordering if you need a dish made without dairy.' },
-  { q: 'Can I order Prasada dishes for delivery in Milton Keynes?', a: 'Yes! We deliver pure veg South Indian food across Milton Keynes including Greenleys, Wolverton, Stony Stratford, Central MK, and Bletchley. Enter your postcode at checkout to confirm your delivery zone.' },
+  { q: 'Can I order Prasada dishes for delivery in Milton Keynes?', a: 'Yes — we deliver pure veg South Indian food across Milton Keynes including Greenleys, Wolverton, Stony Stratford, Central MK, and Bletchley. Enter your postcode at checkout to confirm your delivery zone.' },
   { q: 'What makes Prasada food different from regular vegetarian Indian food?', a: "Prasada means divine offering. Our recipes follow the tradition of South Indian temple cooking — pure ingredients, slow-cooked dals, hand-ground chutneys, and grandmother's recipes with no shortcuts." },
   { q: 'Is there a minimum order for Prasada delivery?', a: 'Yes, a £15 minimum order applies. Collection orders skip the delivery fee and get 10% off — you can schedule a pickup time at checkout.' },
 ];

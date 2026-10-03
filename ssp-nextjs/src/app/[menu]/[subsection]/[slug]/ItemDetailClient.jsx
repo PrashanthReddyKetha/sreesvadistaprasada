@@ -410,7 +410,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
                   <button onClick={handleAddToCart}
                     className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white transition-all hover:shadow-lg active:scale-95"
                     style={{ backgroundColor: added ? '#166534' : '#800020' }}>
-                    {added ? <><CheckCircle size={18} /> Added to Cart!</> : <><ShoppingCart size={18} /> Add to Cart</>}
+                    {added ? <><CheckCircle size={18} /> Added to Basket</> : <><ShoppingCart size={18} /> Add to Basket</>}
                   </button>
                 </>
               ) : (
@@ -438,7 +438,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
               className="w-full flex items-center justify-between rounded-2xl px-5 py-3.5 text-white"
               style={{ backgroundColor: added ? '#166534' : '#800020', boxShadow: '0 -4px 20px rgba(92,0,23,0.35)' }}>
               <span className="flex items-center gap-2 text-sm font-black tracking-wide">
-                {added ? <><CheckCircle size={16} /> Added to Cart</> : <><ShoppingCart size={16} /> Add to Cart</>}
+                {added ? <><CheckCircle size={16} /> Added to Basket</> : <><ShoppingCart size={16} /> Add to Basket</>}
               </span>
               <span className="text-sm font-black" style={{ color: '#F4C430' }}>£{(item.price * qty).toFixed(2)}</span>
             </button>
@@ -688,7 +688,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
                 addToCart({ ...comboWith, price:`£${comboWith.price.toFixed(2)}` });
               }} className="mt-4 w-full py-3 rounded-xl font-semibold text-sm transition-all hover:shadow-lg"
                 style={{ backgroundColor:'#F4C430', color:'#3D2B1F' }}>
-                Add Both to Cart
+                Add Both to Basket
               </button>
             ) : (
               <button onClick={() => openNotifyMe(item.name, item.category)}

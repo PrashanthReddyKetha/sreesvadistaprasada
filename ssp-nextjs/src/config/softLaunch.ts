@@ -23,4 +23,4 @@ export const WA_BULK =
  * admin header (settings.delivery_enabled, served by /kitchen-status).
  */
 export const DELIVERY_LOCKED_MESSAGE =
-  "Delivery's warming up in the kitchen — we're putting the finishing touches on it. Takeaway only for now, but we'll unlock delivery very soon!"
+  "Delivery's warming up in the kitchen — we're putting the finishing touches on it. Collection only for now, but we'll unlock delivery very soon!"

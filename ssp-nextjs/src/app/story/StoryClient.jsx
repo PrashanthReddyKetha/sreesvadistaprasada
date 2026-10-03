@@ -49,7 +49,7 @@ const OurStory = ({ seoLine }) => {
                 and makes you feel truly at peace.
               </p>
               <p className="text-base text-gray-600 leading-relaxed">
-                When we moved to the UK, we realized how many South Indians were missing authentic,
+                When we moved to the UK, we realised how many South Indians were missing authentic,
                 traditional homely food. Not restaurant food, not fusion experiments — but real,
                 soul-satisfying dishes cooked the way our grandmothers made them. That longing became
                 <em className="font-medium" style={{ color: '#800020' }}> Sree Svadista Prasada.</em>
@@ -81,7 +81,7 @@ const OurStory = ({ seoLine }) => {
             </div>
             <div>
               <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Svadista</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">Delicious and authentic — the traditional bold flavors that make your taste buds dance.</p>
+              <p className="text-sm text-gray-600 leading-relaxed">Delicious and authentic — the traditional bold flavours that make your taste buds dance.</p>
             </div>
             <div>
               <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Prasada</h3>
@@ -103,7 +103,7 @@ const OurStory = ({ seoLine }) => {
           </div>
 
           <p className="text-base text-gray-600 leading-relaxed text-center max-w-3xl mx-auto mb-12">
-            We understood that our community has diverse needs. Some crave the bold, rustic flavors of traditional non-vegetarian cooking.
+            We understood that our community has diverse needs. Some crave the bold, rustic flavours of traditional non-vegetarian cooking.
             Others seek the pure, sattvic experience of temple-style vegetarian food.
             That's why we created two distinct experiences under one roof:
           </p>
@@ -160,7 +160,7 @@ const OurStory = ({ seoLine }) => {
           <div className="grid sm:grid-cols-2 gap-6">
             {[
               { title: 'Fresh Ingredients', desc: 'We source the finest ingredients, just like your grandmother would choose from the market.' },
-              { title: 'No Shortcuts', desc: 'Every dish is cooked using traditional methods. No artificial flavors, no preservatives — just authentic taste.' },
+              { title: 'No Shortcuts', desc: 'Every dish is cooked using traditional methods. No artificial flavours, no preservatives — just authentic taste.' },
               { title: 'Temple-like Purity', desc: 'Our vegetarian Prasada dishes are cooked with their own separate utensils and cookware.' },
               { title: 'Cooked with Devotion', desc: 'Every meal is prepared with the same love and care that your mother puts into her cooking.' },
             ].map((item, i) => (
@@ -185,7 +185,7 @@ const OurStory = ({ seoLine }) => {
           </h2>
           <p className="text-base text-gray-600 leading-relaxed mb-4">
             Sree Svadista Prasada is more than a takeaway — it's a gateway back home. Whether you're
-            a student missing Amma's cooking, a professional craving authentic flavors, or a family
+            a student missing Amma's cooking, a professional craving authentic flavours, or a family
             looking for pure prasada for your pooja, we're here for you.
           </p>
           <p className="text-base text-gray-600 leading-relaxed mb-4">

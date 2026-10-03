@@ -237,7 +237,7 @@ const Header = () => {
                 <button
                   className="relative p-2 rounded-full transition-colors duration-200 hover:bg-[#800020]/5"
                   data-testid="cart-button"
-                  aria-label="Open cart"
+                  aria-label="Open basket"
                   style={{ color: '#800020' }}
                   onClick={() => setCartOpen(true)}
                 >
@@ -290,7 +290,7 @@ const Header = () => {
               <button
                 className="relative p-2 rounded-full"
                 data-testid="mobile-cart-button"
-                aria-label="Open cart"
+                aria-label="Open basket"
                 style={{ color: '#800020' }}
                 onClick={() => setCartOpen(true)}
               >

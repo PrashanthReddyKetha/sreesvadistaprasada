@@ -18,7 +18,7 @@ export default function OrderNowBar() {
   const { cartCount } = useCart();
 
   if (HIDDEN_PREFIXES.some(p => path.startsWith(p))) return null;
-  // Dish pages carry their own "Add to Cart · £x" bar
+  // Dish pages carry their own "Add to Basket · £x" bar
   const seg = path.split('/').filter(Boolean);
   if (seg.length === 3 && DISH_MENUS.includes(seg[0])) return null;
   const nudgeVisible = cartCount > 0 && MENU_PATHS.some(p => path.startsWith(p));
