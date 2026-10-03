@@ -75,7 +75,7 @@ export default function KitchenClosedNotify({ compact = false }) {
           onClick={() => setOpen(false)}>
           <form onClick={e => e.stopPropagation()} onSubmit={e => { e.preventDefault(); submit(email); }}
             className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl relative">
-            <button type="button" onClick={() => setOpen(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-700" aria-label="Close"><X size={18} /></button>
+            <button type="button" onClick={() => setOpen(false)} className="absolute top-3 right-3 text-gray-500 hover:text-gray-700" aria-label="Close"><X size={18} /></button>
             <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>We'll ping you when we reopen</h3>
             <p className="text-sm text-gray-600 mb-4">One email the moment the kitchen is back on — nothing else.</p>
             <input type="email" required autoFocus value={email} onChange={e => setEmail(e.target.value)}

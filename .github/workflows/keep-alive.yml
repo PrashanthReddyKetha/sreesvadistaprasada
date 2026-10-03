@@ -10,16 +10,28 @@ jobs:
   ping:
     name: Ping Backend
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 6
 
     steps:
       - name: Ping /api/health
+        # /api/health checks the database too. A sleeping instance can take over a
+        # minute to wake, so try three times before calling it down. A failed run
+        # makes GitHub email the repository owner — that is the outage alert.
         run: |
-          echo "Pinging backend to prevent cold start..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://svadista-backend.onrender.com/api/health)
-          echo "Response status: $STATUS"
-          if [ "$STATUS" = "200" ]; then
-            echo "✅ Backend is alive and healthy"
-          else
-            echo "⚠️ Backend returned status $STATUS (may be waking up)"
-          fi
+          for attempt in 1 2 3; do
+            STATUS=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 90 https://svadista-backend.onrender.com/api/health || echo "000")
+            echo "Attempt $attempt: HTTP $STATUS $(cat /tmp/health.json 2>/dev/null)"
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Backend and database are healthy"
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "❌ Backend did not report healthy after 3 attempts (last status $STATUS)"
+          exit 1
+
+      - name: Check the website
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://sreesvadistaprasada.com/order || echo "000")
+          echo "Site /order: HTTP $STATUS"
+          [ "$STATUS" = "200" ] || { echo "❌ Website is not responding"; exit 1; }

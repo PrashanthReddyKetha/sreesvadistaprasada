@@ -182,7 +182,7 @@ const Menu = ({ initialItems = [] }) => {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-3">
             <div className="relative flex-1 max-w-sm">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 value={searchQuery}
@@ -245,7 +245,7 @@ const Menu = ({ initialItems = [] }) => {
                 <section key={sec.id}>
                   <div className="flex items-baseline justify-between mb-5 pb-2" style={{ borderBottom: `2px solid ${sec.accent}22` }}>
                     <h2 className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: sec.accent }}>
-                      {sec.name} <span className="text-sm font-normal text-gray-400 ml-1">({sec.items.length})</span>
+                      {sec.name} <span className="text-sm font-normal text-gray-500 ml-1">({sec.items.length})</span>
                     </h2>
                     <Link href={sec.href} className="text-xs font-semibold hover:underline whitespace-nowrap" style={{ color: sec.accent }}>
                       Explore {sec.name} {'→'}

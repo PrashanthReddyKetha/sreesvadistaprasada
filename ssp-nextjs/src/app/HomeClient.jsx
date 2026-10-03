@@ -436,7 +436,7 @@ const Home = () => {
                         ))}
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-400">Mild</span>
+                      <span className="text-xs text-gray-500">Mild</span>
                     )}
                   </div>
                   <p className="text-xs text-gray-500 leading-relaxed mb-2 line-clamp-2">
@@ -677,7 +677,7 @@ const Home = () => {
               </p>
               <form onSubmit={checkPostcode} className="flex gap-2 mb-4" data-testid="postcode-form">
                 <div className="relative flex-1">
-                  <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                   <input
                     type="text"
                     value={postcode}
@@ -724,7 +724,7 @@ const Home = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-medium" style={{ color: '#4A7C59' }}>{area.deliveryFee}</p>
-                      <p className="text-xs text-gray-400">{area.timing}</p>
+                      <p className="text-xs text-gray-500">{area.timing}</p>
                     </div>
                   </div>
                 ))}

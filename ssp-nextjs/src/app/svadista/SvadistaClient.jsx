@@ -130,11 +130,11 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
             <div className="relative flex-1 max-w-sm">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dishes..."
                 className="w-full pl-9 pr-8 py-2 rounded-full text-sm border outline-none transition-colors"
                 style={{ borderColor: 'rgba(128,0,32,0.3)', backgroundColor: 'white', color: '#374151' }} />
-              {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={13} /></button>}
+              {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"><X size={13} /></button>}
             </div>
           </div>
           <div ref={tabRowRef} className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
@@ -199,7 +199,7 @@ const Svadista = ({ initialItems = [], initialTab = 'All' }) => {
             </div>
           )}
           {!loading && filtered.length === 0 && (
-            <div className="text-center py-20 text-gray-400">{search ? (
+            <div className="text-center py-20 text-gray-500">{search ? (
               <>No results for &quot;{search}&quot; here — <a href={`/menu?q=${encodeURIComponent(search)}`} className="underline font-semibold" style={{ color: '#800020' }}>search the full menu instead →</a></>
             ) : 'No items in this category yet.'}</div>
           )}

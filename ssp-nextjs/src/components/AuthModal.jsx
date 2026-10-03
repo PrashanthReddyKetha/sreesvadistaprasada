@@ -143,7 +143,7 @@ function Divider() {
   return (
     <div className="flex items-center gap-3 my-1">
       <div className="flex-1 h-px bg-gray-200" />
-      <span className="text-xs text-gray-400 font-medium">or</span>
+      <span className="text-xs text-gray-500 font-medium">or</span>
       <div className="flex-1 h-px bg-gray-200" />
     </div>
   );
@@ -230,6 +230,15 @@ const AuthModal = () => {
     onError: () => { setLoginError('Google sign-in was cancelled.'); setRegError('Google sign-in was cancelled.'); },
   });
 
+  // Escape closes the dialog, like the X button (hook must sit above the early return)
+  const closeRef = useRef(null);
+  useEffect(() => {
+    if (!authOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') closeRef.current?.(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [authOpen]);
+
   if (!authOpen) return null;
 
   /* ── reCAPTCHA helpers ───────────────────────────────────────────────── */
@@ -263,6 +272,7 @@ const AuthModal = () => {
   };
 
   const close = () => { setAuthOpen(false); reset(); };
+  closeRef.current = close;
 
   const startCountdown = (secs = 60) => {
     setCountdown(secs);
@@ -484,7 +494,7 @@ const AuthModal = () => {
       : 'Sign in — your orders and subscription are right where you left them.';
 
   return (
-    <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Sign in or create an account">
       {/* Invisible reCAPTCHA container */}
       <div id="recaptcha-container" />
 
@@ -494,7 +504,7 @@ const AuthModal = () => {
         {/* Header */}
         <div className="px-7 pt-7 pb-5 flex-shrink-0"
           style={{ background: 'linear-gradient(135deg, #800020 0%, #5C0018 100%)' }}>
-          <button onClick={close} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/20"
+          <button onClick={close} aria-label="Close" className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/20"
             style={{ color: 'rgba(255,255,255,0.8)' }}>
             <X size={18} />
           </button>
@@ -551,7 +561,7 @@ const AuthModal = () => {
                 autoComplete="current-password" placeholder="Your password"
                 value={loginPw} onChange={setLoginPw} required
                 suffix={
-                  <button type="button" onClick={() => setShowLoginPw(v => !v)} className="text-gray-400 hover:text-gray-600">
+                  <button type="button" onClick={() => setShowLoginPw(v => !v)} className="text-gray-500 hover:text-gray-600">
                     {showLoginPw ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 }
@@ -572,7 +582,7 @@ const AuthModal = () => {
               <Divider />
               <GoogleBtn onClick={() => googleLogin()} loading={loading} label="Continue with Google" />
 
-              <p className="text-center text-xs text-gray-400 pt-1">
+              <p className="text-center text-xs text-gray-500 pt-1">
                 First time here?{' '}
                 <button type="button" onClick={() => { setTab('register'); setLoginError(''); }}
                   className="font-semibold hover:underline" style={{ color: '#800020' }}>Come on in</button>
@@ -608,7 +618,7 @@ const AuthModal = () => {
                   style={{ backgroundColor: '#800020' }}>
                   {forgotLoading ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Sending…</> : 'Send Reset Link'}
                 </button>
-                <p className="text-center text-xs text-gray-400 pt-1">
+                <p className="text-center text-xs text-gray-500 pt-1">
                   <button type="button" onClick={() => setTab('login')}
                     className="font-semibold hover:underline" style={{ color: '#800020' }}>Back to Sign In</button>
                 </p>
@@ -673,7 +683,7 @@ const AuthModal = () => {
                   value={pw} onChange={v => { setPw(v); setPwError(''); }}
                   error={pwError} required
                   suffix={
-                    <button type="button" onClick={() => setShowPw(v => !v)} className="text-gray-400 hover:text-gray-600">
+                    <button type="button" onClick={() => setShowPw(v => !v)} className="text-gray-500 hover:text-gray-600">
                       {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   }
@@ -719,7 +729,7 @@ const AuthModal = () => {
               <Divider />
               <GoogleBtn onClick={() => googleLogin()} loading={loading} label="Register with Google" />
 
-              <p className="text-center text-xs text-gray-400 pt-1">
+              <p className="text-center text-xs text-gray-500 pt-1">
                 Been here before?{' '}
                 <button type="button" onClick={() => { setTab('login'); setRegError(''); }}
                   className="font-semibold hover:underline" style={{ color: '#800020' }}>Welcome back</button>
@@ -755,14 +765,14 @@ const AuthModal = () => {
 
               <div className="text-center space-y-2">
                 {countdown > 0
-                  ? <p className="text-xs text-gray-400">Resend code in <strong>{countdown}s</strong></p>
+                  ? <p className="text-xs text-gray-500">Resend code in <strong>{countdown}s</strong></p>
                   : <button type="button" onClick={handleSendOtp} disabled={otpLoading}
                       className="text-xs font-semibold hover:underline" style={{ color: '#800020' }}>
                       {otpLoading ? 'Sending…' : 'Resend code'}
                     </button>
                 }
                 <button type="button" onClick={() => { setStep(1); setOtp(''); setRegError(''); confirmationRef.current = null; }}
-                  className="block w-full text-xs text-gray-400 hover:text-gray-600 transition-colors">
+                  className="block w-full text-xs text-gray-500 hover:text-gray-600 transition-colors">
                   ← Change my details
                 </button>
               </div>
@@ -828,14 +838,14 @@ const AuthModal = () => {
 
               <div className="text-center">
                 {countdown > 0
-                  ? <p className="text-xs text-gray-400">Resend in <strong>{countdown}s</strong></p>
+                  ? <p className="text-xs text-gray-500">Resend in <strong>{countdown}s</strong></p>
                   : <button type="button" onClick={handleGoogleSendOtp} disabled={otpLoading}
                       className="text-xs font-semibold hover:underline" style={{ color: '#800020' }}>
                       {otpLoading ? 'Sending…' : 'Resend code'}
                     </button>
                 }
                 <button type="button" onClick={() => { setGoogleStep('phone'); setGoogleOtp(''); setGoogleError(''); confirmationRef.current = null; }}
-                  className="block w-full text-xs text-gray-400 hover:text-gray-600 transition-colors mt-2">
+                  className="block w-full text-xs text-gray-500 hover:text-gray-600 transition-colors mt-2">
                   ← Change number
                 </button>
               </div>

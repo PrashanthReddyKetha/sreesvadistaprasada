@@ -22,7 +22,11 @@ export const useNotifyMe = () => useContext(NotifyMeContext)
 export function NotifyMeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DrawerState>({ isOpen: false, itemName: '', category: '' })
 
+  // The drawer pulls in Firebase; mount it the first time it is asked for, then keep it
+  const [hasOpened, setHasOpened] = useState(false)
+
   const openNotifyMe = (itemName: string, category: string) => {
+    setHasOpened(true)
     setState({ isOpen: true, itemName, category })
   }
 
@@ -31,12 +35,12 @@ export function NotifyMeProvider({ children }: { children: ReactNode }) {
   return (
     <NotifyMeContext.Provider value={{ openNotifyMe }}>
       {children}
-      <NotifyMeDrawer
+      {hasOpened && <NotifyMeDrawer
         isOpen={state.isOpen}
         onClose={close}
         itemName={state.itemName}
         category={state.category}
-      />
+      />}
     </NotifyMeContext.Provider>
   )
 }

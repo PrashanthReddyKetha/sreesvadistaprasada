@@ -134,7 +134,7 @@ export default function EnquiriesTab({ enquiries, reload }) {
                     {sub === 'contact' ? enq.message : enq.additional_details || 'Catering enquiry'}
                   </p>
                 </div>
-                <span className="text-[10px] text-gray-400 whitespace-nowrap flex-shrink-0">
+                <span className="text-[10px] text-gray-500 whitespace-nowrap flex-shrink-0">
                   {new Date(enq.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' })}
                 </span>
               </div>
@@ -188,7 +188,7 @@ export default function EnquiriesTab({ enquiries, reload }) {
       <div className="flex-1 rounded-2xl p-4 mb-3 overflow-y-auto space-y-3"
         style={{ backgroundColor:'#FDFBF7', border:'1px solid rgba(244,196,48,0.2)', maxHeight:'320px' }}>
         {msgLoading ? (
-          <div className="flex justify-center py-8"><RefreshCw size={18} className="animate-spin text-gray-400" /></div>
+          <div className="flex justify-center py-8"><RefreshCw size={18} className="animate-spin text-gray-500" /></div>
         ) : msgError ? (
           <p className="text-center text-sm py-8" style={{ color:'#991B1B' }}>
             Couldn't load this conversation — please try again.
@@ -209,7 +209,7 @@ export default function EnquiriesTab({ enquiries, reload }) {
                       {msg.sender_name}
                     </p>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                    <p className={`text-[10px] mt-1.5 ${isAdmin ? 'text-gray-400' : 'text-white/60'}`}>
+                    <p className={`text-[10px] mt-1.5 ${isAdmin ? 'text-gray-500' : 'text-white/60'}`}>
                       {new Date(msg.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
                     </p>
                   </div>

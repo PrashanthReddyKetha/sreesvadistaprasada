@@ -7,7 +7,7 @@ import {
   Plus, Minus, Trash2, ArrowLeft, X, Zap, Lock, Eye, EyeOff,
   LogIn, UserPlus, ChevronDown, ChevronUp, Tag, CreditCard, AlertCircle, Search
 } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js/pure';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { auth as fbAuth } from '@/firebase';
 import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -27,7 +27,12 @@ import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 import CouponPanel from '@/components/CouponPanel';
 
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
+// Created when the checkout page mounts, not when its code is merely prefetched
+let stripePromise = null;
+const getStripe = () => {
+  if (!stripePromise && STRIPE_KEY) stripePromise = loadStripe(STRIPE_KEY);
+  return stripePromise;
+};
 
 const MINIMUM_ORDER = 15.00;
 const MIN_DELIVERY_FEE = 2.49; // Zone 1 floor — used before postcode is known
@@ -56,7 +61,7 @@ function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange,
         {label}{req && <span className="text-red-400 ml-0.5">*</span>}
       </label>
       <div className="relative">
-        {Icon && <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />}
+        {Icon && <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />}
         <input
           type={type}
           placeholder={placeholder}
@@ -140,7 +145,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
         </div>
         <div className="flex items-center gap-2">
           <span className="font-bold text-sm" style={{ color: '#800020' }}>{fmt(grandTotal)}</span>
-          {collapsed ? <ChevronDown size={15} className="text-gray-400" /> : <ChevronUp size={15} className="text-gray-400" />}
+          {collapsed ? <ChevronDown size={15} className="text-gray-500" /> : <ChevronUp size={15} className="text-gray-500" />}
         </div>
       </button>
 
@@ -158,7 +163,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
                 <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#2D2422' }}>{item.name}</p>
                 <p className="text-sm font-bold mt-0.5" style={{ color: '#800020' }}>
                   {fmt(price(item.price) * item.quantity)}
-                  {item.quantity > 1 && <span className="text-xs font-normal text-gray-400 ml-1">({fmt(price(item.price))} ea)</span>}
+                  {item.quantity > 1 && <span className="text-xs font-normal text-gray-500 ml-1">({fmt(price(item.price))} ea)</span>}
                 </p>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
@@ -193,7 +198,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
             )}
             {coupon && coupon.discount_type !== 'free_delivery' && (
               <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
-                <span>🏷️ Coupon {coupon.code} <span className="text-xs font-normal text-gray-400">({coupon.label})</span></span><span>-{fmt(coupon.discount)}</span>
+                <span>🏷️ Coupon {coupon.code} <span className="text-xs font-normal text-gray-500">({coupon.label})</span></span><span>-{fmt(coupon.discount)}</span>
               </div>
             )}
             {deliveryType === 'takeaway' && feeSaved > 0 && (
@@ -204,13 +209,13 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
             )}
             {deliveryType === 'takeaway' && smallFeeSaved > 0 && (
               <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
-                <span>Small order fee saved <span className="text-xs font-normal text-gray-400">(orders under £20)</span></span>
+                <span>Small order fee saved <span className="text-xs font-normal text-gray-500">(orders under £20)</span></span>
                 <span>-{fmt(smallFeeSaved)}</span>
               </div>
             )}
             {deliveryType === 'delivery' && smallOrderFee > 0 && (
               <div className="flex justify-between text-sm" style={{ color: '#92400E' }}>
-                <span>Small order fee <span className="text-xs text-gray-400">(orders under £20, excl. delivery fee)</span></span>
+                <span>Small order fee <span className="text-xs text-gray-500">(orders under £20, excl. delivery fee)</span></span>
                 <span>{fmt(smallOrderFee)}</span>
               </div>
             )}
@@ -218,7 +223,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
               <div className="flex justify-between text-sm">
                 <span className="flex items-center gap-1.5 text-gray-500"><Truck size={13} /> Delivery</span>
                 {!feeKnown
-                  ? <span className="text-xs text-gray-400 italic">Enter postcode above</span>
+                  ? <span className="text-xs text-gray-500 italic">Enter postcode above</span>
                   : deliveryFee === 0
                     ? <span className="font-semibold" style={{ color: '#166534' }}>{coupon?.discount_type === 'free_delivery' ? `Free · ${coupon.code}` : 'Free'}</span>
                     : <span className="text-gray-600">{fmt(deliveryFee)}</span>
@@ -230,7 +235,7 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
               <span>{fmt(grandTotal)}</span>
             </div>
             {!feeKnown && deliveryType === 'delivery' && (
-              <p className="text-[11px] text-gray-400">
+              <p className="text-[11px] text-gray-500">
                 Delivery fee and any small-order fee are added once you enter your postcode above.
               </p>
             )}
@@ -252,14 +257,14 @@ function GuestPrompt({ onGuest, onSignIn, onSignUp }) {
           style={{ borderColor: 'rgba(128,0,32,0.2)' }}>
           <LogIn size={20} style={{ color: '#800020' }} />
           <span className="text-xs font-semibold text-center" style={{ color: '#2D2422' }}>Sign In</span>
-          <span className="text-[10px] text-gray-400 text-center">Incl. Google · auto-fill details</span>
+          <span className="text-[10px] text-gray-500 text-center">Incl. Google · auto-fill details</span>
         </button>
         <button onClick={onSignUp || onSignIn}
           className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:border-[#800020] hover:bg-white"
           style={{ borderColor: 'rgba(128,0,32,0.2)' }}>
           <UserPlus size={20} style={{ color: '#800020' }} />
           <span className="text-xs font-semibold text-center" style={{ color: '#2D2422' }}>Create Account</span>
-          <span className="text-[10px] text-gray-400 text-center">Track orders & save address</span>
+          <span className="text-[10px] text-gray-500 text-center">Track orders & save address</span>
         </button>
       </div>
       <button onClick={onGuest}
@@ -503,7 +508,7 @@ function CheckoutPostcodeInput({ onZoneFound }) {
       </div>
       {error
         ? <p className="text-[11px] font-medium" style={{ color: '#EF4444' }}>{error}</p>
-        : <p className="text-[11px] text-gray-400">Enter your postcode and press Enter or Check</p>
+        : <p className="text-[11px] text-gray-500">Enter your postcode and press Enter or Check</p>
       }
     </div>
   );
@@ -563,13 +568,13 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
         <div className="px-4 pt-2.5 flex-shrink-0">
           <div className="flex items-center gap-2 rounded-full px-3.5 py-2"
             style={{ backgroundColor: '#F6F1E7', border: '1px solid rgba(128,0,32,0.12)' }}>
-            <Search size={14} className="text-gray-400 flex-shrink-0" />
+            <Search size={14} className="text-gray-500 flex-shrink-0" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search dishes…"
               className="flex-1 bg-transparent outline-none text-sm" style={{ color: '#2D2422' }} />
             {search && (
               <button onClick={() => setSearch('')} aria-label="Clear search">
-                <X size={13} className="text-gray-400" />
+                <X size={13} className="text-gray-500" />
               </button>
             )}
           </div>
@@ -591,7 +596,7 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
           {loading && <div className="flex justify-center py-12"><span className="w-6 h-6 border-2 border-[#800020]/30 border-t-[#800020] rounded-full animate-spin" /></div>}
           {!loading && shown.length === 0 && (
-            <p className="text-center text-sm text-gray-400 py-10">No dishes match &ldquo;{search}&rdquo;.</p>
+            <p className="text-center text-sm text-gray-500 py-10">No dishes match &ldquo;{search}&rdquo;.</p>
           )}
           {!loading && shown.map(item => {
             const inCart = cartIds.has(item.id);
@@ -1256,7 +1261,7 @@ const CheckoutInner = () => {
               )}
             </div>
           )}
-          <p className="text-sm text-gray-400 mb-6">
+          <p className="text-sm text-gray-500 mb-6">
             {deliveryType === 'takeaway'
               ? (success.slotFinal ? 'We\u2019ll text you when it\u2019s ready \u2014 just give your order number at the door.' : 'Ready in about 40 minutes \u2014 we\u2019ll text you when it\u2019s ready to collect.')
               : 'Estimated time: 40\u201350 minutes'}
@@ -1424,7 +1429,7 @@ const CheckoutInner = () => {
                     <span className="text-xs font-medium" style={{ color: '#C2410C' }}>
                       ⚠ Add <strong>{fmt(MINIMUM_ORDER - effectiveSubtotal)}</strong> more to place an order
                     </span>
-                    <span className="text-[10px] text-gray-400">Min. {fmt(MINIMUM_ORDER)}</span>
+                    <span className="text-[10px] text-gray-500">Min. {fmt(MINIMUM_ORDER)}</span>
                   </div>
                   <div className="h-1.5 rounded-full overflow-hidden bg-gray-200">
                     <div className="h-full rounded-full transition-all duration-500"
@@ -1444,7 +1449,7 @@ const CheckoutInner = () => {
                           🚚 Add <strong style={{ color: '#800020' }}>{fmt(freeDeliveryAt - effectiveSubtotal)}</strong> more for free delivery
                         </span>}
                     {effectiveSubtotal < freeDeliveryAt && (
-                      <span className="text-[10px] text-gray-400">Free over {fmt(freeDeliveryAt)}</span>
+                      <span className="text-[10px] text-gray-500">Free over {fmt(freeDeliveryAt)}</span>
                     )}
                   </div>
                   <div className="h-1.5 rounded-full overflow-hidden bg-gray-200">
@@ -1622,10 +1627,10 @@ const CheckoutInner = () => {
                 {deliveryType === 'delivery' && (!user || addrMode === 'new') && <div>
                   <label className="text-xs font-semibold block mb-1" style={{ color: '#5C4B47' }}>
                     Postcode <span className="text-red-400">*</span>
-                    <span className="font-normal text-gray-400 ml-1">— we'll find your address</span>
+                    <span className="font-normal text-gray-500 ml-1">— we'll find your address</span>
                   </label>
                   <div className="relative">
-                    <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input
                       type="text" placeholder="e.g. MK9 1AB"
                       value={form.postcode}
@@ -1703,7 +1708,7 @@ const CheckoutInner = () => {
             {canCheckout && (
               <div className="bg-white rounded-2xl shadow-sm p-6" style={{ border: '1px solid rgba(128,0,32,0.1)' }}>
                 <label className="text-xs font-semibold block mb-2 flex items-center gap-1.5" style={{ color: '#5C4B47' }}>
-                  <FileText size={13} /> Delivery Notes <span className="font-normal text-gray-400">(optional)</span>
+                  <FileText size={13} /> Delivery Notes <span className="font-normal text-gray-500">(optional)</span>
                 </label>
                 <textarea value={form.notes} onChange={e => set('notes')(e.target.value)}
                   placeholder="e.g. Leave at the door, ring bell twice…"
@@ -1734,7 +1739,7 @@ const CheckoutInner = () => {
                         Add <strong style={{ color: '#C2410C' }}>{fmt(MINIMUM_ORDER - effectiveSubtotal)}</strong> more to place an order
                       </span>
                     </div>
-                    <span className="text-xs text-gray-400">Min. {fmt(MINIMUM_ORDER)}</span>
+                    <span className="text-xs text-gray-500">Min. {fmt(MINIMUM_ORDER)}</span>
                   </div>
                   <div className="h-2 rounded-full overflow-hidden bg-gray-200">
                     <div className="h-full rounded-full transition-all duration-500"
@@ -1788,7 +1793,7 @@ const CheckoutInner = () => {
                   <div className="flex items-center gap-2">
                     <CreditCard size={14} style={{ color: '#800020' }} />
                     <span className="font-bold text-sm" style={{ color: '#800020' }}>Payment</span>
-                    <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-400"><Lock size={10} /> Stripe</span>
+                    <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-500"><Lock size={10} /> Stripe</span>
                   </div>
                   <div className="space-y-2">
                     <div className="px-3 py-4 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: '#FDFBF7' }} />
@@ -1812,7 +1817,7 @@ const CheckoutInner = () => {
                   <div className="flex items-center gap-2">
                     <CreditCard size={14} style={{ color: '#800020' }} />
                     <span className="font-bold text-sm" style={{ color: '#800020' }}>Payment</span>
-                    <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-400"><Lock size={10} /> Stripe</span>
+                    <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-500"><Lock size={10} /> Stripe</span>
                   </div>
                   {/* Apple Pay / Google Pay — shows only on devices with a wallet set up */}
                   {paymentRequest && validPricing && meetsMinimum && (
@@ -1825,7 +1830,7 @@ const CheckoutInner = () => {
                       />
                       <div className="flex items-center gap-3 py-1">
                         <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(128,0,32,0.12)' }} />
-                        <span className="text-[11px] text-gray-400 font-semibold">or pay with card</span>
+                        <span className="text-[11px] text-gray-500 font-semibold">or pay with card</span>
                         <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(128,0,32,0.12)' }} />
                       </div>
                     </div>
@@ -1897,7 +1902,7 @@ const CheckoutInner = () => {
                 {[['🔒', 'Secure'], ['⚡', '30–45 min'], ['🍛', 'Fresh']].map(([icon, label]) => (
                   <div key={label} className="flex items-center gap-1">
                     <span className="text-sm">{icon}</span>
-                    <span className="text-[11px] text-gray-400">{label}</span>
+                    <span className="text-[11px] text-gray-500">{label}</span>
                   </div>
                 ))}
               </div>
@@ -1910,10 +1915,13 @@ const CheckoutInner = () => {
   );
 };
 
-const Checkout = () => (
-  <Elements stripe={stripePromise}>
-    <CheckoutInner />
-  </Elements>
-);
+const Checkout = () => {
+  const [stripe] = useState(() => getStripe());
+  return (
+    <Elements stripe={stripe}>
+      <CheckoutInner />
+    </Elements>
+  );
+};
 
 export default Checkout;

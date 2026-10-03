@@ -126,7 +126,7 @@ export default function BlogPage() {
                 <div>
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded-full">{post.category}</span>
-                    <span className="text-xs text-gray-400">{post.readTime}</span>
+                    <span className="text-xs text-gray-500">{post.readTime}</span>
                   </div>
                   <h2 className="text-xl font-bold text-gray-800 mb-2 leading-snug" style={{ fontFamily: 'var(--font-playfair), serif' }}>
                     <Link href={post.href || `/blog/${post.slug}`} className="hover:text-amber-700 transition-colors">

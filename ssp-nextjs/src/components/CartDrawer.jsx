@@ -34,7 +34,7 @@ function DeliveryBar({ subtotal, freeOver }) {
               </span>
           }
         </div>
-        {!isFree && <span className="text-[10px] text-gray-400">Free over {fmt(freeOver)}</span>}
+        {!isFree && <span className="text-[10px] text-gray-500">Free over {fmt(freeOver)}</span>}
       </div>
       <div className="h-1.5 rounded-full overflow-hidden bg-gray-200">
         <div className="h-full rounded-full transition-all duration-500"
@@ -57,7 +57,7 @@ function MinOrderBar({ subtotal }) {
             Add <strong>{fmt(remaining)}</strong> more to place an order
           </span>
         </div>
-        <span className="text-[10px] text-gray-400">Min. {fmt(MINIMUM_ORDER)}</span>
+        <span className="text-[10px] text-gray-500">Min. {fmt(MINIMUM_ORDER)}</span>
       </div>
       <div className="h-1.5 rounded-full overflow-hidden bg-gray-200">
         <div className="h-full rounded-full transition-all duration-500"
@@ -134,7 +134,7 @@ function UpsellRow({ cartItems, onAdd }) {
               <p className="text-[10px] font-semibold leading-tight mb-1 line-clamp-2" style={{ color: '#2D2422' }}>{item.name}</p>
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold" style={{ color: '#800020' }}>{fmt(price(item.price))}</span>
-                <button onClick={() => onAdd(item)} className="w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: '#800020' }}>
+                <button onClick={() => onAdd(item)} aria-label={`Add ${item.name}`} className="w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: '#800020' }}>
                   <Plus size={10} />
                 </button>
               </div>
@@ -179,14 +179,14 @@ function FreeItemPicker({ onSelect, onSkip }) {
             {item.image && <Image src={item.image} alt={item.name} width={48} height={48} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate" style={{ color: '#2D2422' }}>{item.name}</p>
-              <p className="text-xs line-through text-gray-400">{fmt(price(item.price))}</p>
+              <p className="text-xs line-through text-gray-500">{fmt(price(item.price))}</p>
             </div>
             <span className="text-xs font-bold px-2 py-1 rounded-full flex-shrink-0" style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>FREE</span>
           </button>
         ))}
       </div>
       <div className="px-5 py-3 border-t" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>
-        <button onClick={onSkip} className="w-full text-xs text-center text-gray-400 hover:text-gray-600">Skip for now — choose at checkout</button>
+        <button onClick={onSkip} className="w-full text-xs text-center text-gray-500 hover:text-gray-600">Skip for now — choose at checkout</button>
       </div>
     </div>
   );
@@ -258,7 +258,7 @@ function PostcodeInput({ onZoneFound }) {
       </div>
       {error
         ? <p className="text-[11px] mt-1.5 font-medium" style={{ color: '#EF4444' }}>{error}</p>
-        : <p className="text-[11px] mt-1 text-gray-400">Enter your postcode and press Enter or Check</p>
+        : <p className="text-[11px] mt-1 text-gray-500">Enter your postcode and press Enter or Check</p>
       }
     </div>
   );
@@ -271,6 +271,14 @@ const CartDrawer = () => {
           deliveryType, setDeliveryType, zoneInfo, setZoneInfo } = useCart();
   const { user } = useAuth();
   const kitchen = useKitchen();
+
+  // Escape closes the basket
+  useEffect(() => {
+    if (!cartOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setCartOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [cartOpen, setCartOpen]);
 
   const [loyaltyStatus, setLoyaltyStatus] = useState(null);
   const [freeItem, setFreeItem]           = useState(null);
@@ -366,14 +374,14 @@ const CartDrawer = () => {
               Your Basket ({cartCount})
             </h2>
           </div>
-          <button onClick={() => setCartOpen(false)} className="p-1.5 rounded-full text-white/80 hover:text-white"><X size={20} /></button>
+          <button onClick={() => setCartOpen(false)} aria-label="Close basket" className="p-1.5 rounded-full text-white/80 hover:text-white"><X size={20} /></button>
         </div>
 
         {cartItems.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
             <ShoppingBag size={52} className="mb-4 opacity-20" />
             <p className="text-base font-semibold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Nothing packed yet</p>
-            <p className="text-xs text-gray-400 mb-5 italic">Start with a dish you miss.</p>
+            <p className="text-xs text-gray-500 mb-5 italic">Start with a dish you miss.</p>
             <button onClick={() => setCartOpen(false)} className="text-sm font-semibold" style={{ color: '#800020' }}>Open the Menu →</button>
           </div>
         ) : showPicker ? (
@@ -502,14 +510,14 @@ const CartDrawer = () => {
                       <p className="text-sm font-bold leading-tight" style={{ color: '#2D2422' }}>{item.name}</p>
                       <p className="text-sm font-bold mt-0.5" style={{ color: '#800020' }}>
                         {fmt(price(item.price) * item.quantity)}
-                        {item.quantity > 1 && <span className="text-xs font-normal text-gray-400 ml-1">({fmt(price(item.price))} each)</span>}
+                        {item.quantity > 1 && <span className="text-xs font-normal text-gray-500 ml-1">({fmt(price(item.price))} each)</span>}
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded-full border flex items-center justify-center transition-colors hover:bg-[#800020] hover:text-white hover:border-[#800020]" style={{ borderColor: '#ddd', color: '#5C4B47' }}><Minus size={11} /></button>
+                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label={`One less ${item.name}`} className="w-7 h-7 rounded-full border flex items-center justify-center transition-colors hover:bg-[#800020] hover:text-white hover:border-[#800020]" style={{ borderColor: '#ddd', color: '#5C4B47' }}><Minus size={11} /></button>
                       <span className="w-5 text-center text-sm font-bold" style={{ color: '#2D2422' }}>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-7 h-7 rounded-full border flex items-center justify-center transition-colors hover:bg-[#800020] hover:text-white hover:border-[#800020]" style={{ borderColor: '#ddd', color: '#5C4B47' }}><Plus size={11} /></button>
-                      <button onClick={() => removeFromCart(item.id)} className="ml-1 text-gray-300 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label={`One more ${item.name}`} className="w-7 h-7 rounded-full border flex items-center justify-center transition-colors hover:bg-[#800020] hover:text-white hover:border-[#800020]" style={{ borderColor: '#ddd', color: '#5C4B47' }}><Plus size={11} /></button>
+                      <button onClick={() => removeFromCart(item.id)} aria-label={`Remove ${item.name}`} className="ml-1 text-gray-300 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
                     </div>
                   </div>
                 ))}
@@ -521,12 +529,12 @@ const CartDrawer = () => {
                       <Gift size={16} style={{ color: '#166534' }} />
                       <div className="min-w-0">
                         <p className="text-sm font-bold truncate" style={{ color: '#166534' }}>{freeItem.name}</p>
-                        <p className="text-xs line-through text-gray-400">{fmt(price(freeItem.price))}</p>
+                        <p className="text-xs line-through text-gray-500">{fmt(price(freeItem.price))}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>FREE</span>
-                      <button onClick={() => setFreeItem(null)} className="text-gray-300 hover:text-red-400"><X size={14} /></button>
+                      <button onClick={() => setFreeItem(null)} aria-label="Remove free dish" className="text-gray-300 hover:text-red-400"><X size={14} /></button>
                     </div>
                   </div>
                 )}
@@ -560,7 +568,7 @@ const CartDrawer = () => {
                   {deliveryType === 'takeaway'
                     ? <span className="font-semibold text-xs" style={{ color: '#166534' }}>Free</span>
                     : deliveryFee === null
-                      ? <span className="text-gray-400 text-xs italic">Enter postcode</span>
+                      ? <span className="text-gray-500 text-xs italic">Enter postcode</span>
                       : deliveryFee === 0
                         ? <span className="font-semibold text-xs" style={{ color: '#166534' }}>Free</span>
                         : <span className="text-gray-500 text-xs">{fmt(deliveryFee)}</span>

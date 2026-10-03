@@ -358,7 +358,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
                   <p className="text-3xl font-bold" style={{ color:'#800020' }}>£{item.price.toFixed(2)}</p>
                   <p className="text-xs" style={{ color:'#7A5C50' }}>per serving</p>
                 </div>
-                <button onClick={handleLike} disabled={liking}
+                <button onClick={handleLike} disabled={liking} aria-label="Like this dish"
                   className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
                   style={{ backgroundColor: social.user_liked ? '#FEE2E2' : 'rgba(128,0,32,0.08)', color: social.user_liked ? '#C62828' : '#7A5C50' }}>
                   <Heart size={18} style={{ fill: social.user_liked ? '#C62828' : 'none' }} />
@@ -376,12 +376,12 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
                   <div className="flex items-center gap-3">
                     <p className="text-sm font-semibold" style={{ color:'#5C4B47' }}>Quantity</p>
                     <div className="flex items-center gap-2 rounded-xl overflow-hidden" style={{ border:'1px solid rgba(128,0,32,0.2)' }}>
-                      <button onClick={() => setQty(q => Math.max(1, q-1))}
+                      <button onClick={() => setQty(q => Math.max(1, q-1))} aria-label="Decrease quantity"
                         className="w-9 h-9 flex items-center justify-center hover:bg-gray-50" style={{ color:'#800020' }}>
                         <Minus size={14} />
                       </button>
                       <span className="w-8 text-center font-bold text-sm">{qty}</span>
-                      <button onClick={() => setQty(q => q+1)}
+                      <button onClick={() => setQty(q => q+1)} aria-label="Increase quantity"
                         className="w-9 h-9 flex items-center justify-center hover:bg-gray-50" style={{ color:'#800020' }}>
                         <Plus size={14} />
                       </button>

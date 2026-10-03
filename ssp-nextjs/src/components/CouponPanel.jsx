@@ -79,7 +79,7 @@ export default function CouponPanel({ scope, email, ctx, applied, error, onApply
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(128,0,32,0.15)', backgroundColor: 'white' }}>
       <button type="button" onClick={() => setOpen(o => !o)} className="w-full flex items-center justify-between px-4 py-3">
         <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: C.primary }}><Tag size={15} /> Apply coupon</span>
-        {open ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
+        {open ? <ChevronUp size={15} className="text-gray-500" /> : <ChevronDown size={15} className="text-gray-500" />}
       </button>
 
       {open && (

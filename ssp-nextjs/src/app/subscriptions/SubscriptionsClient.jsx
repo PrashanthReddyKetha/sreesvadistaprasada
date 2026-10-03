@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Link from 'next/link';
 import Image from 'next/image';
 import { Check, ArrowRight, ArrowLeft, Leaf, Flame, ChevronLeft, ChevronRight, RotateCcw, Shield, Clock, Package, Star, CreditCard, Lock, Truck, MapPin, Users, Calendar } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js/pure';
 import { Elements, CardElement, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
@@ -12,7 +12,12 @@ import CouponPanel from '@/components/CouponPanel';
 import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase, trackSubscriptionStepView } from '@/lib/analytics';
 
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
+// Created on demand (see Subscriptions below) so the landing page never downloads Stripe.js
+let stripePromise = null;
+const getStripe = () => {
+  if (!stripePromise && STRIPE_KEY) stripePromise = loadStripe(STRIPE_KEY);
+  return stripePromise;
+};
 
 const CARD_STYLE = {
   style: {
@@ -418,7 +423,7 @@ const NavButtons = ({ step, onBack, onNext, nextDisabled, nextLabel }) => (
 );
 
 /* ══════════════════════════════════════════════════════ */
-const SubscriptionsInner = () => {
+const SubscriptionsInner = ({ onNeedStripe }) => {
   const stripe = useStripe();
   const elements = useElements();
   const { user, setAuthOpen } = useAuth();
@@ -506,6 +511,9 @@ const SubscriptionsInner = () => {
     if (pageState !== 'wizard' || step <= 1) return;
     saveProg({ step, selectedPlan, selectedBox, selectedPrefs, customRequest, selectedStartWeek });
   }, [step, selectedPlan, selectedBox, selectedPrefs, customRequest, selectedStartWeek, pageState]);
+
+  // Start fetching Stripe.js once the customer is choosing a start week — well before the payment step
+  useEffect(() => { if (step >= 3) onNeedStripe?.(); }, [step, onNeedStripe]);
 
   /* Number of weeks shown in preview depends on plan */
   const previewCount = selectedPlan === 'monthly' ? 4 : 2;
@@ -1795,7 +1803,7 @@ const SubscriptionsInner = () => {
                         <div className="flex items-center gap-2">
                           <CreditCard size={14} style={{ color: C.primary }} />
                           <span className="font-bold text-sm" style={{ color: C.primary }}>Payment</span>
-                          <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-400"><Lock size={10} /> Secured by Stripe</span>
+                          <span className="ml-auto flex items-center gap-1 text-[11px] text-gray-500"><Lock size={10} /> Secured by Stripe</span>
                         </div>
                         <div className="space-y-2">
                           {/* Card number - full width */}
@@ -1823,7 +1831,7 @@ const SubscriptionsInner = () => {
                             />
                           </div>
                         </div>
-                        <p className="text-[10px] text-gray-400">Card details encrypted — never stored on our servers.</p>
+                        <p className="text-[10px] text-gray-500">Card details encrypted — never stored on our servers.</p>
                       </div>
 
                       {/* Pay button */}
@@ -1840,7 +1848,7 @@ const SubscriptionsInner = () => {
                         {[['🔒', 'Secure'], ['🍛', 'Fresh daily'], ['📦', 'No hidden fees']].map(([icon, label]) => (
                           <div key={label} className="flex items-center gap-1">
                             <span className="text-sm">{icon}</span>
-                            <span className="text-[11px] text-gray-400">{label}</span>
+                            <span className="text-[11px] text-gray-500">{label}</span>
                           </div>
                         ))}
                       </div>
@@ -1869,10 +1877,15 @@ const SubscriptionsInner = () => {
   );
 };
 
-const Subscriptions = () => (
-  <Elements stripe={stripePromise}>
-    <SubscriptionsInner />
-  </Elements>
-);
+const Subscriptions = () => {
+  // null until the customer is past the plan/box steps; Elements accepts null → promise once
+  const [stripe, setStripe] = useState(null);
+  const needStripe = useCallback(() => setStripe(prev => prev || getStripe()), []);
+  return (
+    <Elements stripe={stripe}>
+      <SubscriptionsInner onNeedStripe={needStripe} />
+    </Elements>
+  );
+};
 
 export default Subscriptions;
