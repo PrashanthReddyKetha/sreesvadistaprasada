@@ -53,7 +53,7 @@ export default function Page() {
         <div className="max-w-3xl mx-auto space-y-8 text-sm leading-relaxed" style={{ color: '#5C4B47' }}>
           <div>
             <h1 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-              Dabba Wala — a weekly South Indian meal subscription in Milton Keynes
+              Dabba Wala — Indian tiffin service in Milton Keynes
             </h1>
             <p>
               Fresh Andhra and Telugu dishes delivered to your door every week across

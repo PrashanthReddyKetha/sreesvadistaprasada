@@ -137,10 +137,10 @@ export default function DabbaWalaArticle() {
           </p>
 
           <div className="not-prose bg-amber-800 text-white rounded-2xl p-8 text-center my-8">
-            <h3 className="text-2xl font-bold mb-2">Start Your Dabba Wala Subscription</h3>
+            <h3 className="text-2xl font-bold mb-2">Start Our Tiffin Service in Milton Keynes</h3>
             <p className="text-amber-200 mb-6">Fresh South Indian home meals delivered to Milton Keynes. From £13.75 per meal.</p>
             <Link href="/subscriptions" className="inline-block bg-amber-400 text-gray-900 font-bold px-8 py-3 rounded-full hover:bg-amber-300 transition-colors">
-              View Subscription Plans
+              View Tiffin Service Plans
             </Link>
           </div>
 

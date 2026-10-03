@@ -508,6 +508,10 @@ const Home = () => {
               The Dabba Wala
             </h2>
             <div className="w-12 h-0.5 mx-auto mt-3 md:mt-4" style={{ backgroundColor: '#F4C430' }} />
+            <p className="mt-4 text-xs md:text-sm text-white/85 max-w-xl mx-auto">
+              <Link href="/subscriptions" className="underline font-semibold" style={{ color: '#F4C430' }}>Our Indian tiffin service in Milton Keynes</Link>
+              {' '}— home-cooked Andhra meals, delivered Monday to Friday.
+            </p>
           </div>
 
           <div className="grid grid-cols-3 gap-3 md:gap-12 mb-8 md:mb-12">

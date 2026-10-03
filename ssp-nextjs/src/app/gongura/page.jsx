@@ -210,7 +210,7 @@ export default function GonguraPage() {
             Genuine gongura dishes are rare in the UK. Most Indian restaurants serve Punjabi or
             generic &ldquo;Indian&rdquo; food that has little connection to Andhra cuisine. At
             Sree Svadista Prasada, we prepare both{' '}
-            <Link href="/svadista" className="text-amber-700 font-semibold hover:underline">
+            <Link href="/svadista/curries/gongura-chicken-curry" className="text-amber-700 font-semibold hover:underline">
               Gongura Chicken Curry
             </Link>{' '}
             and Gongura Mutton using fresh gongura leaves sourced specifically for the authentic
@@ -255,14 +255,13 @@ export default function GonguraPage() {
           <div className="mt-12 bg-green-800 text-white rounded-2xl p-8 not-prose text-center">
             <h3 className="text-2xl font-bold mb-2">Try Authentic Gongura Dishes</h3>
             <p className="text-green-200 mb-6">
-              Order Gongura Chicken or Gongura Mutton — delivered across Milton Keynes.
-              Edinburgh &amp; Glasgow coming soon.
+              Order Gongura Chicken Curry online from our kitchen in Milton Keynes.
             </p>
             <Link
-              href="/svadista"
+              href="/svadista/curries/gongura-chicken-curry"
               className="inline-block bg-amber-400 text-gray-900 font-bold px-8 py-3 rounded-full hover:bg-amber-300 transition-colors"
             >
-              View Svadista Menu
+              Order Gongura Chicken Curry
             </Link>
           </div>
 

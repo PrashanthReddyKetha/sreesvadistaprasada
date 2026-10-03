@@ -40,6 +40,8 @@ const nextConfig = {
         destination: 'https://sreesvadistaprasada.com/:path*',
         permanent: true,
       },
+      // Google has shown this address for the gongura guide; the article lives at /gongura
+      { source: '/what-is-gongura', destination: '/gongura', permanent: true },
     ]
   },
 }
