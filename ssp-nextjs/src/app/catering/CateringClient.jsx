@@ -35,7 +35,7 @@ const Catering = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] pb-6 relative overflow-hidden" style={{ minHeight: 'min(50vh, 420px)' }}>
         <img loading="lazy" decoding="async"
           src="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920"
           alt="Catering Services"
@@ -52,6 +52,10 @@ const Catering = () => {
             <p className="text-lg text-gray-200 leading-relaxed" data-testid="catering-hero-subtitle">
               Poojas, Weddings, Corporate Events & More. Authentic South Indian food for your special occasions.
             </p>
+            <a href="#quote" className="inline-block mt-5 px-6 py-3 text-sm font-semibold rounded-sm"
+              style={{ backgroundColor: '#F4C430', color: '#2D2422' }} data-testid="catering-hero-cta">
+              Request a quote
+            </a>
           </div>
         </div>
       </section>
@@ -138,7 +142,7 @@ const Catering = () => {
       </section>
 
       {/* Enquiry Form */}
-      <section className="py-16 md:py-24 px-4 md:px-8">
+      <section id="quote" className="py-16 md:py-24 px-4 md:px-8 scroll-mt-24">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>Get started</p>

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -52,6 +52,49 @@ function Stepper({ qty, onChange }) {
   );
 }
 
+const DishRow = memo(function DishRow({ d, qty, onAdd, onOpen, onQty }) {
+  return (
+    <div className="flex items-center gap-3 py-3" style={{ borderBottom: `1px solid ${C.line}` }}>
+      {d.image ? (
+        <div className="relative shrink-0 rounded-xl overflow-hidden" style={{ width: 56, height: 56 }}>
+          <Image src={d.image} alt={d.name} fill sizes="56px" className="object-cover" />
+        </div>
+      ) : (
+        <div className="shrink-0 rounded-xl flex items-center justify-center font-bold text-white"
+          style={{ width: 56, height: 56, backgroundColor: d.is_veg ? C.veg : C.nonveg, fontFamily: "'Playfair Display', serif" }}>
+          {d.name.slice(0, 1)}
+        </div>
+      )}
+      <button onClick={() => onOpen(d)} className="flex-1 min-w-0 text-left">
+        <span className="flex items-center gap-1.5 font-bold text-sm" style={{ color: C.ink }}>
+          <VegDot isVeg={d.is_veg} />
+          <span className="truncate">{d.name}</span>
+          {d.spice_level > 1 && <Flame size={11} style={{ color: C.nonveg }} className="shrink-0" />}
+        </span>
+        <span className="block text-[11px] truncate" style={{ color: C.muted }}>{d.description}</span>
+        <span className="block text-[13px] font-black mt-0.5" style={{ color: C.ink }}>£{Number(d.price).toFixed(2)}</span>
+      </button>
+      {d.sold_out_today ? (
+        <RestockBell item={d} compact />
+      ) : qty > 0 ? (
+        <Stepper qty={qty} onChange={(n) => onQty(d.id, n)} />
+      ) : (
+        <button onClick={() => onAdd(d)}
+          className="shrink-0 rounded-full px-4 py-2 text-xs font-black tracking-wide"
+          style={d.preorder_only
+            ? { backgroundColor: C.burgundy, color: '#fff', boxShadow: '0 1px 3px rgba(45,36,34,0.18)' }
+            : { backgroundColor: C.saffron, color: C.ink, boxShadow: '0 1px 3px rgba(45,36,34,0.18)' }}>
+          {d.preorder_only ? 'Pre-order' : '+ ADD'}
+        </button>
+      )}
+    </div>
+  );
+});
+
+// Rows drawn straight away; the rest follow in a low-priority render so the
+// first screens respond to taps while the long list fills in below
+const INITIAL_ROWS = 24;
+
 export default function OrderClient({ initialItems = [] }) {
   const router = useRouter();
   // NOTE: deliberately NOT useSearchParams() — it opts this whole component out
@@ -97,6 +140,8 @@ export default function OrderClient({ initialItems = [] }) {
     return () => window.removeEventListener('pageshow', reset);
   }, []);
   const [activeSection, setActiveSection] = useState('breakfast');
+  const [showAll, setShowAll] = useState(false);
+  useEffect(() => { startTransition(() => setShowAll(true)); }, []);
   const sectionRefs = useRef({});
   const stickyRef = useRef(null);
   const heroRef = useRef(null);
@@ -178,7 +223,7 @@ export default function OrderClient({ initialItems = [] }) {
     const cached = getCached('all');
     if (cached) { setDishes(cached); setLoading(false); }
     api.get('/menu?available=true')
-      .then(res => { setDishes(res.data); setCached('all', res.data); })
+      .then(res => { startTransition(() => setDishes(res.data)); setCached('all', res.data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -191,6 +236,12 @@ export default function OrderClient({ initialItems = [] }) {
   const scrollTo = (id) => {
     setActiveSection(id);
     spyPaused.current = Date.now() + 900; // don't let the spy fight the smooth scroll
+    // Tapped a category before the full list has been drawn: draw it now, then jump
+    if (!sectionRefs.current[id]) {
+      setShowAll(true);
+      setTimeout(() => { if (sectionRefs.current[id]) scrollTo(id); }, 80);
+      return;
+    }
     const el = sectionRefs.current[id];
     if (el) {
       const top = el.getBoundingClientRect().top + window.scrollY - stickyH - 110;
@@ -199,7 +250,7 @@ export default function OrderClient({ initialItems = [] }) {
   };
 
   const q = search.trim().toLowerCase();
-  const bySection = SECTIONS.map(sec => ({
+  const allSections = useMemo(() => SECTIONS.map(sec => ({
     ...sec,
     items: dishes
       .filter(d =>
@@ -209,35 +260,45 @@ export default function OrderClient({ initialItems = [] }) {
         (!q || d.name.toLowerCase().includes(q) || (d.description || '').toLowerCase().includes(q))
       )
       .sort((a, b) => a.name.localeCompare(b.name)),
-  })).filter(sec => sec.items.length > 0);
+  })).filter(sec => sec.items.length > 0), [dishes, vegOnly, q]);
+  // Until the full list has been drawn, show the first rows only (a search or
+  // the veg filter always shows every match)
+  const bySection = useMemo(() => {
+    if (showAll || q || vegOnly) return allSections;
+    let budget = INITIAL_ROWS;
+    return allSections.map(sec => {
+      const items = sec.items.slice(0, Math.max(0, budget));
+      budget -= items.length;
+      return { ...sec, items };
+    }).filter(sec => sec.items.length > 0);
+  }, [allSections, showAll, q, vegOnly]);
 
   // Chips only for sections that still have dishes under the veg filter
   const visibleSections = SECTIONS.filter(sec =>
     dishes.some(d => d.category === sec.id && isOrderable(d.category) && (!vegOnly || d.is_veg)));
 
-  const handleAdd = (d) => addToCart({ id: d.id, name: d.name, price: d.price, image: d.image, category: d.category, preorder: !!d.preorder_only });
+  const handleAdd = useCallback(
+    (d) => addToCart({ id: d.id, name: d.name, price: d.price, image: d.image, category: d.category, preorder: !!d.preorder_only }),
+    [addToCart]
+  );
   const hasPreorder = cartItems.some(i => i.preorder);
 
   return (
     <div className="min-h-screen pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: C.ivory }}>
       {/* ── Hero banner ── */}
-      <section ref={heroRef} className="relative overflow-hidden" style={{ height: 170 }}>
+      {/* Slim on phones so the first dishes are on screen without scrolling */}
+      <section ref={heroRef} className="relative overflow-hidden h-[64px] md:h-[170px]">
         <Image fill priority sizes="100vw" src="https://images.unsplash.com/photo-1742281258189-3b933879867a?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1600" alt="Fresh Andhra food" className="object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.94) 0%, rgba(128,0,32,0.75) 55%, rgba(128,0,32,0.45) 100%)' }} />
         <div className="relative h-full max-w-3xl mx-auto px-4 flex flex-col justify-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
             Order Now
           </h1>
-          <p className="text-sm mt-1 max-w-md" style={{ color: '#F4E9D0' }}>
+          <p className="hidden md:block text-sm mt-1 max-w-md" style={{ color: '#F4E9D0' }}>
             Fresh Andhra food, cooked to order — collect in ~40 minutes and save 10%{deliveryEnabled ? ', or get it delivered across Milton Keynes' : ''}.
           </p>
         </div>
       </section>
-
-      {/* Introductory pricing — premium, once, no noise */}
-      <div className="max-w-3xl mx-auto px-4 pt-3">
-        <IntroPricesBanner compact />
-      </div>
 
       {/* Push opt-in — only renders inside the installed app */}
       <div className="max-w-3xl mx-auto px-4 pt-3">
@@ -350,50 +411,16 @@ export default function OrderClient({ initialItems = [] }) {
         {!loading && bySection.length === 0 && (
           <p className="py-10 text-center text-sm" style={{ color: C.muted }}>No dishes match your search.</p>
         )}
-        {bySection.map(sec => (
+        {bySection.map((sec, si) => (
           <section key={sec.id} ref={el => { sectionRefs.current[sec.id] = el; }}>
             <h2 className="pt-8 pb-2 text-lg font-semibold" style={{ fontFamily: "'Playfair Display', serif", color: C.burgundy }}>
               {sec.name}
             </h2>
-            {sec.items.map(d => {
-              const qty = qtyOf(d.id);
-              return (
-                <div key={d.id} className="flex items-center gap-3 py-3" style={{ borderBottom: `1px solid ${C.line}` }}>
-                  {d.image ? (
-                    <div className="relative shrink-0 rounded-xl overflow-hidden" style={{ width: 56, height: 56 }}>
-                      <Image src={d.image} alt={d.name} fill sizes="56px" className="object-cover" />
-                    </div>
-                  ) : (
-                    <div className="shrink-0 rounded-xl flex items-center justify-center font-bold text-white"
-                      style={{ width: 56, height: 56, backgroundColor: d.is_veg ? C.veg : C.nonveg, fontFamily: "'Playfair Display', serif" }}>
-                      {d.name.slice(0, 1)}
-                    </div>
-                  )}
-                  <button onClick={() => setSheetItem(d)} className="flex-1 min-w-0 text-left">
-                    <span className="flex items-center gap-1.5 font-bold text-sm" style={{ color: C.ink }}>
-                      <VegDot isVeg={d.is_veg} />
-                      <span className="truncate">{d.name}</span>
-                      {d.spice_level > 1 && <Flame size={11} style={{ color: C.nonveg }} className="shrink-0" />}
-                    </span>
-                    <span className="block text-[11px] truncate" style={{ color: C.muted }}>{d.description}</span>
-                    <span className="block text-[13px] font-black mt-0.5" style={{ color: C.ink }}>£{Number(d.price).toFixed(2)}</span>
-                  </button>
-                  {d.sold_out_today ? (
-                    <RestockBell item={d} compact />
-                  ) : qty > 0 ? (
-                    <Stepper qty={qty} onChange={(n) => updateQuantity(d.id, n)} />
-                  ) : (
-                    <button onClick={() => handleAdd(d)}
-                      className="shrink-0 rounded-full px-4 py-2 text-xs font-black tracking-wide"
-                      style={d.preorder_only
-                        ? { backgroundColor: C.burgundy, color: '#fff', boxShadow: '0 1px 3px rgba(45,36,34,0.18)' }
-                        : { backgroundColor: C.saffron, color: C.ink, boxShadow: '0 1px 3px rgba(45,36,34,0.18)' }}>
-                      {d.preorder_only ? 'Pre-order' : '+ ADD'}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+            {sec.items.map(d => (
+              <DishRow key={d.id} d={d} qty={qtyOf(d.id)} onAdd={handleAdd} onOpen={setSheetItem} onQty={updateQuantity} />
+            ))}
+            {/* Introductory pricing note — after the first section, so dishes come first */}
+            {si === 0 && !q && <div className="pt-5"><IntroPricesBanner compact /></div>}
           </section>
         ))}
       </div>

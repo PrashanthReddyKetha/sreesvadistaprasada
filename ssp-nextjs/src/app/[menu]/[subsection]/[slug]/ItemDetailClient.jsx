@@ -276,7 +276,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
 
         {/* ── Hero ── */}
         <div className="grid md:grid-cols-2 gap-6 mb-10">
-          <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio:'1/1', maxHeight:'420px' }}>
+          <div className="relative rounded-2xl overflow-hidden aspect-[4/3] md:aspect-square" style={{ maxHeight:'420px' }}>
             {item.image ? (
               <Image fill src={item.image} alt={item.name} className="object-cover" sizes="(max-width:768px) 100vw,50vw" />
             ) : (
@@ -413,6 +413,21 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
             </div>
           </div>
         </div>
+
+        {/* Phones: this dish's price and Add button stay on screen (replaces the generic Order Now bar here) */}
+        {isOrderable(item.category) && !item.sold_out_today && (
+          <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden px-3"
+            style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
+            <button onClick={handleAddToCart} data-testid="dish-add-bar"
+              className="w-full flex items-center justify-between rounded-2xl px-5 py-3.5 text-white"
+              style={{ backgroundColor: added ? '#166534' : '#800020', boxShadow: '0 -4px 20px rgba(92,0,23,0.35)' }}>
+              <span className="flex items-center gap-2 text-sm font-black tracking-wide">
+                {added ? <><CheckCircle size={16} /> Added to Cart</> : <><ShoppingCart size={16} /> Add to Cart</>}
+              </span>
+              <span className="text-sm font-black" style={{ color: '#F4C430' }}>£{(item.price * qty).toFixed(2)}</span>
+            </button>
+          </div>
+        )}
 
         {/* ── Quick Info Bar ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">

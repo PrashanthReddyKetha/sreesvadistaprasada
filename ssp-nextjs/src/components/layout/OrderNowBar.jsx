@@ -10,6 +10,7 @@ import { useCart } from '@/context/CartContext';
  * - menu pages while the cart has items (TakeawayNudge owns the bottom there)
  */
 const HIDDEN_PREFIXES = ['/order', '/checkout', '/admin', '/dashboard', '/reset-password', '/subscriptions'];
+const DISH_MENUS = ['svadista', 'prasada', 'breakfast', 'street-food', 'ragi-specials', 'drinks'];
 const MENU_PATHS = ['/svadista', '/prasada', '/menu', '/breakfast', '/street-food', '/ragi-specials', '/drinks', '/snacks'];
 
 export default function OrderNowBar() {
@@ -17,6 +18,9 @@ export default function OrderNowBar() {
   const { cartCount } = useCart();
 
   if (HIDDEN_PREFIXES.some(p => path.startsWith(p))) return null;
+  // Dish pages carry their own "Add to Cart · £x" bar
+  const seg = path.split('/').filter(Boolean);
+  if (seg.length === 3 && DISH_MENUS.includes(seg[0])) return null;
   const nudgeVisible = cartCount > 0 && MENU_PATHS.some(p => path.startsWith(p));
   if (nudgeVisible) return null;
 
