@@ -1,67 +1,62 @@
 # Sree Svadista Prasada
 
-> Authentic South Indian restaurant and online food shop serving Milton Keynes, Edinburgh, and Glasgow. Two distinct menus: Svadista (contemporary South Indian) and Prasada (traditional temple-style vegetarian).
+> Authentic Telugu / Andhra home-style South Indian kitchen in Greenleys, Milton Keynes. Order online for collection. Two menus: Svadista (non-vegetarian) and Prasada (vegetarian).
 
 ## About
 
-Sree Svadista Prasada is an authentic South Indian restaurant based in the UK. We combine the bold, contemporary flavours of Svadista with the pure, traditional vegetarian cooking of Prasada — temple-style food made with no onion, no garlic.
+Sree Svadista Prasada cooks South Indian food the way it is made at home in Andhra and Telangana. Svadista is the non-vegetarian menu — curries, biryanis, starters. Prasada is the vegetarian menu, and includes a Naivedyam section of temple-style offerings prepared without onion or garlic.
 
 We also offer:
-- Breakfast and street food menus
+- South Indian breakfast (dosa, idli, vada, upma, pongal)
+- Street food
 - Ragi (finger millet) specialities
-- Snacks, pickles, and podis available for UK-wide shipping
-- Dabba Wala weekly meal subscription (UK-wide delivery)
-- Catering for events and functions
+- Drinks
+- Dabba Wala: a weekly or monthly home-cooked meal plan for Milton Keynes
+- Catering for events and functions (by enquiry)
 
-## Locations
+## Location and service
 
-- **Milton Keynes** — Primary dine-in and collection location
-- **Edinburgh** — Coming soon
-- **Glasgow** — Coming soon
+- **Kitchen:** 24 Oxman Ln, Greenleys, Milton Keynes MK12 6LF
+- **Collection:** order online and collect from the kitchen at a chosen time slot.
+- **Delivery:** Milton Keynes postcodes only, when switched on. Check the order page for whether delivery is currently available.
+- **Dine-in:** not offered.
+- **Edinburgh and Glasgow:** planned, not yet open.
+- **Pickles and podis:** coming soon, not yet available to order.
 
-## Menus
+## Ordering
 
-- Svadista Menu: Contemporary South Indian cuisine — curries, biryanis, dosas, idlis, vadas
-- Prasada Menu: Traditional vegetarian temple food — no onion, no garlic
-- Breakfast: South Indian breakfast classics — idli, vada, upma, pongal
-- Street Food: Chaat, bhajis, bondas, and more
-- Ragi Specials: Finger millet-based healthy dishes and drinks
-- Drinks: Fresh juices, lassis, filter coffee, teas
+- Minimum order £15.
+- Collection orders get 10% off.
+- Card payment online. Guests can order without an account.
+- Every fifth completed order on an account earns a free dish.
 
-## Key Pages
+## Dabba Wala meal plan
+
+- Weekly plan: 5 meals. Monthly plan: 20 meals. Delivered on weekdays within Milton Keynes.
+- Vegetarian (Prasada) or non-vegetarian (Svadista) box.
+- Paid up front; plans do not auto-renew.
+- Individual days can be skipped from the customer dashboard. For anything else — pausing, changing or cancelling — customers contact the kitchen.
+
+## Key pages
 
 - Homepage: https://sreesvadistaprasada.com/
-- Full Menu: https://sreesvadistaprasada.com/menu
-- Svadista Menu: https://sreesvadistaprasada.com/svadista
-- Prasada Menu: https://sreesvadistaprasada.com/prasada
-- Breakfast Menu: https://sreesvadistaprasada.com/breakfast
-- Street Food: https://sreesvadistaprasada.com/street-food
-- Ragi Specials: https://sreesvadistaprasada.com/ragi-specials
-- Dabba Wala Subscriptions: https://sreesvadistaprasada.com/subscriptions
-- Online Shop (Snacks): https://sreesvadistaprasada.com/snacks
-- Catering Enquiries: https://sreesvadistaprasada.com/catering
-- Contact Us: https://sreesvadistaprasada.com/contact
-- Our Story: https://sreesvadistaprasada.com/story
-- FAQs: https://sreesvadistaprasada.com/faq
-- Gallery: https://sreesvadistaprasada.com/gallery
+- Order online: https://sreesvadistaprasada.com/order
+- Full menu: https://sreesvadistaprasada.com/menu
+- Svadista (non-veg): https://sreesvadistaprasada.com/svadista
+- Prasada (veg): https://sreesvadistaprasada.com/prasada
+- Breakfast: https://sreesvadistaprasada.com/breakfast
+- Street food: https://sreesvadistaprasada.com/street-food
+- Ragi specials: https://sreesvadistaprasada.com/ragi-specials
+- Drinks: https://sreesvadistaprasada.com/drinks
+- Dabba Wala meal plan: https://sreesvadistaprasada.com/subscriptions
+- Catering enquiries: https://sreesvadistaprasada.com/catering
 - Milton Keynes: https://sreesvadistaprasada.com/milton-keynes
-- Edinburgh: https://sreesvadistaprasada.com/edinburgh
-- Glasgow: https://sreesvadistaprasada.com/glasgow
-
-## Ordering & Delivery
-
-Customers can place orders online for collection or delivery. Delivery is available within defined postcodes around each location. Dabba Wala meal plan subscriptions ship UK-wide.
-
-## Customer Accounts
-
-Users can register and log in to:
-- Place and track orders
-- Manage Dabba Wala subscriptions
-- Write reviews on menu items
-- Send enquiries and receive replies from staff
-- Earn and view loyalty points
+- Our story: https://sreesvadistaprasada.com/story
+- FAQs: https://sreesvadistaprasada.com/faq
+- Contact: https://sreesvadistaprasada.com/contact
+- Terms: https://sreesvadistaprasada.com/terms
 
 ## Contact
 
-- Website: https://sreesvadistaprasada.com/contact
+- Contact form: https://sreesvadistaprasada.com/contact
 - Catering: https://sreesvadistaprasada.com/catering

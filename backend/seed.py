@@ -713,10 +713,23 @@ async def cleanup_menu_april_2026():
     print("Full menu sync applied.")
 
 
+# Bump this whenever MENU_ITEMS (or one of the sync functions below) changes and
+# the change should be pushed to the live database. The sync then runs ONCE on
+# the next boot. Between bumps the database is the source of truth, so prices,
+# descriptions and deletions made in the admin panel survive restarts.
+MENU_SEED_VERSION = 1
+
+
 async def seed_menu():
     """Step 1: rename/migrate. Step 2: insert new. Step 3: full sync."""
     import uuid
     from datetime import datetime
+
+    marker = await db.settings.find_one({"_id": "menu_seed"})
+    has_menu = await db.menu_items.count_documents({}, limit=1)
+    if has_menu and marker and marker.get("version") == MENU_SEED_VERSION:
+        print(f"Menu seed v{MENU_SEED_VERSION} already applied — leaving live menu untouched.")
+        return
 
     await sync_menu_may_2026()
 
@@ -739,6 +752,11 @@ async def seed_menu():
     await update_item_categories()
     await cleanup_menu_april_2026()
     await apply_seo_h1_june_2026()
+    await db.settings.update_one(
+        {"_id": "menu_seed"},
+        {"$set": {"version": MENU_SEED_VERSION, "applied_at": datetime.utcnow().isoformat()}},
+        upsert=True,
+    )
 
 
 SAMPLE_DAILY_SPECIALS = [

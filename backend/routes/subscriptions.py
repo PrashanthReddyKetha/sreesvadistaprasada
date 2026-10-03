@@ -19,16 +19,22 @@ from notifications import (
     email_subscription_confirmation, email_delivery_skipped,
     email_subscription_cancelled, email_subscription_expired,
 )
-from subscription_pricing import quote_subscription, email_key
+from subscription_pricing import quote_subscription, email_key, PLAN_MEALS
 from coupons import redeem as redeem_coupon
 from whatsapp import notify_customer, whatsapp_enabled, tracking_link, first_name
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
-PLAN_DAYS = {
-    "weekly":  4,   # Mon + 4 = Fri
-    "monthly": 30,  # Mon + 30 = approx 1 calendar month
-}
+def plan_end_date(start: datetime, meals: int) -> datetime:
+    """Date of the last paid meal: the Nth weekday counting from the start date.
+    Weekly (5 meals) from a Monday ends that Friday; monthly (20) ends the 4th Friday."""
+    d, counted = start, 0
+    while True:
+        if d.weekday() < 5:
+            counted += 1
+            if counted >= meals:
+                return d
+        d += timedelta(days=1)
 
 # ── Rate limiter for public subscription creation ──────────────────────────────
 _sub_rate_store: dict = defaultdict(list)
@@ -113,7 +119,6 @@ async def create_subscription(
         raise HTTPException(status_code=400, detail=str(e))
     plan = pricing["plan"]
     price = pricing["total"]
-    days  = PLAN_DAYS[plan]
 
     # Verify payment with Stripe before creating the subscription — same rule as orders.
     # Never trust the client for price; an unverified subscription is a free one.
@@ -135,7 +140,7 @@ async def create_subscription(
     # Calculate end_date and cancellation window
     try:
         start = datetime.strptime(payload.start_date, "%Y-%m-%d")
-        end   = start + timedelta(days=days)
+        end   = plan_end_date(start, PLAN_MEALS[plan])
         end_date_str = end.strftime("%Y-%m-%d")
     except Exception:
         end_date_str = None

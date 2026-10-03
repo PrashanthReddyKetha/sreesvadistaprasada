@@ -106,4 +106,10 @@ async def root():
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok"}
+    from fastapi.responses import JSONResponse
+    from database import db
+    try:
+        await asyncio.wait_for(db.command("ping"), timeout=5)
+    except Exception:
+        return JSONResponse(status_code=503, content={"status": "degraded", "database": "unreachable"})
+    return {"status": "ok", "database": "ok"}
