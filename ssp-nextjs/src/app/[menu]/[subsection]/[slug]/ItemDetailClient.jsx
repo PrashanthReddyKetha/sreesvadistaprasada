@@ -257,7 +257,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [] }) 
   ];
 
   return (
-    <div className="min-h-screen pt-20 md:pt-28 pb-16" style={{ backgroundColor:'#FAF8F4' }}>
+    <div className="min-h-screen pt-28 pb-16" style={{ backgroundColor:'#FAF8F4' }}>
       <div className="max-w-6xl mx-auto px-4 md:px-8">
 
         {/* Breadcrumb */}

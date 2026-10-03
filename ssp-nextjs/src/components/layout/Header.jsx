@@ -108,7 +108,7 @@ const Header = () => {
           className="fixed top-0 left-0 right-0 z-50 h-8 flex items-center justify-center px-4 text-center text-xs sm:text-sm font-bold tracking-wide overflow-hidden"
           style={{ backgroundColor: '#2D2422', color: '#F4C430' }}
         >
-          <span className="truncate">🔒 Kitchen closed <span className="hidden sm:inline">&nbsp;·&nbsp; {kitchen.message}</span></span>
+          <span className="truncate">🔒 Kitchen closed &nbsp;·&nbsp; {kitchen.message}</span>
           <span className="ml-3 flex-shrink-0"><KitchenClosedNotify compact /></span>
         </div>
       ) : (
@@ -127,8 +127,8 @@ const Header = () => {
               ? 'Authentic Andhra flavours, cooked fresh and delivered across Milton Keynes — order now 🌶️'
               : 'Authentic Andhra flavours, cooked fresh in Milton Keynes — order now, collect and save 10% 🌶️'}</span>
             <span className="sm:hidden">Swagatam MK 🙏 · {kitchen.deliveryEnabled
-              ? 'Fresh Andhra flavours, delivered — order now 🌶️'
-              : 'Fresh Andhra flavours — collect & save 10% 🌶️'}</span>
+              ? 'Fresh Andhra food, delivered 🌶️'
+              : 'Collect & save 10% 🌶️'}</span>
           </>
         )}
       </div>

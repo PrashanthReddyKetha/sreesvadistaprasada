@@ -66,6 +66,7 @@ function DashboardInner() {
   const [reviews, setReviews] = useState([]);
   const [loyaltyPending, setLoyaltyPending] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const ordersLoaded = useRef(false);  // an orders fetch that never succeeded must not look like "No orders yet"
 
   /* redirect if not logged in */
   // A tracking link (?tab=…) opened while signed out asks for sign-in and stays
@@ -90,7 +91,7 @@ function DashboardInner() {
     ]);
     // Each call is independent — one failing (or a cold-starting backend)
     // shouldn't blank out data the others already fetched successfully.
-    if (oRes.status === 'fulfilled') setOrders(oRes.value.data);
+    if (oRes.status === 'fulfilled') { setOrders(oRes.value.data); ordersLoaded.current = true; }
     if (sRes.status === 'fulfilled') setSubs(sRes.value.data);
     if (eRes.status === 'fulfilled') setEnquiries(eRes.value.data);
     if (nRes.status === 'fulfilled') setUnreadCount(nRes.value.data.count || 0);
@@ -98,7 +99,7 @@ function DashboardInner() {
     if (lRes.status === 'fulfilled') setLoyaltyPending(lRes.value.data?.pending_reward ?? false);
 
     const allFailed = [oRes, sRes, eRes, nRes, rRes, lRes].every(r => r.status === 'rejected');
-    setLoadError(allFailed ? "We couldn't load your account. Please check your connection and try again." : '');
+    setLoadError(allFailed || !ordersLoaded.current ? "We couldn't load your account. Please check your connection and try again." : '');
     setLoading(false);
   }, [user]);
 
@@ -356,14 +357,22 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
   const canCancel = ['pending', 'confirmed'].includes(o.status);
   const { addToCart, setCartOpen } = useCart();
 
-  const handleReorder = (e) => {
+  const handleReorder = async (e) => {
     e.stopPropagation();
+    let menu = null;
+    try { menu = (await api.get('/menu', { params: { available: true } })).data; } catch { /* fall back to adding as-is; checkout re-checks */ }
+    const skipped = [];
     (o.items || []).forEach(item => {
+      const live = menu ? menu.find(m => m.id === item.menu_item_id) : null;
+      if (menu && (!live || live.sold_out_today)) { skipped.push(item.name); return; }
       for (let i = 0; i < (item.quantity || 1); i++) {
-        addToCart({ id: item.menu_item_id, name: item.name, price: item.price });
+        addToCart(live
+          ? { id: live.id, name: live.name, price: live.price, image: live.image, category: live.category, preorder: !!live.preorder_only }
+          : { id: item.menu_item_id, name: item.name, price: item.price });
       }
     });
-    setCartOpen(true);
+    if (skipped.length) alert(`Not available right now, so not added: ${skipped.join(', ')}.`);
+    if (!menu || skipped.length < (o.items || []).length) setCartOpen(true);
   };
   const takeaway = o.delivery_type === 'takeaway';
   const stepMap = { pending: 0, confirmed: 1, preparing: 2, ready: 3, out_for_delivery: 3, delivered: 4, cancelled: -1 };
@@ -469,7 +478,7 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
             </p>
             <p className="text-sm" style={{ color: '#3D2B1F' }}>
               {o.delivery_type === 'takeaway'
-                ? 'Collection from our Greenleys kitchen'
+                ? <>Collect from our Greenleys kitchen — <a href="https://maps.google.com/?q=24+Oxman+Ln,+Greenleys,+Milton+Keynes+MK12+6LF" target="_blank" rel="noopener noreferrer" className="underline">24 Oxman Lane, Greenleys, Milton Keynes, MK12 6LF</a></>
                 : [o.delivery_address?.line1, o.delivery_address?.city, o.delivery_address?.postcode].filter(Boolean).join(', ')}
             </p>
           </div>

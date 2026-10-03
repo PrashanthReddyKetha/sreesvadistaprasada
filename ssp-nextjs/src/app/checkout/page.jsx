@@ -905,9 +905,10 @@ const CheckoutInner = () => {
   const potentialDeliveryFee = zoneInfo
     ? (effectiveSubtotal >= (freeDeliveryAt ?? Infinity) ? 0 : zoneInfo.delivery_fee)
     : null;
-  const collectSavingIsEstimate = potentialDeliveryFee === null;
+  // With delivery switched off there is no delivery fee to "save" — only the 10% is real
+  const collectSavingIsEstimate = kitchen.deliveryEnabled && potentialDeliveryFee === null;
   const collectSaving = meetsMinimum
-    ? Math.round(((potentialDeliveryFee ?? MIN_DELIVERY_FEE) + (effectiveSubtotal <= 19.99 ? 1.50 : 0) + effectiveSubtotal * 0.10) * 100) / 100
+    ? Math.round(((kitchen.deliveryEnabled ? (potentialDeliveryFee ?? MIN_DELIVERY_FEE) + (effectiveSubtotal <= 19.99 ? 1.50 : 0) : 0) + effectiveSubtotal * 0.10) * 100) / 100
     : null;
 
   /* ── Apple Pay / Google Pay (Stripe Payment Request) ─────────────────── */
@@ -1233,6 +1234,14 @@ const CheckoutInner = () => {
           </p>
           <LoyaltyBanner />
           <AddToHomeScreen />
+          {success.isTakeaway && (
+            <p className="text-sm mb-5" style={{ color: '#5C4B47' }}>
+              Collect from our Greenleys kitchen:{' '}
+              <a href="https://maps.google.com/?q=24+Oxman+Ln,+Greenleys,+Milton+Keynes+MK12+6LF" target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: '#800020' }}>
+                24 Oxman Lane, Greenleys, Milton Keynes, MK12 6LF
+              </a>
+            </p>
+          )}
           <div className="flex flex-col sm:flex-row gap-3">
             <button onClick={() => router.push('/')}
               className="flex-1 py-3 text-sm font-semibold rounded-xl border-2 transition-all hover:bg-gray-50"
@@ -1284,7 +1293,7 @@ const CheckoutInner = () => {
 
   /* ── MAIN CHECKOUT ───────────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FAF7F2' }}>
+    <div className="min-h-screen pt-24 md:pt-28" style={{ backgroundColor: '#FAF7F2' }}>
       {showBrowse && (
         <BrowseModal
           cartItems={cartItems}
@@ -1304,7 +1313,7 @@ const CheckoutInner = () => {
             <ArrowLeft size={16} /> Back
           </button>
           <h1 className="text-xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
-            Almost at the doorstep
+            Almost there
           </h1>
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
             <Lock size={12} /> Secure order
@@ -1313,6 +1322,12 @@ const CheckoutInner = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+        {!kitchen.open && (
+          <div role="alert" className="mb-6 py-4 px-4 text-sm font-bold text-center rounded-2xl" style={{ backgroundColor: '#2D2422', color: '#F4C430' }}>
+            🔒 {kitchen.message}
+            <div className="mt-2"><KitchenClosedNotify /></div>
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
 
           {/* ── LEFT: Form ───────────────────────────────────────────── */}
@@ -1486,7 +1501,7 @@ const CheckoutInner = () => {
                 <div className="text-xs font-semibold px-3 py-2 rounded-lg"
                   style={{ backgroundColor: '#F0FFF4', color: '#166534' }}>
                   {collectSaving
-                    ? <>🎉 You&apos;re saving {collectSavingIsEstimate ? 'at least ' : ''}<strong>{fmt(collectSaving)}</strong> on this order{collectSavingIsEstimate ? '' : ' vs delivery'}!</>
+                    ? <>🎉 You&apos;re saving {collectSavingIsEstimate ? 'at least ' : ''}<strong>{fmt(collectSaving)}</strong> on this order{collectSavingIsEstimate || !kitchen.deliveryEnabled ? '' : ' vs delivery'}!</>
                     : <>🎉 You save {fmt(takeawayDiscount)} by collecting — no delivery fee either!</>}
                 </div>
               )}
