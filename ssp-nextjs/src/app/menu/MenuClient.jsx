@@ -105,9 +105,9 @@ const Menu = ({ initialItems = [], seoLine }) => {
 
   const renderCard = (dish) => (
     <Link key={dish.id} href={buildItemUrl(dish)} onClick={e => e.target.closest('button') && e.preventDefault()} data-testid={`menu-dish-${dish.id}`}>
-      <div className="rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }}>
+      <div className="flex sm:block rounded-lg overflow-hidden bg-white card-hover group h-full cursor-pointer" style={{ boxShadow: '0 4px 20px rgba(128,0,32,0.06)' }}>
         {dish.image && (
-          <div className="relative h-40 overflow-hidden">
+          <div className="relative w-24 h-24 shrink-0 sm:w-auto sm:h-40 overflow-hidden">
             <Image fill src={dish.image} alt={dish.name} className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,25vw" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
             <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-sm border-2 flex items-center justify-center bg-white/90"
@@ -116,7 +116,7 @@ const Menu = ({ initialItems = [], seoLine }) => {
             </div>
           </div>
         )}
-        <div className="p-4 flex flex-col h-[180px]">
+        <div className="p-3 sm:p-4 flex flex-col flex-1 min-w-0 sm:h-[180px]">
           <div className="flex items-center gap-1.5 mb-1">
             <h3 className="text-sm font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>{dish.name}</h3>
             {dish.spice_level > 0 && (
@@ -240,7 +240,7 @@ const Menu = ({ initialItems = [], seoLine }) => {
           {loading ? (
             <MenuLoader color="#800020" />
           ) : showSections ? (
-            <div className="space-y-14">
+            <div className="space-y-10 sm:space-y-14">
               {grouped.map(sec => (
                 <section key={sec.id}>
                   <div className="flex items-baseline justify-between mb-5 pb-2" style={{ borderBottom: `2px solid ${sec.accent}22` }}>
@@ -251,14 +251,14 @@ const Menu = ({ initialItems = [], seoLine }) => {
                       Explore {sec.name} {'→'}
                     </Link>
                   </div>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                     {sec.items.map(dish => renderCard(dish))}
                   </div>
                 </section>
               ))}
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {filtered.map(dish => renderCard(dish))}
             </div>
           )}

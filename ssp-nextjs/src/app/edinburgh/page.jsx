@@ -61,7 +61,7 @@ export default function EdinburghPage() {
                 🏴󠁧󠁢󠁳󠁣󠁴󠁿 Coming Soon to Edinburgh
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight tracking-tight" style={{ fontFamily: 'var(--font-playfair), serif' }}>
-                South Indian Food Delivery in Edinburgh
+                South Indian Food in Edinburgh — Coming Soon
               </h1>
               <p className="text-base md:text-lg text-gray-200 mb-8 leading-relaxed">
                 An authentic Andhra kitchen is on its way to Edinburgh — gongura curries, dosas and Dabba Wala tiffin subscriptions, planned for Leith, Marchmont, Newington and all Edinburgh EH postcodes.

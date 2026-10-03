@@ -24,7 +24,7 @@ export const metadata = {
 const FAQS = [
   { q: 'Is there a South Indian restaurant in Glasgow?', a: 'Sree Svadista Prasada, a dedicated Andhra Telugu kitchen, is expanding to Glasgow. We currently serve Milton Keynes. Register your interest to be first to know when we launch Glasgow delivery.' },
   { q: 'Where can I get South Indian food delivered in Glasgow?', a: 'We are bringing authentic Andhra curries, gongura dishes, dosas, and our Dabba Wala tiffin subscription to Glasgow. Contact us via WhatsApp to register your postcode.' },
-  { q: 'What makes Sree Svadista Prasada different from other Indian restaurants in Glasgow?', a: 'Unlike most "Indian" restaurants in Glasgow that serve Punjabi-style North Indian food, Sree Svadista Prasada specialises exclusively in Andhra Pradesh and Telugu cuisine — gongura curries, Guntur-spiced dishes, temple-style Prasada cooking, and the Dabba Wala home-style meal subscription.' },
+  { q: 'What will Sree Svadista Prasada bring to Glasgow?', a: 'Most Indian restaurants in Britain serve Punjabi-style North Indian food. Sree Svadista Prasada cooks the food of Andhra Pradesh and the Telugu home kitchen — gongura curries, Guntur-spiced dishes, temple-style Prasada cooking, and the Dabba Wala home-style meal subscription. We currently serve Milton Keynes; Glasgow is planned.' },
 ];
 
 const jsonLd = [
@@ -61,7 +61,7 @@ export default function GlasgowPage() {
                 🏴󠁧󠁢󠁳󠁣󠁴󠁿 Coming Soon to Glasgow
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight tracking-tight" style={{ fontFamily: 'var(--font-playfair), serif' }}>
-                South Indian Food Delivery in Glasgow
+                South Indian Food in Glasgow — Coming Soon
               </h1>
               <p className="text-base md:text-lg text-gray-200 mb-8 leading-relaxed">
                 Slow-cooked Andhra and Telugu food coming to Pollokshields, Shawlands, Govanhill, Finnieston, West End and across Glasgow — gongura curries, dosas, biryani and Dabba Wala tiffin subscriptions.
