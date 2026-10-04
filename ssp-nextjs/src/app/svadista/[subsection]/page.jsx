@@ -28,7 +28,8 @@ export async function generateStaticParams() {
   return Object.keys(SLUG_TO_TAB).map(subsection => ({ subsection }));
 }
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) return {};
   const seo = categorySeo('svadista', params.subsection);
@@ -40,7 +41,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function SvadistaSubsectionPage({ params }) {
+export default async function SvadistaSubsectionPage(props) {
+  const params = await props.params;
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) notFound();
   const initialItems = await getItems();

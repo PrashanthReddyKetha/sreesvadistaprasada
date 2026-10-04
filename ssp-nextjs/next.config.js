@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // The repo root also holds a lockfile (legacy frontend); pin the root to this app.
+  turbopack: { root: __dirname },
   images: {
     // Only the hosts we actually serve images from — a '**' wildcard turns
     // /_next/image into an open optimisation proxy anyone can abuse.
@@ -16,6 +18,8 @@ const nextConfig = {
     deviceSizes: [640, 828, 1080, 1920],
     // Only generate WebP; dropping AVIF halves the number of format variants.
     formats: ['image/webp'],
+    // Next 16 only serves the qualities listed here; the hero slider asks for 80.
+    qualities: [75, 80],
   },
   // Allow JSX in .jsx files imported from pages/components
   transpilePackages: [],

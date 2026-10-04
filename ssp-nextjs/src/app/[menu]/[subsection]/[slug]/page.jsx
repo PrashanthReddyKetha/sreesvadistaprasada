@@ -82,7 +82,8 @@ const CATEGORY_LABELS = {
   drinks: 'Indian Drinks',
 };
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const item = await getItem(params.slug);
   if (!item) return { title: { absolute: 'Dish Not Found | Sree Svadista Prasada' } };
 
@@ -123,7 +124,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function ItemPage({ params }) {
+export default async function ItemPage(props) {
+  const params = await props.params;
   const item = await getItem(params.slug);
   if (!item) notFound();
 

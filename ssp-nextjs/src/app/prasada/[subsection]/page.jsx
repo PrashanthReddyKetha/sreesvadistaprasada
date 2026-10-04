@@ -34,7 +34,8 @@ export async function generateStaticParams() {
   return Object.keys(SLUG_TO_TAB).map(subsection => ({ subsection }));
 }
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) return {};
   const clean = tab.replace(/[^\w\s&-]/g, '').trim(); // no emoji in titles
@@ -47,7 +48,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function PrasadaSubsectionPage({ params }) {
+export default async function PrasadaSubsectionPage(props) {
+  const params = await props.params;
   const legacy = LEGACY_REDIRECTS[params.subsection];
   if (legacy) permanentRedirect(`/prasada/${legacy}`);
   const tab = SLUG_TO_TAB[params.subsection];

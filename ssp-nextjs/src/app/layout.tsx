@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { Playfair_Display, Lato } from 'next/font/google'
-import dynamic from 'next/dynamic'
+import CartDrawer from '@/components/CartDrawerLoader'
 import { AuthProvider } from '@/context/AuthContext'
 import { CartProvider } from '@/context/CartContext'
 import { KitchenProvider } from '@/context/KitchenContext'
@@ -20,8 +20,6 @@ import CookieConsent from '@/components/CookieConsent'
 import GTMPageView from '@/components/GTMPageView'
 import '@/styles/globals.css'
 
-// Lazy-load cart drawer — only loads its JS when first rendered
-const CartDrawer = dynamic(() => import('@/components/CartDrawer'), { ssr: false })
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
