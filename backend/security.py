@@ -42,3 +42,16 @@ class RateLimit:
             raise HTTPException(status_code=429, detail=self.message)
         recent.append(now)
         self.store[ip] = recent
+
+
+def mask(value) -> str:
+    """Contact details for log lines: enough to recognise, not enough to use.
+    'asha@example.com' -> 'a***@example.com'; '+447700900123' -> '***123'."""
+    text = str(value or "").strip()
+    if not text:
+        return "(none)"
+    if "@" in text:
+        local, _, domain = text.partition("@")
+        return f"{local[:1]}***@{domain}"
+    digits = "".join(ch for ch in text if ch.isdigit())
+    return f"***{digits[-3:]}" if len(digits) >= 3 else "***"

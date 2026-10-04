@@ -22,12 +22,12 @@ const ACTION = {
   add_to_cart: 'Added to basket', remove_from_cart: 'Removed from basket', cart_quantity_change: 'Changed a quantity', view_cart: 'Opened the basket',
   delivery_type_selected: 'Chose delivery or collection', begin_checkout: 'Started checkout', postcode_checked: 'Checked a postcode',
   coupon_applied: 'Coupon accepted', coupon_failed: 'Coupon refused', payment_started: 'Started paying', payment_started_failed: 'Payment could not start',
-  purchase: 'Order confirmed', order_placed: 'Order placed', order_placed_failed: 'Order failed', order_cancelled: 'Order cancelled',
+  purchase: 'Order placed', order_placed_failed: 'Order failed', order_cancelled: 'Order cancelled',
   login: 'Signed in', login_failed: 'Sign-in failed', sign_up: 'Created an account', sign_up_failed: 'Account creation failed', logout: 'Signed out',
   password_reset_requested: 'Asked for a password reset', password_reset_done: 'Reset their password', profile_updated: 'Updated their details',
   address_saved: 'Saved an address', address_deleted: 'Deleted an address',
   begin_subscription: 'Started the Dabba Wala steps', subscription_step_view: 'Viewed a Dabba Wala step', select_subscription_plan: 'Chose a Dabba Wala plan',
-  plan_priced: 'Priced a Dabba Wala plan', subscription_purchase: 'Dabba Wala plan confirmed', plan_purchased: 'Dabba Wala plan bought', plan_purchased_failed: 'Dabba Wala purchase failed',
+  plan_priced: 'Priced a Dabba Wala plan', subscription_purchase: 'Dabba Wala plan bought', plan_purchased_failed: 'Dabba Wala purchase failed',
   meal_skipped: 'Skipped a meal', review_submitted: 'Left a review', review_dismissed: 'Dismissed a review request', dish_liked: 'Liked a dish',
   restock_alert_requested: 'Asked to be told when back in stock', reopen_alert_requested: 'Asked to be told when the kitchen reopens',
   loyalty_redeemed: 'Used a free loyalty dish', notifications_enabled: 'Turned on notifications', notify_me_signup: 'Joined a waiting list',
@@ -50,7 +50,7 @@ function Visits({ visits }) {
           <button onClick={() => setOpen(open === v.visit_id ? null : v.visit_id)} className="w-full px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-left text-sm hover:bg-gray-50">
             <span className="font-medium w-28 shrink-0">{time(v.started)}</span>
             <span className="text-gray-600">{v.source}</span>
-            <span className="text-gray-400 text-xs">{v.device || '—'} · {v.events.length} actions · {v.minutes} min{v.returning ? ' · returning' : ''}</span>
+            <span className="text-gray-400 text-xs">{v.device || '—'} · {v.events.length} actions · {v.minutes} min{v.returning ? ' · returning' : ''}{v.signed_in ? ' · signed in' : ''}</span>
             {v.ordered ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: '#E8F5E9', color: '#2E7D32' }}>Ordered</span>
               : v.added_to_basket ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: '#FFF8E1', color: '#8D6E00' }}>Basket, no order</span> : null}
             <span className="ml-auto text-gray-400">{open === v.visit_id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</span>
@@ -110,8 +110,6 @@ export default function AnalyticsTab() {
   const t = data.totals;
   const top = data.funnel[0]?.visits || 0;
   const maxDay = Math.max(1, ...data.by_day.map(d => d.visits));
-  // the server stores hours in UTC; shift to UK clock time (handles summer time)
-  const ukOffset = Math.round((new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/London' })) - new Date(new Date().toLocaleString('en-US', { timeZone: 'UTC' }))) / 3600000);
   const cards = [
     ['Visits', t.visits, `${t.page_views} pages viewed`],
     ['Orders', t.orders, `${pct(t.orders, t.visits)} of visits`],
@@ -155,6 +153,16 @@ export default function AnalyticsTab() {
         rows={data.sources.map(s => [s.source, s.visits, s.added_to_basket, s.orders, fmt(s.income)])} />
 
       <div className="grid lg:grid-cols-2 gap-5">
+        <Table title="Checkout, step by step" empty="No one has reached checkout in this period." head={['Step', 'Visits']}
+          rows={(data.checkout || []).filter(c => c.visits > 0 || c.step !== 'Payment or order failed').map(c => [c.step, c.visits])} />
+        <Table title="Where visits end without an order" empty="Nothing recorded yet." head={['Last page seen', 'Visits']}
+          rows={(data.exit_pages || []).map(d => [d.name, d.count])} />
+      </div>
+
+      <Table title="Dishes people look at but rarely order" empty="Nothing recorded yet." head={['Dish', 'Opened', 'Added to basket', 'Ordered']}
+        rows={(data.interest_without_orders || []).map(d => [d.name, d.opened, d.added, d.ordered])} />
+
+      <div className="grid lg:grid-cols-2 gap-5">
         <Table title="Dishes opened most" empty="Nothing recorded yet." head={['Dish', 'Times opened']} rows={data.most_viewed_dishes.map(d => [d.name, d.count])} />
         <Table title="Dishes added to basket most" empty="Nothing recorded yet." head={['Dish', 'Quantity added']} rows={data.most_added_dishes.map(d => [d.name, d.count])} />
       </div>
@@ -196,7 +204,7 @@ export default function AnalyticsTab() {
         <div className="bg-white rounded-xl p-4" style={card}>
           <h3 className="font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Busiest hours (UK time)</h3>
           <div className="flex items-end gap-1 h-32">
-            {(data.by_hour || []).map(h => { const max = Math.max(1, ...data.by_hour.map(x => x.page_views)); const uk = (h.hour + ukOffset + 24) % 24; return { ...h, uk, max }; })
+            {(data.by_hour || []).map(h => { const max = Math.max(1, ...data.by_hour.map(x => x.page_views)); return { ...h, uk: h.hour, max }; })
               .sort((a, b) => a.uk - b.uk).map(h => (
                 <div key={h.uk} className="flex-1 flex flex-col items-center justify-end h-full" title={`${String(h.uk).padStart(2, '0')}:00 — ${h.page_views} page views`}>
                   <div className="w-full rounded-t" style={{ height: `${(h.page_views / h.max) * 100}%`, minHeight: h.page_views ? 3 : 0, backgroundColor: P }} />

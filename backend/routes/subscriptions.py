@@ -39,6 +39,12 @@ STATUS_TRANSITIONS = {
 }
 
 
+def status_change(old, new, by: str, reason: str = None) -> dict:
+    """One line of a plan's status history: when, from, to, who, why.
+    `by` is 'system', 'customer' or 'admin: <name>'."""
+    return {"at": datetime.utcnow().isoformat(), "from": old, "to": new, "by": by, "reason": reason}
+
+
 def london_today() -> str:
     return datetime.now(LONDON).strftime("%Y-%m-%d")
 
@@ -85,7 +91,8 @@ async def expire_finished_plans(extra: Optional[dict] = None) -> int:
     async for s in db.subscriptions.find(query, {"_id": 0}):
         claimed = await db.subscriptions.update_one(
             {"id": s["id"], "status": "active"},
-            {"$set": {"status": "expired", "expired_notified_at": datetime.utcnow().isoformat()}},
+            {"$set": {"status": "expired", "expired_notified_at": datetime.utcnow().isoformat()},
+             "$push": {"status_history": status_change("active", "expired", "system", "Last meal day passed")}},
         )
         if not claimed.modified_count:
             continue
@@ -248,7 +255,10 @@ async def create_subscription(
     )
     subscription.coupon_code = pricing["coupon_code"]
     try:
-        await db.subscriptions.insert_one(subscription.model_dump())
+        await db.subscriptions.insert_one({
+            **subscription.model_dump(),
+            "status_history": [status_change(None, "active", "customer", f"Bought a {payload.plan} plan")],
+        })
     except DuplicateKeyError:
         existing = await db.subscriptions.find_one({"payment_intent_id": payload.payment_intent_id}, {"_id": 0})
         if existing and existing.get("user_id") == user_id:
@@ -453,7 +463,8 @@ async def update_subscription_status(
     update = {"status": new_status}
     if new_status == "cancelled":
         update["cancelled_at"] = datetime.utcnow().isoformat()
-    ops = {"$set": update}
+    by = f"admin: {current_user.get('name') or 'Admin'}"
+    ops = {"$set": update, "$push": {"status_history": status_change(old_status, new_status, by)}}
     if new_status == "active":
         ops["$unset"] = {"cancelled_at": ""}
     await db.subscriptions.update_one({"id": sub_id}, ops)

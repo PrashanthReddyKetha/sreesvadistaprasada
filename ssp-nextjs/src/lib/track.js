@@ -62,6 +62,10 @@ function getVisit() {
   return visit;
 }
 
+const isSignedIn = () => {
+  try { return !!localStorage.getItem('ssp_token'); } catch { return false; }
+};
+
 function getVisitorId() {
   if (!hasConsent()) return null;
   try {
@@ -79,6 +83,7 @@ function flush() {
   const body = JSON.stringify({
     visit_id: v.id,
     visitor_id: getVisitorId(),
+    signed_in: isSignedIn(),
     device: window.innerWidth < 768 ? 'phone' : 'desktop',
     attribution: v.attribution,
     events,
@@ -152,8 +157,9 @@ export function startAutoCapture() {
     // Named controls first. Free text is only used when short: long text is a card or a row
     // (an address, an order) and could hold personal details.
     const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
-    const label = tidy(el.getAttribute('data-track-label') || el.getAttribute('aria-label') || el.getAttribute('data-testid')
-      || (text.length <= 50 ? text : '') || el.getAttribute('title') || `(${el.tagName.toLowerCase()})`);
+    const testId = (el.getAttribute('data-testid') || '').replace(/[-_]+/g, ' ').replace(/\b(btn|button|cta)\b/gi, '').trim();
+    const label = tidy(el.getAttribute('data-track-label') || el.getAttribute('aria-label') || (text.length <= 50 ? text : '')
+      || el.getAttribute('title') || testId || (el.tagName === 'A' ? 'Unnamed link' : 'Unnamed button'));
     const href = el.tagName === 'A' ? (el.getAttribute('href') || '') : '';
     const props = { label, area: areaOf(el) };
     if (href.startsWith('tel:')) props.href = 'phone call';
@@ -247,9 +253,8 @@ export function recordApi(method, url, status, requestData, responseData) {
     const hit = API_EVENTS.find(([mm, re]) => mm === m && re.test(path));
     if (!hit) return;
     if (ok) {
+      if (hit[2] === 'order_placed' || hit[2] === 'plan_purchased') return;
       const props = {};
-      if (hit[2] === 'order_placed') { props.transaction_id = responseData?.order_number; props.value = responseData?.total; props.method = responseData?.delivery_type; }
-      if (hit[2] === 'plan_purchased') { props.plan = responseData?.plan; props.box_type = responseData?.box_type; props.value = responseData?.price; }
       if (hit[2] === 'payment_started') { props.value = req?.amount; props.method = req?.purpose; }
       record(hit[2], props);
     } else if (status) {

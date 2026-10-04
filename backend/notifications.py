@@ -11,6 +11,7 @@ Set env vars on Render:
     SITE_URL (optional)           — used in email links, default https://sreesvadistaprasada.com
 """
 from __future__ import annotations
+from security import mask
 import os
 from html import escape as html_escape
 import asyncio
@@ -118,7 +119,7 @@ def _wrap(title: str, body_html: str, cta_text: str = "", cta_url: str = "") -> 
 
 async def _send_email_now(to: str, subject: str, html: str) -> None:
     if not RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY not set — skipping email to %s (%s)", to, subject)
+        logger.warning("RESEND_API_KEY not set — skipping email to %s (%s)", mask(to), subject)
         return
     if not to:
         return
@@ -133,23 +134,23 @@ async def _send_email_now(to: str, subject: str, html: str) -> None:
                 json={"from": RESEND_FROM, "to": [to], "subject": subject, "html": html},
             )
             if r.status_code >= 300:
-                logger.error("Resend error %s → %s: %s", r.status_code, to, r.text[:400])
+                logger.error("Resend error %s → %s: %s", r.status_code, mask(to), r.text[:400])
             else:
-                logger.info("Email sent to=%s subject=%r", to, subject)
+                logger.info("Email sent to=%s subject=%r", mask(to), subject)
     except Exception as e:
-        logger.exception("Email send failed to=%s: %s", to, e)
+        logger.exception("Email send failed to=%s: %s", mask(to), e)
 
 
 async def _send_sms_now(to: str, body: str) -> None:
     if not (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER):
-        logger.warning("Twilio not configured — skipping SMS to %s", to)
+        logger.warning("Twilio not configured — skipping SMS to %s", mask(to))
         return
     if not to:
         return
     # Ensure E.164-ish
     to_clean = to.strip().replace(" ", "")
     if not to_clean.startswith("+"):
-        logger.warning("SMS 'to' is not E.164 (%s) — skipping", to_clean)
+        logger.warning("SMS 'to' is not E.164 (%s) — skipping", mask(to_clean))
         return
     try:
         async with httpx.AsyncClient(
@@ -160,11 +161,11 @@ async def _send_sms_now(to: str, body: str) -> None:
                 data={"From": TWILIO_FROM_NUMBER, "To": to_clean, "Body": body[:480]},
             )
             if r.status_code >= 300:
-                logger.error("Twilio error %s → %s: %s", r.status_code, to_clean, r.text[:400])
+                logger.error("Twilio error %s → %s: %s", r.status_code, mask(to_clean), r.text[:400])
             else:
-                logger.info("SMS sent to=%s", to_clean)
+                logger.info("SMS sent to=%s", mask(to_clean))
     except Exception as e:
-        logger.exception("SMS send failed to=%s: %s", to_clean, e)
+        logger.exception("SMS send failed to=%s: %s", mask(to_clean), e)
 
 
 # ── Public fire-and-forget API ───────────────────────────────────────────────

@@ -18,6 +18,8 @@ from notifications import (
 from whatsapp import notify_customer, tracking_link, first_name, send_renewal_reminder as wa_renewal_reminder
 import uuid
 
+from routes.subscriptions import STATUS_TRANSITIONS, status_change
+
 router = APIRouter(prefix="/admin", tags=["admin-dabba-wala"])
 
 
@@ -235,15 +237,25 @@ async def force_update_status(sub_id: str, payload: dict, current_user: dict = D
     new = payload.get("status")
     if new not in ("active", "cancelled", "expired"):
         raise HTTPException(status_code=400, detail="Status must be active, cancelled or expired.")
-    entry = audit_entry(current_user, "status", old, new, payload.get("reason"))
+    reason = (payload.get("reason") or "").strip() or None
+    # This route can make changes the normal rules refuse (e.g. expired -> cancelled).
+    # That is allowed, but never without saying why.
+    if new != old and new not in STATUS_TRANSITIONS.get(old, set()) and not reason:
+        raise HTTPException(status_code=400, detail=f"Please give a reason for changing a plan from {old} to {new}.")
+    if new == old:
+        return {"ok": True}
+    entry = audit_entry(current_user, "status", old, new, reason)
     entry["forced_by_admin"] = payload.get("forced_by_admin", False)
     update = {"status": new}
-    if new == "cancelled" and old != "cancelled":
+    if new == "cancelled":
         update["cancelled_at"] = datetime.utcnow().isoformat()
-    await db.subscriptions.update_one(
-        {"id": sub_id},
-        {"$set": update, "$push": {"audit_trail": entry}}
-    )
+    ops = {"$set": update, "$push": {
+        "audit_trail": entry,
+        "status_history": status_change(old, new, f"admin: {current_user.get('name') or 'Admin'}", reason),
+    }}
+    if new == "active":
+        ops["$unset"] = {"cancelled_at": ""}
+    await db.subscriptions.update_one({"id": sub_id}, ops)
     if old != new and new == "cancelled":
         name = doc.get("customer_name") or "there"
         if doc.get("customer_email"):
@@ -371,7 +383,9 @@ async def give_makeup_meal(sub_id: str, date: str, current_user: dict = Depends(
          "$or": [{"makeup_meals_given": {"$lt": limit}}, {"makeup_meals_given": {"$exists": False}}] if limit > 0 else [{"id": None}]},
         {"$set": update, "$inc": {"makeup_meals_given": 1},
          "$unset": {"renewal_reminded_at": "", "expired_notified_at": ""},
-         "$push": {"audit_trail": entry}},
+         "$push": ({"audit_trail": entry, "status_history": status_change(
+             "expired", "active", f"admin: {current_user.get('name') or 'Admin'}", f"Make-up meal for skipped {date}")}
+             if update.get("status") == "active" else {"audit_trail": entry})},
     )
     if not taken.modified_count:
         await db.delivery_tracking.update_one({"delivery_id": delivery_id}, {"$set": {"made_up": False}})

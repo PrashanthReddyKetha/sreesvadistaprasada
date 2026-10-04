@@ -10,18 +10,20 @@ automatically after RETENTION_DAYS.
 """
 import re
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
-from auth import get_optional_user, require_admin
+from auth import require_admin
 from database import db
 from security import RateLimit
 
 router = APIRouter(tags=["Events"])
 
 RETENTION_DAYS = 400
+LONDON = ZoneInfo("Europe/London")   # days and hours are the kitchen's, not UTC
 MAX_BATCH = 25
 _rate = RateLimit(120, 60)   # batches per minute per visitor
 
@@ -65,23 +67,25 @@ class Attribution(BaseModel):
 class Batch(BaseModel):
     visit_id: str
     visitor_id: Optional[str] = None
+    signed_in: bool = False                              # a flag only — never who
     device: str = Field(default="", max_length=10)       # phone | desktop
     attribution: Attribution = Field(default_factory=Attribution)
     events: List[EventIn] = Field(max_length=MAX_BATCH)
 
 
 @router.post("/events", status_code=202)
-async def record_events(batch: Batch, request: Request, user: Optional[dict] = Depends(get_optional_user), _=Depends(_rate)):
+async def record_events(batch: Batch, request: Request, _=Depends(_rate)):
     if not _ID.match(batch.visit_id) or (batch.visitor_id and not _ID.match(batch.visitor_id)):
         return {"stored": 0}
     now = datetime.utcnow()
+    local = datetime.now(LONDON)
     docs = []
     for e in batch.events:
         if not _NAME.match(e.name):
             continue
         docs.append({
-            "name": e.name, "path": e.path.split("?")[0], "at": now, "day": now.strftime("%Y-%m-%d"), "hour": now.hour,
-            "visit_id": batch.visit_id, "visitor_id": batch.visitor_id, "signed_in": bool(user), "device": batch.device,
+            "name": e.name, "path": e.path.split("?")[0], "at": now, "day": local.strftime("%Y-%m-%d"), "hour": local.hour,
+            "visit_id": batch.visit_id, "visitor_id": batch.visitor_id, "signed_in": batch.signed_in, "device": batch.device,
             "source": batch.attribution.source, "medium": batch.attribution.medium, "campaign": batch.attribution.campaign,
             "referrer": batch.attribution.referrer, "landing": batch.attribution.landing.split("?")[0],
             "props": {k: _clean(v) for k, v in e.props.items() if k in PROP_KEYS},
@@ -116,6 +120,7 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
 
     visits, by_day, pages, viewed, added, sources, devices = {}, {}, {}, {}, {}, {}, {}
     clicks, searches, problems, hours, stay, action_visits = {}, {}, {}, {}, {}, {}
+    ordered_dishes, last_page = {}, {}
     for e in events:
         action_visits.setdefault(e["name"], set()).add(e["visit_id"])
         p = e.get("props") or {}
@@ -131,7 +136,14 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         elif e["name"] == "page_leave":
             t = stay.setdefault(e["path"], [0, 0, 0])
             t[0] += 1; t[1] += p.get("seconds") or 0; t[2] += p.get("percent") or 0
+        if e["name"] == "purchase":
+            for i in e.get("items") or []:
+                if i.get("name"):
+                    ordered_dishes[i["name"]] = ordered_dishes.get(i["name"], 0) + (i.get("quantity") or 1)
         if e["name"] == "page_view":
+            prev = last_page.get(e["visit_id"])
+            if prev is None or e["at"] >= prev[0]:
+                last_page[e["visit_id"]] = (e["at"], e["path"])
             h = (e.get("hour") if e.get("hour") is not None else e["at"].hour)
             hours[h] = hours.get(h, 0) + 1
         v = visits.setdefault(e["visit_id"], {"names": set(), "first": e, "value": 0.0, "order": None})
@@ -166,6 +178,18 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
     def top(d, n=15):
         return [{"name": k, "count": c} for k, c in sorted(d.items(), key=lambda kv: -kv[1])[:n]]
 
+    exits: dict = {}
+    for vid, (_, path) in last_page.items():
+        if "purchase" not in visits[vid]["names"]:          # where visits that did not order ended
+            exits[path] = exits.get(path, 0) + 1
+    interest = sorted(
+        ({"name": n, "opened": v, "added": added.get(n, 0), "ordered": ordered_dishes.get(n, 0)} for n, v in viewed.items()),
+        key=lambda d: (d["ordered"], -d["opened"]))[:15]
+    checkout_steps = [("begin_checkout", "Started checkout"), ("payment_started", "Started paying"), ("purchase", "Order placed")]
+    checkout = [{"step": label, "visits": sum(1 for v in visits.values() if name in v["names"])} for name, label in checkout_steps]
+    checkout.append({"step": "Payment or order failed", "visits": sum(
+        1 for v in visits.values() if v["names"] & {"order_placed_failed", "payment_started_failed", "payment_failed"})})
+
     funnel = [{"step": step, "visits": sum(1 for v in visits.values() if step in v["names"])} for step in FUNNEL]
     counts: dict = {}
     for e in events:
@@ -189,6 +213,9 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         "most_viewed_dishes": top(viewed),
         "most_added_dishes": top(added),
         "event_counts": counts,
+        "exit_pages": top(exits, 12),
+        "interest_without_orders": interest,
+        "checkout": checkout,
         "actions": sorted(({"name": n, "count": c, "visits": len(action_visits[n])} for n, c in counts.items()), key=lambda a: -a["count"]),
         "top_clicks": [{"label": k[0], "area": k[1], "page": k[2], "count": c} for k, c in sorted(clicks.items(), key=lambda kv: -kv[1])[:40]],
         "searches": top(searches, 25),
@@ -203,7 +230,9 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
 async def recent_visits(limit: int = 40, _: dict = Depends(require_admin)):
     """The latest visits, each with everything the visitor did, in order."""
     limit = max(1, min(limit, 100))
+    since = datetime.utcnow() - timedelta(days=30)      # bounded: never scans the whole record
     latest = await db.events.aggregate([
+        {"$match": {"at": {"$gte": since}}},
         {"$group": {"_id": "$visit_id", "last": {"$max": "$at"}, "first": {"$min": "$at"}, "count": {"$sum": 1}}},
         {"$sort": {"last": -1}}, {"$limit": limit},
     ]).to_list(None)
@@ -222,7 +251,7 @@ async def recent_visits(limit: int = 40, _: dict = Depends(require_admin)):
             "visit_id": v["_id"][:8], "started": v["first"].isoformat(), "ended": v["last"].isoformat(),
             "minutes": round((v["last"] - v["first"]).total_seconds() / 60, 1),
             "source": channel(evs[0]), "landing": evs[0].get("landing") or evs[0]["path"], "device": evs[0].get("device") or "",
-            "returning": bool(evs[0].get("visitor_id")), "ordered": "purchase" in names or "order_placed" in names,
+            "returning": bool(evs[0].get("visitor_id")), "signed_in": any(e.get("signed_in") for e in evs), "ordered": "purchase" in names or "order_placed" in names,
             "added_to_basket": "add_to_cart" in names,
             "events": [{"at": e["at"].isoformat(), "name": e["name"], "path": e["path"], "props": e.get("props") or {},
                         "items": [i.get("name") for i in e.get("items") or [] if i.get("name")]} for e in evs[:300]],

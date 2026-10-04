@@ -20,6 +20,7 @@ Anti-spam rules, enforced here so no route can get them wrong:
   • Reply STOP to opt out, START to opt back in (routes/whatsapp.py).
 """
 from __future__ import annotations
+from security import mask
 import json
 import logging
 import os
@@ -145,7 +146,7 @@ async def _notify_customer_now(
 ) -> None:
     to = to_e164(phone)
     if not to:
-        logger.warning("WhatsApp %s: unusable phone %r — skipping", event, phone)
+        logger.warning("WhatsApp %s: unusable phone %s — skipping", event, mask(phone))
         return
 
     record = {
@@ -203,10 +204,10 @@ async def _notify_customer_now(
                 },
             )
         if r.status_code >= 300:
-            logger.error("Twilio WhatsApp error %s → %s: %s", r.status_code, to, r.text[:400])
+            logger.error("Twilio WhatsApp error %s → %s: %s", r.status_code, mask(to), r.text[:400])
             return await fall_back("send_error")
         await finish("sent", sid=r.json().get("sid"))
-        logger.info("WhatsApp %s sent to=%s", event, to)
+        logger.info("WhatsApp %s sent to=%s", event, mask(to))
     except Exception as e:
         logger.exception("WhatsApp send failed to=%s: %s", to, e)
         await fall_back("send_error")

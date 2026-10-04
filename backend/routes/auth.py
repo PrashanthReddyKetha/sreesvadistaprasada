@@ -8,6 +8,7 @@ import time
 from datetime import datetime, timedelta
 from collections import defaultdict
 from database import db
+from customer_identity import claim_guest_history
 from models import (
     UserCreate, UserLogin, UserUpdate, User, UserInDB, TokenResponse,
     GoogleAuthRequest, GoogleCompleteRequest,
@@ -339,6 +340,7 @@ async def google_auth(payload: GoogleAuthRequest):
             await db.users.update_one({"email": email}, {"$set": updates})
             doc.update(updates)
         user = User(**doc)
+        await claim_guest_history(user.id, email)   # Google has verified this address
         token = create_access_token(user.id, user.role.value)
         return TokenResponse(access_token=token, user=user)
 
@@ -351,6 +353,7 @@ async def google_auth(payload: GoogleAuthRequest):
         password_hash=None,
     )
     await db.users.insert_one(user.model_dump())
+    await claim_guest_history(user.id, email)   # Google has verified this address
     subj, html = email_welcome(user.name)
     send_email(user.email, subj, html)
     await create_notification(
