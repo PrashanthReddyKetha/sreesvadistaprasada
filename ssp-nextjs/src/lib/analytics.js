@@ -7,10 +7,16 @@
  * after the user accepts cookies (analytics_storage: 'granted').
  */
 
+import { recordFromDataLayer } from './track';
+
 function push(obj) {
   if (typeof window === 'undefined') return;
   window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push(obj);
+  // `Event` (capital E) repeats the name for the Tag Manager container, whose shopping
+  // tags read the event name from a data-layer key spelt that way; without it they
+  // reach Google Analytics named "undefined".
+  window.dataLayer.push(obj && obj.event ? { ...obj, Event: obj.event } : obj);
+  recordFromDataLayer(obj);   // our own record — Admin › Analytics
 }
 
 /** Fired on every client-side route change (SPA navigation) */

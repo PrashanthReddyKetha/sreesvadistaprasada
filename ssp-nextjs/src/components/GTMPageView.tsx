@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { trackPageView } from '@/lib/analytics';
+import { record } from '@/lib/track';
 
 /**
  * Fires a GTM page_view event on every client-side route change.
@@ -17,8 +18,8 @@ export default function GTMPageView() {
   const isFirst  = useRef(true);
 
   useEffect(() => {
-    // Skip the very first render — GTM fires page_view on initial hard load itself
-    if (isFirst.current) { isFirst.current = false; return; }
+    // First render: GTM fires its own page_view on a hard load, so only our own record is told
+    if (isFirst.current) { isFirst.current = false; record('page_view'); return; }
     trackPageView(pathname, document.title);
   }, [pathname]);
 

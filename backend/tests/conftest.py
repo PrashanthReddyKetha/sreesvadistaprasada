@@ -29,7 +29,7 @@ import auth  # noqa: E402
 import notifications  # noqa: E402
 from routes import (  # noqa: E402
     orders, payments, pickup_slots, reviews, subscriptions, coupons as coupon_routes, loyalty, admin_dabba_wala,
-    auth as auth_routes, enquiries, customers,
+    auth as auth_routes, enquiries, customers, events,
 )
 
 _loop = asyncio.new_event_loop()
@@ -40,7 +40,7 @@ def run(coro):
 
 
 app = FastAPI()
-for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries, customers):
+for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries, customers, events):
     app.include_router(r.router, prefix="/api")
 
 
@@ -57,7 +57,7 @@ def fresh_state(monkeypatch):
         run(db[name].delete_many({}))
     for limiter in (payments._pi_rate_store, getattr(subscriptions, "_sub_rate_store", None),
                     getattr(subscriptions, "_quote_rate_store", None), auth_routes._rate_store,
-                    enquiries._enquiry_rate_store):
+                    enquiries._enquiry_rate_store, events._rate.store):
         if limiter is not None:
             limiter.clear()
 
