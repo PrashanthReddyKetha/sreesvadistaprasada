@@ -5,13 +5,16 @@ const STORAGE_KEY = 'ssp_cookie_consent';
 
 function pushConsent(granted) {
   window.dataLayer = window.dataLayer || [];
-  // GTM Consent Mode v2 requires the array format, not an event object
-  window.dataLayer.push(['consent', 'update', {
+  // Consent commands are only recognised when pushed as an `arguments` object,
+  // exactly as gtag() does. A plain array is silently ignored, which meant the
+  // visitor's choice never reached Google.
+  function gtag() { window.dataLayer.push(arguments); }
+  gtag('consent', 'update', {
     analytics_storage:  granted ? 'granted' : 'denied',
     ad_storage:         granted ? 'granted' : 'denied',
     ad_user_data:       granted ? 'granted' : 'denied',
     ad_personalization: granted ? 'granted' : 'denied',
-  }]);
+  });
 }
 
 export default function CookieConsent() {
