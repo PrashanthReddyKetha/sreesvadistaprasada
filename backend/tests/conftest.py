@@ -29,7 +29,7 @@ import auth  # noqa: E402
 import notifications  # noqa: E402
 from routes import (  # noqa: E402
     orders, payments, pickup_slots, reviews, subscriptions, coupons as coupon_routes, loyalty, admin_dabba_wala,
-    auth as auth_routes, enquiries,
+    auth as auth_routes, enquiries, customers,
 )
 
 _loop = asyncio.new_event_loop()
@@ -40,7 +40,7 @@ def run(coro):
 
 
 app = FastAPI()
-for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries):
+for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries, customers):
     app.include_router(r.router, prefix="/api")
 
 

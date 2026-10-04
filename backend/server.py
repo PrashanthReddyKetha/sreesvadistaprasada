@@ -10,6 +10,7 @@ from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin
 from routes import content as content_routes
 from routes import whatsapp as whatsapp_routes
 from routes import coupons as coupon_routes
+from routes import customers as customer_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings
 from menu_additions import apply_menu_additions
@@ -126,6 +127,7 @@ app.include_router(pickup_slots.router, prefix="/api")
 app.include_router(push.router, prefix="/api")
 app.include_router(whatsapp_routes.router, prefix="/api")
 app.include_router(coupon_routes.router, prefix="/api")
+app.include_router(customer_routes.router, prefix="/api")
 
 
 @app.get("/api")

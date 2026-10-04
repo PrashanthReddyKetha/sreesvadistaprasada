@@ -21,6 +21,7 @@ import KitchenTab from '@/components/admin/KitchenTab';
 import SlotSettingsTab from '@/components/admin/SlotSettingsTab';
 import PushTab from '@/components/admin/PushTab';
 import CouponsTab from '@/components/admin/CouponsTab';
+import CustomersTab from '@/components/admin/CustomersTab';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -346,37 +347,6 @@ const SubscriptionsTab = ({ subscriptions, onStatusUpdate }) => {
     </div>
   );
 };
-
-// ─── Users ────────────────────────────────────────────────────────────────────
-const UsersTab = ({ users }) => (
-  <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
-    <div className="px-6 py-4 border-b" style={{ borderColor:'#f0ebe6' }}>
-      <h3 className="font-bold" style={{ fontFamily:"'Playfair Display', serif", color:'#800020' }}>Registered Users ({users.length})</h3>
-    </div>
-    {users.length===0 ? <p className="text-center text-gray-400 py-16">No registered users yet.</p> : (
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead style={{ backgroundColor:'#FDFBF7' }}>
-            <tr>{['Name','Email','Phone','Role','Joined'].map(h=>(
-              <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
-            ))}</tr>
-          </thead>
-          <tbody>
-            {users.map(u=>(
-              <tr key={u.id} className="border-t hover:bg-gray-50" style={{ borderColor:'#f9f6ee' }}>
-                <td className="px-4 py-3 font-medium">{u.name}</td>
-                <td className="px-4 py-3 text-gray-600">{u.email}</td>
-                <td className="px-4 py-3 text-gray-500">{u.phone||'—'}</td>
-                <td className="px-4 py-3"><Badge status={u.role==='admin'?'confirmed':'new'} /><span className="ml-1 text-xs capitalize">{u.role}</span></td>
-                <td className="px-4 py-3 text-xs text-gray-400">{fmtDate(u.created_at)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </div>
-);
 
 // ─── Enquiries ────────────────────────────────────────────────────────────────
 const STATUS_ACTIONS = {
@@ -906,7 +876,7 @@ const TABS = [
   { id:'subscriptions', label:'Subscriptions', icon:Package      },
   { id:'menu',          label:'Menu',          icon:Utensils     },
   { id:'specials',      label:"Today's Specials", icon:Sparkles  },
-  { id:'users',         label:'Users',         icon:Users        },
+  { id:'users',         label:'Customers',     icon:Users        },
   { id:'enquiries',     label:'Enquiries',     icon:MessageSquare},
   { id:'loyalty',       label:'Loyalty',       icon:Gift         },
   { id:'coupons',       label:'Coupons',       icon:Tag          },
@@ -1052,7 +1022,7 @@ const Admin = () => {
               {activeTab==='subscriptions' && <SubscriptionsTab subscriptions={data.subscriptions} onStatusUpdate={handleStatusUpdate} />}
               {activeTab==='menu'          && <MenuTab />}
               {activeTab==='specials'      && <DailySpecialsTab />}
-              {activeTab==='users'         && <UsersTab users={data.users} />}
+              {activeTab==='users'         && <CustomersTab />}
               {activeTab==='enquiries'     && <EnquiriesTab contacts={data.contacts} catering={data.catering} onStatusUpdate={handleStatusUpdate} reload={fetchAll} />}
               {activeTab==='loyalty'       && <AdminLoyaltyTab />}
               {activeTab==='coupons'       && <CouponsTab />}
