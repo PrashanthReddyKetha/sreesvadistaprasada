@@ -1,3 +1,4 @@
+import { recordApi } from '@/lib/track';
 import axios from 'axios';
 
 const BASE = (process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com') + '/api';
@@ -15,8 +16,9 @@ api.interceptors.request.use(config => {
 });
 
 api.interceptors.response.use(
-  res => res,
+  res => { recordApi(res.config?.method, res.config?.url, res.status, res.config?.data, res.data); return res; },
   err => {
+    recordApi(err.config?.method, err.config?.url, err.response?.status, err.config?.data, err.response?.data);
     if (err.response?.status === 401 && typeof window !== 'undefined') {
       // Token is expired or invalid — drop it so the user isn't stuck "signed in"
       // to an account the backend no longer recognises.

@@ -1,4 +1,5 @@
 'use client';
+import { record } from '@/lib/track';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -33,6 +34,7 @@ const Header = () => {
     e?.preventDefault();
     const q = searchTerm.trim();
     if (!q) return;
+    record('search', { term: q.slice(0, 60) });
     setSearchOpen(false);
     setSearchTerm('');
     setIsMenuOpen(false);
@@ -259,7 +261,7 @@ const Header = () => {
                       </Link>
                     ) : (
                       /* Fixed label — never the user's name, so the header width never shifts */
-                      <Link href="/dashboard" className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-[#800020]/10 whitespace-nowrap" style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.3)' }} title={user.name}>
+                      <Link href="/dashboard" data-track-label="My account" className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:bg-[#800020]/10 whitespace-nowrap" style={{ color: '#800020', border: '1px solid rgba(128,0,32,0.3)' }} title={user.name}>
                         <User size={13} /> My Dabba
                       </Link>
                     )}
@@ -412,7 +414,7 @@ const Header = () => {
 
             {user ? (
               <div className="mt-4 flex items-center justify-between px-3 py-3 rounded-md" style={{ border: '1px solid rgba(128,0,32,0.2)' }}>
-                <Link href="/dashboard" className="text-sm font-medium" style={{ color: '#800020' }}><User size={14} className="inline mr-1" />{user.name}</Link>
+                <Link href="/dashboard" data-track-label="My account" className="text-sm font-medium" style={{ color: '#800020' }}><User size={14} className="inline mr-1" />{user.name}</Link>
                 <button onClick={logout} className="text-xs font-semibold" style={{ color: '#800020' }}>Sign Out</button>
               </div>
             ) : (

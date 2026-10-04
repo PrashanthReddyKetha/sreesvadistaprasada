@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { trackAddToCart, trackRemoveFromCart } from '@/lib/analytics';
+import { record } from '@/lib/track';
 import { useKitchen } from '@/context/KitchenContext';
 import { isOrderable } from '@/config/softLaunch';
 
@@ -136,6 +137,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     // While the admin has delivery switched off this is the one place that
     // can never be routed around, no matter which screen calls it.
     const next = deliveryEnabled ? type : 'takeaway';
+    record('delivery_type_selected', { method: next });
     setDeliveryTypeRaw(next);
     try { sessionStorage.setItem(DT_KEY, next); } catch {}
     if (next !== 'takeaway') setPickupSlot(null);
@@ -198,6 +200,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   }, [showToast]);
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
+    if (quantity > 0) record('cart_quantity_change', { item_id: id, quantity });
     if (quantity <= 0) {
       setCartItems(prev => {
         const item = prev.find(i => i.id === id);

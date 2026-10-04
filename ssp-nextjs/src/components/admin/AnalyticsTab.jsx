@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '@/api';
 
 /* Admin › Analytics — the site's own record of visits (not Google's): visits, the path to an
@@ -14,6 +14,63 @@ const STEP = {
   begin_checkout: 'Started checkout', purchase: 'Placed an order',
 };
 const card = { boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
+
+// Plain names for every action the site records. Anything not listed is shown as recorded.
+const ACTION = {
+  page_view: 'Viewed a page', page_leave: 'Left a page', scroll_depth: 'Scrolled down a page', click: 'Tapped a button or link',
+  form_submit: 'Sent a form', search: 'Searched the menu', menu_category_view: 'Opened a menu section', view_item: 'Opened a dish',
+  add_to_cart: 'Added to basket', remove_from_cart: 'Removed from basket', cart_quantity_change: 'Changed a quantity', view_cart: 'Opened the basket',
+  delivery_type_selected: 'Chose delivery or collection', begin_checkout: 'Started checkout', postcode_checked: 'Checked a postcode',
+  coupon_applied: 'Coupon accepted', coupon_failed: 'Coupon refused', payment_started: 'Started paying', payment_started_failed: 'Payment could not start',
+  purchase: 'Order confirmed', order_placed: 'Order placed', order_placed_failed: 'Order failed', order_cancelled: 'Order cancelled',
+  login: 'Signed in', login_failed: 'Sign-in failed', sign_up: 'Created an account', sign_up_failed: 'Account creation failed', logout: 'Signed out',
+  password_reset_requested: 'Asked for a password reset', password_reset_done: 'Reset their password', profile_updated: 'Updated their details',
+  address_saved: 'Saved an address', address_deleted: 'Deleted an address',
+  begin_subscription: 'Started the Dabba Wala steps', subscription_step_view: 'Viewed a Dabba Wala step', select_subscription_plan: 'Chose a Dabba Wala plan',
+  plan_priced: 'Priced a Dabba Wala plan', subscription_purchase: 'Dabba Wala plan confirmed', plan_purchased: 'Dabba Wala plan bought', plan_purchased_failed: 'Dabba Wala purchase failed',
+  meal_skipped: 'Skipped a meal', review_submitted: 'Left a review', review_dismissed: 'Dismissed a review request', dish_liked: 'Liked a dish',
+  restock_alert_requested: 'Asked to be told when back in stock', reopen_alert_requested: 'Asked to be told when the kitchen reopens',
+  loyalty_redeemed: 'Used a free loyalty dish', notifications_enabled: 'Turned on notifications', notify_me_signup: 'Joined a waiting list',
+  newsletter_signup: 'Joined the newsletter', whatsapp_click: 'Tapped WhatsApp', enquiry_submit: 'Sent an enquiry', enquiry_reply: 'Replied to an enquiry',
+  site_error: 'Script error on the site',
+};
+const actionName = (n) => ACTION[n] || n.replace(/_/g, ' ');
+const time = (iso) => new Date(iso + (iso.endsWith('Z') ? '' : 'Z')).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+const detail = (e) => [e.props.label, e.props.term && `"${e.props.term}"`, e.items.join(', '), e.props.value != null && fmt(e.props.value), e.props.transaction_id,
+  e.props.coupon, e.props.plan, e.props.method, e.props.reason, e.props.message, e.props.percent != null && `${e.props.percent}%`, e.props.seconds != null && `${e.props.seconds}s`]
+  .filter(Boolean).join(' · ');
+
+function Visits({ visits }) {
+  const [open, setOpen] = useState(null);
+  return (
+    <div className="bg-white rounded-xl overflow-hidden" style={card}>
+      <h3 className="px-4 py-3 font-bold border-b" style={{ fontFamily: "'Playfair Display', serif", color: P, borderColor: '#f0ebe6' }}>Latest visits — everything each visitor did</h3>
+      {visits.length === 0 ? <p className="text-center text-gray-400 py-8 text-sm">Nothing recorded yet.</p> : visits.map(v => (
+        <div key={v.visit_id + v.started} className="border-t" style={{ borderColor: '#f9f6ee' }}>
+          <button onClick={() => setOpen(open === v.visit_id ? null : v.visit_id)} className="w-full px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-left text-sm hover:bg-gray-50">
+            <span className="font-medium w-28 shrink-0">{time(v.started)}</span>
+            <span className="text-gray-600">{v.source}</span>
+            <span className="text-gray-400 text-xs">{v.device || '—'} · {v.events.length} actions · {v.minutes} min{v.returning ? ' · returning' : ''}</span>
+            {v.ordered ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: '#E8F5E9', color: '#2E7D32' }}>Ordered</span>
+              : v.added_to_basket ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: '#FFF8E1', color: '#8D6E00' }}>Basket, no order</span> : null}
+            <span className="ml-auto text-gray-400">{open === v.visit_id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</span>
+          </button>
+          {open === v.visit_id && (
+            <ol className="px-4 pb-3 space-y-1">
+              {v.events.map((e, i) => (
+                <li key={i} className="text-xs flex gap-3">
+                  <span className="text-gray-400 w-12 shrink-0">{new Date(e.at + (e.at.endsWith('Z') ? '' : 'Z')).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="font-medium w-48 shrink-0">{actionName(e.name)}</span>
+                  <span className="text-gray-500 break-all">{e.path}{detail(e) ? ` — ${detail(e)}` : ''}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const Table = ({ title, head, rows, empty }) => (
   <div className="bg-white rounded-xl overflow-hidden" style={card}>
@@ -32,12 +89,16 @@ const Table = ({ title, head, rows, empty }) => (
 export default function AnalyticsTab() {
   const [days, setDays] = useState(30);
   const [data, setData] = useState(null);
+  const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
-    try { setData((await api.get('/admin/analytics', { params: { days } })).data); }
+    try {
+      const [a, v] = await Promise.all([api.get('/admin/analytics', { params: { days } }), api.get('/admin/analytics/visits', { params: { limit: 40 } })]);
+      setData(a.data); setVisits(v.data.visits || []);
+    }
     catch { setError('Could not load the figures. Please try again.'); }
     finally { setLoading(false); }
   }, [days]);
@@ -49,6 +110,8 @@ export default function AnalyticsTab() {
   const t = data.totals;
   const top = data.funnel[0]?.visits || 0;
   const maxDay = Math.max(1, ...data.by_day.map(d => d.visits));
+  // the server stores hours in UTC; shift to UK clock time (handles summer time)
+  const ukOffset = Math.round((new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/London' })) - new Date(new Date().toLocaleString('en-US', { timeZone: 'UTC' }))) / 3600000);
   const cards = [
     ['Visits', t.visits, `${t.page_views} pages viewed`],
     ['Orders', t.orders, `${pct(t.orders, t.visits)} of visits`],
@@ -113,6 +176,38 @@ export default function AnalyticsTab() {
           )}
         </div>
       </div>
+
+      <Table title="Every action recorded" empty="Nothing recorded yet." head={['Action', 'Times', 'In how many visits']}
+        rows={(data.actions || []).map(a => [actionName(a.name), a.count, a.visits])} />
+
+      <div className="grid lg:grid-cols-2 gap-5">
+        <Table title="Buttons and links tapped most" empty="Nothing recorded yet." head={['Button or link', 'Where', 'Page', 'Taps']}
+          rows={(data.top_clicks || []).map(c => [c.label, c.area, c.page, c.count])} />
+        <div className="space-y-5">
+          <Table title="What people searched for" empty="No searches yet." head={['Search', 'Times']} rows={(data.searches || []).map(d => [d.name, d.count])} />
+          <Table title="Problems visitors hit" empty="None recorded." head={['Problem', 'Detail', 'Page', 'Times']}
+            rows={(data.problems || []).map(p => [actionName(p.name), p.detail || '—', p.page, p.count])} />
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-5">
+        <Table title="Time spent and how far people scroll" empty="Nothing recorded yet." head={['Page', 'Views measured', 'Average time', 'Average scroll']}
+          rows={(data.time_on_page || []).map(r => [r.page, r.views, r.average_seconds >= 60 ? `${Math.floor(r.average_seconds / 60)}m ${r.average_seconds % 60}s` : `${r.average_seconds}s`, `${r.average_scroll}%`])} />
+        <div className="bg-white rounded-xl p-4" style={card}>
+          <h3 className="font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Busiest hours (UK time)</h3>
+          <div className="flex items-end gap-1 h-32">
+            {(data.by_hour || []).map(h => { const max = Math.max(1, ...data.by_hour.map(x => x.page_views)); const uk = (h.hour + ukOffset + 24) % 24; return { ...h, uk, max }; })
+              .sort((a, b) => a.uk - b.uk).map(h => (
+                <div key={h.uk} className="flex-1 flex flex-col items-center justify-end h-full" title={`${String(h.uk).padStart(2, '0')}:00 — ${h.page_views} page views`}>
+                  <div className="w-full rounded-t" style={{ height: `${(h.page_views / h.max) * 100}%`, minHeight: h.page_views ? 3 : 0, backgroundColor: P }} />
+                  <span className="text-[9px] text-gray-400 mt-1">{h.uk % 3 === 0 ? h.uk : ''}</span>
+                </div>
+              ))}
+          </div>
+        </div>
+      </div>
+
+      <Visits visits={visits} />
 
       <p className="text-xs text-gray-400">
         This is the site's own count, kept on our server, and starts from the day it was switched on. It will not match Google Analytics exactly.

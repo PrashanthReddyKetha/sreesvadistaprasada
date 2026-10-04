@@ -118,3 +118,143 @@ export function recordFromDataLayer(obj) {
   delete props.page_location; delete props.page_title; delete props.page_path;
   record(event, props, items);
 }
+
+// ── Everything a visitor does, captured without each screen having to ask ─────────────
+
+/** Keep labels short and free of anything that could identify a person. */
+function tidy(text, max = 60) {
+  return String(text || '')
+    .replace(/\s+/g, ' ')
+    .replace(/[^\s@]+@[^\s@]+/g, '[email]')
+    .replace(/\d[\d\s-]{5,}\d/g, '[number]')
+    .trim()
+    .slice(0, max);
+}
+
+function areaOf(el) {
+  if (el.closest('[role="dialog"], [aria-modal="true"]')) return 'pop-up';
+  if (el.closest('header')) return 'header';
+  if (el.closest('footer')) return 'footer';
+  if (el.closest('nav')) return 'menu bar';
+  return 'page';
+}
+
+let capturing = false;
+
+/** Start once per page load: taps and clicks, form submissions, scroll depth, time on page, script errors. */
+export function startAutoCapture() {
+  if (capturing || typeof window === 'undefined') return;
+  capturing = true;
+
+  document.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target.closest('a, button, [role="button"], summary') : null;
+    if (!el || el.closest('[data-notrack]')) return;
+    // Named controls first. Free text is only used when short: long text is a card or a row
+    // (an address, an order) and could hold personal details.
+    const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+    const label = tidy(el.getAttribute('data-track-label') || el.getAttribute('aria-label') || el.getAttribute('data-testid')
+      || (text.length <= 50 ? text : '') || el.getAttribute('title') || `(${el.tagName.toLowerCase()})`);
+    const href = el.tagName === 'A' ? (el.getAttribute('href') || '') : '';
+    const props = { label, area: areaOf(el) };
+    if (href.startsWith('tel:')) props.href = 'phone call';
+    else if (href.startsWith('mailto:')) props.href = 'email';
+    else if (/wa\.me|whatsapp/i.test(href)) props.href = 'WhatsApp';
+    else if (/^https?:/i.test(href) && !href.includes(window.location.hostname)) { try { props.href = new URL(href).hostname; } catch { /* ignore */ } }
+    else if (href) props.href = href.split('?')[0].slice(0, 120);
+    record('click', props);
+  }, { capture: true, passive: true });
+
+  document.addEventListener('submit', (e) => {
+    const f = e.target instanceof HTMLFormElement ? e.target : null;
+    if (!f || f.closest('[data-notrack]')) return;
+    const heading = f.closest('section, [role="dialog"], main')?.querySelector('h1, h2, h3');
+    record('form_submit', { label: tidy(f.getAttribute('aria-label') || f.getAttribute('name') || f.id || heading?.textContent || 'form'), area: areaOf(f) });
+  }, { capture: true, passive: true });
+
+  // How far down each page people get, and how long they stay
+  let path = window.location.pathname, started = Date.now(), deepest = 0, sent = new Set();
+  const leave = () => {
+    const seconds = Math.round((Date.now() - started) / 1000);
+    if (seconds >= 1 && !path.startsWith('/admin')) queue.push({ name: 'page_leave', path, props: { seconds: Math.min(seconds, 3600), percent: deepest }, items: [] });
+  };
+  const turnPage = () => {
+    if (window.location.pathname === path) return;
+    leave(); path = window.location.pathname; started = Date.now(); deepest = 0; sent = new Set();
+  };
+  window.addEventListener('scroll', () => {
+    turnPage();
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const now = total > 0 ? Math.min(100, Math.round((window.scrollY / total) * 100)) : 100;
+    if (now > deepest) deepest = now;
+    for (const mark of [50, 90]) if (deepest >= mark && !sent.has(mark)) { sent.add(mark); record('scroll_depth', { percent: mark }); }
+  }, { passive: true });
+  document.addEventListener('click', () => setTimeout(turnPage, 800), { passive: true });
+  window.addEventListener('pagehide', leave, { capture: true });
+
+  window.addEventListener('error', (e) => { record('site_error', { message: tidy(e.message, 120) }); });
+  window.addEventListener('unhandledrejection', (e) => { record('site_error', { message: tidy(e.reason?.message || e.reason, 120) }); });
+}
+
+// Server calls → business events. [method, path pattern, event on success]; a failure records "<event>_failed".
+const API_EVENTS = [
+  ['post', /^\/auth\/login$/, 'login'],
+  ['post', /^\/auth\/google$/, 'login'],
+  ['post', /^\/auth\/(register|google\/complete)$/, 'sign_up'],
+  ['post', /^\/auth\/forgot-password$/, 'password_reset_requested'],
+  ['post', /^\/auth\/reset-password$/, 'password_reset_done'],
+  ['put', /^\/auth\/me$/, 'profile_updated'],
+  ['post', /^\/auth\/addresses$/, 'address_saved'],
+  ['put', /^\/auth\/addresses\//, 'address_saved'],
+  ['delete', /^\/auth\/addresses\//, 'address_deleted'],
+  ['post', /^\/delivery\/check$/, 'postcode_checked'],
+  ['post', /^\/payments\/create-intent$/, 'payment_started'],
+  ['post', /^\/orders$/, 'order_placed'],
+  ['delete', /^\/orders\//, 'order_cancelled'],
+  ['post', /^\/subscriptions\/quote$/, 'plan_priced'],
+  ['post', /^\/subscriptions$/, 'plan_purchased'],
+  ['post', /^\/subscriptions\/.+\/skip$/, 'meal_skipped'],
+  ['post', /^\/reviews\/.+\/submit$/, 'review_submitted'],
+  ['post', /^\/reviews\/.+\/dismiss$/, 'review_dismissed'],
+  ['post', /^\/menu\/.+\/reviews$/, 'review_submitted'],
+  ['post', /^\/menu\/.+\/like$/, 'dish_liked'],
+  ['post', /^\/menu\/.+\/notify-restock$/, 'restock_alert_requested'],
+  ['post', /^\/loyalty\/redeem$/, 'loyalty_redeemed'],
+  ['post', /^\/push\/subscribe$/, 'notifications_enabled'],
+  ['post', /^\/kitchen-status\/notify-me$/, 'reopen_alert_requested'],
+  ['post', /^\/enquiries\/.+\/reply$/, 'enquiry_reply'],
+];
+const couponSeen = new Set();
+
+/** Called by the API client after every request. Never throws. */
+export function recordApi(method, url, status, requestData, responseData) {
+  try {
+    if (typeof window === 'undefined' || !url) return;
+    const path = String(url).replace(/^https?:\/\/[^/]+/, '').replace(/^\/api/, '').split('?')[0];
+    const m = String(method || 'get').toLowerCase();
+    const ok = status >= 200 && status < 300;
+    let req = requestData;
+    if (typeof req === 'string') { try { req = JSON.parse(req); } catch { req = null; } }
+
+    if (m === 'post' && path === '/orders/calculate' && ok && req?.coupon_code) {
+      const outcome = responseData?.coupon_error ? 'coupon_failed' : (responseData?.coupon_discount > 0 ? 'coupon_applied' : null);
+      const key = `${outcome}:${req.coupon_code}`;
+      if (outcome && !couponSeen.has(key)) {
+        couponSeen.add(key);
+        record(outcome, { coupon: tidy(req.coupon_code, 30), ...(responseData.coupon_error ? { reason: tidy(responseData.coupon_error, 100) } : { value: responseData.coupon_discount }) });
+      }
+      return;
+    }
+    const hit = API_EVENTS.find(([mm, re]) => mm === m && re.test(path));
+    if (!hit) return;
+    if (ok) {
+      const props = {};
+      if (hit[2] === 'order_placed') { props.transaction_id = responseData?.order_number; props.value = responseData?.total; props.method = responseData?.delivery_type; }
+      if (hit[2] === 'plan_purchased') { props.plan = responseData?.plan; props.box_type = responseData?.box_type; props.value = responseData?.price; }
+      if (hit[2] === 'payment_started') { props.value = req?.amount; props.method = req?.purpose; }
+      record(hit[2], props);
+    } else if (status) {
+      const detail = responseData?.detail;
+      record(`${hit[2]}_failed`, { status, reason: tidy(typeof detail === 'string' ? detail : 'error', 100) });
+    }
+  } catch { /* tracking must never break the site */ }
+}

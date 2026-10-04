@@ -25,15 +25,14 @@ RETENTION_DAYS = 400
 MAX_BATCH = 25
 _rate = RateLimit(120, 60)   # batches per minute per visitor
 
-ALLOWED = {
-    "page_view", "menu_category_view", "view_item", "add_to_cart", "remove_from_cart", "view_cart",
-    "begin_checkout", "purchase", "begin_subscription", "subscription_step_view", "select_subscription_plan",
-    "subscription_purchase", "notify_me_signup", "newsletter_signup", "whatsapp_click", "enquiry_submit",
-    "login", "sign_up", "coupon_applied", "coupon_failed", "payment_failed", "search", "review_submitted", "reorder",
-}
+# Any lower-case name is accepted, so a new action on the site needs no change here.
+_NAME = re.compile(r"^[a-z][a-z0-9_]{1,39}$")
 FUNNEL = ["page_view", "view_item", "add_to_cart", "begin_checkout", "purchase"]
 PROP_KEYS = {"value", "transaction_id", "coupon", "plan", "box_type", "step_number", "step_name", "source",
-             "enquiry_type", "category", "location", "item_id", "item_name", "quantity", "term", "method", "reason"}
+             "enquiry_type", "category", "location", "item_id", "item_name", "quantity", "term", "method", "reason",
+             "label", "area", "href", "seconds", "percent", "status", "message"}
+_EMAIL = re.compile(r"[^\s@]+@[^\s@]+")
+_DIGITS = re.compile(r"\d[\d\s-]{5,}\d")
 _ID = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
 
 
@@ -42,7 +41,10 @@ def _clean(value, limit=120):
         return value
     if isinstance(value, (int, float)):
         return value
-    return str(value)[:limit] if value is not None else None
+    if value is None:
+        return None
+    # second line of defence: the browser already strips these from labels
+    return _DIGITS.sub("[number]", _EMAIL.sub("[email]", str(value)))[:limit]
 
 
 class EventIn(BaseModel):
@@ -75,10 +77,10 @@ async def record_events(batch: Batch, request: Request, user: Optional[dict] = D
     now = datetime.utcnow()
     docs = []
     for e in batch.events:
-        if e.name not in ALLOWED:
+        if not _NAME.match(e.name):
             continue
         docs.append({
-            "name": e.name, "path": e.path.split("?")[0], "at": now, "day": now.strftime("%Y-%m-%d"),
+            "name": e.name, "path": e.path.split("?")[0], "at": now, "day": now.strftime("%Y-%m-%d"), "hour": now.hour,
             "visit_id": batch.visit_id, "visitor_id": batch.visitor_id, "signed_in": bool(user), "device": batch.device,
             "source": batch.attribution.source, "medium": batch.attribution.medium, "campaign": batch.attribution.campaign,
             "referrer": batch.attribution.referrer, "landing": batch.attribution.landing.split("?")[0],
@@ -113,7 +115,25 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
     events = await db.events.find({"at": {"$gte": since}}, {"_id": 0}).to_list(None)
 
     visits, by_day, pages, viewed, added, sources, devices = {}, {}, {}, {}, {}, {}, {}
+    clicks, searches, problems, hours, stay, action_visits = {}, {}, {}, {}, {}, {}
     for e in events:
+        action_visits.setdefault(e["name"], set()).add(e["visit_id"])
+        p = e.get("props") or {}
+        if e["name"] == "click":
+            key = (p.get("label") or "", p.get("area") or "", e["path"])
+            clicks[key] = clicks.get(key, 0) + 1
+        elif e["name"] == "search" and p.get("term"):
+            term = str(p["term"]).lower()
+            searches[term] = searches.get(term, 0) + 1
+        elif e["name"] == "site_error" or e["name"].endswith("_failed"):
+            key = (e["name"], p.get("reason") or p.get("message") or "", e["path"])
+            problems[key] = problems.get(key, 0) + 1
+        elif e["name"] == "page_leave":
+            t = stay.setdefault(e["path"], [0, 0, 0])
+            t[0] += 1; t[1] += p.get("seconds") or 0; t[2] += p.get("percent") or 0
+        if e["name"] == "page_view":
+            h = (e.get("hour") if e.get("hour") is not None else e["at"].hour)
+            hours[h] = hours.get(h, 0) + 1
         v = visits.setdefault(e["visit_id"], {"names": set(), "first": e, "value": 0.0, "order": None})
         v["names"].add(e["name"])
         if e["name"] == "purchase":
@@ -169,4 +189,42 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         "most_viewed_dishes": top(viewed),
         "most_added_dishes": top(added),
         "event_counts": counts,
+        "actions": sorted(({"name": n, "count": c, "visits": len(action_visits[n])} for n, c in counts.items()), key=lambda a: -a["count"]),
+        "top_clicks": [{"label": k[0], "area": k[1], "page": k[2], "count": c} for k, c in sorted(clicks.items(), key=lambda kv: -kv[1])[:40]],
+        "searches": top(searches, 25),
+        "problems": [{"name": k[0], "detail": k[1], "page": k[2], "count": c} for k, c in sorted(problems.items(), key=lambda kv: -kv[1])[:25]],
+        "by_hour": [{"hour": h, "page_views": hours.get(h, 0)} for h in range(24)],
+        "time_on_page": sorted(({"page": pth, "views": t[0], "average_seconds": round(t[1] / t[0]), "average_scroll": round(t[2] / t[0])}
+                                for pth, t in stay.items() if t[0]), key=lambda r: -r["views"])[:20],
     }
+
+
+@router.get("/admin/analytics/visits")
+async def recent_visits(limit: int = 40, _: dict = Depends(require_admin)):
+    """The latest visits, each with everything the visitor did, in order."""
+    limit = max(1, min(limit, 100))
+    latest = await db.events.aggregate([
+        {"$group": {"_id": "$visit_id", "last": {"$max": "$at"}, "first": {"$min": "$at"}, "count": {"$sum": 1}}},
+        {"$sort": {"last": -1}}, {"$limit": limit},
+    ]).to_list(None)
+    ids = [v["_id"] for v in latest]
+    events = await db.events.find({"visit_id": {"$in": ids}}, {"_id": 0}).sort("at", 1).to_list(None)
+    by_visit: dict = {}
+    for e in events:
+        by_visit.setdefault(e["visit_id"], []).append(e)
+    out = []
+    for v in latest:
+        evs = by_visit.get(v["_id"], [])
+        if not evs:
+            continue
+        names = {e["name"] for e in evs}
+        out.append({
+            "visit_id": v["_id"][:8], "started": v["first"].isoformat(), "ended": v["last"].isoformat(),
+            "minutes": round((v["last"] - v["first"]).total_seconds() / 60, 1),
+            "source": channel(evs[0]), "landing": evs[0].get("landing") or evs[0]["path"], "device": evs[0].get("device") or "",
+            "returning": bool(evs[0].get("visitor_id")), "ordered": "purchase" in names or "order_placed" in names,
+            "added_to_basket": "add_to_cart" in names,
+            "events": [{"at": e["at"].isoformat(), "name": e["name"], "path": e["path"], "props": e.get("props") or {},
+                        "items": [i.get("name") for i in e.get("items") or [] if i.get("name")]} for e in evs[:300]],
+        })
+    return {"visits": out}

@@ -1,4 +1,5 @@
 'use client';
+import { record } from '@/lib/track';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -56,6 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
+    record('logout');
     localStorage.removeItem('ssp_token');
     localStorage.removeItem('ssp_user');
     setUser(null);
