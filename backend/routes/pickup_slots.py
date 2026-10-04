@@ -328,7 +328,7 @@ async def broadcast_kitchen_reopened():
             "<p>Fresh, authentic Andhra food, cooked to order in Milton Keynes.</p>",
             "Order now", f"{SITE_URL}/order",
         )
-        send_email(sub["email"], "We're open again — order today 🍛", html)
+        send_email(sub["email"], "We're open again — order today 🍛", html, kind="marketing")
     if subs:
         await db.reopen_subs.delete_many({})
         logger.info("Kitchen reopen emails queued: %d", len(subs))

@@ -99,7 +99,7 @@ async def expire_finished_plans(extra: Optional[dict] = None) -> int:
         expired += 1
         if s.get("customer_email") and not s.get("expired_notified_at"):
             subj, html = email_subscription_expired(s.get("customer_name") or "there", s)
-            send_email(s["customer_email"], subj, html)
+            send_email(s["customer_email"], subj, html, kind="marketing")
     return expired
 
 

@@ -164,7 +164,7 @@ async def _schedule_sms_reminder(user_id: str, review_type: str, ref_id: str):
         )
     if user.get("email"):
         subj, html = email_review_prompt(name, when_label)
-        send_email(user["email"], subj, html)
+        send_email(user["email"], subj, html, kind="marketing")
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────

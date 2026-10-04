@@ -67,16 +67,17 @@ def restock_sms(item: dict) -> str:
 
 async def notify_restock(item: dict):
     """Email + SMS every subscriber for this item, then clear the subs."""
-    subs = await db.restock_subs.find({"item_id": item["id"]}, {"_id": 0}).to_list(length=500)
-    if not subs:
-        return
-    for sub in subs:
+    for _ in range(500):
+        # Taking each request out of the list as it is claimed means a second sweep
+        # running at the same moment cannot send the same alert again.
+        sub = await db.restock_subs.find_one_and_delete({"item_id": item["id"]})
+        if not sub:
+            break
         subj, html = restock_email(item, sub.get("name", ""))
         if sub.get("email"):
-            send_email(sub["email"], subj, html)
+            send_email(sub["email"], subj, html, kind="marketing")
         if sub.get("phone"):
-            send_sms(sub["phone"], restock_sms(item))
-    await db.restock_subs.delete_many({"item_id": item["id"]})
+            send_sms(sub["phone"], restock_sms(item), kind="marketing")
 
 
 async def sweep_expired_sold_outs():

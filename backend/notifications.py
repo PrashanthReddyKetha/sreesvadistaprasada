@@ -13,6 +13,9 @@ Set env vars on Render:
 from __future__ import annotations
 from security import mask
 import os
+import hmac
+import hashlib
+from urllib.parse import quote
 from html import escape as html_escape
 import asyncio
 import logging
@@ -115,13 +118,67 @@ def _wrap(title: str, body_html: str, cta_text: str = "", cta_url: str = "") -> 
 </body></html>"""
 
 
+# ── Unsubscribe, opt-outs and the send log ───────────────────────────────────
+# "service" messages are about something the customer bought or asked for (order
+# updates, plan confirmations, password reset) and are always sent.
+# "marketing" messages invite the customer to do something (review, renew, come
+# back). They carry an unsubscribe link and are never sent to someone who opted out.
+
+PUBLIC_API_URL = os.environ.get("PUBLIC_API_URL", "https://svadista-backend.onrender.com").rstrip("/")
+MESSAGE_LOG_DAYS = 400
+
+
+def unsubscribe_token(email: str) -> str:
+    from auth import SECRET_KEY
+    return hmac.new(SECRET_KEY.encode(), (email or "").strip().lower().encode(), hashlib.sha256).hexdigest()[:32]
+
+
+def unsubscribe_url(email: str) -> str:
+    return f"{PUBLIC_API_URL}/api/unsubscribe?e={quote((email or '').strip().lower())}&t={unsubscribe_token(email)}"
+
+
+async def email_opted_out(email: str) -> bool:
+    from database import db
+    return bool(await db.email_optouts.find_one({"email": (email or "").strip().lower()}, {"_id": 1}))
+
+
+async def log_message(channel: str, to: str, kind: str, status: str, subject: str = "", ref: str = "") -> None:
+    """One line per message sent or skipped, on every channel. Never raises."""
+    try:
+        from database import db
+        await db.message_log.insert_one({
+            "at": datetime.utcnow(), "channel": channel, "to": (to or "").strip().lower(), "kind": kind,
+            "status": status, "subject": (subject or "")[:160], "ref": ref,
+        })
+    except Exception as e:  # the log must never cost the customer their message
+        logger.error("message_log insert failed: %s", e)
+
+
+def _with_unsubscribe(html: str, email: str) -> str:
+    link = unsubscribe_url(email)
+    footer = (
+        '<p style="text-align:center;font-size:12px;color:#9C7B6B;margin:10px 0 0">'
+        "You are receiving this because you ordered from us or asked to hear from us. "
+        f'<a href="{link}" style="color:#9C7B6B">Unsubscribe</a></p>'
+    )
+    return html.replace("</body>", footer + "</body>") if "</body>" in html else html + footer
+
+
 # ── Low-level senders ────────────────────────────────────────────────────────
 
-async def _send_email_now(to: str, subject: str, html: str) -> None:
+async def _send_email_now(to: str, subject: str, html: str, kind: str = "service") -> None:
+    if not to:
+        return
+    extra_headers = {}
+    if kind == "marketing":
+        if await email_opted_out(to):
+            await log_message("email", to, kind, "skipped: unsubscribed", subject)
+            return
+        html = _with_unsubscribe(html, to)
+        extra_headers = {"List-Unsubscribe": f"<{unsubscribe_url(to)}>", "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"}
     if not RESEND_API_KEY:
         logger.warning("RESEND_API_KEY not set — skipping email to %s (%s)", mask(to), subject)
-        return
-    if not to:
+        await log_message("email", to, kind, "skipped: email not set up", subject)
         return
     try:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -131,19 +188,25 @@ async def _send_email_now(to: str, subject: str, html: str) -> None:
                     "Authorization": f"Bearer {RESEND_API_KEY}",
                     "Content-Type": "application/json",
                 },
-                json={"from": RESEND_FROM, "to": [to], "subject": subject, "html": html},
+                json={"from": RESEND_FROM, "to": [to], "subject": subject, "html": html,
+                      **({"headers": extra_headers} if extra_headers else {})},
             )
             if r.status_code >= 300:
                 logger.error("Resend error %s → %s: %s", r.status_code, mask(to), r.text[:400])
+                await log_message("email", to, kind, f"failed: provider {r.status_code}", subject)
             else:
                 logger.info("Email sent to=%s subject=%r", mask(to), subject)
+                await log_message("email", to, kind, "sent", subject)
     except Exception as e:
         logger.exception("Email send failed to=%s: %s", mask(to), e)
+        await log_message("email", to, kind, "failed: could not reach provider", subject)
 
 
-async def _send_sms_now(to: str, body: str) -> None:
+async def _send_sms_now(to: str, body: str, kind: str = "service") -> None:
     if not (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER):
         logger.warning("Twilio not configured — skipping SMS to %s", mask(to))
+        if to:
+            await log_message("sms", to, kind, "skipped: text messages not set up", body[:60])
         return
     if not to:
         return
@@ -162,10 +225,13 @@ async def _send_sms_now(to: str, body: str) -> None:
             )
             if r.status_code >= 300:
                 logger.error("Twilio error %s → %s: %s", r.status_code, mask(to_clean), r.text[:400])
+                await log_message("sms", to_clean, kind, f"failed: provider {r.status_code}", body[:60])
             else:
                 logger.info("SMS sent to=%s", mask(to_clean))
+                await log_message("sms", to_clean, kind, "sent", body[:60])
     except Exception as e:
         logger.exception("SMS send failed to=%s: %s", mask(to_clean), e)
+        await log_message("sms", to_clean, kind, "failed: could not reach provider", body[:60])
 
 
 # ── Public fire-and-forget API ───────────────────────────────────────────────
@@ -185,16 +251,17 @@ def _fire(coro) -> None:
         asyncio.run(coro)
 
 
-def send_email(to: str, subject: str, html: str) -> None:
+def send_email(to: str, subject: str, html: str, kind: str = "service") -> None:
+    """kind="marketing" adds an unsubscribe link and respects opt-outs."""
     if not to:
         return
-    _fire(_send_email_now(to, subject, html))
+    _fire(_send_email_now(to, subject, html, kind))
 
 
-def send_sms(to: str, body: str) -> None:
+def send_sms(to: str, body: str, kind: str = "service") -> None:
     if not to:
         return
-    _fire(_send_sms_now(to, body))
+    _fire(_send_sms_now(to, body, kind))
 
 
 def notify_admin(subject: str, html: str) -> None:
@@ -225,6 +292,7 @@ async def send_push_notification(token: str, title: str, body: str, data: Option
 # ── Templated helpers (keep route files tidy) ────────────────────────────────
 
 def email_password_reset(name: str, reset_url: str) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     html = _wrap(
         "Reset your password",
         f"<p>Hi {name},</p>"
@@ -237,6 +305,7 @@ def email_password_reset(name: str, reset_url: str) -> tuple[str, str]:
 
 
 def email_welcome(name: str) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     html = _wrap(
         f"Welcome, {name}!",
         "<p>Thank you for joining <b>Sree Svadista Prasada</b>. Your account is ready — "
@@ -252,6 +321,7 @@ def _order_disp(order: dict) -> str:
 
 
 def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     items_rows = "".join(
         f'<tr><td style="padding:4px 0">{i.get("quantity",1)} × {i.get("name","Item")}</td>'
         f'<td style="padding:4px 0;text-align:right">£{(i.get("price",0)*i.get("quantity",1)):.2f}</td></tr>'
@@ -295,6 +365,7 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
 
 
 def email_order_status(order: dict, name: str, status: str) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     is_takeaway = order.get("delivery_type") == "takeaway"
     pretty = {
         "confirmed": "Your order is confirmed",
@@ -322,6 +393,7 @@ def email_order_status(order: dict, name: str, status: str) -> tuple[str, str]:
 
 
 def email_subscription_confirmation(sub: dict, name: str) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     html = _wrap(
         "Dabba Wala subscription confirmed",
         f"<p>Welcome to the weekly meal family, {name}!</p>"
@@ -348,6 +420,7 @@ def email_enquiry_receipt(kind: str, name: str) -> tuple[str, str]:
 
 
 def email_enquiry_reply(name: str, admin_text: str) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     safe = (admin_text or "").replace("<", "&lt;").replace(">", "&gt;")
     html = _wrap(
         "New reply to your enquiry",
@@ -360,6 +433,7 @@ def email_enquiry_reply(name: str, admin_text: str) -> tuple[str, str]:
 
 
 def email_delivery_skipped(name: str, date: str, short_notice: bool) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     extra = (
         "<p style=\"color:#800020\"><b>Heads-up:</b> this is within 12 hours of delivery — "
         "we'll do our best but the box may already be prepped.</p>"
@@ -375,6 +449,7 @@ def email_delivery_skipped(name: str, date: str, short_notice: bool) -> tuple[st
 
 
 def email_subscription_cancelled(name: str, sub: dict) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     html = _wrap(
         "Your Dabba Wala subscription is cancelled",
         f"<p>Hi {name}, your <b>{sub.get('plan','').title()}</b> plan has been cancelled. "
@@ -386,6 +461,7 @@ def email_subscription_cancelled(name: str, sub: dict) -> tuple[str, str]:
 
 
 def email_subscription_expired(name: str, sub: dict) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     html = _wrap(
         "Your Dabba Wala has ended — renew in one tap",
         f"<p>Hi {name}, your <b>{sub.get('plan','').title()}</b> Dabba Wala plan wrapped up on "
@@ -397,6 +473,7 @@ def email_subscription_expired(name: str, sub: dict) -> tuple[str, str]:
 
 
 def email_renewal_reminder(name: str, sub: dict) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     html = _wrap(
         "Your Dabba Wala ends soon",
         f"<p>Hi {name}, a quick reminder that your <b>{sub.get('plan','').title()}</b> plan "
@@ -407,6 +484,7 @@ def email_renewal_reminder(name: str, sub: dict) -> tuple[str, str]:
 
 
 def email_delivery_issue(name: str, date: str, description: str) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     safe = (description or "").replace("<", "&lt;").replace(">", "&gt;") or "We hit a snag with today's delivery."
     html = _wrap(
         "About today's delivery",
@@ -419,6 +497,7 @@ def email_delivery_issue(name: str, date: str, description: str) -> tuple[str, s
 
 
 def email_review_prompt(name: str, when_label: str) -> tuple[str, str]:
+    name = html_escape(str(name or ""))
     html = _wrap(
         "How was it?",
         f"<p>Hi {name}, we hope you enjoyed {when_label}. Could you take 10 seconds to rate it? "

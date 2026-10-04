@@ -284,17 +284,21 @@ async def add_internal_note(sub_id: str, payload: dict, current_user: dict = Dep
 async def send_renewal_reminder(sub_id: str, current_user: dict = Depends(require_admin)):
     doc = await _get_sub_or_404(sub_id)
     name = doc.get("customer_name") or "there"
+    # One reminder per plan, whether it came from this button or the automatic check.
+    claimed = await db.subscriptions.update_one(
+        {"id": sub_id, "renewal_reminded_at": {"$exists": False}},
+        {"$set": {"renewal_reminded_at": datetime.utcnow().isoformat()}},
+    )
+    if not claimed.modified_count:
+        raise HTTPException(status_code=409, detail="A renewal reminder has already been sent for this plan.")
     sent = False
     if doc.get("customer_email"):
         subj, html = email_renewal_reminder(name, doc)
-        send_email(doc["customer_email"], subj, html)
+        send_email(doc["customer_email"], subj, html, kind="marketing")
         sent = True
     if doc.get("customer_phone"):
         # Shares its dedupe key with the automatic reminder — a customer is never nudged twice
         await wa_renewal_reminder(doc)
-        await db.subscriptions.update_one(
-            {"id": sub_id}, {"$set": {"renewal_reminded_at": datetime.utcnow().isoformat()}}
-        )
         sent = True
     entry = audit_entry(current_user, "renewal_reminder_sent", None, datetime.utcnow().isoformat())
     await db.subscriptions.update_one({"id": sub_id}, {"$push": {"audit_trail": entry}})

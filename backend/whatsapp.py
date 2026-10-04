@@ -99,6 +99,11 @@ def tracking_link(tab: str, order_id: Optional[str] = None) -> str:
     return f"{url}&order={order_id}" if order_id else url
 
 
+# Messages that invite rather than inform. Someone who said STOP on WhatsApp does not
+# then get these by text message instead; order and delivery updates still arrive.
+MARKETING_EVENTS = {"sub_renewal"}
+
+
 def first_name(name: Optional[str]) -> str:
     parts = (name or "").split()
     return parts[0] if parts else "there"
@@ -187,6 +192,8 @@ async def _notify_customer_now(
     if not whatsapp_enabled() or not sid:
         return await fall_back("not_configured")
     if await is_opted_out(to):
+        if event in MARKETING_EVENTS:
+            return await finish("skipped:opted_out")
         return await fall_back("opted_out")
 
     try:
@@ -288,7 +295,7 @@ async def renewal_reminder_loop():
                         continue
                     if sub.get("customer_email"):
                         subj, html = email_renewal_reminder(sub.get("customer_name") or "there", sub)
-                        send_email(sub["customer_email"], subj, html)
+                        send_email(sub["customer_email"], subj, html, kind="marketing")
                     await send_renewal_reminder(sub)
         except asyncio.CancelledError:
             raise

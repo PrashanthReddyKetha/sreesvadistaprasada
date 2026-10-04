@@ -23,6 +23,7 @@ import PushTab from '@/components/admin/PushTab';
 import CouponsTab from '@/components/admin/CouponsTab';
 import CustomersTab from '@/components/admin/CustomersTab';
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
+import MessagesTab from '@/components/admin/MessagesTab';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -879,6 +880,7 @@ const TABS = [
   { id:'specials',      label:"Today's Specials", icon:Sparkles  },
   { id:'users',         label:'Customers',     icon:Users        },
   { id:'analytics',     label:'Analytics',     icon:TrendingUp   },
+  { id:'messages',      label:'Messages',      icon:Mail         },
   { id:'enquiries',     label:'Enquiries',     icon:MessageSquare},
   { id:'loyalty',       label:'Loyalty',       icon:Gift         },
   { id:'coupons',       label:'Coupons',       icon:Tag          },
@@ -1026,6 +1028,7 @@ const Admin = () => {
               {activeTab==='specials'      && <DailySpecialsTab />}
               {activeTab==='users'         && <CustomersTab />}
               {activeTab==='analytics'     && <AnalyticsTab />}
+              {activeTab==='messages'      && <MessagesTab />}
               {activeTab==='enquiries'     && <EnquiriesTab contacts={data.contacts} catering={data.catering} onStatusUpdate={handleStatusUpdate} reload={fetchAll} />}
               {activeTab==='loyalty'       && <AdminLoyaltyTab />}
               {activeTab==='coupons'       && <CouponsTab />}

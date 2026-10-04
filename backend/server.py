@@ -12,6 +12,7 @@ from routes import whatsapp as whatsapp_routes
 from routes import coupons as coupon_routes
 from routes import customers as customer_routes
 from routes import events as event_routes
+from routes import comms as comms_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings
 from menu_additions import apply_menu_additions
@@ -49,6 +50,10 @@ async def lifespan(app: FastAPI):
     # Our own visit record: fast date queries, and automatic deletion after the retention period
     await db.events.create_index("at", expireAfterSeconds=event_routes.RETENTION_DAYS * 86400)
     await db.events.create_index("visit_id")
+    # The send log: who was sent what. Deleted automatically after the retention period.
+    from notifications import MESSAGE_LOG_DAYS
+    await db.message_log.create_index("at", expireAfterSeconds=MESSAGE_LOG_DAYS * 86400)
+    await db.email_optouts.create_index("email", unique=True)
     # Lookups that run on every dashboard, kitchen and item page
     for coll, keys in (
         ("orders", "user_id"), ("orders", "status"), ("orders", "items.menu_item_id"),
@@ -133,6 +138,7 @@ app.include_router(whatsapp_routes.router, prefix="/api")
 app.include_router(coupon_routes.router, prefix="/api")
 app.include_router(customer_routes.router, prefix="/api")
 app.include_router(event_routes.router, prefix="/api")
+app.include_router(comms_routes.router, prefix="/api")
 
 
 @app.get("/api")
