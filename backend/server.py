@@ -13,6 +13,7 @@ from routes import coupons as coupon_routes
 from routes import customers as customer_routes
 from routes import events as event_routes
 from routes import comms as comms_routes
+from routes import automations as automation_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings
 from menu_additions import apply_menu_additions
@@ -54,6 +55,10 @@ async def lifespan(app: FastAPI):
     from notifications import MESSAGE_LOG_DAYS
     await db.message_log.create_index("at", expireAfterSeconds=MESSAGE_LOG_DAYS * 86400)
     await db.email_optouts.create_index("email", unique=True)
+    # An automation message goes to a customer once per reason; the unique key is what guarantees it
+    await db.automation_sends.create_index([("automation", 1), ("email", 1), ("reason", 1)], unique=True)
+    await db.automation_sends.create_index("at")
+    await db.admin_audit.create_index("at")
     # Lookups that run on every dashboard, kitchen and item page
     for coll, keys in (
         ("orders", "user_id"), ("orders", "status"), ("orders", "items.menu_item_id"),
@@ -83,12 +88,15 @@ async def lifespan(app: FastAPI):
     orphan_watchdog = asyncio.create_task(orphan_payment_loop())
     from routes.subscriptions import subscription_maintenance_loop
     sub_maintenance = asyncio.create_task(subscription_maintenance_loop())
+    from automations import automation_loop
+    automation_runner = asyncio.create_task(automation_loop())
     yield
     logger.info("Shutting down...")
     push_scheduler.cancel()
     renewal_scheduler.cancel()
     orphan_watchdog.cancel()
     sub_maintenance.cancel()
+    automation_runner.cancel()
     client.close()
 
 
@@ -139,6 +147,7 @@ app.include_router(coupon_routes.router, prefix="/api")
 app.include_router(customer_routes.router, prefix="/api")
 app.include_router(event_routes.router, prefix="/api")
 app.include_router(comms_routes.router, prefix="/api")
+app.include_router(automation_routes.router, prefix="/api")
 
 
 @app.get("/api")
