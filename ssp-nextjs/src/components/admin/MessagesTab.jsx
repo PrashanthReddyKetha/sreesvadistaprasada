@@ -52,6 +52,27 @@ export default function MessagesTab() {
         ))}
       </div>
 
+      <div className="bg-white rounded-xl p-5" style={card}>
+        <h3 className="font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Were the emails opened?</h3>
+        {!data.email_reports?.connected ? (
+          <p className="text-sm text-gray-600">Not connected yet. Your email provider (Resend) can report when an email is delivered, opened and clicked; it needs a one-time set-up in the Resend dashboard and one setting on the server. Until then this stays empty.</p>
+        ) : data.email_reports.sent === 0 ? <p className="text-sm text-gray-400">Connected. No emails in this period yet.</p> : (
+          <>
+            <p className="text-sm text-gray-600 mb-3">{data.email_reports.sent} sent · {data.email_reports.delivered} delivered · {data.email_reports.opened} opened · {data.email_reports.clicked} clicked</p>
+            <table className="w-full text-sm">
+              <thead><tr className="text-left text-xs text-gray-500 uppercase tracking-wider">{['Email', 'Sent', 'Opened', 'Clicked'].map(h => <th key={h} className="py-1 pr-4 font-semibold">{h}</th>)}</tr></thead>
+              <tbody>{data.email_reports.by_subject.map(b => (
+                <tr key={b.subject} className="border-t" style={{ borderColor: '#f9f6ee' }}>
+                  <td className="py-1.5 pr-4">{b.subject}</td><td className="py-1.5 pr-4">{b.sent}</td>
+                  <td className="py-1.5 pr-4">{b.opened} ({b.sent ? Math.round((b.opened / b.sent) * 100) : 0}%)</td>
+                  <td className="py-1.5 pr-4">{b.clicked} ({b.sent ? Math.round((b.clicked / b.sent) * 100) : 0}%)</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </>
+        )}
+      </div>
+
       <div className="bg-white rounded-xl overflow-hidden" style={card}>
         <h3 className="px-4 py-3 font-bold border-b" style={{ fontFamily: "'Playfair Display', serif", color: P, borderColor: '#f0ebe6' }}>By channel</h3>
         {data.summary.length === 0 ? <p className="text-center text-gray-400 py-8 text-sm">Nothing sent in this period.</p> : (

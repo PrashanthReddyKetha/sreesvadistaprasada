@@ -73,6 +73,18 @@ def fresh_state(monkeypatch):
             if hasattr(mod, fn):
                 monkeypatch.setattr(mod, fn, fake)
 
+    # The nightly review must never reach the live site or the AI service from a test
+    import intelligence
+    import ai_ops
+
+    async def _no_site_check():
+        return None
+
+    async def _no_ai(_figures):
+        return {"ok": False, "why": "AI is switched off in tests"}
+    monkeypatch.setattr(intelligence, "site_check", _no_site_check)
+    monkeypatch.setattr(ai_ops, "investigate", _no_ai)
+
     intents = {}
 
     def retrieve(pi_id):

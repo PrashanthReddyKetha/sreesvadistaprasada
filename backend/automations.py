@@ -310,7 +310,7 @@ async def audience(automation_id: str, now: Optional[datetime] = None) -> list:
     return out
 
 
-async def run(automation_id: str, now: Optional[datetime] = None) -> dict:
+async def run(automation_id: str, now: Optional[datetime] = None, local_hour: Optional[int] = None) -> dict:
     """Send to today's audience. Returns counts. Safe to call repeatedly."""
     now = now or datetime.utcnow()
     a, cfg = BY_ID[automation_id], await settings_for(automation_id)
@@ -323,6 +323,10 @@ async def run(automation_id: str, now: Optional[datetime] = None) -> dict:
         if person["skip"]:
             skipped += 1
             continue
+        usual = person["customer"].get("usual_order_hour")
+        hour = (local_hour if local_hour is not None else datetime.now(LONDON).hour)
+        if usual is not None and 11 <= usual <= 18 and hour < usual - 1:
+            continue        # wait: it will go out an hour before they usually order
         if sent_today + sent >= DAILY_CAP:
             break
         try:    # the unique index makes this claim atomic: two runs cannot both send

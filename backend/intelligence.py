@@ -33,6 +33,12 @@ PAIRING_WINDOW_DAYS = 90
 MIN_SENDS_TO_JUDGE_AUTOMATION = 10
 UNSUBSCRIBE_LIMIT = 0.10              # more than 1 in 10 recipients unsubscribing switches an automation off
 MIN_BASELINE_DAYS = 3                 # days of history before a change can be called a change
+MIN_SECTION_ORDERS_FOR_ORDERING = 50  # portions sold in a menu section (30 days) before its dishes are put in sales order
+ORDERING_WINDOW_DAYS = 30
+NEW_DISH_DAYS = 14                    # a new dish is shown near the top for this long, so it gets a fair chance
+RETIRE_AFTER_DAYS = 60                # on the menu this long with no sale, while its section sells, is worth a look
+SITE_CHECK_PAGES = 60
+SITE_URL = "https://sreesvadistaprasada.com"
 REVIEW_AFTER_DAYS = 14                # how long before asking "did that work?"
 NOT_ON_SALE = {"pickles", "podis"}    # coming soon — never featured (owner rule D-024)
 
@@ -48,7 +54,7 @@ WATCHED = {
     "unsubscribes":    ("Unsubscribes", 1.00, 3, "up"),
 }
 
-DEFAULT_SETTINGS = {"menu_decisions": True, "owner_alerts": True, "customer_messages": False}
+DEFAULT_SETTINGS = {"menu_decisions": True, "owner_alerts": True, "customer_messages": False, "ai_investigation": True}
 
 
 async def get_settings() -> dict:
@@ -64,6 +70,7 @@ async def log_decision(kind: str, noticed: str, decided: str, did: str, level: i
         "id": str(uuid.uuid4()), "at": datetime.utcnow(), "kind": kind, "by": by, "level": level,
         "noticed": noticed, "decided": decided, "did": did,
         "undo": undo, "undone_at": None, "measure": measure, "outcome": None,
+        "response": None,     # for recommendations: the owner's "agreed" or "not now"
     }
     await db.decision_log.insert_one(dict(doc))
     return doc
@@ -96,6 +103,7 @@ async def measure_day(day: str) -> dict:
         "failures": sum(1 for e in events if e["name"] in ("order_placed_failed", "payment_started_failed", "payment_failed")),
         "script_errors": sum(1 for e in events if e["name"] == "site_error"),
         "unsubscribes": await db.email_optouts.count_documents({"at": {"$gte": start, "$lt": end}}),
+        "new_accounts": await db.users.count_documents({"created_at": {"$gte": start, "$lt": end}, "role": {"$ne": "admin"}}),
         "measured_at": datetime.utcnow(),
     }
     await db.daily_metrics.update_one({"day": day}, {"$set": m}, upsert=True)
@@ -179,6 +187,48 @@ async def decide_featured() -> dict:
         undo={"type": "featured", "ids": before},
         measure={"type": "orders_per_day", "before": round(await _orders_per_day(14, 0), 2)})
     return {"changed": True, "added": added, "removed": removed}
+
+
+async def decide_order() -> dict:
+    """Within each menu section, best sellers first — once the section has sold enough to know.
+    New dishes are placed second so they are seen. Sections without enough sales stay alphabetical."""
+    since = datetime.utcnow() - timedelta(days=ORDERING_WINDOW_DAYS)
+    sold: dict = {}
+    async for o in db.orders.find({"created_at": {"$gte": since}, "status": {"$ne": "cancelled"}}, {"_id": 0, "items": 1}):
+        for i in o.get("items") or []:
+            mid = i.get("menu_item_id") or i.get("id")
+            if mid:
+                sold[mid] = sold.get(mid, 0) + int(i.get("quantity") or 1)
+    sections: dict = {}
+    async for m in db.menu_items.find({"available": True}, {"_id": 0, "id": 1, "name": 1, "category": 1, "subcategory": 1, "created_at": 1, "sort_rank": 1}):
+        sections.setdefault((m.get("category"), m.get("subcategory") or ""), []).append(m)
+    ranked_sections, changes = [], 0
+    new_cutoff = datetime.utcnow() - timedelta(days=NEW_DISH_DAYS)
+    for (category, sub), dishes in sections.items():
+        total = sum(sold.get(d["id"], 0) for d in dishes)
+        if total < MIN_SECTION_ORDERS_FOR_ORDERING:
+            continue
+        by_sales = sorted(dishes, key=lambda d: (-sold.get(d["id"], 0), d["name"]))
+        fresh = [d for d in by_sales if isinstance(d.get("created_at"), datetime) and d["created_at"] >= new_cutoff and sold.get(d["id"], 0) == 0]
+        ordered = [d for d in by_sales if d not in fresh]
+        ordered[1:1] = fresh                           # new, unsold dishes go straight after the best seller
+        before = {d["id"]: d.get("sort_rank") for d in dishes}
+        for rank, d in enumerate(ordered, start=1):
+            if before[d["id"]] != rank:
+                await db.menu_items.update_one({"id": d["id"]}, {"$set": {"sort_rank": rank}})
+                changes += 1
+        if any(before[d["id"]] != r for r, d in enumerate(ordered, start=1)):
+            ranked_sections.append({"section": f"{category} / {sub}" if sub else str(category), "first": ordered[0]["name"],
+                                    "before": before})
+    if ranked_sections:
+        await log_decision(
+            "dish order",
+            f"{len(ranked_sections)} menu section{'s have' if len(ranked_sections) != 1 else ' has'} sold at least {MIN_SECTION_ORDERS_FOR_ORDERING} portions in {ORDERING_WINDOW_DAYS} days.",
+            "Show best sellers first in those sections; new dishes second so they are seen. Other sections stay alphabetical.",
+            "; ".join(f"{r['section']}: now led by {r['first']}" for r in ranked_sections[:10]),
+            undo={"type": "order", "ranks": {k: v for r in ranked_sections for k, v in r["before"].items()}},
+            measure={"type": "orders_per_day", "before": round(await _orders_per_day(14, 0), 2)})
+    return {"sections": len(ranked_sections), "changes": changes}
 
 
 async def decide_pairings() -> dict:
@@ -278,6 +328,49 @@ async def recommendations() -> list:
     if ignored and sum(sold.values()) >= 10:
         out.append(("dish interest", "Dishes opened often but not ordered in two weeks: " + ", ".join(f"{n} (opened {v} times)" for n, v in ignored) + ".",
                     "The photo, price or description may be putting people off. Worth a look."))
+    # Dishes to consider retiring: on the menu a long time, never sold, in a section that does sell
+    old = datetime.utcnow() - timedelta(days=RETIRE_AFTER_DAYS)
+    sold60, _ = await _sales(RETIRE_AFTER_DAYS)
+    section_sales, idle = {}, []
+    async for m in db.menu_items.find({"available": True}, {"_id": 0, "id": 1, "name": 1, "category": 1, "created_at": 1, "price": 1}):
+        section_sales[m.get("category")] = section_sales.get(m.get("category"), 0) + sold60.get(m["id"], 0)
+        if not sold60.get(m["id"]) and isinstance(m.get("created_at"), datetime) and m["created_at"] <= old:
+            idle.append(m)
+    idle = [m for m in idle if section_sales.get(m.get("category"), 0) >= 30 and (m.get("category") or "").lower() not in NOT_ON_SALE][:8]
+    if idle:
+        out.append(("dishes not selling", f"On the menu for over {RETIRE_AFTER_DAYS} days with no sale, in sections that are selling: " + ", ".join(m["name"] for m in idle) + ".",
+                    "Consider a better photo or description, a lower price, or taking them off so the menu is shorter."))
+
+    # Prices worth a look — never changed automatically
+    views14, adds14 = {}, {}
+    async for e in db.events.find({"at": {"$gte": since}, "name": {"$in": ["view_item", "add_to_cart"]}}, {"_id": 0, "name": 1, "items": 1}):
+        for i in e.get("items") or []:
+            if i.get("name"):
+                bucket = views14 if e["name"] == "view_item" else adds14
+                bucket[i["name"]] = bucket.get(i["name"], 0) + 1
+    eager = sorted(((n, v, adds14.get(n, 0)) for n, v in views14.items() if v >= 40 and adds14.get(n, 0) / v >= 0.5), key=lambda t: -t[1])[:4]
+    shy = sorted(((n, v, adds14.get(n, 0)) for n, v in views14.items() if v >= 40 and adds14.get(n, 0) / v <= 0.05), key=lambda t: -t[1])[:4]
+    if eager:
+        out.append(("price worth a look", "Dishes that more than half of viewers add to their basket: " + ", ".join(f"{n} ({a} of {v})" for n, v, a in eager) + ".",
+                    "Demand is strong at the current price. Whether to change it is yours to decide; nothing has been changed."))
+    if shy:
+        out.append(("price worth a look", "Dishes many people open and almost nobody adds: " + ", ".join(f"{n} ({a} of {v})" for n, v, a in shy) + ".",
+                    "Price, photo or description may be the reason. Nothing has been changed."))
+
+    # Opening hours against when people actually order (UK time)
+    hours = [0] * 24
+    async for o in db.orders.find({"created_at": {"$gte": datetime.utcnow() - timedelta(days=28)}, "status": {"$ne": "cancelled"}}, {"_id": 0, "created_at": 1}):
+        if isinstance(o.get("created_at"), datetime):
+            hours[o["created_at"].replace(tzinfo=ZoneInfo("UTC")).astimezone(LONDON).hour] += 1
+    if sum(hours) >= 60:
+        busy = [h for h, n in enumerate(hours) if n]
+        quiet = [h for h in range(min(busy), max(busy) + 1) if hours[h] <= sum(hours) * 0.01]
+        peak = max(range(24), key=lambda h: hours[h])
+        text = f"Over four weeks, orders came in between {min(busy)}:00 and {max(busy) + 1}:00, busiest around {peak}:00."
+        if quiet:
+            text += " Almost nothing was ordered around " + ", ".join(f"{h}:00" for h in quiet[:6]) + "."
+        out.append(("opening hours", text, "Worth comparing with the hours you are open. Nothing has been changed."))
+
     logged = []
     for kind, noticed, decided in out:
         recent = await db.decision_log.find_one({"kind": kind, "noticed": noticed, "at": {"$gte": datetime.utcnow() - timedelta(days=7)}}, {"_id": 1})
@@ -309,6 +402,60 @@ async def things_to_know(day: str) -> list:
     if orphaned:
         lines.append(f"{orphaned} payment{'s' if orphaned != 1 else ''} had no matching order. Check Stripe.")
     return lines
+
+
+async def dishes_gone_quiet() -> list:
+    now = datetime.utcnow()
+
+    async def sold_between(a: int, b: int) -> dict:
+        out: dict = {}
+        async for o in db.orders.find({"created_at": {"$gte": now - timedelta(days=a), "$lt": now - timedelta(days=b)}, "status": {"$ne": "cancelled"}}, {"_id": 0, "items": 1}):
+            for i in o.get("items") or []:
+                if i.get("name"):
+                    out[i["name"]] = out.get(i["name"], 0) + int(i.get("quantity") or 1)
+        return out
+    earlier, recent = await sold_between(21, 7), await sold_between(7, 0)
+    if sum(recent.values()) < 20:          # a quiet week overall says nothing about one dish
+        return []
+    return [n for n, q in sorted(earlier.items(), key=lambda kv: -kv[1]) if q >= 8 and not recent.get(n)][:5]
+
+
+async def site_check() -> Optional[dict]:
+    """Fetch the public pages and report what a visitor or a search engine would trip over. Read-only."""
+    import re
+    import httpx
+    found = []
+    try:
+        async with httpx.AsyncClient(timeout=20, follow_redirects=True, headers={"User-Agent": "SSP-site-check"}) as client:
+            sitemap = await client.get(f"{SITE_URL}/sitemap.xml")
+            urls = re.findall(r"<loc>(.*?)</loc>", sitemap.text)[:SITE_CHECK_PAGES]
+            if not urls:
+                return {"pages": 0, "found": ["the sitemap could not be read"]}
+            for url in urls:
+                path = url.replace(SITE_URL, "") or "/"
+                try:
+                    r = await client.get(url)
+                except httpx.HTTPError:
+                    found.append(f"{path} did not load")
+                    continue
+                if r.status_code != 200:
+                    found.append(f"{path} returned {r.status_code}")
+                    continue
+                html = r.text
+                if not re.search(r"<title>[^<]{5,}</title>", html):
+                    found.append(f"{path} has no title")
+                h1 = len(re.findall(r"<h1[\s>]", html))
+                if h1 != 1:
+                    found.append(f"{path} has {h1} main headings")
+                if not re.search(r'<meta[^>]+name="description"[^>]+content="[^"]{50,}', html):
+                    found.append(f"{path} has a missing or very short description")
+                no_alt = len(re.findall(r"<img(?![^>]*\balt=)[^>]*>", html))
+                if no_alt:
+                    found.append(f"{path} has {no_alt} image(s) with no description")
+            return {"pages": len(urls), "found": found}
+    except Exception as e:
+        logger.warning("Site check could not run: %s", e)
+        return None
 
 
 async def _orders_per_day(days: int, ending_days_ago: int) -> float:
@@ -345,6 +492,9 @@ async def undo(decision_id: str, by: str) -> dict:
     if u["type"] == "featured":
         await db.menu_items.update_many({"featured": True}, {"$set": {"featured": False}})
         await db.menu_items.update_many({"id": {"$in": u["ids"]}}, {"$set": {"featured": True}})
+    elif u["type"] == "order":
+        for mid, rank in u["ranks"].items():
+            await db.menu_items.update_one({"id": mid}, {"$set": {"sort_rank": rank}} if rank is not None else {"$unset": {"sort_rank": ""}})
     elif u["type"] == "pairings":
         await db.menu_items.update_many({"id": {"$in": u["ids"]}, "pairs_with_set_by": "system"},
                                         {"$set": {"pairs_with": []}, "$unset": {"pairs_with_set_by": ""}})
@@ -379,6 +529,9 @@ async def run_review(now_local: Optional[datetime] = None) -> dict:
     if cfg["menu_decisions"]:
         f = await decide_featured()
         (did if f["changed"] else skipped).append("Featured dishes: " + ("updated" if f["changed"] else f["why"]))
+        o = await decide_order()
+        (did if o["sections"] else skipped).append(f"Dish order: {o['sections']} section(s) put in sales order" if o["sections"]
+                                                   else f"Dish order: no section has sold {MIN_SECTION_ORDERS_FOR_ORDERING} portions yet")
         p = await decide_pairings()
         (did if p["filled"] else skipped).append(f"Goes-well-with: {p['filled']} filled" if p["filled"] else "Goes-well-with: nothing bought together often enough yet")
     else:
@@ -406,6 +559,42 @@ async def run_review(now_local: Optional[datetime] = None) -> dict:
         notify_admin(subject, body + "<p>Open Admin › System log for the detail.</p>")
         did.append(f"Emailed you: {len(worse)} figure(s) moved sharply, {len(facts)} thing(s) to know")
 
+    # A dish that used to sell and has stopped
+    dropped = await dishes_gone_quiet()
+    if dropped:
+        await log_decision("dish gone quiet", "Sold steadily two weeks ago and not at all in the last week: " + ", ".join(dropped) + ".",
+                           "Check it is still shown, in stock and priced as you intend.", "Nothing changed — worth a look.", level=3)
+
+    # Once a week, read the public pages the way a visitor's browser does
+    checked_recently = await db.decision_log.find_one({"kind": "weekly site check", "at": {"$gte": datetime.utcnow() - timedelta(days=6)}}, {"_id": 1})
+    if now_local.weekday() == 0 and not checked_recently:
+        problems = await site_check()
+        if problems is not None:
+            await log_decision("weekly site check", f"Read {problems['pages']} public pages." + (" Found: " + "; ".join(problems["found"][:8]) + "." if problems["found"] else " Every page loaded with a title and one main heading."),
+                               "Listed for fixing." if problems["found"] else "No action needed.",
+                               "Nothing changed automatically." if problems["found"] else "No action taken.", level=3 if problems["found"] else 1)
+
+    # Something moved sharply for the worse and no rule above explains it: ask Claude once, with summary figures only
+    if worse and cfg["ai_investigation"]:
+        already = await db.decision_log.find_one({"kind": "investigation", "at": {"$gte": datetime.utcnow() - timedelta(hours=20)}}, {"_id": 1})
+        if not already:
+            from ai_ops import investigate
+            result = await investigate({
+                "yesterday": {k: v for k, v in today.items() if k != "measured_at"},
+                "sharply_worse": [{"figure": s["label"], "yesterday": s["current"], "usually": s["usual"]} for s in worse],
+                "previous_days": [{k: v for k, v in h.items() if k != "measured_at"} for h in sorted(history, key=lambda h: h["day"])[-14:]],
+                "things_to_know": facts,
+            })
+            if result["ok"]:
+                f = result["finding"]
+                await log_decision("investigation", f["summary"],
+                                   "Likely causes: " + "; ".join(f["likely_causes"][:4]) + ". Check first: " + "; ".join(f["what_to_check"][:4]) + ".",
+                                   f'{f["recommendation"]} (Confidence: {f["confidence"]}. Written by Claude from summary figures; cost about ${result["cost_usd"]:.3f}.)',
+                                   level=3, by="Claude")
+                did.append("Asked Claude to look into the change; its finding is in the log")
+            else:
+                skipped.append(f"AI investigation skipped: {result['why']}")
+
     material = [s for s in signals if s["material"]]
     noticed = (", ".join(f"{s['label']} {'up' if s['change'] > 0 else 'down'} {abs(round(s['change'] * 100))}%" for s in material)
                if material else "No figure moved materially against its usual level." if history else
@@ -416,7 +605,7 @@ async def run_review(now_local: Optional[datetime] = None) -> dict:
         "; ".join(did) if did else "No action taken. " + "; ".join(skipped))
     await db.settings.update_one({"_id": "intelligence"}, {"$set": {"last_run_day": now_local.strftime("%Y-%m-%d"),
                                                                     "last_run_at": datetime.utcnow().isoformat()}}, upsert=True)
-    return {"day": yesterday, "metrics": {k: v for k, v in today.items() if k != "measured_at"}, "signals": signals,
+    return {"day": yesterday, "dish_order_changes": o["changes"] if cfg["menu_decisions"] else 0, "metrics": {k: v for k, v in today.items() if k != "measured_at"}, "signals": signals,
             "did": did, "skipped": skipped, "recommendations": len(recs), "outcomes_reviewed": reviewed, "log_id": summary["id"]}
 
 

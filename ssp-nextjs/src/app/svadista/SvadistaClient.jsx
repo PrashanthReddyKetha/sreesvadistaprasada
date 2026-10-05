@@ -1,4 +1,5 @@
 'use client';
+import { byMenuOrder } from '@/lib/menuOrder';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -72,17 +73,17 @@ const Svadista = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
   }, []);
 
   const byTab = activeTab === 'All'
-    ? [...items].sort((a, b) => a.name.localeCompare(b.name))
+    ? [...items].sort(byMenuOrder)
     : [...items].filter(i =>
         i.subcategory === activeTab ||
         (i.extra_categories || []).some(ec => ec.category === 'nonVeg' && ec.subcategory === activeTab)
-      ).sort((a, b) => a.name.localeCompare(b.name));
+      ).sort(byMenuOrder);
 
   // Searching spans every subsection on this page, not just the active tab
   const filtered = search.trim()
     ? [...items]
         .filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()))
-        .sort((a, b) => a.name.localeCompare(b.name))
+        .sort(byMenuOrder)
     : byTab;
 
   return (

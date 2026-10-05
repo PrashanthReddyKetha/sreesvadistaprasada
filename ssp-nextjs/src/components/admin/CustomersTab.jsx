@@ -146,6 +146,7 @@ function Insights({ data }) {
           {tile('Weekly to monthly', d.moved_from_weekly_to_monthly, `of ${d.started_with_a_weekly_plan} who began weekly`)}
           {tile('Meals skipped', rate(d.skip_rate), `${d.meals_skipped} of ${d.meals_sold} · ${d.makeup_meals} made up`)}
           {tile('Cancelled', d.cancelled, `${d.finished} finished without cancelling`)}
+          {data.next_week_meals && tile('Meals to cook next week', data.next_week_meals.meals, 'from plans already bought')}
         </div>
         {(data.dabba_forecast || []).some(w => w.plans_ending > 0) && (
           <table className="w-full text-xs mt-4">
@@ -159,6 +160,43 @@ function Insights({ data }) {
           </table>
         )}
       </div>
+      {(data.sells_together || []).length > 0 && (
+        <div className="bg-white rounded-xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+          <h3 className="font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Bought together most</h3>
+          <ul className="text-sm space-y-1">{data.sells_together.map(p => <li key={p.dishes} className="flex justify-between gap-3"><span>{p.dishes}</span><span className="text-gray-500 whitespace-nowrap">{p.baskets} baskets</span></li>)}</ul>
+        </div>
+      )}
+      {data.time_patterns && data.time_patterns.by_weekday.some(d => d.orders > 0) && (
+        <div className="bg-white rounded-xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+          <h3 className="font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: P }}>When people order</h3>
+          <div className="flex items-end gap-1.5 h-20 mb-1">
+            {data.time_patterns.by_weekday.map(d => { const max = Math.max(1, ...data.time_patterns.by_weekday.map(x => x.orders)); return (
+              <div key={d.day} className="flex-1 flex flex-col items-center justify-end h-full" title={`${d.day}: ${d.orders} orders`}>
+                <div className="w-full rounded-t" style={{ height: `${(d.orders / max) * 100}%`, minHeight: d.orders ? 3 : 0, backgroundColor: P }} />
+                <span className="text-[10px] text-gray-400 mt-1">{d.day.slice(0, 3)}</span>
+              </div>); })}
+          </div>
+          <ul className="text-xs text-gray-600 space-y-1 mt-3">{data.time_patterns.top_by_time_of_day.filter(t => t.dishes.length).map(t => <li key={t.when}><b>{t.when}:</b> {t.dishes.join(', ')}</li>)}</ul>
+        </div>
+      )}
+      {((data.postcodes || []).length > 0 || (data.loyalty && data.loyalty.member_orders > 0)) && (
+        <div className="bg-white rounded-xl p-4 lg:col-span-2 grid md:grid-cols-2 gap-6" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+          {(data.postcodes || []).length > 0 && (
+            <div>
+              <h3 className="font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Where delivery orders went</h3>
+              <ul className="text-sm space-y-1">{data.postcodes.map(p => <li key={p.district} className="flex justify-between"><span>{p.district}</span><span className="text-gray-500">{p.orders} orders · {fmt(p.income)}</span></li>)}</ul>
+            </div>
+          )}
+          {data.loyalty && data.loyalty.member_orders > 0 && (
+            <div>
+              <h3 className="font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: P }}>What loyalty costs and brings</h3>
+              <p className="text-sm text-gray-600">{data.loyalty.free_dishes_given} free dish{data.loyalty.free_dishes_given === 1 ? '' : 'es'} given, worth {fmt(data.loyalty.value_given)}.
+                Customers on the scheme placed {data.loyalty.member_orders} orders worth {fmt(data.loyalty.member_income)}
+                {data.loyalty.income_per_pound_given != null ? ` — ${fmt(data.loyalty.income_per_pound_given)} of orders for every £1 given away.` : '.'}</p>
+            </div>
+          )}
+        </div>
+      )}
       {(data.coupons || []).length > 0 && (
         <div className="bg-white rounded-xl p-4 lg:col-span-2" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
           <h3 className="font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: P }}>What each coupon gave away and brought in</h3>
@@ -320,7 +358,8 @@ export default function CustomersTab() {
                         {(c.flags || []).filter(f => FLAGS[f]).map(f => <span key={f} className="block mt-1"><span className="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap" style={{ backgroundColor: FLAGS[f].bg, color: FLAGS[f].color }}>{FLAGS[f].label}</span></span>)}
                         {c.newsletter && <p className="text-xs text-gray-400 mt-1">newsletter</p>}</td>
                       <td className="px-4 py-3">{c.orders}{c.cancelled_orders > 0 && <span className="text-xs text-gray-400"> (+{c.cancelled_orders} cancelled)</span>}</td>
-                      <td className="px-4 py-3 font-semibold">{fmt(c.total_spend)}</td>
+                      <td className="px-4 py-3 font-semibold">{fmt(c.total_spend)}
+                        {c.expected_90_day_spend != null && <p className="text-xs font-normal text-gray-400" title="A rough estimate from their usual pace and order size, scaled down if they have gone quiet">next 90 days ≈ {fmt(c.expected_90_day_spend)}</p>}</td>
                       <td className="px-4 py-3 text-gray-600">{c.orders ? fmt(c.average_order) : '—'}</td>
                       <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{fmtDate(c.last_order)}
                         {c.days_since_last_order != null && <p className="text-xs text-gray-400">{c.days_since_last_order === 0 ? 'today' : `${c.days_since_last_order} days ago`}</p>}

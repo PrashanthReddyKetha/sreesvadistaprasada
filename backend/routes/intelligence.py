@@ -11,6 +11,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+import ai_ops
 import intelligence as brain
 from audit_log import record_admin_action
 from auth import require_admin
@@ -26,6 +27,8 @@ def _plain(d: dict) -> dict:
         "can_undo": bool(d.get("undo")) and not d.get("undone_at"),
         "undone_at": d["undone_at"].isoformat() if d.get("undone_at") else None, "undone_by": d.get("undone_by"),
         "outcome": d.get("outcome"),
+        "response": d.get("response"), "responded_by": d.get("responded_by"),
+        "can_respond": d.get("level", 1) == 3 and not d.get("response") and "No action" not in d["did"],
     }
 
 
@@ -41,6 +44,8 @@ async def system_log(days: int = 30, _: dict = Depends(require_admin)):
         signals = brain.compare(latest[0], history)
     return {
         "settings": await brain.get_settings(),
+        "ai": {**(await ai_ops.month_to_date()), "model": ai_ops.MODEL,
+               "recent": [{**u, "at": u["at"].isoformat()} async for u in db.ai_usage.find({}, {"_id": 0}).sort("at", -1).limit(15)]},
         "latest_day": latest[0] if latest else None,
         "signals": signals,
         "recent_days": list(reversed(latest[:14])),
@@ -70,7 +75,27 @@ async def undo(decision_id: str, admin: dict = Depends(require_admin)):
     return result
 
 
+class Response(BaseModel):
+    answer: str     # "agreed" or "not now"
+
+
+@router.post("/{decision_id}/respond")
+async def respond(decision_id: str, payload: Response, admin: dict = Depends(require_admin)):
+    """Record the owner's answer to a recommendation. Nothing is changed by this — it is so the system
+    stops repeating a suggestion that has been dealt with, and so the log shows what was decided."""
+    if payload.answer not in ("agreed", "not now"):
+        raise HTTPException(status_code=400, detail="Answer must be 'agreed' or 'not now'.")
+    me = await db.users.find_one({"id": admin["sub"]}, {"_id": 0, "name": 1})
+    done = await db.decision_log.update_one({"id": decision_id, "level": 3, "response": None},
+                                            {"$set": {"response": payload.answer, "responded_by": (me or {}).get("name") or "Admin",
+                                                      "responded_at": datetime.utcnow()}})
+    if not done.modified_count:
+        raise HTTPException(status_code=400, detail="This entry is not waiting for an answer.")
+    return {"ok": True}
+
+
 class SettingsUpdate(BaseModel):
+    ai_investigation: Optional[bool] = None
     menu_decisions: Optional[bool] = None
     owner_alerts: Optional[bool] = None
     customer_messages: Optional[bool] = None

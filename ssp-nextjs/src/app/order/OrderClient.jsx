@@ -1,4 +1,5 @@
 'use client';
+import { byMenuOrder } from '@/lib/menuOrder';
 import { useState, useEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -259,7 +260,7 @@ export default function OrderClient({ initialItems = [] }) {
         (!vegOnly || d.is_veg) &&
         (!q || d.name.toLowerCase().includes(q) || (d.description || '').toLowerCase().includes(q))
       )
-      .sort((a, b) => a.name.localeCompare(b.name)),
+      .sort(byMenuOrder),
   })).filter(sec => sec.items.length > 0), [dishes, vegOnly, q]);
   // Until the full list has been drawn, show the first rows only (a search or
   // the veg filter always shows every match)

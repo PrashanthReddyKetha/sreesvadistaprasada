@@ -142,13 +142,15 @@ async def email_opted_out(email: str) -> bool:
     return bool(await db.email_optouts.find_one({"email": (email or "").strip().lower()}, {"_id": 1}))
 
 
-async def log_message(channel: str, to: str, kind: str, status: str, subject: str = "", ref: str = "") -> None:
+async def log_message(channel: str, to: str, kind: str, status: str, subject: str = "", ref: str = "",
+                      provider_id: str = "") -> None:
     """One line per message sent or skipped, on every channel. Never raises."""
     try:
         from database import db
         await db.message_log.insert_one({
             "at": datetime.utcnow(), "channel": channel, "to": (to or "").strip().lower(), "kind": kind,
             "status": status, "subject": (subject or "")[:160], "ref": ref,
+            "provider_id": provider_id or None, "delivered_at": None, "opened_at": None, "clicked_at": None,
         })
     except Exception as e:  # the log must never cost the customer their message
         logger.error("message_log insert failed: %s", e)
@@ -196,7 +198,11 @@ async def _send_email_now(to: str, subject: str, html: str, kind: str = "service
                 await log_message("email", to, kind, f"failed: provider {r.status_code}", subject)
             else:
                 logger.info("Email sent to=%s subject=%r", mask(to), subject)
-                await log_message("email", to, kind, "sent", subject)
+                try:
+                    provider_id = r.json().get("id") or ""
+                except Exception:
+                    provider_id = ""
+                await log_message("email", to, kind, "sent", subject, provider_id=provider_id)
     except Exception as e:
         logger.exception("Email send failed to=%s: %s", mask(to), e)
         await log_message("email", to, kind, "failed: could not reach provider", subject)

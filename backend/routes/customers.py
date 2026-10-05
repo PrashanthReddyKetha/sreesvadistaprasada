@@ -6,6 +6,7 @@ same email, or who later opens an account, is one customer.
 """
 import re
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from typing import Optional
 
 from fastapi import APIRouter, Depends
@@ -15,6 +16,7 @@ from database import db
 
 router = APIRouter(prefix="/admin/customers", tags=["Admin Customers"])
 
+LONDON = ZoneInfo("Europe/London")
 LAPSED_AFTER_DAYS = 60     # no order for this long, and no running plan
 REGULAR_FROM_ORDERS = 5
 AT_RISK_AFTER_DAYS = 30    # a returning customer who has gone quiet, but is not yet lapsed
@@ -76,6 +78,16 @@ def _return_risk(c: dict, now: datetime) -> Optional[str]:
         ratio = quiet / usual
         return "high" if ratio > 2 else "medium" if ratio > 1.2 else "low"
     return "high" if quiet > 45 else "medium" if quiet > 21 else "low"
+
+
+def _expected_spend(c: dict) -> Optional[float]:
+    """A rough figure for the next 90 days: usual order value x orders expected at their usual pace,
+    scaled down for customers who have gone quiet. An estimate for ranking, not a forecast."""
+    if c["orders"] < 2 or not c["first_order"] or not c["last_order"]:
+        return None
+    gap_days = max(3.0, (c["last_order"] - c["first_order"]).total_seconds() / 86400 / (c["orders"] - 1))
+    keep = {"low": 0.8, "medium": 0.5, "high": 0.2}.get(c.get("return_risk"), 0.9 if c["active_plan"] else 0.5)
+    return round(min(90 / gap_days, 60) * (c["order_spend"] / c["orders"]) * keep, 2)
 
 
 def _flags(c: dict, now: datetime) -> list:
@@ -157,6 +169,8 @@ async def build_customers(now: Optional[datetime] = None) -> list:
             if c["last_order"] is None or when > c["last_order"]:
                 c["last_order"], c["last_order_number"] = when, o.get("order_number")
         touch(c, when)
+        if when:
+            c.setdefault("_hours", []).append(when.replace(tzinfo=ZoneInfo("UTC")).astimezone(LONDON).hour)
 
     today = now.strftime("%Y-%m-%d")
     subs = await db.subscriptions.find({}, {"_id": 0, "audit_trail": 0, "internal_notes": 0}).to_list(None)
@@ -201,6 +215,9 @@ async def build_customers(now: Optional[datetime] = None) -> list:
         c["return_risk"] = _return_risk(c, now)
         c["dabba_stage"] = _dabba_stage(c, today, (now + timedelta(days=EXPIRING_WITHIN_DAYS)).strftime("%Y-%m-%d"))
         c["days_since_last_order"] = (now - c["last_order"]).days if c["last_order"] else None
+        hours = c.pop("_hours", [])
+        c["usual_order_hour"] = max(set(hours), key=hours.count) if len(hours) >= 2 else None
+        c["expected_90_day_spend"] = _expected_spend(c)
         for f in ("joined", "first_order", "last_order", "last_activity", "last_plan_started"):
             c[f] = c[f].isoformat() if c[f] else None
         out.append(c)
@@ -441,8 +458,69 @@ async def customer_insights(_: dict = Depends(require_admin)):
         forecast.append({"week_starting": start.isoformat(), "plans_ending": ending,
                          "expected_renewals": round(ending * dabba["renewal_rate"], 1) if dabba["renewal_rate"] is not None else None})
 
+    # When orders come in, what sells together, where from, and what loyalty costs and brings
+    days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    by_weekday, by_hour, pairs, sold, postcodes = [0] * 7, [0] * 24, {}, {}, {}
+    daypart = {"Morning (before 11)": {}, "Midday (11 to 3)": {}, "Evening (after 3)": {}}
+    loyalty = {"free_dishes_given": 0, "value_given": 0.0, "member_orders": 0, "member_income": 0.0}
+    member_ids = {u["id"] async for u in db.users.find({"loyalty_order_count": {"$gt": 0}}, {"_id": 0, "id": 1})}
+    async for o in db.orders.find({"status": {"$ne": "cancelled"}}, {"_id": 0}):
+        if o.get("user_id") in admin_ids:
+            continue
+        when = _as_dt(o.get("created_at"))
+        names = [i.get("name") for i in o.get("items") or [] if i.get("name")]
+        if when:
+            local = when.replace(tzinfo=ZoneInfo("UTC")).astimezone(LONDON)
+            by_weekday[local.weekday()] += 1
+            by_hour[local.hour] += 1
+            part = "Morning (before 11)" if local.hour < 11 else "Midday (11 to 3)" if local.hour < 15 else "Evening (after 3)"
+            for i in o.get("items") or []:
+                if i.get("name"):
+                    daypart[part][i["name"]] = daypart[part].get(i["name"], 0) + int(i.get("quantity") or 1)
+        for i in o.get("items") or []:
+            if i.get("name"):
+                sold[i["name"]] = sold.get(i["name"], 0) + int(i.get("quantity") or 1)
+        for a in sorted(set(names)):
+            for b in sorted(set(names)):
+                if a < b:
+                    pairs[(a, b)] = pairs.get((a, b), 0) + 1
+        pc = ((o.get("delivery_address") or {}).get("postcode") or "").upper().replace(" ", "")
+        if len(pc) >= 5:
+            district = pc[:-3]
+            p = postcodes.setdefault(district, {"district": district, "orders": 0, "income": 0.0})
+            p["orders"] += 1
+            p["income"] = round(p["income"] + float(o.get("total") or 0), 2)
+        if o.get("is_loyalty_redemption"):
+            loyalty["free_dishes_given"] += 1
+            loyalty["value_given"] += float(o.get("free_item_discount") or 0)
+        if o.get("user_id") in member_ids:
+            loyalty["member_orders"] += 1
+            loyalty["member_income"] += float(o.get("total") or 0)
+    loyalty["value_given"], loyalty["member_income"] = round(loyalty["value_given"], 2), round(loyalty["member_income"], 2)
+    loyalty["income_per_pound_given"] = round(loyalty["member_income"] / loyalty["value_given"], 1) if loyalty["value_given"] else None
+    week_ahead = (now + timedelta(days=7 - now.weekday())).date()
+    next_week_meals = 0
+    async for sub in db.subscriptions.find({"status": "active", "end_date": {"$gte": week_ahead.isoformat()}}, {"_id": 0, "end_date": 1, "start_date": 1}):
+        if (sub.get("start_date") or "") > (week_ahead + timedelta(days=4)).isoformat():
+            continue
+        try:
+            last = datetime.strptime(sub["end_date"], "%Y-%m-%d").date()
+        except (ValueError, KeyError):
+            continue
+        next_week_meals += max(0, min(5, (last - week_ahead).days + 1))
+
     order_people = set(by_person)
     return {
+        "sells_together": [{"dishes": f"{a} + {b}", "baskets": n} for (a, b), n in sorted(pairs.items(), key=lambda kv: -kv[1])[:12] if n >= 2],
+        "time_patterns": {
+            "by_weekday": [{"day": days_of_week[i], "orders": n} for i, n in enumerate(by_weekday)],
+            "by_hour": [{"hour": h, "orders": n} for h, n in enumerate(by_hour)],
+            "top_by_time_of_day": [{"when": part, "dishes": [f"{n} ({q})" for n, q in sorted(d.items(), key=lambda kv: -kv[1])[:5]]}
+                                   for part, d in daypart.items()],
+        },
+        "postcodes": sorted(postcodes.values(), key=lambda p: -p["orders"])[:15],
+        "loyalty": loyalty,
+        "next_week_meals": {"week_starting": week_ahead.isoformat(), "meals": next_week_meals},
         "coupons": sorted(coupons.values(), key=lambda k: -k["orders"]),
         "dabba_forecast": forecast,
         "orders": {

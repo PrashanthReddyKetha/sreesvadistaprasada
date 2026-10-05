@@ -224,6 +224,8 @@ class MenuItem(MenuItemCreate):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     # Computed on read: sold_out_until covers today (London)
     sold_out_today: bool = False
+    # Set by the nightly review from sales: 1 = best seller in its section. None = no ranking yet (alphabetical).
+    sort_rank: Optional[int] = None
 
 
 # --- Reviews ---

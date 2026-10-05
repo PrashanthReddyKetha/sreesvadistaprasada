@@ -3,10 +3,15 @@
 GET/POST /api/unsubscribe      public; the link in every marketing email
 GET      /api/admin/messages   admin; the send log across email, text and WhatsApp
 """
+import base64
+import hashlib
 import hmac
+import json
+import os
+import time
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from auth import require_admin
@@ -50,6 +55,46 @@ async def unsubscribe_one_click(e: str = "", t: str = ""):
     return {"ok": await _unsubscribe(e, t)}
 
 
+def _resend_signature_ok(secret: str, msg_id: str, timestamp: str, body: bytes, header: str) -> bool:
+    """Resend signs webhooks the Svix way: HMAC-SHA256 over "id.timestamp.body" with the base64 secret after "whsec_"."""
+    try:
+        if abs(time.time() - int(timestamp)) > 300:
+            return False
+        key = base64.b64decode(secret.split("_", 1)[1] if secret.startswith("whsec_") else secret)
+    except (ValueError, IndexError):
+        return False
+    expected = base64.b64encode(hmac.new(key, f"{msg_id}.{timestamp}.".encode() + body, hashlib.sha256).digest()).decode()
+    return any(hmac.compare_digest(expected, part.split(",", 1)[-1]) for part in (header or "").split())
+
+
+RESEND_EVENTS = {"email.delivered": "delivered_at", "email.opened": "opened_at", "email.clicked": "clicked_at"}
+
+
+@router.post("/webhooks/resend")
+async def resend_webhook(request: Request):
+    """Delivery, open and click reports from the email provider. Inert until RESEND_WEBHOOK_SECRET is set."""
+    secret = os.environ.get("RESEND_WEBHOOK_SECRET")
+    if not secret:
+        raise HTTPException(status_code=503, detail="Email reports are not set up.")
+    body = await request.body()
+    h = request.headers
+    if not _resend_signature_ok(secret, h.get("svix-id", ""), h.get("svix-timestamp", ""), body, h.get("svix-signature", "")):
+        raise HTTPException(status_code=401, detail="Signature did not match.")
+    event = json.loads(body)
+    kind, email_id = event.get("type"), (event.get("data") or {}).get("email_id")
+    if not email_id:
+        return {"ok": True}
+    if kind in RESEND_EVENTS:      # keep the first time each thing happened
+        await db.message_log.update_one({"provider_id": email_id, RESEND_EVENTS[kind]: None}, {"$set": {RESEND_EVENTS[kind]: datetime.utcnow()}})
+    elif kind in ("email.bounced", "email.complained"):
+        await db.message_log.update_one({"provider_id": email_id}, {"$set": {"status": "failed: " + ("bounced" if kind.endswith("bounced") else "marked as spam")}})
+        if kind == "email.complained":      # someone who reports us as spam is unsubscribed at once
+            row = await db.message_log.find_one({"provider_id": email_id}, {"_id": 0, "to": 1})
+            if row and row.get("to"):
+                await db.email_optouts.update_one({"email": row["to"]}, {"$setOnInsert": {"email": row["to"], "at": datetime.utcnow(), "source": "spam report"}}, upsert=True)
+    return {"ok": True}
+
+
 @router.get("/admin/messages")
 async def message_log(days: int = 30, limit: int = 200, _: dict = Depends(require_admin)):
     days, limit = max(1, min(days, 400)), max(1, min(limit, 500))
@@ -65,10 +110,24 @@ async def message_log(days: int = 30, limit: int = 200, _: dict = Depends(requir
         outcome = "sent" if status in ("sent", "delivered", "read", "queued") else ("skipped" if status.startswith(("skipped", "sms")) else "failed")
         key = ("whatsapp", "marketing" if m.get("event") == "sub_renewal" else "service", outcome)
         summary[key] = summary.get(key, 0) + 1
+    emails = [r for r in rows if r.get("channel") == "email" and r.get("status") == "sent"]
+    tracked = [r for r in emails if r.get("provider_id")]
+    by_subject: dict = {}
+    for r in tracked:
+        b = by_subject.setdefault(r.get("subject") or "", {"subject": r.get("subject") or "", "sent": 0, "delivered": 0, "opened": 0, "clicked": 0})
+        b["sent"] += 1
+        b["delivered"] += bool(r.get("delivered_at")); b["opened"] += bool(r.get("opened_at")); b["clicked"] += bool(r.get("clicked_at"))
     return {
+        "email_reports": {
+            "connected": bool(os.environ.get("RESEND_WEBHOOK_SECRET")),
+            "sent": len(tracked), "delivered": sum(1 for r in tracked if r.get("delivered_at")),
+            "opened": sum(1 for r in tracked if r.get("opened_at")), "clicked": sum(1 for r in tracked if r.get("clicked_at")),
+            "by_subject": sorted(by_subject.values(), key=lambda b: -b["sent"])[:20],
+        },
         "days": days,
         "summary": [{"channel": c, "kind": k, "outcome": o, "count": n} for (c, k, o), n in sorted(summary.items(), key=lambda kv: -kv[1])],
         "unsubscribed": await db.email_optouts.count_documents({}),
         "whatsapp_opted_out": await db.wa_optouts.count_documents({}),
-        "messages": [{**r, "at": r["at"].isoformat()} for r in rows[:limit]],
+        "messages": [{**r, "at": r["at"].isoformat(), **{k: (r[k].isoformat() if r.get(k) else None) for k in ("delivered_at", "opened_at", "clicked_at")}}
+                     for r in rows[:limit]],
     }

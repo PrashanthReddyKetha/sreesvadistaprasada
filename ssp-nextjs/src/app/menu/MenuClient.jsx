@@ -1,4 +1,5 @@
 'use client';
+import { byMenuOrder } from '@/lib/menuOrder';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -72,7 +73,7 @@ const Menu = ({ initialItems = [], seoLine }) => {
   }, []);
 
   const searching = searchQuery.trim().length > 0;
-  const byName = (a, b) => a.name.localeCompare(b.name);
+  const byName = byMenuOrder;
   const filtered = allDishes
     .filter(dish => !HIDDEN_CATEGORIES.has(dish.category))
     .filter(dish => !vegOnly || dish.is_veg)

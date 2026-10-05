@@ -1,4 +1,5 @@
 'use client';
+import { byMenuOrder } from '@/lib/menuOrder';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -26,8 +27,8 @@ const StreetFood = ({ initialItems = [] }) => {
   }, []);
 
   const filtered = search.trim()
-    ? [...items].sort((a, b) => a.name.localeCompare(b.name)).filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()))
-    : [...items].sort((a, b) => a.name.localeCompare(b.name));
+    ? [...items].sort(byMenuOrder).filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.description?.toLowerCase().includes(search.toLowerCase()))
+    : [...items].sort(byMenuOrder);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>

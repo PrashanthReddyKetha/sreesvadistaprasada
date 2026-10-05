@@ -17,6 +17,7 @@ const LEVEL = {
 const SWITCHES = [
   ['menu_decisions', 'Menu decisions', 'Featured dishes follow what sells; dishes with no “goes well with” get one from what is bought together.'],
   ['owner_alerts', 'Alerts to you', 'An email when visits, orders, income or failures move sharply against a normal day.'],
+  ['ai_investigation', 'Ask Claude when something is unexplained', 'When a figure falls sharply and no rule explains it, Claude is shown summary figures (never customer details) and writes what it thinks happened. At most once a day, within the monthly limit below.'],
   ['customer_messages', 'Customer messages', 'Lets the system switch on the four customer messages under Automations by itself. Off until you allow it.'],
 ];
 const show = (v, metric) => v == null ? '—' : metric === 'income' ? `£${Number(v).toFixed(2)}` : /rate|done/.test(metric) ? `${Math.round(v * 100)}%` : Math.round(v * 10) / 10;
@@ -77,6 +78,17 @@ export default function SystemLogTab() {
         <p className="text-xs text-gray-400 mt-3">It never changes prices, plan terms, refunds or the wording of your menu. Those are only ever listed below for you.</p>
       </div>
 
+      {data.ai && (
+        <div className="bg-white rounded-xl p-5" style={card}>
+          <h3 className="font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: P }}>AI use this month</h3>
+          <p className="text-sm text-gray-600">{data.ai.calls} of {data.ai.call_cap} calls · about ${Number(data.ai.cost_usd).toFixed(2)} of ${Number(data.ai.cost_cap_usd).toFixed(2)}.
+            {data.ai.calls === 0 ? ' Nothing has needed it yet.' : ''} When a limit is reached, AI calls stop until next month; the nightly checks carry on without it.</p>
+          {data.ai.recent.length > 0 && (
+            <ul className="text-xs text-gray-500 mt-2 space-y-0.5">{data.ai.recent.slice(0, 6).map((u, i) => <li key={i}>{when(u.at)} — {u.purpose} — {u.outcome} — ${Number(u.cost_usd || 0).toFixed(3)}</li>)}</ul>
+          )}
+        </div>
+      )}
+
       {data.latest_day && (
         <div className="bg-white rounded-xl overflow-hidden" style={card}>
           <h3 className="px-4 py-3 font-bold border-b" style={{ fontFamily: "'Playfair Display', serif", color: P, borderColor: '#f0ebe6' }}>
@@ -115,6 +127,15 @@ export default function SystemLogTab() {
               <p className="text-sm"><span className="text-gray-500">Decided:</span> {e.decided}</p>
               <p className="text-sm"><span className="text-gray-500">Did:</span> {e.did}</p>
               {e.outcome && <p className="text-sm mt-1"><span className="text-gray-500">Two weeks on:</span> {e.outcome}</p>}
+              {e.response && <p className="text-xs mt-1 text-gray-500">You answered: <b>{e.response}</b>{e.responded_by ? ` (${e.responded_by})` : ''}</p>}
+              {e.can_respond && (
+                <div className="mt-2 flex gap-2">
+                  <button onClick={() => act(() => api.post(`/admin/system-log/${e.id}/respond`, { answer: 'agreed' }), 'Noted: agreed.')} disabled={busy}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50" style={{ backgroundColor: '#2E7D32', color: '#fff' }}>I agree — I will deal with it</button>
+                  <button onClick={() => act(() => api.post(`/admin/system-log/${e.id}/respond`, { answer: 'not now' }), 'Noted: not now.')} disabled={busy}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border disabled:opacity-50" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}>Not now</button>
+                </div>
+              )}
               {e.can_undo && (
                 <button onClick={() => act(() => api.post(`/admin/system-log/${e.id}/undo`), 'Undone.')} disabled={busy}
                   className="mt-2 px-3 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1.5 disabled:opacity-50" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}><Undo2 size={13} /> Undo this</button>

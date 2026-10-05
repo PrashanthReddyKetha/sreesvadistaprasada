@@ -79,6 +79,8 @@ async def get_menu(
     items = await db.menu_items.find(query, {"_id": 0}).to_list(500)
     for i in items:
         i["sold_out_today"] = is_sold_out_today(i)
+    if featured:        # a dish that has sold out today drops out of the featured row until it is back
+        items = [i for i in items if not i["sold_out_today"]]
     return items
 
 
@@ -273,6 +275,8 @@ Return ONLY valid JSON with exactly these keys:
             timeout=30,
             messages=[{"role": "user", "content": prompt}]
         ))
+        from ai_ops import record_usage
+        await record_usage("dish auto-fill", "claude-haiku-4-5-20251001", message.usage.input_tokens, message.usage.output_tokens, "answered")
         raw = message.content[0].text.strip()
         # Strip markdown fences if present
         if raw.startswith("```"):
