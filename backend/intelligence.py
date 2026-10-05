@@ -38,6 +38,7 @@ ORDERING_WINDOW_DAYS = 30
 NEW_DISH_DAYS = 14                    # a new dish is shown near the top for this long, so it gets a fair chance
 RETIRE_AFTER_DAYS = 60                # on the menu this long with no sale, while its section sells, is worth a look
 SITE_CHECK_PAGES = 60
+WEEKLY_DAY = 0                        # Monday: the weekly site check and the weekly report
 SITE_URL = "https://sreesvadistaprasada.com"
 REVIEW_AFTER_DAYS = 14                # how long before asking "did that work?"
 NOT_ON_SALE = {"pickles", "podis"}    # coming soon — never featured (owner rule D-024)
@@ -550,12 +551,15 @@ async def run_review(now_local: Optional[datetime] = None) -> dict:
     facts = await things_to_know(yesterday)
     if facts:
         await log_decision("things to know", " ".join(facts), "These need a person, not a rule.", "Nothing changed. Included in your morning email." if cfg["owner_alerts"] else "Nothing changed.", level=3)
-    if (worse or facts) and cfg["owner_alerts"]:
+    acted = list(did)        # what the system changed overnight, before the email line is added
+    if (worse or facts or acted) and cfg["owner_alerts"]:
         lines = "".join(f"<li><b>{s['label']}</b>: {s['current']} yesterday, usually about {s['usual']}</li>" for s in worse)
         body = (f"<p>Compared with a normal {datetime.strptime(yesterday, '%Y-%m-%d').strftime('%A')}:</p><ul>{lines}</ul>" if worse else "")
         body += ("<p>Worth knowing:</p><ul>" + "".join(f"<li>{f}</li>" for f in facts) + "</ul>") if facts else ""
+        body += ("<p>What the system did overnight:</p><ul>" + "".join(f"<li>{a}</li>" for a in acted) + "</ul>") if acted else ""
         subject = (f"Sree Svadista — {len(worse)} figure{'s' if len(worse) != 1 else ''} moved sharply yesterday" if worse
-                   else f"Sree Svadista — {len(facts)} thing{'s' if len(facts) != 1 else ''} to know from yesterday")
+                   else f"Sree Svadista — {len(facts)} thing{'s' if len(facts) != 1 else ''} to know from yesterday" if facts
+                   else f"Sree Svadista — the system made {len(acted)} change{'s' if len(acted) != 1 else ''} overnight")
         notify_admin(subject, body + "<p>Open Admin › System log for the detail.</p>")
         did.append(f"Emailed you: {len(worse)} figure(s) moved sharply, {len(facts)} thing(s) to know")
 
@@ -567,7 +571,7 @@ async def run_review(now_local: Optional[datetime] = None) -> dict:
 
     # Once a week, read the public pages the way a visitor's browser does
     checked_recently = await db.decision_log.find_one({"kind": "weekly site check", "at": {"$gte": datetime.utcnow() - timedelta(days=6)}}, {"_id": 1})
-    if now_local.weekday() == 0 and not checked_recently:
+    if now_local.weekday() == WEEKLY_DAY and not checked_recently:
         problems = await site_check()
         if problems is not None:
             await log_decision("weekly site check", f"Read {problems['pages']} public pages." + (" Found: " + "; ".join(problems["found"][:8]) + "." if problems["found"] else " Every page loaded with a title and one main heading."),
@@ -599,6 +603,12 @@ async def run_review(now_local: Optional[datetime] = None) -> dict:
     noticed = (", ".join(f"{s['label']} {'up' if s['change'] > 0 else 'down'} {abs(round(s['change'] * 100))}%" for s in material)
                if material else "No figure moved materially against its usual level." if history else
                "Not enough history yet to say what is normal.")
+    if now_local.weekday() == WEEKLY_DAY and cfg["owner_alerts"]:
+        sent_this_week = await db.decision_log.find_one({"kind": "weekly report", "at": {"$gte": datetime.utcnow() - timedelta(days=6)}}, {"_id": 1})
+        if not sent_this_week:
+            report = await weekly_report(now_local)
+            await log_decision("weekly report", f"It is Monday. {report['actions']} action(s) by the system last week, {report['outcomes']} outcome(s) judged, {report['waiting']} item(s) waiting for you.",
+                               "Send the owner the week's summary.", f'Emailed: "{report["subject"]}"')
     summary = await log_decision(
         "nightly review", f"Figures for {yesterday}: {today['visits']} visits, {today['orders']} orders, £{today['income']:.2f}. {noticed}",
         "No material change — nothing needed deciding." if not (did or recs) else "Acted where the rules allow; the rest is listed for you.",
@@ -607,6 +617,66 @@ async def run_review(now_local: Optional[datetime] = None) -> dict:
                                                                     "last_run_at": datetime.utcnow().isoformat()}}, upsert=True)
     return {"day": yesterday, "dish_order_changes": o["changes"] if cfg["menu_decisions"] else 0, "metrics": {k: v for k, v in today.items() if k != "measured_at"}, "signals": signals,
             "did": did, "skipped": skipped, "recommendations": len(recs), "outcomes_reviewed": reviewed, "log_id": summary["id"]}
+
+
+# ── Emailed reports ─────────────────────────────────────────────────────────
+
+def _money(v) -> str:
+    return f"£{float(v or 0):,.2f}"
+
+
+async def weekly_report(now_local: datetime) -> Optional[dict]:
+    """Every Monday: the week's figures against the week before, what the system did and why,
+    what came of earlier actions, and what is waiting for the owner."""
+    def span(start_back: int, end_back: int) -> dict:
+        return {"$gte": (now_local - timedelta(days=start_back)).strftime("%Y-%m-%d"), "$lt": (now_local - timedelta(days=end_back)).strftime("%Y-%m-%d")}
+
+    async def totals(start_back: int, end_back: int) -> dict:
+        rows = await db.daily_metrics.find({"day": span(start_back, end_back)}, {"_id": 0}).to_list(None)
+        return {k: round(sum(float(r.get(k) or 0) for r in rows), 2) for k in ("visits", "orders", "income", "failures", "new_accounts", "unsubscribes")}
+
+    this, last = await totals(7, 0), await totals(14, 7)
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    entries = await db.decision_log.find({"at": {"$gte": week_ago}, "kind": {"$ne": "nightly review"}}, {"_id": 0}).sort("at", 1).to_list(None)
+    actions = [e for e in entries if e.get("level", 1) < 3]
+    waiting = await db.decision_log.find({"level": 3, "response": None, "at": {"$gte": datetime.utcnow() - timedelta(days=30)},
+                                          "did": {"$not": {"$regex": "No action"}}}, {"_id": 0}).sort("at", -1).to_list(15)
+    outcomes = await db.decision_log.find({"outcome_at": {"$gte": week_ago}}, {"_id": 0}).to_list(None)
+    sends = await db.automation_sends.count_documents({"at": {"$gte": week_ago}})
+    from ai_ops import month_to_date
+    ai = await month_to_date()
+
+    def change(key: str) -> str:
+        a, b = this[key], last[key]
+        if not b:
+            return "" if not a else " (nothing the week before)"
+        pct = round((a - b) / b * 100)
+        return f" ({'+' if pct >= 0 else ''}{pct}% on the week before)"
+
+    def bullet(items: list, empty: str) -> str:
+        return ("<ul>" + "".join(f"<li>{i}</li>" for i in items) + "</ul>") if items else f"<p>{empty}</p>"
+
+    html = (
+        f"<p>Week to {(now_local - timedelta(days=1)).strftime('%A %d %B')}.</p>"
+        "<h3>The week in figures</h3><ul>"
+        f"<li><b>Visits:</b> {int(this['visits'])}{change('visits')}</li>"
+        f"<li><b>Orders:</b> {int(this['orders'])}{change('orders')}</li>"
+        f"<li><b>Order income:</b> {_money(this['income'])}{change('income')}</li>"
+        f"<li><b>New accounts:</b> {int(this['new_accounts'])} · <b>Failed payments or orders:</b> {int(this['failures'])} · <b>Unsubscribes:</b> {int(this['unsubscribes'])}</li>"
+        f"<li><b>Automatic customer messages sent:</b> {sends}</li></ul>"
+        "<h3>What the system did, and why</h3>"
+        + bullet([f"<b>{e['kind'].capitalize()}</b> — {e['did']} <i>Why: {e['noticed']}</i>" for e in actions],
+                 "Nothing needed changing this week. It measured every night and found no reason to act.")
+        + "<h3>What came of earlier actions</h3>"
+        + bullet([f"<b>{e['kind'].capitalize()}</b> — {e['outcome']}" for e in outcomes], "No action was old enough to be judged this week (each is checked after two weeks).")
+        + "<h3>Waiting for you</h3>"
+        + bullet([f"<b>{e['kind'].capitalize()}</b> — {e['noticed']} {e['decided']}" for e in waiting], "Nothing is waiting for an answer.")
+        + f"<p style='color:#777'>AI use this month: {ai['calls']} of {ai['call_cap']} calls, about ${ai['cost_usd']:.2f} of ${ai['cost_cap_usd']:.2f}. "
+          "Everything above is in Admin › System log, where each automatic action can be undone.</p>"
+    )
+    subject = f"Sree Svadista — your week: {int(this['orders'])} orders, {_money(this['income'])}; {len(actions)} action{'s' if len(actions) != 1 else ''} by the system"
+    notify_admin(subject, html)
+    return {"subject": subject, "actions": len(actions), "waiting": len(waiting), "outcomes": len(outcomes)}
 
 
 async def intelligence_loop():

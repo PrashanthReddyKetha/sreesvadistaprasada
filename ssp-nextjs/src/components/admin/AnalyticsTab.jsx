@@ -152,6 +152,59 @@ export default function AnalyticsTab() {
         head={['Source', 'Visits', 'Added to basket', 'Orders', 'Income']}
         rows={data.sources.map(s => [s.source, s.visits, s.added_to_basket, s.orders, fmt(s.income)])} />
 
+      {(() => {
+        const funnelRows = (list) => (list || []).map(f => [f.name, f.visits, f.view_item, f.add_to_cart, f.begin_checkout, f.payment_started, f.purchase, pct(f.purchase, f.visits)]);
+        const head = (first) => [first, 'Visits', 'Opened a dish', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered', 'Visits that ordered'];
+        const stopTop = Math.max(1, ...(data.stopped_at || []).map(x => x.visits));
+        const subTop = (data.subscription_funnel || [])[0]?.visits || 0;
+        return (
+          <>
+            <Table title="From the page they landed on to an order" empty="Nothing recorded yet." head={head('Landed on')} rows={funnelRows(data.landing_funnels)} />
+            <div className="grid lg:grid-cols-2 gap-5">
+              <Table title="Phone or computer" empty="Nothing recorded yet." head={head('Device')} rows={funnelRows(data.device_funnels)} />
+              <Table title="First visit or returning" empty="Nothing recorded yet." head={head('Visitor')} rows={funnelRows(data.visitor_funnels)} />
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-5">
+              <div className="bg-white rounded-xl p-4" style={card}>
+                <h3 className="font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Where visits that did not order stopped</h3>
+                <p className="text-xs text-gray-500 mb-3">The furthest each visit got.</p>
+                {(data.stopped_at || []).map(x => (
+                  <div key={x.step} className="mb-2">
+                    <div className="flex justify-between text-sm"><span>{x.step}, then left</span><span className="text-gray-600">{x.visits}</span></div>
+                    <div className="h-2 rounded-full mt-1" style={{ backgroundColor: '#f3ece6' }}><div className="h-2 rounded-full" style={{ width: `${(x.visits / stopTop) * 100}%`, backgroundColor: P }} /></div>
+                  </div>
+                ))}
+                <p className="text-sm text-gray-600 mt-3">
+                  <b>{data.abandoned?.visits || 0}</b> visit{(data.abandoned?.visits || 0) === 1 ? '' : 's'} left with food in the basket, worth about <b>{fmt(data.abandoned?.basket_value)}</b>.
+                  {data.minutes_to_order?.median != null && <> Those who ordered took a typical <b>{data.minutes_to_order.median} minutes</b> from arriving to ordering.</>}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-4" style={card}>
+                <h3 className="font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Dabba Wala: step by step</h3>
+                <p className="text-xs text-gray-500 mb-3">Visits that reached each step of choosing and buying a plan.</p>
+                {subTop === 0 ? <p className="text-sm text-gray-400">No one has started the plan steps in this period.</p> : data.subscription_funnel.map(x => (
+                  <div key={x.step} className="mb-2">
+                    <div className="flex justify-between text-sm"><span>{x.step}</span><span className="text-gray-600">{x.visits} <span className="text-xs text-gray-400">({pct(x.visits, subTop)})</span></span></div>
+                    <div className="h-2 rounded-full mt-1" style={{ backgroundColor: '#f3ece6' }}><div className="h-2 rounded-full" style={{ width: `${Math.max(2, (x.visits / subTop) * 100)}%`, backgroundColor: '#2E7D32' }} /></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-5">
+              <Table title="Last thing done before leaving the checkout" empty="No one has left the checkout in this period." head={['Last action', 'Visits']}
+                rows={(data.last_action_before_leaving_checkout || []).map(d => [d.name, d.count])} />
+              <Table title="Last thing done before leaving with a basket" empty="No one has left with a basket in this period." head={['Last action', 'Visits']}
+                rows={(data.last_action_before_leaving_with_a_basket || []).map(d => [d.name, d.count])} />
+            </div>
+
+            <Table title="Dishes taken back out of the basket" empty="Nothing has been removed from a basket in this period." head={['Dish', 'Removed', 'Added', 'Removed for every 10 added']}
+              rows={(data.removals || []).map(d => [d.name, d.removed, d.added, d.removal_rate == null ? '—' : Math.round(d.removal_rate * 10)])} />
+          </>
+        );
+      })()}
+
       <div className="grid lg:grid-cols-2 gap-5">
         <Table title="Checkout, step by step" empty="No one has reached checkout in this period." head={['Step', 'Visits']}
           rows={(data.checkout || []).filter(c => c.visits > 0 || c.step !== 'Payment or order failed').map(c => [c.step, c.visits])} />

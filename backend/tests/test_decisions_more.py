@@ -220,3 +220,81 @@ def test_email_reports_need_a_valid_signature_and_update_the_send_log(client, db
     assert run(db.email_optouts.find_one({"email": "a@example.com"}))["source"] == "spam report"
     report = client.get("/api/admin/messages", headers=ADMIN()).json()["email_reports"]
     assert report["connected"] is True and report["by_subject"] == []                  # the bounced/complained one is no longer "sent"
+
+
+# ── Journey reports ───────────────────────────────────────────────────────────
+
+def test_journey_reports_landing_funnels_drop_off_removals_and_dabba_steps(client):
+    def send(visit, steps, landing="/", device="phone", visitor=None):
+        events = []
+        for name, extra in steps:
+            events.append({"name": name, "path": extra.pop("path", landing), **extra})
+        client.post("/api/events", json={"visit_id": visit, "visitor_id": visitor, "device": device,
+                                         "attribution": {"landing": landing}, "events": events})
+    dosa = {"items": [{"id": "m1", "name": "Masala Dosa", "quantity": 1}]}
+    # lands on home, goes all the way
+    send("visit-home0001", [("page_view", {}), ("view_item", dict(dosa)), ("add_to_cart", {**dosa, "props": {"value": 6.99}}),
+                            ("begin_checkout", {}), ("payment_started", {}), ("purchase", {**dosa, "props": {"value": 16.0}})], visitor="visitor-aaaa1111")
+    # lands on home, adds then removes, leaves at the basket
+    send("visit-home0002", [("page_view", {}), ("add_to_cart", {**dosa, "props": {"value": 6.99}}), ("remove_from_cart", {**dosa, "props": {"value": 6.99}}),
+                            ("click", {"props": {"label": "Close basket"}, "path": "/order"})], device="desktop")
+    # lands on a dish page from search, reaches checkout, leaves after a refused coupon
+    send("visit-dish0001", [("page_view", {}), ("add_to_cart", {**dosa, "props": {"value": 6.99}}), ("begin_checkout", {}),
+                            ("coupon_failed", {"props": {"reason": "This code has expired"}, "path": "/checkout"})], landing="/breakfast/dosas/masala-dosa-2-pcs")
+    # Dabba Wala wizard: two start, one finishes
+    send("visit-plan0001", [("begin_subscription", {}), ("subscription_step_view", {"props": {"step_number": 1, "step_name": "Choose plan"}}),
+                            ("subscription_step_view", {"props": {"step_number": 2, "step_name": "Your details"}}), ("select_subscription_plan", {}),
+                            ("plan_priced", {}), ("subscription_purchase", {})], landing="/subscriptions")
+    send("visit-plan0002", [("begin_subscription", {}), ("subscription_step_view", {"props": {"step_number": 1, "step_name": "Choose plan"}})], landing="/subscriptions")
+
+    r = client.get("/api/admin/analytics?days=7", headers=ADMIN()).json()
+    home = next(f for f in r["landing_funnels"] if f["name"] == "/")
+    assert (home["visits"], home["add_to_cart"], home["begin_checkout"], home["payment_started"], home["purchase"], home["order_rate"]) == (2, 2, 1, 1, 1, 0.5)
+    dishpage = next(f for f in r["landing_funnels"] if f["name"].startswith("/breakfast/dosas/"))
+    assert (dishpage["begin_checkout"], dishpage["purchase"]) == (1, 0)
+    assert {f["name"]: f["visits"] for f in r["device_funnels"]} == {"phone": 4, "desktop": 1}
+    assert {f["name"] for f in r["visitor_funnels"]} == {"First visit", "Cookies not accepted"}
+    stopped = {s["step"]: s["visits"] for s in r["stopped_at"]}
+    assert stopped["Added to basket"] == 1 and stopped["Started checkout"] == 1 and stopped["Arrived"] == 2
+    assert r["last_action_before_leaving_checkout"] == [{"name": "coupon failed: This code has expired on /checkout", "count": 1}]
+    assert r["last_action_before_leaving_with_a_basket"][0]["name"] == "click: Close basket on /order"
+    assert r["abandoned"] == {"visits": 2, "basket_value": 6.99}                # one basket was emptied again; one left with a dosa in it
+    assert r["removals"] == [{"name": "Masala Dosa", "removed": 1, "added": 3, "removal_rate": 0.33}]
+    assert r["minutes_to_order"]["orders_measured"] == 1
+    steps = {s["step"]: s["visits"] for s in r["subscription_funnel"]}
+    assert steps == {"Opened the plan page": 2, "1. Choose plan": 2, "2. Your details": 1, "Chose a plan": 1,
+                     "Saw the price for their postcode": 1, "Bought a plan": 1}
+
+
+# ── Emailed reports ───────────────────────────────────────────────────────────
+
+def test_weekly_report_is_emailed_once_on_the_weekly_day_with_actions_and_what_is_waiting(db, monkeypatch):
+    mails = []
+    monkeypatch.setattr(brain, "notify_admin", lambda subject, html: mails.append((subject, html)))
+    monkeypatch.setattr(brain, "WEEKLY_DAY", datetime.now(LONDON).weekday())
+    def day(n):
+        return (datetime.now(LONDON) - timedelta(days=n)).strftime("%Y-%m-%d")
+    for n in range(1, 15):
+        run(db.daily_metrics.insert_one({"day": day(n), "visits": 50 if n <= 7 else 40, "orders": 4 if n <= 7 else 2, "income": 80.0 if n <= 7 else 40.0,
+                                         "failures": 0, "new_accounts": 1, "unsubscribes": 0}))
+    run(brain.log_decision("featured dishes", "64 portions sold.", "Feature what sells.", "Now featured: Masala Dosa."))
+    run(brain.log_decision("menu gap", "People searched for filter coffee.", "Worth considering.", "Nothing changed — this one is for you to decide.", level=3))
+    run(db.decision_log.insert_one({"id": "old", "at": NOW - timedelta(days=16), "kind": "dish order", "level": 1, "noticed": "n", "decided": "d", "did": "x",
+                                    "outcome": "Orders a day were 1.0 before and 2.0 after — up.", "outcome_at": NOW - timedelta(days=1), "response": None}))
+    run(brain.run_review()); run(brain.run_review())
+    weekly = [m for m in mails if "your week" in m[0]]
+    assert len(weekly) == 1                                               # once, not on every run
+    subject, html = weekly[0]
+    assert "1 action by the system" in subject
+    for text in ("Now featured: Masala Dosa.", "Why: 64 portions sold.", "filter coffee", "Orders a day were 1.0 before and 2.0 after", "+71% on the week before", "AI use this month"):
+        assert text in html, text
+    assert run(db.decision_log.count_documents({"kind": "weekly report"})) == 1
+
+
+def test_morning_email_says_what_the_system_changed_overnight(db, monkeypatch):
+    mails = []
+    monkeypatch.setattr(brain, "notify_admin", lambda subject, html: mails.append((subject, html)))
+    dish(db, 1, featured=True); dish(db, 2)
+    order(db, 1, [(2, 40)])
+    run(brain.run_review())
+    assert len(mails) == 1 and "change" in mails[0][0] and "Featured dishes: updated" in mails[0][1]

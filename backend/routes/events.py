@@ -175,6 +175,90 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         dev = v["first"].get("device") or "unknown"
         devices[dev] = devices.get(dev, 0) + 1
 
+    # ── Journeys: each visit's events in order ───────────────────────────────
+    STEPS = [("page_view", "Arrived"), ("view_item", "Opened a dish"), ("add_to_cart", "Added to basket"),
+             ("begin_checkout", "Started checkout"), ("payment_started", "Started paying"), ("purchase", "Ordered")]
+    ordered_events: dict = {}
+    for e in sorted(events, key=lambda e: e["at"]):
+        ordered_events.setdefault(e["visit_id"], []).append(e)
+
+    def funnel_row(label: str, group: list) -> dict:
+        row = {"name": label, "visits": len(group)}
+        for name, _ in STEPS[1:]:
+            row[name] = sum(1 for v in group if name in visits[v]["names"])
+        row["order_rate"] = round(row["purchase"] / len(group), 3) if group else 0
+        return row
+
+    by_landing, by_device, by_kind = {}, {}, {"First visit": [], "Returning visitor": [], "Cookies not accepted": []}
+    for vid, v in visits.items():
+        first = v["first"]
+        by_landing.setdefault(first.get("landing") or first.get("path") or "/", []).append(vid)
+        by_device.setdefault(first.get("device") or "unknown", []).append(vid)
+    seen_before = set()
+    for vid, evs in sorted(ordered_events.items(), key=lambda kv: kv[1][0]["at"]):
+        visitor = evs[0].get("visitor_id")
+        if not visitor:
+            by_kind["Cookies not accepted"].append(vid)
+        else:
+            by_kind["Returning visitor" if visitor in seen_before else "First visit"].append(vid)
+            seen_before.add(visitor)
+    landing_funnels = [funnel_row(path, group) for path, group in sorted(by_landing.items(), key=lambda kv: -len(kv[1]))[:12]]
+    device_funnels = [funnel_row(d, group) for d, group in sorted(by_device.items(), key=lambda kv: -len(kv[1]))]
+    visitor_funnels = [funnel_row(k, group) for k, group in by_kind.items() if group]
+
+    # Where visits that did not order stopped: the furthest step reached, and the last thing done at the two costly stages
+    furthest, last_at_checkout, last_at_basket = {}, {}, {}
+    abandoned_baskets, abandoned_value, minutes_to_order = 0, 0.0, []
+    for vid, evs in ordered_events.items():
+        names = visits[vid]["names"]
+        if "purchase" in names:
+            bought_at = next(e["at"] for e in evs if e["name"] == "purchase")
+            minutes_to_order.append((bought_at - evs[0]["at"]).total_seconds() / 60)
+            continue
+        reached = next(label for name, label in reversed(STEPS) if name in names or name == "page_view")
+        furthest[reached] = furthest.get(reached, 0) + 1
+        meaningful = [e for e in evs if e["name"] not in ("page_leave", "scroll_depth")]
+        last = meaningful[-1] if meaningful else evs[-1]
+        what = (last.get("props") or {}).get("label") or (last.get("props") or {}).get("reason") or ""
+        last_text = f'{last["name"].replace("_", " ")}{": " + str(what) if what else ""} on {last["path"]}'
+        if "begin_checkout" in names:
+            last_at_checkout[last_text] = last_at_checkout.get(last_text, 0) + 1
+        elif "add_to_cart" in names:
+            last_at_basket[last_text] = last_at_basket.get(last_text, 0) + 1
+            abandoned_baskets += 1
+            abandoned_value += sum(float((e.get("props") or {}).get("value") or 0) for e in evs if e["name"] == "add_to_cart") \
+                - sum(float((e.get("props") or {}).get("value") or 0) for e in evs if e["name"] == "remove_from_cart")
+        if "begin_checkout" in names:
+            abandoned_baskets += 1
+            abandoned_value += sum(float((e.get("props") or {}).get("value") or 0) for e in evs if e["name"] == "add_to_cart") \
+                - sum(float((e.get("props") or {}).get("value") or 0) for e in evs if e["name"] == "remove_from_cart")
+    minutes_to_order.sort()
+
+    # Dishes taken back out of the basket
+    removed: dict = {}
+    for e in events:
+        if e["name"] == "remove_from_cart":
+            for i in e.get("items") or []:
+                if i.get("name"):
+                    removed[i["name"]] = removed.get(i["name"], 0) + (i.get("quantity") or 1)
+    removals = [{"name": n, "removed": q, "added": added.get(n, 0), "removal_rate": round(q / added[n], 2) if added.get(n) else None}
+                for n, q in sorted(removed.items(), key=lambda kv: -kv[1])[:15]]
+
+    # Dabba Wala: each step of the plan wizard
+    sub_visits = [vid for vid, v in visits.items() if v["names"] & {"begin_subscription", "subscription_step_view"}]
+    step_reached: dict = {}
+    for vid in sub_visits:
+        for e in ordered_events[vid]:
+            if e["name"] == "subscription_step_view":
+                p = e.get("props") or {}
+                key = (int(p.get("step_number") or 0), str(p.get("step_name") or f"Step {p.get('step_number')}"))
+                step_reached.setdefault(key, set()).add(vid)
+    subscription_funnel = [{"step": "Opened the plan page", "visits": len(sub_visits)}]
+    subscription_funnel += [{"step": f"{n}. {label}", "visits": len(vs)} for (n, label), vs in sorted(step_reached.items())]
+    for name, label in (("select_subscription_plan", "Chose a plan"), ("plan_priced", "Saw the price for their postcode"),
+                        ("subscription_purchase", "Bought a plan")):
+        subscription_funnel.append({"step": label, "visits": sum(1 for vid in sub_visits if name in visits[vid]["names"])})
+
     def top(d, n=15):
         return [{"name": k, "count": c} for k, c in sorted(d.items(), key=lambda kv: -kv[1])[:n]]
 
@@ -231,6 +315,17 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         "most_added_dishes": top(added),
         "event_counts": counts,
         "exit_pages": top(exits, 12),
+        "landing_funnels": landing_funnels,
+        "device_funnels": device_funnels,
+        "visitor_funnels": visitor_funnels,
+        "stopped_at": [{"step": label, "visits": furthest.get(label, 0)} for _, label in STEPS[:-1]],
+        "last_action_before_leaving_checkout": top(last_at_checkout, 10),
+        "last_action_before_leaving_with_a_basket": top(last_at_basket, 10),
+        "abandoned": {"visits": abandoned_baskets, "basket_value": round(max(abandoned_value, 0), 2)},
+        "minutes_to_order": {"median": round(minutes_to_order[len(minutes_to_order) // 2], 1) if minutes_to_order else None,
+                             "orders_measured": len(minutes_to_order)},
+        "removals": removals,
+        "subscription_funnel": subscription_funnel,
         "interest_without_orders": interest,
         "dish_ranking": dish_ranking,
         "checkout": checkout,
