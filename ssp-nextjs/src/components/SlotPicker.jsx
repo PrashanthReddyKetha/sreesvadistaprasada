@@ -1,6 +1,9 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import api from '@/api';
+import { record } from '@/lib/track';
+
+const slotsReported = new Set();   // one "saw the times" record per day shown, per page load
 
 /**
  * Collection time picker — ASAP + slot chips from GET /pickup-slots.
@@ -31,6 +34,11 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
       const params = which === 'tomorrow' ? { date: tomorrowStr() } : {};
       const res = await api.get('/pickup-slots', { params });
       setData(res.data);
+      const list = res.data?.slots || [];
+      if (list.length && !slotsReported.has(which)) {
+        slotsReported.add(which);
+        record('slots_viewed', { method: which, quantity: list.length, percent: Math.round((list.filter(x => !x.available).length / list.length) * 100) });
+      }
     } catch (e) {
       setError('Could not load collection times — please try again.');
     } finally {
@@ -132,7 +140,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {showAsap && (
             <button
-              onClick={() => setPickupSlot(null)}
+              onClick={() => { record('slot_selected', { label: 'ASAP', method: day }); setPickupSlot(null); }}
               style={chipStyle(!pickupSlot, false)}>
               ASAP<span className="block text-[9px] font-normal" style={{ color: '#5C4B47' }}>~40 min</span>
             </button>
@@ -142,7 +150,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
             const disabled = !s.available;
             return (
               <button key={s.iso} disabled={disabled}
-                onClick={() => setPickupSlot({ iso: s.iso, label: s.label, date: data.date })}
+                onClick={() => { record('slot_selected', { label: s.label, method: day }); setPickupSlot({ iso: s.iso, label: s.label, date: data.date }); }}
                 style={chipStyle(selected, disabled)}>
                 {s.label}
                 {disabled && <span className="block text-[9px] font-normal">Full</span>}

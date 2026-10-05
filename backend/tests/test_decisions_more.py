@@ -298,3 +298,31 @@ def test_morning_email_says_what_the_system_changed_overnight(db, monkeypatch):
     order(db, 1, [(2, 40)])
     run(brain.run_review())
     assert len(mails) == 1 and "change" in mails[0][0] and "Featured dishes: updated" in mails[0][1]
+
+
+def test_seven_more_reports(client):
+    def send(visit, steps, day_offset=0):
+        client.post("/api/events", json={"visit_id": visit, "device": "phone", "attribution": {"landing": "/"},
+                                         "events": [{"name": n, "path": e.pop("path", "/order"), **e} for n, e in steps]})
+    cheap = {"items": [{"id": "m1", "name": "Upma", "quantity": 1}], "props": {"value": 3.99}}
+    dear = {"items": [{"id": "m2", "name": "Veg Thali", "quantity": 1}], "props": {"value": 14.99}}
+    send("visit-buy00001", [("page_view", {"path": "/"}), ("page_view", {"path": "/order"}), ("view_item", dict(cheap)), ("add_to_cart", dict(cheap)),
+                            ("slots_viewed", {"props": {"method": "today", "quantity": 10, "percent": 40}}), ("slot_selected", {"props": {"label": "ASAP", "method": "today"}}),
+                            ("begin_checkout", {"path": "/checkout"}), ("payment_started", {"path": "/checkout"}), ("purchase", {**cheap, "path": "/checkout"})])
+    send("visit-left0001", [("page_view", {"path": "/"}), ("page_view", {"path": "/order"}), ("view_item", dict(dear)), ("view_item", dict(dear)),
+                            ("slots_viewed", {"props": {"method": "today", "quantity": 10, "percent": 80}}), ("slot_selected", {"props": {"label": "18:30", "method": "today"}}),
+                            ("begin_checkout", {"path": "/checkout"}),
+                            ("field_focus", {"path": "/checkout", "props": {"label": "Full name", "area": "Your details"}}),
+                            ("field_focus", {"path": "/checkout", "props": {"label": "Phone number", "area": "Your details"}}),
+                            ("repeated_taps", {"path": "/checkout", "props": {"label": "Verify phone", "area": "page"}})])
+    r = client.get("/api/admin/analytics?days=7", headers=ADMIN()).json()
+    assert r["field_drop_off"] == [{"page": "/checkout", "form": "Your details", "last_field": "Phone number", "visits": 1}]
+    assert r["repeated_taps"] == [{"label": "Verify phone", "page": "/checkout", "visits": 1}]
+    assert {t["between"]: t["visits"] for t in r["step_times"]} == {"Arriving to first dish added": 1, "Adding to starting checkout": 1,
+                                                                   "Starting checkout to starting to pay": 1, "Starting to pay to order placed": 1}
+    assert r["paths_that_ordered"] == [{"name": "/ → /order", "count": 1}] and r["paths_that_left"] == [{"name": "/ → /order", "count": 1}]
+    assert len(r["weekday_funnels"]) == 1 and r["weekday_funnels"][0]["visits"] == 2 and r["weekday_funnels"][0]["purchase"] == 1
+    assert r["price_bands"] == [{"band": "Under £5", "opened": 1, "added": 1, "add_rate": 1.0}, {"band": "£11 and over", "opened": 2, "added": 0, "add_rate": 0.0}]
+    slots = r["collection_slots"]
+    assert slots["times_shown"]["today"] == {"views": 2, "average_percent_full": 60} and slots["chose_asap_share"] == 0.5
+    assert {c["name"] for c in slots["chosen"]} == {"ASAP", "18:30"}

@@ -32,7 +32,8 @@ const ACTION = {
   restock_alert_requested: 'Asked to be told when back in stock', reopen_alert_requested: 'Asked to be told when the kitchen reopens',
   loyalty_redeemed: 'Used a free loyalty dish', notifications_enabled: 'Turned on notifications', notify_me_signup: 'Joined a waiting list',
   newsletter_signup: 'Joined the newsletter', whatsapp_click: 'Tapped WhatsApp', enquiry_submit: 'Sent an enquiry', enquiry_reply: 'Replied to an enquiry',
-  site_error: 'Script error on the site',
+  site_error: 'Script error on the site', field_focus: 'Moved to a form field', repeated_taps: 'Tapped the same thing repeatedly',
+  slots_viewed: 'Saw the collection times', slot_selected: 'Chose a collection time',
 };
 const actionName = (n) => ACTION[n] || n.replace(/_/g, ' ');
 const time = (iso) => new Date(iso + (iso.endsWith('Z') ? '' : 'Z')).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -197,6 +198,46 @@ export default function AnalyticsTab() {
                 rows={(data.last_action_before_leaving_checkout || []).map(d => [d.name, d.count])} />
               <Table title="Last thing done before leaving with a basket" empty="No one has left with a basket in this period." head={['Last action', 'Visits']}
                 rows={(data.last_action_before_leaving_with_a_basket || []).map(d => [d.name, d.count])} />
+            </div>
+
+            <Table title="By day of the week" empty="Nothing recorded yet." head={head('Day')} rows={funnelRows(data.weekday_funnels)} />
+
+            <div className="grid lg:grid-cols-2 gap-5">
+              <Table title="How long each step takes" empty="Nothing recorded yet." head={['Between', 'Typical minutes', 'Visits measured']}
+                rows={(data.step_times || []).filter(t => t.visits > 0).map(t => [t.between, t.median_minutes, t.visits])} />
+              <Table title="Does price put people off?" empty="No dish views with a price recorded yet." head={['Dish price', 'Opened', 'Added to basket', 'Added for every 10 opened']}
+                rows={(data.price_bands || []).map(b => [b.band, b.opened, b.added, b.add_rate == null ? '—' : Math.round(b.add_rate * 10)])} />
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-5">
+              <Table title="Page routes that ended in an order" empty="No orders in this period." head={['Pages, in order', 'Visits']} rows={(data.paths_that_ordered || []).map(d => [d.name, d.count])} />
+              <Table title="Page routes that ended without one" empty="Nothing recorded yet." head={['Pages, in order', 'Visits']} rows={(data.paths_that_left || []).map(d => [d.name, d.count])} />
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-5">
+              <Table title="The field people were on when they gave up" empty="No one has left part-way through a form in this period." head={['Page', 'Form', 'Last field touched', 'Visits']}
+                rows={(data.field_drop_off || []).map(f => [f.page, f.form, f.last_field, f.visits])} />
+              <Table title="Tapped again and again" empty="Nothing has been tapped repeatedly in this period." head={['What was tapped', 'Page', 'Visits']}
+                rows={(data.repeated_taps || []).map(t => [t.label, t.page, t.visits])} />
+            </div>
+
+            <div className="bg-white rounded-xl p-4" style={card}>
+              <h3 className="font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Collection times</h3>
+              {(() => {
+                const c = data.collection_slots || { times_shown: {}, chosen: [] };
+                const t = c.times_shown.today || {}, m = c.times_shown.tomorrow || {};
+                if (!t.views && !m.views && !c.chosen.length) return <p className="text-sm text-gray-400">No one has looked at collection times in this period.</p>;
+                return (
+                  <>
+                    <p className="text-sm text-gray-600">
+                      Today's times were shown {t.views || 0} times{t.average_percent_full != null ? `, on average ${t.average_percent_full}% already full` : ''}.
+                      Tomorrow's were shown {m.views || 0} times{m.average_percent_full != null ? `, ${m.average_percent_full}% full` : ''}.
+                      {c.chose_asap_share != null && ` ${Math.round(c.chose_asap_share * 100)}% of choices were "as soon as possible".`}
+                    </p>
+                    {c.chosen.length > 0 && <p className="text-sm text-gray-600 mt-2"><span className="text-gray-500">Chosen most:</span> {c.chosen.map(x => `${x.name} (${x.count})`).join(', ')}</p>}
+                  </>
+                );
+              })()}
             </div>
 
             <Table title="Dishes taken back out of the basket" empty="Nothing has been removed from a basket in this period." head={['Dish', 'Removed', 'Added', 'Removed for every 10 added']}

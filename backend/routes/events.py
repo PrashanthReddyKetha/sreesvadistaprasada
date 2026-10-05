@@ -234,6 +234,71 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
                 - sum(float((e.get("props") or {}).get("value") or 0) for e in evs if e["name"] == "remove_from_cart")
     minutes_to_order.sort()
 
+    def median(values: list):
+        values = sorted(values)
+        return round(values[len(values) // 2], 1) if values else None
+
+    # Time between steps (minutes), from each visit's first occurrence of the step
+    gaps = {"Arriving to first dish added": [], "Adding to starting checkout": [], "Starting checkout to starting to pay": [], "Starting to pay to order placed": []}
+    pairs = [("Arriving to first dish added", None, "add_to_cart"), ("Adding to starting checkout", "add_to_cart", "begin_checkout"),
+             ("Starting checkout to starting to pay", "begin_checkout", "payment_started"), ("Starting to pay to order placed", "payment_started", "purchase")]
+    paths_ordered, paths_left, weekday_groups = {}, {}, {}
+    field_last, taps, bands = {}, {}, {}
+    slot_views, slot_picks = {"today": [], "tomorrow": []}, {}
+    day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+    def band(price) -> str:
+        try:
+            p = float(price)
+        except (TypeError, ValueError):
+            return ""
+        return "Under £5" if p < 5 else "£5 to £7.99" if p < 8 else "£8 to £10.99" if p < 11 else "£11 and over"
+
+    for vid, evs in ordered_events.items():
+        first_at = {}
+        for e in evs:
+            first_at.setdefault(e["name"], e["at"])
+        for label, a, b in pairs:
+            start = evs[0]["at"] if a is None else first_at.get(a)
+            if start and first_at.get(b) and first_at[b] >= start:
+                gaps[label].append((first_at[b] - start).total_seconds() / 60)
+        route = []
+        for e in evs:
+            if e["name"] == "page_view" and (not route or route[-1] != e["path"]):
+                route.append(e["path"])
+        if route:
+            key = " → ".join(route[:5]) + (" → …" if len(route) > 5 else "")
+            target = paths_ordered if "purchase" in visits[vid]["names"] else paths_left
+            target[key] = target.get(key, 0) + 1
+        try:
+            weekday_groups.setdefault(datetime.strptime(evs[0]["day"], "%Y-%m-%d").weekday(), []).append(vid)
+        except (KeyError, ValueError):
+            pass
+        done = visits[vid]["names"] & {"purchase", "subscription_purchase", "login", "sign_up", "enquiry_submit"}
+        focused = [e for e in evs if e["name"] == "field_focus"]
+        if focused and not done:
+            last = focused[-1]
+            k = (last["path"], (last.get("props") or {}).get("area") or "", (last.get("props") or {}).get("label") or "")
+            field_last[k] = field_last.get(k, 0) + 1
+        for e in evs:
+            p = e.get("props") or {}
+            if e["name"] == "repeated_taps":
+                k = (p.get("label") or "", e["path"])
+                taps[k] = taps.get(k, 0) + 1
+            elif e["name"] == "view_item" and band(p.get("value")):
+                bands.setdefault(band(p.get("value")), {"opened": 0, "added": 0})["opened"] += 1
+            elif e["name"] == "add_to_cart" and p.get("value") is not None:
+                qty = sum(i.get("quantity") or 1 for i in e.get("items") or []) or 1
+                b = band(float(p["value"]) / qty)
+                if b:
+                    bands.setdefault(b, {"opened": 0, "added": 0})["added"] += 1
+            elif e["name"] == "slots_viewed" and p.get("method") in slot_views and p.get("percent") is not None:
+                slot_views[p["method"]].append(float(p["percent"]))
+            elif e["name"] == "slot_selected" and p.get("label"):
+                slot_picks[str(p["label"])] = slot_picks.get(str(p["label"]), 0) + 1
+    band_order = ["Under £5", "£5 to £7.99", "£8 to £10.99", "£11 and over"]
+    total_picks = sum(slot_picks.values())
+
     # Dishes taken back out of the basket
     removed: dict = {}
     for e in events:
@@ -325,6 +390,19 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         "minutes_to_order": {"median": round(minutes_to_order[len(minutes_to_order) // 2], 1) if minutes_to_order else None,
                              "orders_measured": len(minutes_to_order)},
         "removals": removals,
+        "step_times": [{"between": label, "median_minutes": median(v), "visits": len(v)} for label, v in gaps.items()],
+        "paths_that_ordered": top(paths_ordered, 8),
+        "paths_that_left": top(paths_left, 8),
+        "weekday_funnels": [funnel_row(day_names[d], weekday_groups[d]) for d in sorted(weekday_groups)],
+        "field_drop_off": [{"page": k[0], "form": k[1], "last_field": k[2], "visits": n} for k, n in sorted(field_last.items(), key=lambda kv: -kv[1])[:15]],
+        "repeated_taps": [{"label": k[0], "page": k[1], "visits": n} for k, n in sorted(taps.items(), key=lambda kv: -kv[1])[:15]],
+        "price_bands": [{"band": b, **bands[b], "add_rate": round(bands[b]["added"] / bands[b]["opened"], 2) if bands[b]["opened"] else None}
+                        for b in band_order if b in bands],
+        "collection_slots": {
+            "times_shown": {d: {"views": len(v), "average_percent_full": round(sum(v) / len(v)) if v else None} for d, v in slot_views.items()},
+            "chosen": [{"name": n, "count": c} for n, c in sorted(slot_picks.items(), key=lambda kv: -kv[1])[:12]],
+            "chose_asap_share": round(slot_picks.get("ASAP", 0) / total_picks, 2) if total_picks else None,
+        },
         "subscription_funnel": subscription_funnel,
         "interest_without_orders": interest,
         "dish_ranking": dish_ranking,

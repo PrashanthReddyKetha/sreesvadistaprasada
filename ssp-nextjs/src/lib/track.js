@@ -170,6 +170,40 @@ export function startAutoCapture() {
     record('click', props);
   }, { capture: true, passive: true });
 
+  // Which field someone was on — the field's name only, never what was typed
+  const fieldsSeen = new Set();
+  document.addEventListener('focusin', (e) => {
+    const el = e.target instanceof Element ? e.target.closest('input, select, textarea') : null;
+    if (!el || el.closest('[data-notrack]') || el.type === 'hidden') return;
+    const id = el.getAttribute('id');
+    const labelEl = (id && document.querySelector(`label[for="${CSS.escape(id)}"]`)) || el.closest('label')
+      || el.parentElement?.querySelector('label') || el.parentElement?.parentElement?.querySelector('label');
+    // A real label first; then the kind of field; a placeholder is the last resort because it is usually an example value
+    const byType = { email: 'Email', tel: 'Phone number', password: 'Password', search: 'Search', date: 'Date', number: 'Number' }[el.type];
+    const name = tidy(el.getAttribute('aria-label') || labelEl?.textContent || byType || el.getAttribute('name') || el.getAttribute('placeholder') || 'Field', 40);
+    const key = `${window.location.pathname}|${name}`;
+    if (fieldsSeen.has(key)) return;
+    fieldsSeen.add(key);
+    const form = el.closest('form, [role="dialog"], section, main');
+    const heading = form?.querySelector('h1, h2, h3') || el.closest('[role="dialog"], section, main')?.querySelector('h1, h2, h3');
+    record('field_focus', { label: name, area: tidy(form?.getAttribute('aria-label') || heading?.textContent || areaOf(el), 40) });
+  }, { capture: true, passive: true });
+
+  // Three taps on the same thing within two seconds: it looks broken, or the page is slow
+  let lastTap = { el: null, times: [] };
+  const tapsReported = new WeakSet();
+  document.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? (e.target.closest('a, button, [role="button"]') || e.target) : null;
+    if (!el || el.closest('[data-notrack]')) return;
+    const now = Date.now();
+    lastTap = lastTap.el === el ? { el, times: [...lastTap.times.filter(t => now - t < 2000), now] } : { el, times: [now] };
+    if (lastTap.times.length >= 3 && !tapsReported.has(el)) {
+      tapsReported.add(el);
+      const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+      record('repeated_taps', { label: tidy(el.getAttribute('aria-label') || (text.length <= 50 ? text : '') || `(${el.tagName.toLowerCase()})`), area: areaOf(el) });
+    }
+  }, { capture: true, passive: true });
+
   document.addEventListener('submit', (e) => {
     const f = e.target instanceof HTMLFormElement ? e.target : null;
     if (!f || f.closest('[data-notrack]')) return;
