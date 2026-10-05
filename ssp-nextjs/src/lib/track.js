@@ -62,6 +62,16 @@ function getVisit() {
   return visit;
 }
 
+/** The owner signed in as admin, and automated browsers (monitoring, crawlers, our own checks), are not customers.
+ *  A check script can opt back in by setting localStorage "ssp_track_test" = "1". */
+const isStaffOrRobot = () => {
+  try {
+    if (localStorage.getItem('ssp_track_test') === '1') return false;
+    if (navigator.webdriver) return true;
+    return JSON.parse(localStorage.getItem('ssp_user') || 'null')?.role === 'admin';
+  } catch { return false; }
+};
+
 const isSignedIn = () => {
   try { return !!localStorage.getItem('ssp_token'); } catch { return false; }
 };
@@ -98,6 +108,7 @@ export function record(name, props = {}, items = []) {
   if (typeof window === 'undefined') return;
   const path = window.location.pathname;
   if (path.startsWith('/admin')) return;           // staff screens are not visits
+  if (isStaffOrRobot()) return;                    // nor is the owner browsing, or an automated browser
   getVisit();
   queue.push({ name, path, props, items });
   if (!listening) {

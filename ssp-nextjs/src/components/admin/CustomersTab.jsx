@@ -230,16 +230,17 @@ export default function CustomersTab() {
   const [risk, setRisk] = useState('all');
   const [open, setOpen] = useState(null);
   const [insights, setInsights] = useState(null);
+  const [showTest, setShowTest] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      setData((await api.get('/admin/customers')).data);
+      setData((await api.get('/admin/customers', { params: { include_test: showTest } })).data);
       api.get('/admin/customers/insights').then(r => setInsights(r.data)).catch(() => {});
     }
     catch { setError('Could not load customers. Please try again.'); }
     finally { setLoading(false); }
-  }, []);
+  }, [showTest]);
   useEffect(() => { load(); }, [load]);
 
   const rows = useMemo(() => {
@@ -377,6 +378,12 @@ export default function CustomersTab() {
       </div>
       <Insights data={insights} />
       {open && <CustomerPage email={open} onClose={() => setOpen(null)} />}
+      {s.test_accounts > 0 && (
+        <p className="text-xs text-gray-500">
+          {showTest ? `Showing ${s.test_accounts} test account${s.test_accounts === 1 ? '' : 's'} as well.` : `${s.test_accounts} test account${s.test_accounts === 1 ? ' is' : 's are'} hidden (addresses such as test@test.com made while the site was being built). They are left out of every figure and never sent a message.`}{' '}
+          <button onClick={() => setShowTest(!showTest)} className="underline" style={{ color: P }}>{showTest ? 'Hide them' : 'Show them'}</button>
+        </p>
+      )}
       <p className="text-xs text-gray-400">Select a row to open that customer's full history. People are matched on email address. Spend leaves out cancelled orders and cancelled plans. A plan counts as running only until its end date.</p>
     </div>
   );

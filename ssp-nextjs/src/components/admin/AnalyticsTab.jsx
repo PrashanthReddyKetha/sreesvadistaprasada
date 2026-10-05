@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { RefreshCw, ChevronDown, ChevronUp, Download, Copy } from 'lucide-react';
 import api from '@/api';
 
 /* Admin › Analytics — the site's own record of visits (not Google's): visits, the path to an
@@ -43,10 +43,11 @@ const detail = (e) => [e.props.label, e.props.term && `"${e.props.term}"`, e.ite
 
 function Visits({ visits }) {
   const [open, setOpen] = useState(null);
+  const [count, setCount] = useState(10);
   return (
     <div className="bg-white rounded-xl overflow-hidden" style={card}>
       <h3 className="px-4 py-3 font-bold border-b" style={{ fontFamily: "'Playfair Display', serif", color: P, borderColor: '#f0ebe6' }}>Latest visits — everything each visitor did</h3>
-      {visits.length === 0 ? <p className="text-center text-gray-400 py-8 text-sm">Nothing recorded yet.</p> : visits.map(v => (
+      {visits.length === 0 ? <p className="text-center text-gray-400 py-8 text-sm">Nothing recorded yet.</p> : visits.slice(0, count).map(v => (
         <div key={v.visit_id + v.started} className="border-t" style={{ borderColor: '#f9f6ee' }}>
           <button onClick={() => setOpen(open === v.visit_id ? null : v.visit_id)} className="w-full px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-left text-sm hover:bg-gray-50">
             <span className="font-medium w-28 shrink-0">{time(v.started)}</span>
@@ -69,28 +70,92 @@ function Visits({ visits }) {
           )}
         </div>
       ))}
+      {visits.length > count && (
+        <button onClick={() => setCount(count + 10)} className="w-full py-2 text-xs font-semibold border-t" style={{ borderColor: '#f0ebe6', color: P }}>Show 10 more ({visits.length - count} left)</button>
+      )}
     </div>
   );
 }
 
-const Table = ({ title, head, rows, empty }) => (
-  <div className="bg-white rounded-xl overflow-hidden" style={card}>
-    <h3 className="px-4 py-3 font-bold border-b" style={{ fontFamily: "'Playfair Display', serif", color: P, borderColor: '#f0ebe6' }}>{title}</h3>
-    {rows.length === 0 ? <p className="text-center text-gray-400 py-8 text-sm">{empty}</p> : (
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead style={{ backgroundColor: '#FDFBF7' }}><tr>{head.map(h => <th key={h} className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>)}</tr></thead>
-          <tbody>{rows.map((r, i) => <tr key={i} className="border-t" style={{ borderColor: '#f9f6ee' }}>{r.map((c, j) => <td key={j} className={`px-4 py-2 ${j === 0 ? 'font-medium break-all' : 'text-gray-600 whitespace-nowrap'}`}>{c}</td>)}</tr>)}</tbody>
-        </table>
-      </div>
-    )}
-  </div>
-);
+const SHORT = 8;
+
+function Table({ title, head, rows, empty }) {
+  const [all, setAll] = useState(false);
+  const shown = all ? rows : rows.slice(0, SHORT);
+  return (
+    <div className="bg-white rounded-xl overflow-hidden" style={card}>
+      <h3 className="px-4 py-3 font-bold border-b" style={{ fontFamily: "'Playfair Display', serif", color: P, borderColor: '#f0ebe6' }}>{title}</h3>
+      {rows.length === 0 ? <p className="text-center text-gray-400 py-8 text-sm">{empty}</p> : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead style={{ backgroundColor: '#FDFBF7' }}><tr>{head.map(h => <th key={h} className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>)}</tr></thead>
+              <tbody>{shown.map((r, i) => <tr key={i} className="border-t" style={{ borderColor: '#f9f6ee' }}>{r.map((c, j) => <td key={j} className={`px-4 py-2 ${j === 0 ? 'font-medium break-all' : 'text-gray-600 whitespace-nowrap'}`}>{c}</td>)}</tr>)}</tbody>
+            </table>
+          </div>
+          {rows.length > SHORT && (
+            <button onClick={() => setAll(!all)} className="w-full py-2 text-xs font-semibold border-t" style={{ borderColor: '#f0ebe6', color: P }}>
+              {all ? 'Show fewer' : `Show all ${rows.length}`}
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+const VIEWS = [
+  ['summary', 'Summary', 'Totals, the path to an order, and where visitors came from'],
+  ['journeys', 'Journeys', 'Where people land, where they stop, and why'],
+  ['dishes', 'Dishes', 'What is looked at, added and ordered'],
+  ['behaviour', 'Behaviour', 'Pages, taps, searches, problems, timing'],
+  ['visits', 'Visits', 'The latest visits, one by one'],
+];
+
+/** Every figure on this screen as plain sections: used for the download and for "copy summary". */
+function sections(data, days) {
+  const f = (list) => (list || []).map(x => [x.name, x.visits, x.view_item, x.add_to_cart, x.begin_checkout, x.payment_started, x.purchase]);
+  const fh = (first) => [first, 'Visits', 'Opened a dish', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered'];
+  const t = data.totals;
+  return [
+    [`Totals, last ${days} days`, ['Visits', 'Pages viewed', 'Orders', 'Order income', 'Plans sold'], [[t.visits, t.page_views, t.orders, t.income, t.plans_sold]]],
+    ['From visit to order', ['Step', 'Visits'], data.funnel.map(x => [STEP[x.step] || x.step, x.visits])],
+    ['Where visitors came from', ['Source', 'Visits', 'Added to basket', 'Orders', 'Income'], data.sources.map(x => [x.source, x.visits, x.added_to_basket, x.orders, x.income])],
+    ['By landing page', fh('Landed on'), f(data.landing_funnels)],
+    ['By device', fh('Device'), f(data.device_funnels)],
+    ['By visitor type', fh('Visitor'), f(data.visitor_funnels)],
+    ['By day of the week', fh('Day'), f(data.weekday_funnels)],
+    ['Where visits that did not order stopped', ['Furthest step', 'Visits'], (data.stopped_at || []).map(x => [x.step, x.visits])],
+    ['Left with food in the basket', ['Visits', 'Basket value'], [[data.abandoned?.visits || 0, data.abandoned?.basket_value || 0]]],
+    ['Checkout step by step', ['Step', 'Visits'], (data.checkout || []).map(x => [x.step, x.visits])],
+    ['Last action before leaving the checkout', ['Action', 'Visits'], (data.last_action_before_leaving_checkout || []).map(x => [x.name, x.count])],
+    ['Last action before leaving with a basket', ['Action', 'Visits'], (data.last_action_before_leaving_with_a_basket || []).map(x => [x.name, x.count])],
+    ['Dabba Wala step by step', ['Step', 'Visits'], (data.subscription_funnel || []).map(x => [x.step, x.visits])],
+    ['Minutes between steps', ['Between', 'Typical minutes', 'Visits measured'], (data.step_times || []).map(x => [x.between, x.median_minutes ?? '', x.visits])],
+    ['Dishes', ['Dish', 'Opened', 'Added to basket', 'Ordered', 'Reading'], (data.dish_ranking || []).map(x => [x.name, x.opened, x.added, x.ordered, x.verdict])],
+    ['Dishes taken back out of the basket', ['Dish', 'Removed', 'Added'], (data.removals || []).map(x => [x.name, x.removed, x.added])],
+    ['Add rate by price', ['Price', 'Opened', 'Added'], (data.price_bands || []).map(x => [x.band, x.opened, x.added])],
+    ['Pages viewed most', ['Page', 'Views'], data.top_pages.map(x => [x.name, x.count])],
+    ['Where visits ended without an order', ['Page', 'Visits'], (data.exit_pages || []).map(x => [x.name, x.count])],
+    ['Time and scroll per page', ['Page', 'Views measured', 'Average seconds', 'Average scroll %'], (data.time_on_page || []).map(x => [x.page, x.views, x.average_seconds, x.average_scroll])],
+    ['Every action', ['Action', 'Times', 'Visits'], (data.actions || []).map(x => [actionName(x.name), x.count, x.visits])],
+    ['Buttons and links tapped most', ['Label', 'Where', 'Page', 'Taps'], (data.top_clicks || []).map(x => [x.label, x.area, x.page, x.count])],
+    ['Searches', ['Search', 'Times'], (data.searches || []).map(x => [x.name, x.count])],
+    ['Problems visitors hit', ['Problem', 'Detail', 'Page', 'Times'], (data.problems || []).map(x => [actionName(x.name), x.detail, x.page, x.count])],
+    ['Field people were on when they gave up', ['Page', 'Form', 'Field', 'Visits'], (data.field_drop_off || []).map(x => [x.page, x.form, x.last_field, x.visits])],
+    ['Day by day', ['Day', 'Visits', 'Page views', 'Orders', 'Income'], data.by_day.map(x => [x.day, x.visits, x.page_views, x.orders, x.income])],
+    ['Busiest hours (UK)', ['Hour', 'Page views'], (data.by_hour || []).map(x => [`${x.hour}:00`, x.page_views])],
+  ].filter(([, , rows]) => rows.length);
+}
+
+const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
 export default function AnalyticsTab() {
   const [days, setDays] = useState(30);
   const [data, setData] = useState(null);
   const [visits, setVisits] = useState([]);
+  const [view, setView] = useState('summary');
+  const [copied, setCopied] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -128,6 +193,23 @@ export default function AnalyticsTab() {
         <button onClick={load} className="p-2 rounded-lg border ml-auto" style={{ borderColor: '#e0d9d0' }} aria-label="Refresh"><RefreshCw size={15} className={loading ? 'animate-spin' : ''} /></button>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <button onClick={() => {
+          const out = [`Sree Svadista Prasada — site analytics, last ${days} days, downloaded ${new Date().toLocaleString('en-GB')}`, ''];
+          sections(data, days).forEach(([title, head, rows]) => { out.push(csvCell(title)); out.push(head.map(csvCell).join(',')); rows.forEach(r => out.push(r.map(csvCell).join(','))); out.push(''); });
+          const blob = new Blob(['\ufeff' + out.join('\n')], { type: 'text/csv;charset=utf-8' });
+          const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `analytics-${days}-days-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+        }} className="px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2" style={{ backgroundColor: P, color: '#fff' }}><Download size={15} /> Download everything (spreadsheet)</button>
+        <button onClick={async () => {
+          const text = [`Sree Svadista Prasada — site analytics, last ${days} days`, ''];
+          sections(data, days).forEach(([title, head, rows]) => { text.push(`## ${title}`); text.push(head.join(' | ')); rows.slice(0, 15).forEach(r => text.push(r.join(' | '))); text.push(''); });
+          try { await navigator.clipboard.writeText(text.join('\n')); setCopied('Copied. Paste it into a message or a document.'); } catch { setCopied('Could not copy — use the download instead.'); }
+          setTimeout(() => setCopied(''), 5000);
+        }} className="px-3 py-2 rounded-lg text-sm font-semibold border flex items-center gap-2" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}><Copy size={15} /> Copy as text</button>
+        <button onClick={() => window.print()} className="px-3 py-2 rounded-lg text-sm font-semibold border" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}>Print or save as PDF</button>
+        {copied && <span className="text-sm text-gray-600" role="status">{copied}</span>}
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(([label, value, note]) => (
           <div key={label} className="bg-white rounded-xl p-4" style={card}>
@@ -138,6 +220,15 @@ export default function AnalyticsTab() {
         ))}
       </div>
 
+      <div className="flex flex-wrap gap-2 border-b pb-3" style={{ borderColor: '#e9e2d8' }} role="tablist" aria-label="Analytics sections">
+        {VIEWS.map(([id, label, hint]) => (
+          <button key={id} role="tab" aria-selected={view === id} onClick={() => setView(id)} title={hint} className="px-4 py-2 rounded-lg text-sm font-semibold"
+            style={view === id ? { backgroundColor: '#F7E9EC', color: P } : { color: '#5C4B47' }}>{label}</button>
+        ))}
+      </div>
+      <p className="text-xs text-gray-500 -mt-2">{VIEWS.find(v => v[0] === view)[2]}.</p>
+
+      {view === 'summary' && (<>
       <div className="bg-white rounded-xl p-4" style={card}>
         <h3 className="font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: P }}>From visit to order</h3>
         {top === 0 ? <p className="text-sm text-gray-400">No visits recorded in this period yet.</p> : data.funnel.map((f, i) => (
@@ -153,6 +244,8 @@ export default function AnalyticsTab() {
         head={['Source', 'Visits', 'Added to basket', 'Orders', 'Income']}
         rows={data.sources.map(s => [s.source, s.visits, s.added_to_basket, s.orders, fmt(s.income)])} />
 
+      </>)}
+      {view === 'journeys' && (<>
       {(() => {
         const funnelRows = (list) => (list || []).map(f => [f.name, f.visits, f.view_item, f.add_to_cart, f.begin_checkout, f.payment_started, f.purchase, pct(f.purchase, f.visits)]);
         const head = (first) => [first, 'Visits', 'Opened a dish', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered', 'Visits that ordered'];
@@ -252,7 +345,9 @@ export default function AnalyticsTab() {
         <Table title="Where visits end without an order" empty="Nothing recorded yet." head={['Last page seen', 'Visits']}
           rows={(data.exit_pages || []).map(d => [d.name, d.count])} />
       </div>
+      </>)}
 
+      {view === 'dishes' && (<>
       <Table title="How each dish is doing" empty="Nothing recorded yet." head={['Dish', 'Opened', 'Added to basket', 'Ordered', 'Reading']}
         rows={(data.dish_ranking || []).map(d => [d.name, d.opened, d.added, d.ordered, d.verdict])} />
 
@@ -260,7 +355,9 @@ export default function AnalyticsTab() {
         <Table title="Dishes opened most" empty="Nothing recorded yet." head={['Dish', 'Times opened']} rows={data.most_viewed_dishes.map(d => [d.name, d.count])} />
         <Table title="Dishes added to basket most" empty="Nothing recorded yet." head={['Dish', 'Quantity added']} rows={data.most_added_dishes.map(d => [d.name, d.count])} />
       </div>
+      </>)}
 
+      {view === 'behaviour' && (<>
       <div className="grid lg:grid-cols-2 gap-5">
         <Table title="Pages viewed most" empty="Nothing recorded yet." head={['Page', 'Views']} rows={data.top_pages.map(d => [d.name, d.count])} />
         <div className="bg-white rounded-xl overflow-hidden" style={card}>
@@ -308,8 +405,11 @@ export default function AnalyticsTab() {
           </div>
         </div>
       </div>
+      </>)}
 
+      {view === 'visits' && (<>
       <Visits visits={visits} />
+      </>)}
 
       <p className="text-xs text-gray-400">
         This is the site's own count, kept on our server, and starts from the day it was switched on. It will not match Google Analytics exactly.

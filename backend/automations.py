@@ -297,7 +297,7 @@ async def audience(automation_id: str, now: Optional[datetime] = None) -> list:
     out = []
     for c in await build_customers(now):
         reason = a["who"](c, now)
-        if not reason or not c.get("email"):
+        if not reason or not c.get("email") or c.get("is_test"):      # a test account is never sent a customer message
             continue
         skip = None
         if await email_opted_out(c["email"]):

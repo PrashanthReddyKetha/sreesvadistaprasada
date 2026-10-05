@@ -25,6 +25,16 @@ EXPIRING_WITHIN_DAYS = 3   # a running plan this close to its last meal
 PLAN_MEALS = {"weekly": 5, "monthly": 20}
 
 
+TEST_DOMAINS = {"test.com", "e2e.com", "t.com", "mailinator.com"}
+
+
+def is_test_account(email: Optional[str]) -> bool:
+    """Accounts made while building and testing the site. They are kept in the database but left out of
+    every figure, list and automated message unless asked for."""
+    local, _, domain = (email or "").strip().lower().partition("@")
+    return domain in TEST_DOMAINS or local.startswith(("test", "e2e", "qa-", "qa_"))
+
+
 def _key(email: Optional[str]) -> str:
     return (email or "").strip().lower()
 
@@ -210,6 +220,7 @@ async def build_customers(now: Optional[datetime] = None) -> list:
         c["total_spend"] = round(c["order_spend"] + c["plan_spend"], 2)
         c["order_spend"], c["plan_spend"] = round(c["order_spend"], 2), round(c["plan_spend"], 2)
         c["average_order"] = round(c["order_spend"] / c["orders"], 2) if c["orders"] else 0.0
+        c["is_test"] = is_test_account(c["email"])
         c["segment"] = _segment(c, now)
         c["flags"] = _flags(c, now)
         c["return_risk"] = _return_risk(c, now)
@@ -226,8 +237,10 @@ async def build_customers(now: Optional[datetime] = None) -> list:
 
 
 @router.get("")
-async def list_customers(_: dict = Depends(require_admin)):
-    customers = await build_customers()
+async def list_customers(include_test: bool = False, _: dict = Depends(require_admin)):
+    everyone = await build_customers()
+    hidden = sum(1 for c in everyone if c["is_test"])
+    customers = everyone if include_test else [c for c in everyone if not c["is_test"]]
     buyers = [c for c in customers if c["orders"] or c["plans"]]
     segments, stages, flags = {}, {}, {}
     for c in customers:
@@ -240,6 +253,8 @@ async def list_customers(_: dict = Depends(require_admin)):
     return {
         "summary": {
             "people": len(customers),
+            "test_accounts_hidden": 0 if include_test else hidden,
+            "test_accounts": hidden,
             "buyers": len(buyers),
             "repeat_buyers": sum(1 for c in buyers if c["orders"] + c["plans"] >= 2),
             "segments": segments,
@@ -358,8 +373,10 @@ async def customer_insights(_: dict = Depends(require_admin)):
     now = datetime.utcnow()
     admin_ids = {u["id"] async for u in db.users.find({"role": "admin"}, {"_id": 0, "id": 1})}
     by_person: dict = {}
+    test_ids = {u["id"] async for u in db.users.find({}, {"_id": 0, "id": 1, "email": 1}) if is_test_account(u.get("email"))}
+    admin_ids = admin_ids | test_ids          # from here on: everyone whose activity must not count
     async for o in db.orders.find({"status": {"$ne": "cancelled"}}, {"_id": 0, "items": 0}):
-        if o.get("user_id") in admin_ids:
+        if o.get("user_id") in admin_ids or is_test_account(o.get("customer_email")):
             continue
         who = o.get("user_id") or _key(o.get("customer_email"))
         when = _as_dt(o.get("created_at"))
@@ -393,7 +410,7 @@ async def customer_insights(_: dict = Depends(require_admin)):
              "finished": 0, "meals_sold": 0, "meals_skipped": 0, "makeup_meals": 0}
     plan_ids = []
     async for s in db.subscriptions.find({}, {"_id": 0, "audit_trail": 0, "internal_notes": 0}):
-        if s.get("user_id") in admin_ids:
+        if s.get("user_id") in admin_ids or is_test_account(s.get("customer_email")):
             continue
         dabba["plans_sold"] += 1
         plan_ids.append(s.get("id"))
@@ -439,7 +456,7 @@ async def customer_insights(_: dict = Depends(require_admin)):
     # What each coupon gave away, and the order income that came with it
     coupons: dict = {}
     async for o in db.orders.find({"status": {"$ne": "cancelled"}, "coupon_code": {"$nin": [None, ""]}}, {"_id": 0, "items": 0}):
-        if o.get("user_id") in admin_ids:
+        if o.get("user_id") in admin_ids or is_test_account(o.get("customer_email")):
             continue
         k = coupons.setdefault(o["coupon_code"], {"code": o["coupon_code"], "orders": 0, "discount_given": 0.0, "income": 0.0})
         k["orders"] += 1
@@ -465,7 +482,7 @@ async def customer_insights(_: dict = Depends(require_admin)):
     loyalty = {"free_dishes_given": 0, "value_given": 0.0, "member_orders": 0, "member_income": 0.0}
     member_ids = {u["id"] async for u in db.users.find({"loyalty_order_count": {"$gt": 0}}, {"_id": 0, "id": 1})}
     async for o in db.orders.find({"status": {"$ne": "cancelled"}}, {"_id": 0}):
-        if o.get("user_id") in admin_ids:
+        if o.get("user_id") in admin_ids or is_test_account(o.get("customer_email")):
             continue
         when = _as_dt(o.get("created_at"))
         names = [i.get("name") for i in o.get("items") or [] if i.get("name")]

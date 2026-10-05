@@ -86,3 +86,20 @@ def test_admin_accounts_and_passwords_are_not_listed(client, db):
     raw = client.get(URL, headers=token("boss", "admin")).text
     assert "secret-hash" not in raw and "password_hash" not in raw
     assert "boss@example.com" not in by_email(client)[0]
+
+
+def test_test_accounts_are_hidden_from_lists_figures_and_messages(client, db):
+    order(db, "real@gmail.com", 20.0, number="SP1")
+    order(db, "test@test.com", 99.0, number="SP2")
+    order(db, "e2e_user_1@gmail.com", 50.0, number="SP3")
+    run(db.newsletter.insert_one({"id": "n9", "email": "testlaunch@example.com", "active": True}))
+    body = client.get(URL, headers=token("boss", "admin")).json()
+    assert [c["email"] for c in body["customers"]] == ["real@gmail.com"]
+    assert body["summary"]["order_revenue"] == 20.0 and body["summary"]["test_accounts_hidden"] == 3
+    with_test = client.get(URL + "?include_test=true", headers=token("boss", "admin")).json()
+    assert len(with_test["customers"]) == 4 and with_test["summary"]["test_accounts_hidden"] == 0
+    insights = client.get(URL + "/insights", headers=token("boss", "admin")).json()
+    assert insights["orders"]["buyers"] == 1
+    import automations
+    people = run(automations.audience("first_order"))
+    assert all(p["email"] == "real@gmail.com" for p in people)
