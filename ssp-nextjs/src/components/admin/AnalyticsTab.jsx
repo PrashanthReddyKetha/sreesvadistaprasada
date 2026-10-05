@@ -10,7 +10,7 @@ const P = '#800020';
 const fmt = (n) => `£${Number(n || 0).toFixed(2)}`;
 const pct = (a, b) => (b ? `${Math.round((a / b) * 100)}%` : '—');
 const STEP = {
-  page_view: 'Visited the site', view_item: 'Opened a dish', add_to_cart: 'Added to basket',
+  page_view: 'Visited the site', looked_at_menu: 'Looked at the menu or a dish', view_item: 'Opened a dish', add_to_cart: 'Added to basket',
   begin_checkout: 'Started checkout', purchase: 'Placed an order',
 };
 const card = { boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
@@ -36,7 +36,7 @@ const ACTION = {
   slots_viewed: 'Saw the collection times', slot_selected: 'Chose a collection time',
 };
 const actionName = (n) => ACTION[n] || n.replace(/_/g, ' ');
-const time = (iso) => new Date(iso + (iso.endsWith('Z') ? '' : 'Z')).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+const time = (iso) => new Date(iso + (iso.endsWith('Z') ? '' : 'Z')).toLocaleString('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 const detail = (e) => [e.props.label, e.props.term && `"${e.props.term}"`, e.items.join(', '), e.props.value != null && fmt(e.props.value), e.props.transaction_id,
   e.props.coupon, e.props.plan, e.props.method, e.props.reason, e.props.message, e.props.percent != null && `${e.props.percent}%`, e.props.seconds != null && `${e.props.seconds}s`]
   .filter(Boolean).join(' · ');
@@ -61,7 +61,7 @@ function Visits({ visits }) {
             <ol className="px-4 pb-3 space-y-1">
               {v.events.map((e, i) => (
                 <li key={i} className="text-xs flex gap-3">
-                  <span className="text-gray-400 w-12 shrink-0">{new Date(e.at + (e.at.endsWith('Z') ? '' : 'Z')).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-gray-400 w-12 shrink-0">{new Date(e.at + (e.at.endsWith('Z') ? '' : 'Z')).toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' })}</span>
                   <span className="font-medium w-48 shrink-0">{actionName(e.name)}</span>
                   <span className="text-gray-500 break-all">{e.path}{detail(e) ? ` — ${detail(e)}` : ''}</span>
                 </li>
@@ -104,6 +104,31 @@ function Table({ title, head, rows, empty }) {
   );
 }
 
+function Dishes({ dishes }) {
+  const [query, setQuery] = useState('');
+  const [section, setSection] = useState('all');
+  const [touched, setTouched] = useState(false);
+  const sectionsList = [...new Set(dishes.map(d => d.section).filter(Boolean))];
+  const q = query.trim().toLowerCase();
+  const rows = dishes.filter(d => (section === 'all' || d.section === section) && (!q || d.name.toLowerCase().includes(q)) && (!touched || d.opened || d.added || d.ordered));
+  const active = dishes.filter(d => d.opened || d.added || d.ordered).length;
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a dish" aria-label="Find a dish" className="px-3 py-2 text-sm border rounded-lg w-56" style={{ borderColor: '#e0d9d0' }} />
+        <select value={section} onChange={e => setSection(e.target.value)} aria-label="Menu section" className="px-3 py-2 text-sm border rounded-lg bg-white" style={{ borderColor: '#e0d9d0' }}>
+          <option value="all">Every section</option>
+          {sectionsList.map(x => <option key={x} value={x}>{x}</option>)}
+        </select>
+        <label className="text-sm text-gray-600 flex items-center gap-2"><input type="checkbox" checked={touched} onChange={e => setTouched(e.target.checked)} /> Only dishes someone has looked at</label>
+        <span className="text-sm text-gray-500 ml-auto">{dishes.length} dishes on the menu · {active} looked at, added or ordered in this period</span>
+      </div>
+      <Table key={`${q}|${section}|${touched}`} title="How each dish is doing" empty="No dish matches." head={['Dish', 'Section', 'Price', 'Opened', 'Added to basket', 'Ordered', 'Reading']}
+        rows={rows.map(d => [d.name, d.section || '—', d.price != null ? fmt(d.price) : '—', d.opened, d.added, d.ordered, d.verdict])} />
+    </div>
+  );
+}
+
 const VIEWS = [
   ['summary', 'Summary', 'Totals, the path to an order, and where visitors came from'],
   ['journeys', 'Journeys', 'Where people land, where they stop, and why'],
@@ -114,8 +139,8 @@ const VIEWS = [
 
 /** Every figure on this screen as plain sections: used for the download and for "copy summary". */
 function sections(data, days) {
-  const f = (list) => (list || []).map(x => [x.name, x.visits, x.view_item, x.add_to_cart, x.begin_checkout, x.payment_started, x.purchase]);
-  const fh = (first) => [first, 'Visits', 'Opened a dish', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered'];
+  const f = (list) => (list || []).map(x => [x.name, x.visits, x.looked_at_menu, x.add_to_cart, x.begin_checkout, x.payment_started, x.purchase]);
+  const fh = (first) => [first, 'Visits', 'Looked at the menu', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered'];
   const t = data.totals;
   return [
     [`Totals, last ${days} days`, ['Visits', 'Pages viewed', 'Orders', 'Order income', 'Plans sold'], [[t.visits, t.page_views, t.orders, t.income, t.plans_sold]]],
@@ -132,7 +157,7 @@ function sections(data, days) {
     ['Last action before leaving with a basket', ['Action', 'Visits'], (data.last_action_before_leaving_with_a_basket || []).map(x => [x.name, x.count])],
     ['Dabba Wala step by step', ['Step', 'Visits'], (data.subscription_funnel || []).map(x => [x.step, x.visits])],
     ['Minutes between steps', ['Between', 'Typical minutes', 'Visits measured'], (data.step_times || []).map(x => [x.between, x.median_minutes ?? '', x.visits])],
-    ['Dishes', ['Dish', 'Opened', 'Added to basket', 'Ordered', 'Reading'], (data.dish_ranking || []).map(x => [x.name, x.opened, x.added, x.ordered, x.verdict])],
+    ['Dishes', ['Dish', 'Section', 'Price', 'Opened', 'Added to basket', 'Ordered', 'Reading'], (data.dish_ranking || []).map(x => [x.name, x.section, x.price ?? '', x.opened, x.added, x.ordered, x.verdict])],
     ['Dishes taken back out of the basket', ['Dish', 'Removed', 'Added'], (data.removals || []).map(x => [x.name, x.removed, x.added])],
     ['Add rate by price', ['Price', 'Opened', 'Added'], (data.price_bands || []).map(x => [x.band, x.opened, x.added])],
     ['Pages viewed most', ['Page', 'Views'], data.top_pages.map(x => [x.name, x.count])],
@@ -156,6 +181,7 @@ export default function AnalyticsTab() {
   const [visits, setVisits] = useState([]);
   const [view, setView] = useState('summary');
   const [copied, setCopied] = useState('');
+  const [confirmReset, setConfirmReset] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -234,7 +260,7 @@ export default function AnalyticsTab() {
         {top === 0 ? <p className="text-sm text-gray-400">No visits recorded in this period yet.</p> : data.funnel.map((f, i) => (
           <div key={f.step} className="mb-2">
             <div className="flex justify-between text-sm"><span>{STEP[f.step] || f.step}</span>
-              <span className="text-gray-600">{f.visits} <span className="text-xs text-gray-400">({pct(f.visits, top)}{i > 0 ? `, ${pct(f.visits, data.funnel[i - 1].visits)} of the step before` : ''})</span></span></div>
+              <span className="text-gray-600">{f.visits} <span className="text-xs text-gray-400">({pct(f.visits, top)}{i > 0 && data.funnel[i - 1].visits >= f.visits && data.funnel[i - 1].visits > 0 ? `, ${pct(f.visits, data.funnel[i - 1].visits)} of the step before` : ''})</span></span></div>
             <div className="h-2.5 rounded-full mt-1" style={{ backgroundColor: '#f3ece6' }}><div className="h-2.5 rounded-full" style={{ width: `${Math.max(2, (f.visits / top) * 100)}%`, backgroundColor: P }} /></div>
           </div>
         ))}
@@ -247,17 +273,15 @@ export default function AnalyticsTab() {
       </>)}
       {view === 'journeys' && (<>
       {(() => {
-        const funnelRows = (list) => (list || []).map(f => [f.name, f.visits, f.view_item, f.add_to_cart, f.begin_checkout, f.payment_started, f.purchase, pct(f.purchase, f.visits)]);
-        const head = (first) => [first, 'Visits', 'Opened a dish', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered', 'Visits that ordered'];
+        const funnelRows = (list) => (list || []).map(f => [f.name, f.visits, f.looked_at_menu, f.add_to_cart, f.begin_checkout, f.payment_started, f.purchase, pct(f.purchase, f.visits)]);
+        const head = (first) => [first, 'Visits', 'Looked at the menu', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered', 'Visits that ordered'];
         const stopTop = Math.max(1, ...(data.stopped_at || []).map(x => x.visits));
         const subTop = (data.subscription_funnel || [])[0]?.visits || 0;
         return (
           <>
             <Table title="From the page they landed on to an order" empty="Nothing recorded yet." head={head('Landed on')} rows={funnelRows(data.landing_funnels)} />
-            <div className="grid lg:grid-cols-2 gap-5">
-              <Table title="Phone or computer" empty="Nothing recorded yet." head={head('Device')} rows={funnelRows(data.device_funnels)} />
-              <Table title="First visit or returning" empty="Nothing recorded yet." head={head('Visitor')} rows={funnelRows(data.visitor_funnels)} />
-            </div>
+            <Table title="Phone or computer" empty="Nothing recorded yet." head={head('Device')} rows={funnelRows(data.device_funnels)} />
+            <Table title="First visit or returning" empty="Nothing recorded yet." head={head('Visitor')} rows={funnelRows(data.visitor_funnels)} />
 
             <div className="grid lg:grid-cols-2 gap-5">
               <div className="bg-white rounded-xl p-4" style={card}>
@@ -348,8 +372,7 @@ export default function AnalyticsTab() {
       </>)}
 
       {view === 'dishes' && (<>
-      <Table title="How each dish is doing" empty="Nothing recorded yet." head={['Dish', 'Opened', 'Added to basket', 'Ordered', 'Reading']}
-        rows={(data.dish_ranking || []).map(d => [d.name, d.opened, d.added, d.ordered, d.verdict])} />
+      <Dishes dishes={data.dish_ranking || []} />
 
       <div className="grid lg:grid-cols-2 gap-5">
         <Table title="Dishes opened most" empty="Nothing recorded yet." head={['Dish', 'Times opened']} rows={data.most_viewed_dishes.map(d => [d.name, d.count])} />
@@ -412,9 +435,29 @@ export default function AnalyticsTab() {
       </>)}
 
       <p className="text-xs text-gray-400">
-        This is the site's own count, kept on our server, and starts from the day it was switched on. It will not match Google Analytics exactly.
-        A visit is one sitting on the site. Phones: {data.devices.phone || 0} · computers: {data.devices.desktop || 0}. Staff screens are not counted. No names or contact details are recorded here.
+        This is the site's own count, kept on our server. It will not match Google Analytics exactly. A visit is one sitting: pages opened less than 30 minutes apart by the same browser.
+        Your own visits while signed in as admin, and automated browsers, are not counted. All times are UK time. Phones: {data.devices.phone || 0} · computers: {data.devices.desktop || 0}. No names or contact details are recorded here.
       </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={() => setConfirmReset(true)} className="px-3 py-2 rounded-lg text-xs font-semibold border" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}>Start counting afresh…</button>
+        <span className="text-xs text-gray-400">Empties the visit record, for example to clear visits made while the site was being tested.</span>
+      </div>
+      {confirmReset && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-label="Confirm" data-notrack>
+          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-3">
+            <h3 className="font-bold text-lg" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Start counting afresh?</h3>
+            <p className="text-sm"><span className="text-gray-500">Now:</span> {t.visits} visits recorded in the last {days} days, and everything before.</p>
+            <p className="text-sm"><span className="text-gray-500">After:</span> the visit record is empty and counting starts again from this moment.</p>
+            <p className="text-sm"><span className="text-gray-500">Not affected:</span> orders, customers, meal plans, messages, the menu.</p>
+            <p className="text-sm" style={{ color: '#B91C1C' }}>This cannot be undone. Download the figures first if you want to keep them.</p>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setConfirmReset(false)} className="px-4 py-2 text-sm font-semibold rounded-lg border" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}>Keep the record</button>
+              <button onClick={async () => { try { await api.post('/admin/analytics/reset'); setCopied('The visit record is empty. Counting starts again now.'); } catch { setCopied('That did not work. Please try again.'); } setConfirmReset(false); load(); }}
+                className="px-4 py-2 text-sm font-semibold rounded-lg" style={{ backgroundColor: P, color: '#fff' }}>Yes, empty it</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

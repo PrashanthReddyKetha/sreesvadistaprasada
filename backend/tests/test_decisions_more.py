@@ -326,3 +326,62 @@ def test_seven_more_reports(client):
     slots = r["collection_slots"]
     assert slots["times_shown"]["today"] == {"views": 2, "average_percent_full": 60} and slots["chose_asap_share"] == 0.5
     assert {c["name"] for c in slots["chosen"]} == {"ASAP", "18:30"}
+
+
+# ── One sitting is one visit, even when the browser forgets ───────────────────
+
+def test_page_loads_from_the_same_browser_are_joined_into_one_visit_without_storing_the_address(client, db, monkeypatch):
+    from routes import events
+    monkeypatch.setattr(events, "JOIN_PAGE_LOADS", True)
+
+    def load(visit, path, ua="Phone Browser", visitor=None):
+        return client.post("/api/events", headers={"user-agent": ua},
+                           json={"visit_id": visit, "visitor_id": visitor, "attribution": {"landing": path}, "events": [{"name": "page_view", "path": path}]})
+    load("visit-load0001", "/")                       # three full page loads: the browser made a new number each time
+    load("visit-load0002", "/breakfast/dosas")
+    load("visit-load0003", "/order")
+    load("visit-other001", "/", ua="Desktop Browser")  # someone else
+    load("visit-cookie01", "/", visitor="visitor-aaaa1111")   # accepted cookies: the browser keeps its own number
+    docs = run(db.events.find({}, {"_id": 0}).to_list(None))
+    by_path = {(d["path"], d.get("visitor_id")): d["visit_id"] for d in docs}
+    assert by_path[("/", None)] in ("visit-load0001", "visit-other001")
+    phone = [d for d in docs if d["visit_id"] == "visit-load0001"]
+    assert sorted(d["path"] for d in phone) == ["/", "/breakfast/dosas", "/order"]          # one visit, three pages
+    assert len({d["visit_id"] for d in docs}) == 3
+    assert all("ip" not in d and "user_agent" not in d for d in docs) and "testclient" not in str(docs)
+    # a long pause starts a new visit
+    run(db.events.update_many({"visit_id": "visit-load0001"}, {"$set": {"at": datetime.utcnow() - timedelta(minutes=45)}}))
+    load("visit-load0004", "/menu")
+    assert run(db.events.find_one({"path": "/menu"}))["visit_id"] == "visit-load0004"
+    report = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    assert report["totals"]["visits"] == 4 and "day_code" not in str(report)
+    landed = {f["name"]: f["visits"] for f in report["landing_funnels"]}
+    assert landed == {"/": 3, "/menu": 1}                                                  # the joined visit landed on the home page
+
+
+def test_every_dish_on_the_menu_is_listed_and_the_funnel_counts_looking_at_the_menu(client, db):
+    for i, cat in enumerate(("breakfast", "veg", "nonVeg")):
+        run(db.menu_items.insert_one({"id": f"d{i}", "name": f"Dish {i}", "category": cat, "available": True, "price": 5.0 + i}))
+    run(db.menu_items.insert_one({"id": "hidden", "name": "Hidden Dish", "category": "veg", "available": False, "price": 5.0}))
+    client.post("/api/events", json={"visit_id": "visit-menu0001", "events": [
+        {"name": "page_view", "path": "/"}, {"name": "page_view", "path": "/order"},
+        {"name": "add_to_cart", "path": "/order", "items": [{"id": "d1", "name": "Dish 1", "quantity": 1}], "props": {"value": 6.0}}]})
+    client.post("/api/events", json={"visit_id": "visit-home0009", "events": [{"name": "page_view", "path": "/story"}]})
+    r = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    ranking = {d["name"]: d for d in r["dish_ranking"]}
+    assert set(ranking) == {"Dish 0", "Dish 1", "Dish 2"}                                  # all three on sale; the hidden one is not
+    assert ranking["Dish 1"]["added"] == 1 and ranking["Dish 1"]["section"] == "Prasada (veg)" and ranking["Dish 1"]["price"] == 6.0
+    assert ranking["Dish 0"]["verdict"] == "Not looked at yet"
+    assert [(f["step"], f["visits"]) for f in r["funnel"]] == [("page_view", 2), ("looked_at_menu", 1), ("add_to_cart", 1), ("begin_checkout", 0), ("purchase", 0)]
+
+
+def test_starting_afresh_empties_the_visit_record_only(client, db):
+    run(db.orders.insert_one({"id": "keep", "status": "delivered", "total": 10.0, "items": []}))
+    client.post("/api/events", json={"visit_id": "visit-gone0001", "events": [{"name": "page_view", "path": "/"}]})
+    run(db.daily_metrics.insert_one({"day": "2026-10-05", "visits": 89}))
+    assert client.post("/api/admin/analytics/reset").status_code in (401, 403)
+    assert client.post("/api/admin/analytics/reset", headers=token("u1")).status_code == 403
+    assert client.post("/api/admin/analytics/reset", headers=ADMIN()).json() == {"ok": True, "removed": 1}
+    assert run(db.events.count_documents({})) == 0 and run(db.daily_metrics.count_documents({})) == 0
+    assert run(db.orders.count_documents({})) == 1
+    assert run(db.admin_audit.find_one({}))["action"] == "emptied the visit record"

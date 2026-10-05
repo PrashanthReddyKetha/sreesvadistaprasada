@@ -36,7 +36,7 @@ const FLAGS = {
 };
 const RISK = { high: { label: 'Likely to drift away', color: '#B91C1C' }, medium: { label: 'Overdue an order', color: '#8D6E00' }, low: { label: 'On their usual rhythm', color: '#2E7D32' } };
 const KIND = { order: '#800020', plan: '#2E7D32', review: '#6A1B9A', enquiry: '#1565C0', loyalty: '#E65100', coupon: '#8D6E00', account: '#616161', newsletter: '#616161' };
-const fmtWhen = (iso) => new Date(iso + (/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? '' : 'Z')).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const fmtWhen = (iso) => new Date(iso + (/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? '' : 'Z')).toLocaleString('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const rate = (v) => (v == null ? '—' : `${Math.round(v * 100)}%`);
 
 function CustomerPage({ email, onClose }) {

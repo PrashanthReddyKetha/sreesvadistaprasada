@@ -8,7 +8,7 @@ import api from '@/api';
 
 const P = '#800020';
 const card = { boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
-const when = (iso) => new Date(iso + (/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? '' : 'Z')).toLocaleString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+const when = (iso) => new Date(iso + (/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? '' : 'Z')).toLocaleString('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 const LEVEL = {
   1: { label: 'Done automatically', bg: '#E8F5E9', color: '#2E7D32' },
   2: { label: 'Done within your limits', bg: '#E3F2FD', color: '#1565C0' },

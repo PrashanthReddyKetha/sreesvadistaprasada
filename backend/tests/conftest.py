@@ -82,6 +82,7 @@ def fresh_state(monkeypatch):
 
     async def _no_ai(_figures):
         return {"ok": False, "why": "AI is switched off in tests"}
+    monkeypatch.setattr(events, "JOIN_PAGE_LOADS", False)      # tests name their visits; joining is tested on its own
     monkeypatch.setattr(intelligence, "site_check", _no_site_check)
     monkeypatch.setattr(intelligence, "WEEKLY_DAY", 99)      # weekly jobs only run in the tests that ask for them
     monkeypatch.setattr(ai_ops, "investigate", _no_ai)

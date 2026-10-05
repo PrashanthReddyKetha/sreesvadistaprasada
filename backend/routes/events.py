@@ -3,12 +3,20 @@
 POST /api/events           public; the site sends small batches of events
 GET  /api/admin/analytics  admin; visits, funnel, sources, top dishes, by day
 
-Privacy: no name, email, phone or address is stored here. A visit id is always
-present; a returning-visitor id is only sent by the browser when the visitor has
-accepted analytics cookies. IP addresses are not stored. Events are deleted
-automatically after RETENTION_DAYS.
+Privacy: no name, email, phone or address is stored here. A returning-visitor id is only
+sent by the browser when the visitor has accepted analytics cookies. IP addresses are not
+stored. Events are deleted automatically after RETENTION_DAYS.
+
+What counts as one visit: for a visitor who accepted cookies, the browser keeps the visit
+number for the session. For everyone else nothing is kept on their device, so page loads are
+joined on the server instead: the visitor's address and browser type are combined with a
+random value that is replaced every day, turned into a short code, and the address is thrown
+away. Page loads with the same code less than 30 minutes apart are one visit. The code cannot
+be turned back into an address and cannot link one day to the next.
 """
+import hashlib
 import re
+import secrets
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from typing import List, Optional
@@ -18,18 +26,22 @@ from pydantic import BaseModel, Field
 
 from auth import require_admin
 from database import db
-from security import RateLimit
+from audit_log import record_admin_action
+from security import RateLimit, client_ip
 
 router = APIRouter(tags=["Events"])
 
 RETENTION_DAYS = 400
 LONDON = ZoneInfo("Europe/London")   # days and hours are the kitchen's, not UTC
 MAX_BATCH = 25
+VISIT_GAP_MINUTES = 30      # a pause longer than this starts a new visit
+JOIN_PAGE_LOADS = True      # see "What counts as one visit" above
+MENU_PATHS = ("/order", "/menu", "/breakfast", "/prasada", "/svadista", "/street-food", "/drinks", "/ragi-specials", "/snacks")
 _rate = RateLimit(120, 60)   # batches per minute per visitor
 
 # Any lower-case name is accepted, so a new action on the site needs no change here.
 _NAME = re.compile(r"^[a-z][a-z0-9_]{1,39}$")
-FUNNEL = ["page_view", "view_item", "add_to_cart", "begin_checkout", "purchase"]
+FUNNEL = ["page_view", "looked_at_menu", "add_to_cart", "begin_checkout", "purchase"]
 PROP_KEYS = {"value", "transaction_id", "coupon", "plan", "box_type", "step_number", "step_name", "source",
              "enquiry_type", "category", "location", "item_id", "item_name", "quantity", "term", "method", "reason",
              "label", "area", "href", "seconds", "percent", "status", "message"}
@@ -73,19 +85,38 @@ class Batch(BaseModel):
     events: List[EventIn] = Field(max_length=MAX_BATCH)
 
 
+async def _day_code(request: Request, day: str) -> str:
+    """A short code for "the same browser today". The salt changes daily; neither the address nor the
+    browser type is stored."""
+    doc = await db.settings.find_one({"_id": "event_salt"})
+    if not doc or doc.get("day") != day:
+        doc = {"day": day, "salt": secrets.token_hex(16)}
+        await db.settings.update_one({"_id": "event_salt"}, {"$set": doc}, upsert=True)
+    raw = f'{doc["salt"]}|{client_ip(request)}|{request.headers.get("user-agent", "")}'
+    return hashlib.sha256(raw.encode()).hexdigest()[:20]
+
+
 @router.post("/events", status_code=202)
 async def record_events(batch: Batch, request: Request, _=Depends(_rate)):
     if not _ID.match(batch.visit_id) or (batch.visitor_id and not _ID.match(batch.visitor_id)):
         return {"stored": 0}
     now = datetime.utcnow()
     local = datetime.now(LONDON)
+    visit_id, day_code = batch.visit_id, None
+    if JOIN_PAGE_LOADS and not batch.visitor_id:
+        # No cookie consent, so the browser forgets its visit number on every full page load. Join them here.
+        day_code = await _day_code(request, local.strftime("%Y-%m-%d"))
+        recent = await db.events.find({"day_code": day_code, "at": {"$gte": now - timedelta(minutes=VISIT_GAP_MINUTES)}},
+                                      {"_id": 0, "visit_id": 1}).sort("at", -1).limit(1).to_list(1)
+        if recent:
+            visit_id = recent[0]["visit_id"]
     docs = []
     for e in batch.events:
         if not _NAME.match(e.name):
             continue
         docs.append({
             "name": e.name, "path": e.path.split("?")[0], "at": now, "day": local.strftime("%Y-%m-%d"), "hour": local.hour,
-            "visit_id": batch.visit_id, "visitor_id": batch.visitor_id, "signed_in": batch.signed_in, "device": batch.device,
+            "visit_id": visit_id, "day_code": day_code, "visitor_id": batch.visitor_id, "signed_in": batch.signed_in, "device": batch.device,
             "source": batch.attribution.source, "medium": batch.attribution.medium, "campaign": batch.attribution.campaign,
             "referrer": batch.attribution.referrer, "landing": batch.attribution.landing.split("?")[0],
             "props": {k: _clean(v) for k, v in e.props.items() if k in PROP_KEYS},
@@ -116,7 +147,7 @@ def channel(e: dict) -> str:
 async def analytics(days: int = 30, _: dict = Depends(require_admin)):
     days = max(1, min(days, RETENTION_DAYS))
     since = datetime.utcnow() - timedelta(days=days)
-    events = await db.events.find({"at": {"$gte": since}}, {"_id": 0}).to_list(None)
+    events = await db.events.find({"at": {"$gte": since}}, {"_id": 0, "day_code": 0}).sort("at", 1).to_list(None)
 
     visits, by_day, pages, viewed, added, sources, devices = {}, {}, {}, {}, {}, {}, {}
     clicks, searches, problems, hours, stay, action_visits = {}, {}, {}, {}, {}, {}
@@ -148,6 +179,9 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
             hours[h] = hours.get(h, 0) + 1
         v = visits.setdefault(e["visit_id"], {"names": set(), "first": e, "value": 0.0, "order": None})
         v["names"].add(e["name"])
+        v["names"].add("page_view")          # every visit arrived, whether or not that first event was kept
+        if e["name"] in ("view_item", "menu_category_view", "add_to_cart") or (e["name"] == "page_view" and e["path"].startswith(MENU_PATHS)):
+            v["names"].add("looked_at_menu")
         if e["name"] == "purchase":
             v["value"] += float(e["props"].get("value") or 0)
             v["order"] = e["props"].get("transaction_id")
@@ -176,7 +210,7 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         devices[dev] = devices.get(dev, 0) + 1
 
     # ── Journeys: each visit's events in order ───────────────────────────────
-    STEPS = [("page_view", "Arrived"), ("view_item", "Opened a dish"), ("add_to_cart", "Added to basket"),
+    STEPS = [("page_view", "Arrived"), ("looked_at_menu", "Looked at the menu"), ("add_to_cart", "Added to basket"),
              ("begin_checkout", "Started checkout"), ("payment_started", "Started paying"), ("purchase", "Ordered")]
     ordered_events: dict = {}
     for e in sorted(events, key=lambda e: e["at"]):
@@ -346,11 +380,18 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         ({"name": n, "opened": v, "added": added.get(n, 0), "ordered": ordered_dishes.get(n, 0),
           "verdict": verdict(v, added.get(n, 0), ordered_dishes.get(n, 0))} for n, v in viewed.items()),
         key=lambda d: (d["ordered"], -d["opened"]))[:15]
+    menu = await db.menu_items.find({"available": True}, {"_id": 0, "name": 1, "category": 1, "subcategory": 1, "price": 1}).to_list(None)
+    on_menu = {m["name"]: m for m in menu}
+    section_names = {"breakfast": "Breakfast", "veg": "Prasada (veg)", "nonVeg": "Svadista (non-veg)", "streetFood": "Street food",
+                     "drinks": "Drinks", "ragiSpecials": "Ragi specials", "pickles": "Pickles", "podis": "Podis"}
     dish_ranking = sorted(
-        ({"name": n, "opened": viewed.get(n, 0), "added": added.get(n, 0), "ordered": ordered_dishes.get(n, 0),
-          "verdict": verdict(viewed.get(n, 0), added.get(n, 0), ordered_dishes.get(n, 0))}
-         for n in set(viewed) | set(added) | set(ordered_dishes)),
-        key=lambda d: (-d["ordered"], -d["added"], -d["opened"]))[:40]
+        ({"name": n, "section": section_names.get((on_menu.get(n) or {}).get("category"), "No longer on the menu" if n not in on_menu else ""),
+          "price": (on_menu.get(n) or {}).get("price"),
+          "opened": viewed.get(n, 0), "added": added.get(n, 0), "ordered": ordered_dishes.get(n, 0),
+          "verdict": ("Not looked at yet" if not (viewed.get(n) or added.get(n) or ordered_dishes.get(n))
+                      else verdict(viewed.get(n, 0), added.get(n, 0), ordered_dishes.get(n, 0)))}
+         for n in set(on_menu) | set(viewed) | set(added) | set(ordered_dishes)),
+        key=lambda d: (-d["ordered"], -d["added"], -d["opened"], d["name"]))
     checkout_steps = [("begin_checkout", "Started checkout"), ("payment_started", "Started paying"), ("purchase", "Order placed")]
     checkout = [{"step": label, "visits": sum(1 for v in visits.values() if name in v["names"])} for name, label in checkout_steps]
     checkout.append({"step": "Payment or order failed", "visits": sum(
@@ -415,6 +456,16 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         "time_on_page": sorted(({"page": pth, "views": t[0], "average_seconds": round(t[1] / t[0]), "average_scroll": round(t[2] / t[0])}
                                 for pth, t in stay.items() if t[0]), key=lambda r: -r["views"])[:20],
     }
+
+
+@router.post("/admin/analytics/reset")
+async def start_afresh(admin: dict = Depends(require_admin)):
+    """Empty the visit record and the stored daily figures, so counting starts again from now.
+    Orders, customers, plans and messages are not touched."""
+    gone = await db.events.delete_many({})
+    await db.daily_metrics.delete_many({})
+    await record_admin_action(admin, "emptied the visit record", "Analytics", {"events": gone.deleted_count}, {"events": 0})
+    return {"ok": True, "removed": gone.deleted_count}
 
 
 @router.get("/admin/analytics/visits")

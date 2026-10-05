@@ -52,6 +52,7 @@ async def lifespan(app: FastAPI):
     # Our own visit record: fast date queries, and automatic deletion after the retention period
     await db.events.create_index("at", expireAfterSeconds=event_routes.RETENTION_DAYS * 86400)
     await db.events.create_index("visit_id")
+    await db.events.create_index([("day_code", 1), ("at", -1)], sparse=True)
     # The send log: who was sent what. Deleted automatically after the retention period.
     from notifications import MESSAGE_LOG_DAYS
     await db.message_log.create_index("at", expireAfterSeconds=MESSAGE_LOG_DAYS * 86400)

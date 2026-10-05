@@ -9,7 +9,7 @@ import api from '@/api';
 const P = '#800020';
 const card = { boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
 const fmt = (n) => `£${Number(n || 0).toFixed(2)}`;
-const when = (iso) => iso ? new Date(iso + (/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? '' : 'Z')).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+const when = (iso) => iso ? new Date(iso + (/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? '' : 'Z')).toLocaleString('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 
 function Preview({ automation, onClose }) {
   const [data, setData] = useState(null);
