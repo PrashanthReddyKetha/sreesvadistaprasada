@@ -34,6 +34,7 @@ const FLAGS = {
   at_risk:    { label: 'Going quiet',  hint: 'Ordered at least twice, nothing for 30 to 60 days', bg: '#FCE4EC', color: '#AD1457' },
   only_cancelled: { label: 'Only cancelled orders', hint: 'Every order so far was cancelled', bg: '#F5F5F5', color: '#616161' },
 };
+const RISK = { high: { label: 'Likely to drift away', color: '#B91C1C' }, medium: { label: 'Overdue an order', color: '#8D6E00' }, low: { label: 'On their usual rhythm', color: '#2E7D32' } };
 const KIND = { order: '#800020', plan: '#2E7D32', review: '#6A1B9A', enquiry: '#1565C0', loyalty: '#E65100', coupon: '#8D6E00', account: '#616161', newsletter: '#616161' };
 const fmtWhen = (iso) => new Date(iso + (/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? '' : 'Z')).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const rate = (v) => (v == null ? '—' : `${Math.round(v * 100)}%`);
@@ -146,7 +147,34 @@ function Insights({ data }) {
           {tile('Meals skipped', rate(d.skip_rate), `${d.meals_skipped} of ${d.meals_sold} · ${d.makeup_meals} made up`)}
           {tile('Cancelled', d.cancelled, `${d.finished} finished without cancelling`)}
         </div>
+        {(data.dabba_forecast || []).some(w => w.plans_ending > 0) && (
+          <table className="w-full text-xs mt-4">
+            <thead><tr className="text-left text-gray-500">{['Week starting', 'Plans ending', 'Renewals to expect'].map(h => <th key={h} className="py-1 pr-3 font-semibold">{h}</th>)}</tr></thead>
+            <tbody>{data.dabba_forecast.map(w => (
+              <tr key={w.week_starting} className="border-t" style={{ borderColor: '#f9f6ee' }}>
+                <td className="py-1 pr-3">{new Date(w.week_starting).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</td>
+                <td className="py-1 pr-3">{w.plans_ending}</td><td className="py-1 pr-3">{w.expected_renewals == null ? 'not enough history' : w.expected_renewals}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        )}
       </div>
+      {(data.coupons || []).length > 0 && (
+        <div className="bg-white rounded-xl p-4 lg:col-span-2" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+          <h3 className="font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: P }}>What each coupon gave away and brought in</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead><tr className="text-left text-xs text-gray-500 uppercase tracking-wider">{['Code', 'Orders', 'Discount given', 'Order income', 'Income per £1 given'].map(h => <th key={h} className="py-1 pr-4 font-semibold whitespace-nowrap">{h}</th>)}</tr></thead>
+              <tbody>{data.coupons.map(k => (
+                <tr key={k.code} className="border-t" style={{ borderColor: '#f9f6ee' }}>
+                  <td className="py-1.5 pr-4 font-medium">{k.code}</td><td className="py-1.5 pr-4">{k.orders}</td><td className="py-1.5 pr-4">{fmt(k.discount_given)}</td>
+                  <td className="py-1.5 pr-4">{fmt(k.income)}</td><td className="py-1.5 pr-4">{k.income_per_pound_given == null ? '—' : fmt(k.income_per_pound_given)}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -161,6 +189,7 @@ export default function CustomersTab() {
   const [query, setQuery] = useState('');
   const [stage, setStage] = useState('all');
   const [flag, setFlag] = useState('all');
+  const [risk, setRisk] = useState('all');
   const [open, setOpen] = useState(null);
   const [insights, setInsights] = useState(null);
 
@@ -181,8 +210,9 @@ export default function CustomersTab() {
       (segment === 'all' || c.segment === segment) &&
       (stage === 'all' || c.dabba_stage === stage) &&
       (flag === 'all' || (c.flags || []).includes(flag)) &&
+      (risk === 'all' || c.return_risk === risk) &&
       (!q || [c.name, c.email, c.phone].some(v => (v || '').toLowerCase().includes(q))));
-  }, [data, segment, stage, flag, query]);
+  }, [data, segment, stage, flag, risk, query]);
 
   const exportCsv = () => {
     const head = ['Name', 'Email', 'Phone', 'Group', 'Dabba Wala stage', 'Account', 'Orders', 'Order spend', 'Plans', 'Plan spend', 'Total spend', 'Average order', 'First order', 'Last order', 'Running plan', 'Newsletter'];
@@ -245,6 +275,12 @@ export default function CustomersTab() {
             {FLAGS[k].label} ({(s.flags || {})[k] || 0})
           </button>
         ))}
+        {['high', 'medium'].map(k => (
+          <button key={k} onClick={() => setRisk(risk === k ? 'all' : k)} title="Judged from how long they have been quiet against their own usual gap between orders" className="px-3 py-1 rounded-full text-xs font-semibold border"
+            style={risk === k ? { backgroundColor: RISK[k].color, color: '#fff', borderColor: RISK[k].color } : { borderColor: '#e0d9d0', color: '#5C4B47' }}>
+            {RISK[k].label} ({(s.return_risk || {})[k] || 0})
+          </button>
+        ))}
       </div>
       {(stage !== 'all' || flag !== 'all') && <p className="text-xs text-gray-500 -mt-2">{[stage !== 'all' && STAGES[stage].hint, flag !== 'all' && FLAGS[flag].hint].filter(Boolean).join(' · ')}</p>}
 
@@ -287,7 +323,8 @@ export default function CustomersTab() {
                       <td className="px-4 py-3 font-semibold">{fmt(c.total_spend)}</td>
                       <td className="px-4 py-3 text-gray-600">{c.orders ? fmt(c.average_order) : '—'}</td>
                       <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{fmtDate(c.last_order)}
-                        {c.days_since_last_order != null && <p className="text-xs text-gray-400">{c.days_since_last_order === 0 ? 'today' : `${c.days_since_last_order} days ago`}</p>}</td>
+                        {c.days_since_last_order != null && <p className="text-xs text-gray-400">{c.days_since_last_order === 0 ? 'today' : `${c.days_since_last_order} days ago`}</p>}
+                        {RISK[c.return_risk] && c.return_risk !== 'low' && <p className="text-xs" style={{ color: RISK[c.return_risk].color }}>{RISK[c.return_risk].label}</p>}</td>
                       <td className="px-4 py-3 text-gray-600">{c.active_plan ? <span className="capitalize">{c.active_plan}</span> : c.plans ? <span className="text-xs text-gray-400">ended {c.last_plan_end || ''}</span> : '—'}
                         {STAGES[c.dabba_stage] && c.dabba_stage !== 'prospect' && <p className="text-xs text-gray-400">{STAGES[c.dabba_stage].label}</p>}</td>
                       <td className="px-4 py-3 text-gray-600">{c.has_account ? c.loyalty_orders : '—'}{c.loyalty_reward_waiting && <p className="text-xs" style={{ color: '#2E7D32' }}>free dish waiting</p>}</td>

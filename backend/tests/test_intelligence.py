@@ -123,8 +123,8 @@ def test_customer_messages_stay_off_unless_the_owner_allows_the_system_to_manage
     client.put(f"{URL}/settings", json={"customer_messages": True}, headers=ADMIN())
     run(brain.run_review())
     state = {a["id"]: a["enabled"] for a in run(db.automation_settings.find({}).to_list(None))}
-    assert state == {"lapsed": False, "first_order": True, "going_quiet": True, "plan_finished": True}
-    assert len(log(db, "customer message switched on")) == 3
+    assert state["lapsed"] is False and all(v for k, v in state.items() if k != "lapsed") and len(state) == 11
+    assert len(log(db, "customer message switched on")) == 10
 
 
 # ── Noticing change ───────────────────────────────────────────────────────────
@@ -153,6 +153,21 @@ def test_normal_variation_is_not_an_alarm():
              "failures": 1, "script_errors": 2, "unsubscribes": 0}
     assert not any(s["material"] for s in brain.compare(today, history))
     assert all(s["note"] == "not enough history yet" for s in brain.compare(today, history[:2]))
+
+
+def test_things_to_know_are_listed_and_emailed_without_any_action(db, alerts):
+    yesterday_noon = datetime.strptime(day(1), "%Y-%m-%d") + timedelta(hours=12)
+    run(db.delivery_reviews.insert_one({"id": "r1", "status": "submitted", "rating": 1, "submitted_at": yesterday_noon.isoformat()}))
+    run(db.orders.insert_one({"id": "c1", "status": "cancelled", "total": 20.0, "items": [], "created_at": yesterday_noon, "updated_at": yesterday_noon}))
+    for n in range(6):
+        run(db.events.insert_one({"name": "coupon_failed", "visit_id": f"v{n}", "day": day(1), "at": yesterday_noon, "path": "/checkout"}))
+    run(db.subscriptions.insert_one({"id": "p1", "status": "active", "end_date": day(-3), "customer_email": "t@example.com"}))
+    result = run(brain.run_review())
+    entry = log(db, "things to know")[0]
+    for text in ("1 low review", "1 order was cancelled", "refused 6 times", "1 Dabba Wala plan ends"):
+        assert text in entry["noticed"], text
+    assert entry["level"] == 3 and len(alerts) == 1 and "4 things to know" in alerts[0]
+    assert any("4 thing(s) to know" in d for d in result["did"])
 
 
 # ── Recommendations and outcomes ──────────────────────────────────────────────

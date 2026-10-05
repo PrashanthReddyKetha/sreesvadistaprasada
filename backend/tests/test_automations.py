@@ -86,12 +86,41 @@ def test_going_quiet_lapsed_and_plan_finished_pick_the_right_customers(client, d
                                      "plan": "weekly", "box_type": "prasada", "price": 75.0, "status": "expired", "user_id": None,
                                      "end_date": (NOW - timedelta(days=10)).strftime("%Y-%m-%d"), "created_at": NOW - timedelta(days=17)}))
     listing = {a["id"]: a["would_send_now"] for a in client.get(URL, headers=ADMIN()).json()["automations"]}
-    assert listing == {"first_order": 0, "going_quiet": 1, "lapsed": 1, "plan_finished": 1}
+    assert {k: listing[k] for k in ("first_order", "going_quiet", "lapsed", "plan_finished")} == {
+        "first_order": 0, "going_quiet": 1, "lapsed": 1, "plan_finished": 1}
+    assert len(listing) == 11
     for a in ("going_quiet", "lapsed", "plan_finished"):
         switch_on(client, a)
     assert run(engine.run("going_quiet"))["sent"] == 1 and sent[-1]["to"] == "quiet@example.com"
     assert run(engine.run("plan_finished"))["sent"] == 1 and "subscriptions" in sent[-1]["html"]
     assert run(engine.run("lapsed"))["sent"] == 1 and sent[-1]["to"] == "lapsed@example.com"
+
+
+def test_the_seven_further_automations_pick_the_right_customers(client, db, sent):
+    def acct(uid, email, days_ago, **extra):
+        run(db.users.insert_one({"id": uid, "name": "Mira Rao", "email": email, "role": "customer",
+                                 "created_at": NOW - timedelta(days=days_ago), **extra}))
+    order(db, "two@example.com", 4, 1); order(db, "two@example.com", 12, 2)                    # second order 4 days ago
+    acct("u1", "reward@example.com", 60, loyalty_order_count=5, loyalty_pending_reward=True)
+    order(db, "reward@example.com", 9, 3)
+    acct("u2", "almost@example.com", 60, loyalty_order_count=4)
+    order(db, "almost@example.com", 5, 4)
+    for n in range(8):
+        order(db, "big@example.com", 1 + n, 10 + n, total=25.0)                               # £200, and 8 orders, never a plan
+    run(db.newsletter.insert_one({"id": "n1", "email": "news@example.com", "active": True, "created_at": NOW - timedelta(days=1)}))
+    acct("u3", "empty@example.com", 5)
+    listing = {a["id"]: a["would_send_now"] for a in client.get(URL, headers=ADMIN()).json()["automations"]}
+    assert {k: listing[k] for k in ("second_order", "reward_waiting", "one_away", "high_spender", "tiffin_intro",
+                                    "newsletter_welcome", "account_no_order")} == {
+        "second_order": 1, "reward_waiting": 1, "one_away": 1, "high_spender": 1, "tiffin_intro": 1,
+        "newsletter_welcome": 1, "account_no_order": 1}
+    for a, who in (("reward_waiting", "reward@example.com"), ("one_away", "almost@example.com"), ("account_no_order", "empty@example.com")):
+        switch_on(client, a)
+        assert run(engine.run(a))["sent"] == 1 and sent[-1]["to"] == who
+    switch_on(client, "high_spender")
+    assert run(engine.run("high_spender"))["sent"] == 1 and sent[-1]["to"] == "big@example.com"
+    switch_on(client, "tiffin_intro")                                                          # same person, same week: held back
+    assert run(engine.run("tiffin_intro"))["sent"] == 0
 
 
 def test_coupon_must_exist_and_appears_in_the_message(client, db, sent):

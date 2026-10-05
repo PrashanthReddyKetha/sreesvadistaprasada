@@ -159,8 +159,8 @@ export default function AnalyticsTab() {
           rows={(data.exit_pages || []).map(d => [d.name, d.count])} />
       </div>
 
-      <Table title="Dishes people look at but rarely order" empty="Nothing recorded yet." head={['Dish', 'Opened', 'Added to basket', 'Ordered']}
-        rows={(data.interest_without_orders || []).map(d => [d.name, d.opened, d.added, d.ordered])} />
+      <Table title="How each dish is doing" empty="Nothing recorded yet." head={['Dish', 'Opened', 'Added to basket', 'Ordered', 'Reading']}
+        rows={(data.dish_ranking || []).map(d => [d.name, d.opened, d.added, d.ordered, d.verdict])} />
 
       <div className="grid lg:grid-cols-2 gap-5">
         <Table title="Dishes opened most" empty="Nothing recorded yet." head={['Dish', 'Times opened']} rows={data.most_viewed_dishes.map(d => [d.name, d.count])} />

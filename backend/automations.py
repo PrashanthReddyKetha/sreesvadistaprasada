@@ -118,6 +118,105 @@ def _msg_plan_finished(c: dict, code: Optional[str]):
         + _offer(code), "Start a new plan", f"{SITE_URL}/subscriptions?utm_source=email&utm_medium=automation&utm_campaign=plan_finished")
 
 
+def _who_second_order(c: dict, now: datetime):
+    d = _days_since(c.get("last_order"), now)
+    return "second-order" if c["orders"] == 2 and d is not None and 2 <= d <= 10 else None
+
+
+def _who_reward_waiting(c: dict, now: datetime):
+    d = _days_since(c.get("last_order"), now)
+    if c.get("loyalty_reward_waiting") and d is not None and d >= 7:
+        return f'reward-waiting-since-{(c.get("last_order") or "")[:10]}'
+    return None
+
+
+def _who_one_away(c: dict, now: datetime):
+    d = _days_since(c.get("last_order"), now)
+    n = c.get("loyalty_orders") or 0
+    if c.get("has_account") and n % 5 == 4 and not c.get("loyalty_reward_waiting") and d is not None and 3 <= d <= 21:
+        return f"one-away-at-{n}"
+    return None
+
+
+def _who_high_spender(c: dict, now: datetime):
+    return "high-spender" if "high_value" in (c.get("flags") or []) else None
+
+
+def _who_orders_no_plan(c: dict, now: datetime):
+    d = _days_since(c.get("last_order"), now)
+    return "tiffin-intro" if c.get("dabba_stage") == "prospect" and c["orders"] >= 3 and d is not None and d <= 30 else None
+
+
+def _who_newsletter_welcome(c: dict, now: datetime):
+    d = _days_since(c.get("joined"), now)
+    return "newsletter-welcome" if c.get("newsletter") and c["orders"] == 0 and c["plans"] == 0 and d is not None and d <= 3 else None
+
+
+def _who_account_no_order(c: dict, now: datetime):
+    d = _days_since(c.get("joined"), now)
+    if c.get("has_account") and c["orders"] == 0 and c["plans"] == 0 and c["cancelled_orders"] == 0 and d is not None and 3 <= d <= 14:
+        return "account-no-order"
+    return None
+
+
+def _msg_second_order(c: dict, code: Optional[str]):
+    return "Thank you for coming back", _wrap(
+        "Two orders in — thank you",
+        f"<p>Hi {_first(c['name'])}, thank you for ordering from us a second time. It means a great deal to a small kitchen.</p>"
+        "<p>If you order with an account, every fifth order earns a free dish of your choice.</p>"
+        + _offer(code), "See the menu", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=second_order")
+
+
+def _msg_reward_waiting(c: dict, code: Optional[str]):
+    return "Your free dish is waiting", _wrap(
+        "You have a free dish to use",
+        f"<p>Hi {_first(c['name'])}, your orders have earned you a free dish, and it has not been used yet.</p>"
+        "<p>Choose any dish on your next order and take it off at checkout.</p>",
+        "Use my free dish", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=reward_waiting")
+
+
+def _msg_one_away(c: dict, code: Optional[str]):
+    return "One more order to a free dish", _wrap(
+        "You are one order away",
+        f"<p>Hi {_first(c['name'])}, your next order is the one that earns you a free dish of your choice.</p>"
+        + _offer(code), "Order now", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=one_away")
+
+
+def _msg_high_spender(c: dict, code: Optional[str]):
+    return "A thank-you from our kitchen", _wrap(
+        "Thank you",
+        f"<p>Hi {_first(c['name'])}, you are one of the people who order from us most, and we wanted to say thank you properly.</p>"
+        "<p>If there is a dish from home you wish we cooked, reply and tell us. We read every message.</p>"
+        + _offer(code), "See the menu", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=high_spender")
+
+
+def _msg_orders_no_plan(c: dict, code: Optional[str]):
+    return "Have you seen our Dabba Wala?", _wrap(
+        "Home-cooked meals, every weekday",
+        f"<p>Hi {_first(c['name'])}, as you order from us regularly, you might like our Dabba Wala: a freshly cooked tiffin every weekday, "
+        "for a week or a month, vegetarian or non-vegetarian.</p>"
+        "<p>Rice, pickle and papad are always in the box; the dal, curry and sabzi change every day. You can skip any day you do not need.</p>"
+        + _offer(code), "See the plans", f"{SITE_URL}/subscriptions?utm_source=email&utm_medium=automation&utm_campaign=tiffin_intro")
+
+
+def _msg_newsletter_welcome(c: dict, code: Optional[str]):
+    return "Welcome to Sree Svadista Prasada", _wrap(
+        "Thank you for joining us",
+        "<p>Thank you for signing up. We are a home kitchen in Greenleys, Milton Keynes, cooking Telugu and Andhra food to order — "
+        "dosas and idli in the morning, curries, biryani and rice bowls through the day.</p>"
+        "<p>We will write only when there is something worth telling you.</p>"
+        + _offer(code), "See the menu", f"{SITE_URL}/menu?utm_source=email&utm_medium=automation&utm_campaign=newsletter_welcome")
+
+
+def _msg_account_no_order(c: dict, code: Optional[str]):
+    return "Your account is ready when you are", _wrap(
+        "Ready when you are",
+        f"<p>Hi {_first(c['name'])}, you opened an account with us a few days ago. Whenever you are hungry, ordering takes a couple of minutes "
+        "and you collect from Greenleys.</p>"
+        "<p>With an account, every fifth order earns a free dish.</p>"
+        + _offer(code), "See the menu", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=account_no_order")
+
+
 CATALOGUE = [
     {"id": "first_order", "name": "After a first order",
      "who_text": "Customers with exactly one order, placed 3 to 14 days ago, and no meal plan running.",
@@ -135,6 +234,34 @@ CATALOGUE = [
      "who_text": "Customers whose Dabba Wala plan finished 7 to 30 days ago and who have not started another.",
      "what_text": "An invitation to start a new plan.",
      "who": _who_plan_finished, "message": _msg_plan_finished},
+    {"id": "second_order", "name": "After a second order",
+     "who_text": "Customers whose second order was placed 2 to 10 days ago.",
+     "what_text": "A thank-you and a reminder that every fifth order earns a free dish.",
+     "who": _who_second_order, "message": _msg_second_order},
+    {"id": "reward_waiting", "name": "Free dish earned but not used",
+     "who_text": "Account holders with a free loyalty dish waiting and no order for a week or more.",
+     "what_text": "A reminder that the free dish is there.",
+     "who": _who_reward_waiting, "message": _msg_reward_waiting},
+    {"id": "one_away", "name": "One order from a free dish",
+     "who_text": "Account holders whose next order earns the free dish, last ordered 3 to 21 days ago.",
+     "what_text": "Tells them their next order earns it.",
+     "who": _who_one_away, "message": _msg_one_away},
+    {"id": "high_spender", "name": "Thank-you to your best customers",
+     "who_text": "Customers who have spent £150 or more in total. Sent once, ever.",
+     "what_text": "A personal thank-you and an invitation to suggest a dish.",
+     "who": _who_high_spender, "message": _msg_high_spender},
+    {"id": "tiffin_intro", "name": "Regular customer who has never tried Dabba Wala",
+     "who_text": "Three or more orders, the latest within 30 days, and never a meal plan. Sent once, ever.",
+     "what_text": "Introduces the tiffin plans.",
+     "who": _who_orders_no_plan, "message": _msg_orders_no_plan},
+    {"id": "newsletter_welcome", "name": "Welcome to the newsletter",
+     "who_text": "People who joined the newsletter in the last 3 days and have not ordered.",
+     "what_text": "A short welcome saying who you are and what you cook.",
+     "who": _who_newsletter_welcome, "message": _msg_newsletter_welcome},
+    {"id": "account_no_order", "name": "Account opened, nothing ordered",
+     "who_text": "People who opened an account 3 to 14 days ago and have not ordered.",
+     "what_text": "A gentle nudge to place a first order.",
+     "who": _who_account_no_order, "message": _msg_account_no_order},
 ]
 BY_ID = {a["id"]: a for a in CATALOGUE}
 

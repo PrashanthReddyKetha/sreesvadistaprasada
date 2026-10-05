@@ -106,6 +106,34 @@ def test_insights_repeat_rate_cohorts_and_dabba(client, db):
     assert (d["moved_from_weekly_to_monthly"], d["meals_sold"], d["meals_skipped"], d["makeup_meals"], d["skip_rate"]) == (1, 35, 1, 1, 0.029)
 
 
+def test_dish_verdicts(client):
+    def send(visit, names, item):
+        client.post("/api/events", json={"visit_id": visit, "events": [{"name": n, "path": "/order", "items": [item]} for n in names]})
+    for n in range(12):
+        send(f"visit-good{n:04d}", ["view_item", "add_to_cart"] + (["purchase"] if n < 4 else []), {"id": "a", "name": "Seller", "quantity": 1})
+        send(f"visit-look{n:04d}", ["view_item"], {"id": "b", "name": "Ignored", "quantity": 1})
+        send(f"visit-cart{n:04d}", ["view_item", "add_to_cart"], {"id": "c", "name": "Stuck", "quantity": 1})
+    ranking = {d["name"]: d["verdict"] for d in client.get("/api/admin/analytics?days=7", headers=ADMIN()).json()["dish_ranking"]}
+    assert ranking == {"Seller": "Selling well — worth featuring", "Ignored": "Looked at, rarely chosen — check photo, price, description",
+                       "Stuck": "Added to baskets but not bought — check the checkout"}
+
+
+def test_return_risk_coupon_return_and_dabba_forecast(client, db):
+    for n, d in enumerate((60, 53, 46, 39)):                             # weekly customer, silent for 39 days
+        order(db, "drifting@example.com", 20, d, n)
+    for n, d in enumerate((21, 14, 7, 1)):                               # weekly customer, ordered yesterday
+        order(db, "steady@example.com", 20, d, 10 + n)
+    order(db, "coupon@example.com", 18.0, 3, 30, coupon_code="WELCOME10", coupon_discount=2.0)
+    order(db, "coupon2@example.com", 27.0, 2, 31, coupon_code="WELCOME10", coupon_discount=3.0)
+    plan(db, "ending@example.com", "weekly", 5, 2, n=1)
+    c, summary = people(client)
+    assert (c["drifting@example.com"]["return_risk"], c["steady@example.com"]["return_risk"]) == ("high", "low")
+    assert summary["return_risk"]["high"] >= 1
+    r = client.get("/api/admin/customers/insights", headers=ADMIN()).json()
+    assert r["coupons"] == [{"code": "WELCOME10", "orders": 2, "discount_given": 5.0, "income": 45.0, "income_per_pound_given": 9.0}]
+    assert len(r["dabba_forecast"]) == 4 and sum(w["plans_ending"] for w in r["dabba_forecast"]) == 1
+
+
 def test_event_report_shows_exits_interest_and_checkout_steps(client):
     def send(visit, names, **kw):
         client.post("/api/events", json={"visit_id": visit, "events": [{"name": n, "path": kw.get("paths", {}).get(n, "/order"), **kw.get(n, {})} for n in names]})
@@ -118,5 +146,6 @@ def test_event_report_shows_exits_interest_and_checkout_steps(client):
     assert r["checkout"] == [{"step": "Started checkout", "visits": 2}, {"step": "Started paying", "visits": 1},
                              {"step": "Order placed", "visits": 1}, {"step": "Payment or order failed", "visits": 1}]
     assert r["exit_pages"] == [{"name": "/checkout", "count": 1}]            # the visit that ordered is not an exit
-    assert r["interest_without_orders"][0] == {"name": "Veg Thali", "opened": 2, "added": 0, "ordered": 0}
-    assert r["interest_without_orders"][1] == {"name": "Masala Dosa", "opened": 1, "added": 0, "ordered": 1}
+    assert r["interest_without_orders"][0] == {"name": "Veg Thali", "opened": 2, "added": 0, "ordered": 0, "verdict": "Too few views to judge"}
+    assert (r["interest_without_orders"][1]["name"], r["interest_without_orders"][1]["ordered"]) == ("Masala Dosa", 1)
+    assert r["dish_ranking"][0]["name"] == "Masala Dosa"

@@ -286,6 +286,31 @@ async def recommendations() -> list:
     return logged
 
 
+async def things_to_know(day: str) -> list:
+    """Plain facts from yesterday that a person running the kitchen would want to hear. No action is taken."""
+    start, end = _uk_day_bounds(day)
+    lines = []
+    low = await db.delivery_reviews.count_documents({"status": "submitted", "rating": {"$lte": 2},
+                                                     "submitted_at": {"$gte": start.isoformat(), "$lt": end.isoformat()}})
+    low += await db.reviews.count_documents({"rating": {"$lte": 2}, "created_at": {"$gte": start, "$lt": end}})
+    if low:
+        lines.append(f"{low} low review{'s' if low != 1 else ''} (1 or 2 stars) came in. Worth reading and replying to.")
+    cancelled = await db.orders.count_documents({"status": "cancelled", "updated_at": {"$gte": start, "$lt": end}})
+    if cancelled:
+        lines.append(f"{cancelled} order{'s were' if cancelled != 1 else ' was'} cancelled.")
+    refused = await db.events.count_documents({"day": day, "name": "coupon_failed"})
+    if refused >= 5:
+        lines.append(f"A coupon was refused {refused} times. A code may have expired or been shared wrongly.")
+    week = (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=8)).strftime("%Y-%m-%d")
+    ending = await db.subscriptions.count_documents({"status": "active", "end_date": {"$gt": day, "$lte": week}})
+    if ending:
+        lines.append(f"{ending} Dabba Wala plan{'s end' if ending != 1 else ' ends'} in the next 7 days.")
+    orphaned = await db.payments.count_documents({"alerted": True, "alerted_at": {"$gte": start.isoformat(), "$lt": end.isoformat()}})
+    if orphaned:
+        lines.append(f"{orphaned} payment{'s' if orphaned != 1 else ''} had no matching order. Check Stripe.")
+    return lines
+
+
 async def _orders_per_day(days: int, ending_days_ago: int) -> float:
     end = datetime.utcnow() - timedelta(days=ending_days_ago)
     n = await db.orders.count_documents({"created_at": {"$gte": end - timedelta(days=days), "$lt": end}, "status": {"$ne": "cancelled"}})
@@ -369,12 +394,17 @@ async def run_review(now_local: Optional[datetime] = None) -> dict:
     reviewed = await review_outcomes()
 
     worse = [s for s in signals if s["worse"]]
-    if worse and cfg["owner_alerts"]:
+    facts = await things_to_know(yesterday)
+    if facts:
+        await log_decision("things to know", " ".join(facts), "These need a person, not a rule.", "Nothing changed. Included in your morning email." if cfg["owner_alerts"] else "Nothing changed.", level=3)
+    if (worse or facts) and cfg["owner_alerts"]:
         lines = "".join(f"<li><b>{s['label']}</b>: {s['current']} yesterday, usually about {s['usual']}</li>" for s in worse)
-        notify_admin(f"Sree Svadista — {len(worse)} figure{'s' if len(worse) != 1 else ''} moved sharply yesterday",
-                     f"<p>Compared with a normal {datetime.strptime(yesterday, '%Y-%m-%d').strftime('%A')}:</p><ul>{lines}</ul>"
-                     "<p>Open Admin › System log for the detail.</p>")
-        did.append(f"Emailed you about {len(worse)} figure(s) that moved sharply")
+        body = (f"<p>Compared with a normal {datetime.strptime(yesterday, '%Y-%m-%d').strftime('%A')}:</p><ul>{lines}</ul>" if worse else "")
+        body += ("<p>Worth knowing:</p><ul>" + "".join(f"<li>{f}</li>" for f in facts) + "</ul>") if facts else ""
+        subject = (f"Sree Svadista — {len(worse)} figure{'s' if len(worse) != 1 else ''} moved sharply yesterday" if worse
+                   else f"Sree Svadista — {len(facts)} thing{'s' if len(facts) != 1 else ''} to know from yesterday")
+        notify_admin(subject, body + "<p>Open Admin › System log for the detail.</p>")
+        did.append(f"Emailed you: {len(worse)} figure(s) moved sharply, {len(facts)} thing(s) to know")
 
     material = [s for s in signals if s["material"]]
     noticed = (", ".join(f"{s['label']} {'up' if s['change'] > 0 else 'down'} {abs(round(s['change'] * 100))}%" for s in material)

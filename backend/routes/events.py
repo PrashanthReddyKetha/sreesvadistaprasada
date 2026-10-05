@@ -182,9 +182,26 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
     for vid, (_, path) in last_page.items():
         if "purchase" not in visits[vid]["names"]:          # where visits that did not order ended
             exits[path] = exits.get(path, 0) + 1
+    def verdict(opened: int, add: int, ordered: int) -> str:
+        if opened < 10:
+            return "Too few views to judge"
+        if ordered >= max(3, opened * 0.15):
+            return "Selling well — worth featuring"
+        if add >= opened * 0.2 and ordered == 0:
+            return "Added to baskets but not bought — check the checkout"
+        if add < opened * 0.05:
+            return "Looked at, rarely chosen — check photo, price, description"
+        return "Steady"
+
     interest = sorted(
-        ({"name": n, "opened": v, "added": added.get(n, 0), "ordered": ordered_dishes.get(n, 0)} for n, v in viewed.items()),
+        ({"name": n, "opened": v, "added": added.get(n, 0), "ordered": ordered_dishes.get(n, 0),
+          "verdict": verdict(v, added.get(n, 0), ordered_dishes.get(n, 0))} for n, v in viewed.items()),
         key=lambda d: (d["ordered"], -d["opened"]))[:15]
+    dish_ranking = sorted(
+        ({"name": n, "opened": viewed.get(n, 0), "added": added.get(n, 0), "ordered": ordered_dishes.get(n, 0),
+          "verdict": verdict(viewed.get(n, 0), added.get(n, 0), ordered_dishes.get(n, 0))}
+         for n in set(viewed) | set(added) | set(ordered_dishes)),
+        key=lambda d: (-d["ordered"], -d["added"], -d["opened"]))[:40]
     checkout_steps = [("begin_checkout", "Started checkout"), ("payment_started", "Started paying"), ("purchase", "Order placed")]
     checkout = [{"step": label, "visits": sum(1 for v in visits.values() if name in v["names"])} for name, label in checkout_steps]
     checkout.append({"step": "Payment or order failed", "visits": sum(
@@ -215,6 +232,7 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         "event_counts": counts,
         "exit_pages": top(exits, 12),
         "interest_without_orders": interest,
+        "dish_ranking": dish_ranking,
         "checkout": checkout,
         "actions": sorted(({"name": n, "count": c, "visits": len(action_visits[n])} for n, c in counts.items()), key=lambda a: -a["count"]),
         "top_clicks": [{"label": k[0], "area": k[1], "page": k[2], "count": c} for k, c in sorted(clicks.items(), key=lambda kv: -kv[1])[:40]],

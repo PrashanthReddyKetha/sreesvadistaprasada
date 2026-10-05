@@ -65,6 +65,19 @@ def _dabba_stage(c: dict, today: str, soon: str) -> str:
     return "prospect" if c["orders"] else "none"
 
 
+def _return_risk(c: dict, now: datetime) -> Optional[str]:
+    """How likely this buyer is to drift away: low, medium or high. A rule of thumb from how long
+    they have been quiet against their own usual gap — not a prediction."""
+    if not c["orders"] or c["active_plan"] or not c["last_order"]:
+        return None
+    quiet = (now - c["last_order"]).total_seconds() / 86400
+    if c["orders"] >= 3 and c["first_order"]:
+        usual = max(3.0, (c["last_order"] - c["first_order"]).total_seconds() / 86400 / (c["orders"] - 1))
+        ratio = quiet / usual
+        return "high" if ratio > 2 else "medium" if ratio > 1.2 else "low"
+    return "high" if quiet > 45 else "medium" if quiet > 21 else "low"
+
+
 def _flags(c: dict, now: datetime) -> list:
     out = []
     if c["total_spend"] >= HIGH_VALUE_FROM:
@@ -185,6 +198,7 @@ async def build_customers(now: Optional[datetime] = None) -> list:
         c["average_order"] = round(c["order_spend"] / c["orders"], 2) if c["orders"] else 0.0
         c["segment"] = _segment(c, now)
         c["flags"] = _flags(c, now)
+        c["return_risk"] = _return_risk(c, now)
         c["dabba_stage"] = _dabba_stage(c, today, (now + timedelta(days=EXPIRING_WITHIN_DAYS)).strftime("%Y-%m-%d"))
         c["days_since_last_order"] = (now - c["last_order"]).days if c["last_order"] else None
         for f in ("joined", "first_order", "last_order", "last_activity", "last_plan_started"):
@@ -213,6 +227,7 @@ async def list_customers(_: dict = Depends(require_admin)):
             "repeat_buyers": sum(1 for c in buyers if c["orders"] + c["plans"] >= 2),
             "segments": segments,
             "dabba_stages": stages,
+            "return_risk": {r: sum(1 for c in customers if c.get("return_risk") == r) for r in ("high", "medium", "low")},
             "flags": flags,
             "definitions": {"lapsed_after_days": LAPSED_AFTER_DAYS, "at_risk_after_days": AT_RISK_AFTER_DAYS,
                             "high_value_from": HIGH_VALUE_FROM, "regular_from_orders": REGULAR_FROM_ORDERS,
@@ -404,8 +419,32 @@ async def customer_insights(_: dict = Depends(require_admin)):
         skip_rate=round(dabba["meals_skipped"] / dabba["meals_sold"], 3) if dabba["meals_sold"] else None,
         renewal_rate=round(came_back / finished_first, 3) if finished_first else None,
     )
+    # What each coupon gave away, and the order income that came with it
+    coupons: dict = {}
+    async for o in db.orders.find({"status": {"$ne": "cancelled"}, "coupon_code": {"$nin": [None, ""]}}, {"_id": 0, "items": 0}):
+        if o.get("user_id") in admin_ids:
+            continue
+        k = coupons.setdefault(o["coupon_code"], {"code": o["coupon_code"], "orders": 0, "discount_given": 0.0, "income": 0.0})
+        k["orders"] += 1
+        k["discount_given"] += float(o.get("coupon_discount") or 0)
+        k["income"] += float(o.get("total") or 0)
+    for k in coupons.values():
+        k["discount_given"], k["income"] = round(k["discount_given"], 2), round(k["income"], 2)
+        k["income_per_pound_given"] = round(k["income"] / k["discount_given"], 1) if k["discount_given"] else None
+
+    # Plans finishing in each of the next four weeks, and how many renewals to expect at the rate seen so far
+    forecast = []
+    week0 = (now - timedelta(days=now.weekday())).date()
+    for w in range(4):
+        start, end = week0 + timedelta(days=7 * w), week0 + timedelta(days=7 * w + 6)
+        ending = await db.subscriptions.count_documents({"status": "active", "end_date": {"$gte": start.isoformat(), "$lte": end.isoformat()}})
+        forecast.append({"week_starting": start.isoformat(), "plans_ending": ending,
+                         "expected_renewals": round(ending * dabba["renewal_rate"], 1) if dabba["renewal_rate"] is not None else None})
+
     order_people = set(by_person)
     return {
+        "coupons": sorted(coupons.values(), key=lambda k: -k["orders"]),
+        "dabba_forecast": forecast,
         "orders": {
             "buyers": buyers,
             "ordered_more_than_once": repeaters,
