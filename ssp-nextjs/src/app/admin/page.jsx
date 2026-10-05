@@ -25,6 +25,7 @@ import CustomersTab from '@/components/admin/CustomersTab';
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
 import MessagesTab from '@/components/admin/MessagesTab';
 import AutomationsTab from '@/components/admin/AutomationsTab';
+import SystemLogTab from '@/components/admin/SystemLogTab';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -881,6 +882,7 @@ const TABS = [
   { id:'specials',      label:"Today's Specials", icon:Sparkles  },
   { id:'users',         label:'Customers',     icon:Users        },
   { id:'analytics',     label:'Analytics',     icon:TrendingUp   },
+  { id:'systemlog',     label:'System log',    icon:CheckCircle  },
   { id:'automations',   label:'Automations',   icon:RefreshCw    },
   { id:'messages',      label:'Messages',      icon:Mail         },
   { id:'enquiries',     label:'Enquiries',     icon:MessageSquare},
@@ -1030,6 +1032,7 @@ const Admin = () => {
               {activeTab==='specials'      && <DailySpecialsTab />}
               {activeTab==='users'         && <CustomersTab />}
               {activeTab==='analytics'     && <AnalyticsTab />}
+              {activeTab==='systemlog'     && <SystemLogTab />}
               {activeTab==='automations'   && <AutomationsTab />}
               {activeTab==='messages'      && <MessagesTab />}
               {activeTab==='enquiries'     && <EnquiriesTab contacts={data.contacts} catering={data.catering} onStatusUpdate={handleStatusUpdate} reload={fetchAll} />}

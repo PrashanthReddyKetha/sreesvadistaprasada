@@ -70,9 +70,17 @@ def _flags(c: dict, now: datetime) -> list:
     if c["total_spend"] >= HIGH_VALUE_FROM:
         out.append("high_value")
     last = c["last_activity"]
-    if (c["orders"] >= 2 and not c["active_plan"] and last
-            and timedelta(days=AT_RISK_AFTER_DAYS) < (now - last) <= timedelta(days=LAPSED_AFTER_DAYS)):
-        out.append("at_risk")
+    if c["orders"] >= 2 and not c["active_plan"] and last:
+        quiet_for = now - last
+        after = timedelta(days=AT_RISK_AFTER_DAYS)
+        # With three or more orders the customer's own usual gap is known: someone who orders
+        # weekly is "going quiet" after about ten days, not thirty.
+        if c["orders"] >= 3 and c["first_order"] and c["last_order"]:
+            usual_gap = (c["last_order"] - c["first_order"]) / (c["orders"] - 1)
+            after = min(after, max(timedelta(days=10), usual_gap * 1.5))
+            c["usual_gap_days"] = round(usual_gap.total_seconds() / 86400, 1)
+        if after < quiet_for <= timedelta(days=LAPSED_AFTER_DAYS):
+            out.append("at_risk")
     if c["cancelled_orders"] and not c["orders"]:
         out.append("only_cancelled")
     return out

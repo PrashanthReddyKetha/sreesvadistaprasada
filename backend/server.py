@@ -14,6 +14,7 @@ from routes import customers as customer_routes
 from routes import events as event_routes
 from routes import comms as comms_routes
 from routes import automations as automation_routes
+from routes import intelligence as intelligence_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings
 from menu_additions import apply_menu_additions
@@ -59,6 +60,8 @@ async def lifespan(app: FastAPI):
     await db.automation_sends.create_index([("automation", 1), ("email", 1), ("reason", 1)], unique=True)
     await db.automation_sends.create_index("at")
     await db.admin_audit.create_index("at")
+    await db.decision_log.create_index("at")
+    await db.daily_metrics.create_index("day", unique=True)
     # Lookups that run on every dashboard, kitchen and item page
     for coll, keys in (
         ("orders", "user_id"), ("orders", "status"), ("orders", "items.menu_item_id"),
@@ -90,6 +93,8 @@ async def lifespan(app: FastAPI):
     sub_maintenance = asyncio.create_task(subscription_maintenance_loop())
     from automations import automation_loop
     automation_runner = asyncio.create_task(automation_loop())
+    from intelligence import intelligence_loop
+    nightly_review = asyncio.create_task(intelligence_loop())
     yield
     logger.info("Shutting down...")
     push_scheduler.cancel()
@@ -97,6 +102,7 @@ async def lifespan(app: FastAPI):
     orphan_watchdog.cancel()
     sub_maintenance.cancel()
     automation_runner.cancel()
+    nightly_review.cancel()
     client.close()
 
 
@@ -148,6 +154,7 @@ app.include_router(customer_routes.router, prefix="/api")
 app.include_router(event_routes.router, prefix="/api")
 app.include_router(comms_routes.router, prefix="/api")
 app.include_router(automation_routes.router, prefix="/api")
+app.include_router(intelligence_routes.router, prefix="/api")
 
 
 @app.get("/api")
