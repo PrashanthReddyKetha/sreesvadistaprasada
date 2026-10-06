@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshCw, X, Eye, Send, Power } from 'lucide-react';
+import { RefreshCw, X, Eye, Send, Power, Pencil } from 'lucide-react';
 import api from '@/api';
 
 /* Admin › Automations — messages the site can send by itself. Each is off until switched on,
@@ -57,6 +57,77 @@ function Preview({ automation, onClose }) {
   );
 }
 
+/* The words of one message: edit, see it as a customer would, save, or put the original back. */
+function Words({ automation, onClose, onSaved }) {
+  const [data, setData] = useState(null);
+  const [text, setText] = useState(null);
+  const [shown, setShown] = useState(null);
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    let live = true;
+    api.get(`/admin/automations/${automation.id}/text`).then(r => { if (live) { setData(r.data); setText(r.data.current); } }).catch(() => { if (live) setNote('Could not load the words.'); });
+    return () => { live = false; };
+  }, [automation.id]);
+  // the preview follows the typing, a moment behind
+  useEffect(() => {
+    if (!text) return undefined;
+    const t = setTimeout(() => { api.post(`/admin/automations/${automation.id}/text/preview`, text).then(r => setShown(r.data)).catch(() => {}); }, 500);
+    return () => clearTimeout(t);
+  }, [text, automation.id]);
+  const act = async (fn, done) => {
+    setBusy(true); setNote('');
+    try { const r = await fn(); setText(r.data.current); setNote(done); onSaved(); }
+    catch (e) { setNote(e.response?.data?.detail || 'That did not work. Please try again.'); }
+    finally { setBusy(false); }
+  };
+  const field = (key, label, rows) => (
+    <label className="block text-sm">
+      <span className="text-gray-500">{label} <span className="text-gray-400">({(text[key] || '').length}/{data.limits[key]})</span></span>
+      {rows ? <textarea value={text[key]} rows={rows} maxLength={data.limits[key]} onChange={e => setText({ ...text, [key]: e.target.value })} className="mt-1 w-full px-3 py-2 border rounded-lg" style={{ borderColor: '#e0d9d0' }} />
+        : <input value={text[key]} maxLength={data.limits[key]} onChange={e => setText({ ...text, [key]: e.target.value })} className="mt-1 w-full px-3 py-2 border rounded-lg" style={{ borderColor: '#e0d9d0' }} />}
+    </label>
+  );
+  return (
+    <div className="fixed inset-0 z-[70] flex justify-end" role="dialog" aria-modal="true" aria-label="Change the words" data-notrack>
+      <button className="flex-1 bg-black/40" onClick={onClose} aria-label="Close" />
+      <div className="w-full max-w-3xl bg-white h-full overflow-y-auto">
+        <div className="sticky top-0 bg-white px-5 py-4 border-b flex items-start gap-3" style={{ borderColor: '#f0ebe6' }}>
+          <div className="flex-1"><h3 className="font-bold text-lg" style={{ fontFamily: "'Playfair Display', serif", color: P }}>{automation.name} — the words</h3>
+            <p className="text-xs text-gray-500">Write plainly; a blank line starts a new paragraph. <code>{'{first_name}'}</code> becomes the customer's first name. The button's link and the unsubscribe line cannot be changed.</p></div>
+          <button onClick={onClose} className="p-2 rounded-lg border" style={{ borderColor: '#e0d9d0' }} aria-label="Close"><X size={16} /></button>
+        </div>
+        {!text && <p className="p-6 text-sm text-gray-400">{note || 'Loading…'}</p>}
+        {text && (
+          <div className="p-5 grid lg:grid-cols-2 gap-5">
+            <div className="space-y-3">
+              {field('subject', 'Subject line')}
+              {field('heading', 'Heading inside the email')}
+              {field('body', 'The message', 10)}
+              {field('button', 'Button')}
+              {automation.coupon_code && <p className="text-xs text-gray-500">The offer code {automation.coupon_code} is added after the last paragraph.</p>}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button onClick={() => act(() => api.put(`/admin/automations/${automation.id}/text`, text), 'Saved. New messages use these words.')} disabled={busy}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50" style={{ backgroundColor: P, color: '#fff' }}>Save</button>
+                <button onClick={() => act(() => api.delete(`/admin/automations/${automation.id}/text`), 'The original words are back.')} disabled={busy || !data.is_custom && JSON.stringify(text) === JSON.stringify(data.original)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold border disabled:opacity-40" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}>Put the original back</button>
+              </div>
+              {note && <p className="text-sm" role="status" style={{ color: note.startsWith('Saved') || note.startsWith('The original') ? '#2E7D32' : '#B91C1C' }}>{note}</p>}
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">As a customer called Asha would see it</h4>
+              {shown ? (<>
+                <p className="text-sm mb-2"><span className="text-gray-500">Subject:</span> <b>{shown.subject}</b></p>
+                <iframe title="Message preview" sandbox="" srcDoc={shown.html} className="w-full rounded-lg border" style={{ height: 520, borderColor: '#e0d9d0' }} />
+              </>) : <p className="text-sm text-gray-400">Preparing the preview…</p>}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Confirm({ automation, rules, onCancel, onConfirm, busy }) {
   const turningOn = !automation.enabled;
   return (
@@ -93,6 +164,7 @@ export default function AutomationsTab() {
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
   const [preview, setPreview] = useState(null);
+  const [words, setWords] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
   const [codes, setCodes] = useState({});
@@ -142,6 +214,7 @@ export default function AutomationsTab() {
             </div>
             <div className="flex flex-wrap gap-2">
               <button onClick={() => setPreview(a)} className="px-3 py-2 rounded-lg text-sm font-semibold border flex items-center gap-1.5" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}><Eye size={15} /> Preview</button>
+              <button onClick={() => setWords(a)} className="px-3 py-2 rounded-lg text-sm font-semibold border flex items-center gap-1.5" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}><Pencil size={15} /> Change the words</button>
               <button onClick={() => test(a)} disabled={busy} className="px-3 py-2 rounded-lg text-sm font-semibold border flex items-center gap-1.5 disabled:opacity-50" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}><Send size={15} /> Send me a test</button>
               <button onClick={() => setConfirm(a)} className="px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5" style={{ backgroundColor: a.enabled ? P : '#2E7D32', color: '#fff' }}><Power size={15} /> {a.enabled ? 'Switch off' : 'Switch on'}</button>
             </div>
@@ -178,6 +251,7 @@ export default function AutomationsTab() {
       <p className="text-xs text-gray-400">Limits that always apply: at most {data.rules.daily_cap} messages a day from each automation; no customer receives more than one automatic message in {data.rules.quiet_days} days; sent only between {data.rules.hours}; never to anyone who has unsubscribed.</p>
 
       {preview && <Preview automation={preview} onClose={() => setPreview(null)} />}
+      {words && <Words automation={words} onClose={() => setWords(null)} onSaved={load} />}
       {confirm && <Confirm automation={confirm} rules={data.rules} busy={busy} onCancel={() => setConfirm(null)}
         onConfirm={() => change(confirm, { enabled: !confirm.enabled }, `"${confirm.name}" is now ${confirm.enabled ? 'off' : 'on'}.`)} />}
     </div>

@@ -53,6 +53,95 @@ def _days_since(iso: Optional[str], now: datetime) -> Optional[int]:
         return None
 
 
+# ── The words of each message ────────────────────────────────────────────────
+# The owner can change these in Admin › Automations (kept in settings "message_texts"). Paragraphs are separated by a
+# blank line; {first_name} is filled in. Any offer code is added after the last paragraph. The link is not editable.
+
+TEXTS = {
+    "first_order": {
+        "subject": "How was your first order?", "heading": "Thank you for trying us",
+        "body": "Hi {first_name}, thank you for your first order from our kitchen in Greenleys.\n\n"
+                "We cook Telugu home food the way it is made at home, and we would love to cook for you again. "
+                "If anything was not right, just reply to this email and tell us — we read every message.\n\n"
+                "Next time, you might like to try a dosa for breakfast, a rice bowl for lunch, or one of the Andhra curries.",
+        "button": "See the menu", "link": "/order?utm_source=email&utm_medium=automation&utm_campaign=first_order"},
+    "going_quiet": {
+        "subject": "It has been a little while", "heading": "We have missed cooking for you",
+        "body": "Hi {first_name}, it has been a few weeks since your last order, so we wanted to say hello.\n\n"
+                "The kitchen is cooking fresh every day — breakfast dosas and idli from the morning, curries, biryani and rice bowls through the day.",
+        "button": "Order for collection", "link": "/order?utm_source=email&utm_medium=automation&utm_campaign=going_quiet"},
+    "lapsed": {
+        "subject": "Still cooking, if you are hungry", "heading": "A note from our kitchen",
+        "body": "Hi {first_name}, you ordered from us a while ago and we hope you enjoyed it.\n\n"
+                "We are still here in Greenleys, cooking Andhra home food to order. If you would like to hear from us less, "
+                "the unsubscribe link below takes one tap.",
+        "button": "See what is cooking", "link": "/order?utm_source=email&utm_medium=automation&utm_campaign=lapsed"},
+    "plan_finished": {
+        "subject": "Would you like your Dabba Wala back?", "heading": "Your tiffin plan",
+        "body": "Hi {first_name}, your Dabba Wala plan finished recently. We hope the meals made your days a little easier.\n\n"
+                "If you would like to start again — for a week or a month — it takes a couple of minutes, and you can skip any day you do not need.",
+        "button": "Start a new plan", "link": "/subscriptions?utm_source=email&utm_medium=automation&utm_campaign=plan_finished"},
+    "second_order": {
+        "subject": "Thank you for coming back", "heading": "Two orders in — thank you",
+        "body": "Hi {first_name}, thank you for ordering from us a second time. It means a great deal to a small kitchen.\n\n"
+                "If you order with an account, every fifth order earns a free dish of your choice.",
+        "button": "See the menu", "link": "/order?utm_source=email&utm_medium=automation&utm_campaign=second_order"},
+    "reward_waiting": {
+        "subject": "Your free dish is waiting", "heading": "You have a free dish to use",
+        "body": "Hi {first_name}, your orders have earned you a free dish, and it has not been used yet.\n\n"
+                "Choose any dish on your next order and take it off at checkout.",
+        "button": "Use my free dish", "link": "/order?utm_source=email&utm_medium=automation&utm_campaign=reward_waiting"},
+    "one_away": {
+        "subject": "One more order to a free dish", "heading": "You are one order away",
+        "body": "Hi {first_name}, your next order is the one that earns you a free dish of your choice.",
+        "button": "Order now", "link": "/order?utm_source=email&utm_medium=automation&utm_campaign=one_away"},
+    "high_spender": {
+        "subject": "A thank-you from our kitchen", "heading": "Thank you",
+        "body": "Hi {first_name}, you are one of the people who order from us most, and we wanted to say thank you properly.\n\n"
+                "If there is a dish from home you wish we cooked, reply and tell us. We read every message.",
+        "button": "See the menu", "link": "/order?utm_source=email&utm_medium=automation&utm_campaign=high_spender"},
+    "tiffin_intro": {
+        "subject": "Have you seen our Dabba Wala?", "heading": "Home-cooked meals, every weekday",
+        "body": "Hi {first_name}, as you order from us regularly, you might like our Dabba Wala: a freshly cooked tiffin every weekday, "
+                "for a week or a month, vegetarian or non-vegetarian.\n\n"
+                "Rice, pickle and papad are always in the box; the dal, curry and sabzi change every day. You can skip any day you do not need.",
+        "button": "See the plans", "link": "/subscriptions?utm_source=email&utm_medium=automation&utm_campaign=tiffin_intro"},
+    "newsletter_welcome": {
+        "subject": "Welcome to Sree Svadista Prasada", "heading": "Thank you for joining us",
+        "body": "Thank you for signing up. We are a home kitchen in Greenleys, Milton Keynes, cooking Telugu and Andhra food to order — "
+                "dosas and idli in the morning, curries, biryani and rice bowls through the day.\n\n"
+                "We will write only when there is something worth telling you.",
+        "button": "See the menu", "link": "/menu?utm_source=email&utm_medium=automation&utm_campaign=newsletter_welcome"},
+    "account_no_order": {
+        "subject": "Your account is ready when you are", "heading": "Ready when you are",
+        "body": "Hi {first_name}, you opened an account with us a few days ago. Whenever you are hungry, ordering takes a couple of minutes "
+                "and you collect from Greenleys.\n\n"
+                "With an account, every fifth order earns a free dish.",
+        "button": "See the menu", "link": "/order?utm_source=email&utm_medium=automation&utm_campaign=account_no_order"},
+}
+EDITABLE = ("subject", "heading", "body", "button")
+LIMITS = {"subject": 120, "heading": 120, "body": 3000, "button": 40}
+
+
+async def text_for(automation_id: str) -> dict:
+    """The words as they will be sent: the owner's version where there is one, otherwise the original."""
+    doc = await db.settings.find_one({"_id": "message_texts"}, {"_id": 0, automation_id: 1}) or {}
+    own = doc.get(automation_id) or {}
+    return {**TEXTS[automation_id], **{k: own[k] for k in EDITABLE if own.get(k)}}
+
+
+def render(automation_id: str, text: dict, c: dict, code: Optional[str]) -> tuple:
+    """Subject and HTML for one customer. The owner's words are plain text: escaped, then split into paragraphs."""
+    paragraphs = [escape(p.strip()).replace("{first_name}", _first(c.get("name"))) for p in str(text["body"]).split("\n\n") if p.strip()]
+    html = _wrap(escape(text["heading"]), "".join(f"<p>{p}</p>" for p in paragraphs) + _offer(code),
+                 escape(text["button"]), f"{SITE_URL}{TEXTS[automation_id]['link']}")
+    return str(text["subject"]).replace("{first_name}", _first(c.get("name"))), html
+
+
+async def message(automation_id: str, c: dict, code: Optional[str]) -> tuple:
+    return render(automation_id, await text_for(automation_id), c, code)
+
+
 # ── The catalogue ────────────────────────────────────────────────────────────
 # who(c, now) -> the reason this customer qualifies today (used as the send-once key), or None.
 
@@ -81,41 +170,6 @@ def _who_plan_finished(c: dict, now: datetime):
     except ValueError:
         return None
     return f"plan-ended-{end}" if 7 <= d <= 30 else None
-
-
-def _msg_first_order(c: dict, code: Optional[str]):
-    return "How was your first order?", _wrap(
-        "Thank you for trying us",
-        f"<p>Hi {_first(c['name'])}, thank you for your first order from our kitchen in Greenleys.</p>"
-        "<p>We cook Telugu home food the way it is made at home, and we would love to cook for you again. "
-        "If anything was not right, just reply to this email and tell us — we read every message.</p>"
-        "<p>Next time, you might like to try a dosa for breakfast, a rice bowl for lunch, or one of the Andhra curries.</p>"
-        + _offer(code), "See the menu", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=first_order")
-
-
-def _msg_going_quiet(c: dict, code: Optional[str]):
-    return "It has been a little while", _wrap(
-        "We have missed cooking for you",
-        f"<p>Hi {_first(c['name'])}, it has been a few weeks since your last order, so we wanted to say hello.</p>"
-        "<p>The kitchen is cooking fresh every day — breakfast dosas and idli from the morning, curries, biryani and rice bowls through the day.</p>"
-        + _offer(code), "Order for collection", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=going_quiet")
-
-
-def _msg_lapsed(c: dict, code: Optional[str]):
-    return "Still cooking, if you are hungry", _wrap(
-        "A note from our kitchen",
-        f"<p>Hi {_first(c['name'])}, you ordered from us a while ago and we hope you enjoyed it.</p>"
-        "<p>We are still here in Greenleys, cooking Andhra home food to order. If you would like to hear from us less, "
-        "the unsubscribe link below takes one tap.</p>"
-        + _offer(code), "See what is cooking", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=lapsed")
-
-
-def _msg_plan_finished(c: dict, code: Optional[str]):
-    return "Would you like your Dabba Wala back?", _wrap(
-        "Your tiffin plan",
-        f"<p>Hi {_first(c['name'])}, your Dabba Wala plan finished recently. We hope the meals made your days a little easier.</p>"
-        "<p>If you would like to start again — for a week or a month — it takes a couple of minutes, and you can skip any day you do not need.</p>"
-        + _offer(code), "Start a new plan", f"{SITE_URL}/subscriptions?utm_source=email&utm_medium=automation&utm_campaign=plan_finished")
 
 
 def _who_second_order(c: dict, now: datetime):
@@ -159,109 +213,51 @@ def _who_account_no_order(c: dict, now: datetime):
     return None
 
 
-def _msg_second_order(c: dict, code: Optional[str]):
-    return "Thank you for coming back", _wrap(
-        "Two orders in — thank you",
-        f"<p>Hi {_first(c['name'])}, thank you for ordering from us a second time. It means a great deal to a small kitchen.</p>"
-        "<p>If you order with an account, every fifth order earns a free dish of your choice.</p>"
-        + _offer(code), "See the menu", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=second_order")
-
-
-def _msg_reward_waiting(c: dict, code: Optional[str]):
-    return "Your free dish is waiting", _wrap(
-        "You have a free dish to use",
-        f"<p>Hi {_first(c['name'])}, your orders have earned you a free dish, and it has not been used yet.</p>"
-        "<p>Choose any dish on your next order and take it off at checkout.</p>",
-        "Use my free dish", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=reward_waiting")
-
-
-def _msg_one_away(c: dict, code: Optional[str]):
-    return "One more order to a free dish", _wrap(
-        "You are one order away",
-        f"<p>Hi {_first(c['name'])}, your next order is the one that earns you a free dish of your choice.</p>"
-        + _offer(code), "Order now", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=one_away")
-
-
-def _msg_high_spender(c: dict, code: Optional[str]):
-    return "A thank-you from our kitchen", _wrap(
-        "Thank you",
-        f"<p>Hi {_first(c['name'])}, you are one of the people who order from us most, and we wanted to say thank you properly.</p>"
-        "<p>If there is a dish from home you wish we cooked, reply and tell us. We read every message.</p>"
-        + _offer(code), "See the menu", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=high_spender")
-
-
-def _msg_orders_no_plan(c: dict, code: Optional[str]):
-    return "Have you seen our Dabba Wala?", _wrap(
-        "Home-cooked meals, every weekday",
-        f"<p>Hi {_first(c['name'])}, as you order from us regularly, you might like our Dabba Wala: a freshly cooked tiffin every weekday, "
-        "for a week or a month, vegetarian or non-vegetarian.</p>"
-        "<p>Rice, pickle and papad are always in the box; the dal, curry and sabzi change every day. You can skip any day you do not need.</p>"
-        + _offer(code), "See the plans", f"{SITE_URL}/subscriptions?utm_source=email&utm_medium=automation&utm_campaign=tiffin_intro")
-
-
-def _msg_newsletter_welcome(c: dict, code: Optional[str]):
-    return "Welcome to Sree Svadista Prasada", _wrap(
-        "Thank you for joining us",
-        "<p>Thank you for signing up. We are a home kitchen in Greenleys, Milton Keynes, cooking Telugu and Andhra food to order — "
-        "dosas and idli in the morning, curries, biryani and rice bowls through the day.</p>"
-        "<p>We will write only when there is something worth telling you.</p>"
-        + _offer(code), "See the menu", f"{SITE_URL}/menu?utm_source=email&utm_medium=automation&utm_campaign=newsletter_welcome")
-
-
-def _msg_account_no_order(c: dict, code: Optional[str]):
-    return "Your account is ready when you are", _wrap(
-        "Ready when you are",
-        f"<p>Hi {_first(c['name'])}, you opened an account with us a few days ago. Whenever you are hungry, ordering takes a couple of minutes "
-        "and you collect from Greenleys.</p>"
-        "<p>With an account, every fifth order earns a free dish.</p>"
-        + _offer(code), "See the menu", f"{SITE_URL}/order?utm_source=email&utm_medium=automation&utm_campaign=account_no_order")
-
-
 CATALOGUE = [
     {"id": "first_order", "name": "After a first order",
      "who_text": "Customers with exactly one order, placed 3 to 14 days ago, and no meal plan running.",
      "what_text": "A thank-you, an invitation to reply if anything was wrong, and a nudge to order again.",
-     "who": _who_first_order, "message": _msg_first_order},
+     "who": _who_first_order},
     {"id": "going_quiet", "name": "Regular customer going quiet",
      "who_text": "Customers with two or more orders and nothing for 30 to 60 days, with no meal plan running.",
      "what_text": "A short hello and a link to order.",
-     "who": _who_going_quiet, "message": _msg_going_quiet},
+     "who": _who_going_quiet},
     {"id": "lapsed", "name": "Not seen for two months",
      "who_text": "Customers who have ordered before and have done nothing for 60 to 180 days.",
      "what_text": "One gentle note. Sent once per quiet spell.",
-     "who": _who_lapsed, "message": _msg_lapsed},
+     "who": _who_lapsed},
     {"id": "plan_finished", "name": "After a meal plan finishes",
      "who_text": "Customers whose Dabba Wala plan finished 7 to 30 days ago and who have not started another.",
      "what_text": "An invitation to start a new plan.",
-     "who": _who_plan_finished, "message": _msg_plan_finished},
+     "who": _who_plan_finished},
     {"id": "second_order", "name": "After a second order",
      "who_text": "Customers whose second order was placed 2 to 10 days ago.",
      "what_text": "A thank-you and a reminder that every fifth order earns a free dish.",
-     "who": _who_second_order, "message": _msg_second_order},
+     "who": _who_second_order},
     {"id": "reward_waiting", "name": "Free dish earned but not used",
      "who_text": "Account holders with a free loyalty dish waiting and no order for a week or more.",
      "what_text": "A reminder that the free dish is there.",
-     "who": _who_reward_waiting, "message": _msg_reward_waiting},
+     "who": _who_reward_waiting},
     {"id": "one_away", "name": "One order from a free dish",
      "who_text": "Account holders whose next order earns the free dish, last ordered 3 to 21 days ago.",
      "what_text": "Tells them their next order earns it.",
-     "who": _who_one_away, "message": _msg_one_away},
+     "who": _who_one_away},
     {"id": "high_spender", "name": "Thank-you to your best customers",
      "who_text": "Customers who have spent £150 or more in total. Sent once, ever.",
      "what_text": "A personal thank-you and an invitation to suggest a dish.",
-     "who": _who_high_spender, "message": _msg_high_spender},
+     "who": _who_high_spender},
     {"id": "tiffin_intro", "name": "Regular customer who has never tried Dabba Wala",
      "who_text": "Three or more orders, the latest within 30 days, and never a meal plan. Sent once, ever.",
      "what_text": "Introduces the tiffin plans.",
-     "who": _who_orders_no_plan, "message": _msg_orders_no_plan},
+     "who": _who_orders_no_plan},
     {"id": "newsletter_welcome", "name": "Welcome to the newsletter",
      "who_text": "People who joined the newsletter in the last 3 days and have not ordered.",
      "what_text": "A short welcome saying who you are and what you cook.",
-     "who": _who_newsletter_welcome, "message": _msg_newsletter_welcome},
+     "who": _who_newsletter_welcome},
     {"id": "account_no_order", "name": "Account opened, nothing ordered",
      "who_text": "People who opened an account 3 to 14 days ago and have not ordered.",
      "what_text": "A gentle nudge to place a first order.",
-     "who": _who_account_no_order, "message": _msg_account_no_order},
+     "who": _who_account_no_order},
 ]
 BY_ID = {a["id"]: a for a in CATALOGUE}
 
@@ -319,6 +315,7 @@ async def run(automation_id: str, now: Optional[datetime] = None, local_hour: Op
     start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
     sent_today = await db.automation_sends.count_documents({"automation": automation_id, "at": {"$gte": start_of_day}})
     sent = skipped = 0
+    text = await text_for(automation_id)
     for person in await audience(automation_id, now):
         if person["skip"]:
             skipped += 1
@@ -335,7 +332,7 @@ async def run(automation_id: str, now: Optional[datetime] = None, local_hour: Op
         except DuplicateKeyError:
             skipped += 1
             continue
-        subject, html = a["message"](person["customer"], cfg.get("coupon_code"))
+        subject, html = render(automation_id, text, person["customer"], cfg.get("coupon_code"))
         send_email(person["email"], subject, html, kind="marketing")
         sent += 1
     if sent:

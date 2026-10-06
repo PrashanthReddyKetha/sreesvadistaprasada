@@ -154,3 +154,32 @@ def test_switching_on_is_recorded_and_test_send_goes_only_to_the_admin(client, d
     assert entry["action"] == "automation changed" and entry["before"]["on"] is False and entry["after"]["on"] is True
     assert client.post(f"{URL}/first_order/test", headers=ADMIN()).json()["sent_to"] == "boss@example.com"
     assert tests_sent == [("boss@example.com", "[Test] How was your first order?")] and sent == []
+
+
+# ── The owner can change the words of a message ──────────────────────────────
+
+def test_the_owner_can_change_the_words_try_them_out_and_put_them_back(client, db, sent, monkeypatch):
+    monkeypatch.setattr(engine, "LONDON", __import__("zoneinfo").ZoneInfo("UTC"))
+    order(db, "new@example.com", 5, 1)
+    words = {"subject": "Hello {first_name}, how was it?", "heading": "From Lakshmi's kitchen",
+             "body": "Hi {first_name}, thank you!\n\n<b>Bold?</b> Not allowed.  \n\n\nCome again soon.", "button": "Order again"}
+    # try before saving: nothing stored, the name filled in, HTML from the owner shown as text
+    p = client.post(f"{URL}/first_order/text/preview", json=words, headers=ADMIN()).json()
+    assert p["subject"] == "Hello Asha, how was it?" and "&lt;b&gt;Bold?&lt;/b&gt;" in p["html"] and "<p>Come again soon.</p>" in p["html"]
+    assert run(db.settings.find_one({"_id": "message_texts"})) is None
+    # save: the next send uses the new words and the audit log has before and after
+    r = client.put(f"{URL}/first_order/text", json=words, headers=ADMIN()).json()
+    assert r["current"]["body"] == "Hi {first_name}, thank you!\n\n<b>Bold?</b> Not allowed.\n\nCome again soon."
+    got = client.get(f"{URL}/first_order/text", headers=ADMIN()).json()
+    assert got["is_custom"] is True and got["original"]["subject"] == "How was your first order?" and got["link"].endswith("utm_campaign=first_order")
+    switch_on(client)
+    run(engine.run("first_order", NOW, local_hour=12))
+    assert sent and sent[0]["subject"] == "Hello Asha, how was it?" and "From Lakshmi" in sent[0]["html"] and "Order again" in sent[0]["html"]
+    assert "utm_campaign=first_order" in sent[0]["html"]                                     # the link cannot be changed
+    entry = run(db.admin_audit.find_one({"action": "message words changed"}))
+    assert entry["before"]["subject"] == "How was your first order?" and entry["after"]["subject"] == words["subject"]
+    # an empty field is refused; put back to the original
+    assert client.put(f"{URL}/first_order/text", json={**words, "button": "  "}, headers=ADMIN()).status_code == 400
+    assert client.delete(f"{URL}/first_order/text", headers=ADMIN()).json()["current"]["subject"] == "How was your first order?"
+    assert client.get(f"{URL}/first_order/text", headers=ADMIN()).json()["is_custom"] is False
+    assert client.get(f"{URL}/first_order/text").status_code in (401, 403)
