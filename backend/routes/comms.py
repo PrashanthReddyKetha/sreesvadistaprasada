@@ -13,11 +13,12 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+from audit_log import record_admin_action
 from auth import get_current_user, require_admin
 from database import db
-from notifications import SITE_URL, unsubscribe_token
+from notifications import SITE_URL, _wrap, send_email, unsubscribe_token
 
 router = APIRouter(tags=["Communications"])
 
@@ -54,6 +55,70 @@ async def unsubscribe(e: str = "", t: str = ""):
 async def unsubscribe_one_click(e: str = "", t: str = ""):
     """Used by mail apps that offer their own unsubscribe button."""
     return {"ok": await _unsubscribe(e, t)}
+
+
+# ── A newsletter, written by the owner, to everyone on the list ───────────────
+
+class Newsletter(BaseModel):
+    subject: str = Field(min_length=1, max_length=120)
+    heading: str = Field(default="", max_length=120)
+    body: str = Field(min_length=1, max_length=6000)
+    button: str = Field(default="See the menu", max_length=40)
+    link: str = Field(default="/menu", max_length=200)      # a path on our own site
+    confirm: bool = False
+
+
+def _newsletter_html(n: Newsletter) -> str:
+    """The owner's plain text as an email: paragraphs split on blank lines, shown as text, never as HTML."""
+    from html import escape
+    paragraphs = [f"<p>{escape(p.strip())}</p>" for p in n.body.replace("\r", "").split("\n\n") if p.strip()]
+    path = n.link if n.link.startswith("/") else "/menu"
+    sep = "&" if "?" in path else "?"
+    return _wrap(escape(n.heading or n.subject), "".join(paragraphs), escape(n.button), f"{SITE_URL}{path}{sep}utm_source=email&utm_medium=newsletter")
+
+
+async def _newsletter_recipients() -> list:
+    """Active newsletter sign-ups who have not unsubscribed, each address once."""
+    out, seen = [], set()
+    async for s in db.newsletter.find({"active": {"$ne": False}}, {"_id": 0, "email": 1}):
+        email = (s.get("email") or "").strip().lower()
+        if email and email not in seen and not await db.email_optouts.find_one({"email": email}, {"_id": 1}):
+            seen.add(email)
+            out.append(email)
+    return out
+
+
+@router.post("/admin/newsletter/preview")
+async def newsletter_preview(payload: Newsletter, _: dict = Depends(require_admin)):
+    return {"subject": payload.subject, "html": _newsletter_html(payload), "recipients": len(await _newsletter_recipients())}
+
+
+@router.post("/admin/newsletter/test")
+async def newsletter_test(payload: Newsletter, admin: dict = Depends(require_admin)):
+    me = await db.users.find_one({"id": admin["sub"]}, {"_id": 0, "email": 1})
+    if not me or not me.get("email"):
+        raise HTTPException(status_code=400, detail="Your admin account has no email address to send the test to.")
+    send_email(me["email"], f"[Test] {payload.subject}", _newsletter_html(payload), kind="marketing")
+    return {"ok": True, "sent_to": me["email"]}
+
+
+@router.post("/admin/newsletter/send")
+async def newsletter_send(payload: Newsletter, admin: dict = Depends(require_admin)):
+    """To the whole list, once. Needs confirm=true; the same subject cannot go out twice in a day."""
+    if not payload.confirm:
+        raise HTTPException(status_code=400, detail="Please confirm the send.")
+    recent = await db.newsletter_sends.find_one({"subject": payload.subject, "at": {"$gte": datetime.utcnow() - timedelta(days=1)}}, {"_id": 1})
+    if recent:
+        raise HTTPException(status_code=409, detail="A newsletter with this subject was sent in the last 24 hours.")
+    recipients = await _newsletter_recipients()
+    if not recipients:
+        raise HTTPException(status_code=400, detail="Nobody is on the list.")
+    html = _newsletter_html(payload)
+    await db.newsletter_sends.insert_one({"at": datetime.utcnow(), "subject": payload.subject, "recipients": len(recipients), "by": admin.get("sub")})
+    for email in recipients:
+        send_email(email, payload.subject, html, kind="marketing")
+    await record_admin_action(admin, "newsletter sent", payload.subject, None, {"recipients": len(recipients)})
+    return {"ok": True, "recipients": len(recipients)}
 
 
 # ── A signed-in customer's own choice, in My Account ──────────────────────────

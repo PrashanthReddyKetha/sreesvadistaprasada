@@ -245,3 +245,23 @@ def test_a_customer_can_turn_marketing_email_off_and_on_in_their_account(client,
     assert client.get("/api/me/preferences", headers=user_headers).json() == {"marketing_email": False}
     assert client.put("/api/me/preferences", json={"marketing_email": True}, headers=user_headers).json() == {"marketing_email": True}
     assert run(db.email_optouts.count_documents({})) == 0
+
+
+# ── The owner writes to the newsletter list ───────────────────────────────────
+
+def test_a_newsletter_goes_once_to_the_active_list_minus_opt_outs(client, db, monkeypatch):
+    from routes import comms
+    sent = []
+    monkeypatch.setattr(comms, "send_email", lambda to, subject, html, kind="service": sent.append((to, subject, kind, html)))
+    run(db.newsletter.insert_many([{"id": "1", "email": "A@example.com", "active": True}, {"id": "2", "email": "a@example.com", "active": True},
+                                   {"id": "3", "email": "gone@example.com", "active": False}, {"id": "4", "email": "out@example.com", "active": True}]))
+    run(db.email_optouts.insert_one({"email": "out@example.com"}))
+    letter = {"subject": "Diwali sweets this week", "body": "Hello from the kitchen.\n\n<script>x</script> is only text.", "link": "/menu?cat=sweets"}
+    p = client.post("/api/admin/newsletter/preview", json=letter, headers=token("boss", "admin")).json()
+    assert p["recipients"] == 1 and "&lt;script&gt;" in p["html"] and "utm_medium=newsletter" in p["html"] and "cat=sweets" in p["html"]
+    assert client.post("/api/admin/newsletter/send", json=letter, headers=token("boss", "admin")).status_code == 400          # not confirmed
+    r = client.post("/api/admin/newsletter/send", json={**letter, "confirm": True}, headers=token("boss", "admin")).json()
+    assert r == {"ok": True, "recipients": 1} and [(s[0], s[2]) for s in sent] == [("a@example.com", "marketing")]
+    assert client.post("/api/admin/newsletter/send", json={**letter, "confirm": True}, headers=token("boss", "admin")).status_code == 409   # not twice in a day
+    assert run(db.admin_audit.find_one({"action": "newsletter sent"}))["after"] == {"recipients": 1}
+    assert client.post("/api/admin/newsletter/send", json={**letter, "confirm": True}, headers=token("u1")).status_code == 403

@@ -113,10 +113,78 @@ export default function MessagesTab() {
           </div>
         )}
       </div>
+      <Newsletter onSent={load} />
       <p className="text-xs text-gray-400">
         Messages about an order or plan are always sent. Reminders and invitations carry an unsubscribe link and are not sent to anyone who has unsubscribed.
         This record is kept for 400 days.
       </p>
+    </div>
+  );
+}
+
+/* Write to everyone on the newsletter list: preview, a test to yourself, then one confirmed send. */
+function Newsletter({ onSent }) {
+  const blank = { subject: '', heading: '', body: '', button: 'See the menu', link: '/menu' };
+  const [letter, setLetter] = useState(blank);
+  const [shown, setShown] = useState(null);
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState('');
+  const ready = letter.subject.trim() && letter.body.trim();
+  useEffect(() => {
+    if (!ready) { setShown(null); return undefined; }
+    const t = setTimeout(() => { api.post('/admin/newsletter/preview', letter).then(r => setShown(r.data)).catch(() => {}); }, 500);
+    return () => clearTimeout(t);
+  }, [letter, ready]);
+  const act = async (path, body, done) => {
+    setBusy(true); setNote('');
+    try { const r = await api.post(path, body); setNote(done(r.data)); if (path.endsWith('/send')) { setLetter(blank); setConfirm(false); onSent(); } }
+    catch (e) { setNote(e.response?.data?.detail || 'That did not work. Please try again.'); }
+    finally { setBusy(false); }
+  };
+  const input = (key, label, props = {}) => (
+    <label className="block text-sm"><span className="text-gray-500">{label}</span>
+      <input value={letter[key]} onChange={e => setLetter({ ...letter, [key]: e.target.value })} className="mt-1 w-full px-3 py-2 border rounded-lg" style={{ borderColor: '#e0d9d0' }} {...props} />
+    </label>
+  );
+  return (
+    <div className="bg-white rounded-xl p-5" style={card}>
+      <h3 className="font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Write to the newsletter list</h3>
+      <p className="text-xs text-gray-500 mb-4">Goes to everyone who signed up and has not unsubscribed, once. Write plainly; a blank line starts a new paragraph. Send yourself a test first.</p>
+      <div className="grid lg:grid-cols-2 gap-5">
+        <div className="space-y-3">
+          {input('subject', 'Subject line', { maxLength: 120 })}
+          {input('heading', 'Heading inside the email (optional — the subject is used if empty)', { maxLength: 120 })}
+          <label className="block text-sm"><span className="text-gray-500">The message</span>
+            <textarea value={letter.body} rows={8} maxLength={6000} onChange={e => setLetter({ ...letter, body: e.target.value })} className="mt-1 w-full px-3 py-2 border rounded-lg" style={{ borderColor: '#e0d9d0' }} />
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            {input('button', 'Button', { maxLength: 40 })}
+            {input('link', 'Button goes to (a page on the site)', { maxLength: 200, placeholder: '/menu' })}
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button onClick={() => act('/admin/newsletter/test', letter, r => `A test was sent to ${r.sent_to}.`)} disabled={busy || !ready}
+              className="px-3 py-2 rounded-lg text-sm font-semibold border disabled:opacity-40" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}>Send me a test</button>
+            {!confirm ? (
+              <button onClick={() => setConfirm(true)} disabled={busy || !ready || !shown}
+                className="px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-40" style={{ backgroundColor: P, color: '#fff' }}>Send to the list…</button>
+            ) : (
+              <span className="flex flex-wrap items-center gap-2 text-sm">
+                <span>Send "{letter.subject}" to <b>{shown?.recipients ?? '…'}</b> people now?</span>
+                <button onClick={() => act('/admin/newsletter/send', { ...letter, confirm: true }, r => `Sent to ${r.recipients} people. It will appear in the log as each one goes out.`)} disabled={busy}
+                  className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ backgroundColor: P, color: '#fff' }}>Yes, send</button>
+                <button onClick={() => setConfirm(false)} className="px-3 py-1.5 rounded-lg text-sm font-semibold border" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}>Not yet</button>
+              </span>
+            )}
+          </div>
+          {note && <p className="text-sm" role="status" style={{ color: /did not|Please|Nobody|last 24/.test(note) ? '#B91C1C' : '#2E7D32' }}>{note}</p>}
+        </div>
+        <div>
+          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">As it will look{shown ? ` · ${shown.recipients} on the list` : ''}</h4>
+          {shown ? <iframe title="Newsletter preview" sandbox="" srcDoc={shown.html} className="w-full rounded-lg border" style={{ height: 460, borderColor: '#e0d9d0' }} />
+            : <p className="text-sm text-gray-400">Type a subject and a message to see the preview.</p>}
+        </div>
+      </div>
     </div>
   );
 }
