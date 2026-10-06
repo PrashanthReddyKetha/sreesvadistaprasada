@@ -12,7 +12,7 @@ Set env vars on Render:
 """
 from __future__ import annotations
 from security import mask
-import os
+import os
 import hmac
 import hashlib
 from urllib.parse import quote
@@ -126,6 +126,25 @@ def _wrap(title: str, body_html: str, cta_text: str = "", cta_url: str = "") -> 
 
 PUBLIC_API_URL = os.environ.get("PUBLIC_API_URL", "https://svadista-backend.onrender.com").rstrip("/")
 MESSAGE_LOG_DAYS = 400
+# A provider that cannot be reached, or answers with a server error or "too busy", is tried again after these
+# pauses. A message the provider refuses outright (a bad address) is not retried.
+RETRY_DELAYS = (20, 120, 600)
+
+
+def _again(status_code: Optional[int]) -> bool:
+    """Worth another try? Only when the fault is on the provider's side."""
+    return status_code is None or status_code == 429 or status_code >= 500
+
+
+async def _gave_up(channel: str, to: str, kind: str, label: str, fault: str, tries: int) -> None:
+    """The last try failed: log it, and for a message the customer is owed (an order update, a plan confirmation)
+    tell the owner so it can be sent by hand. Alerts about alerts would loop, so an alert never raises another."""
+    await log_message(channel, to, kind, f"failed: {fault} after {tries} tries", label)
+    if kind == "service":
+        notify_admin(f"A {channel} to a customer could not be sent",
+                     f"<p>A <b>{channel}</b> to <b>{mask(to)}</b> failed {tries} times: {html_escape(fault)}.</p>"
+                     f"<p>Subject: {html_escape(label)}</p><p>Please check the provider and, if needed, contact the customer another way. "
+                     f"The attempt is in Admin › Messages.</p>")
 
 
 def unsubscribe_token(email: str) -> str:
@@ -182,30 +201,38 @@ async def _send_email_now(to: str, subject: str, html: str, kind: str = "service
         logger.warning("RESEND_API_KEY not set — skipping email to %s (%s)", mask(to), subject)
         await log_message("email", to, kind, "skipped: email not set up", subject)
         return
-    try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.post(
-                "https://api.resend.com/emails",
-                headers={
-                    "Authorization": f"Bearer {RESEND_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={"from": RESEND_FROM, "to": [to], "subject": subject, "html": html,
-                      **({"headers": extra_headers} if extra_headers else {})},
-            )
-            if r.status_code >= 300:
-                logger.error("Resend error %s → %s: %s", r.status_code, mask(to), r.text[:400])
-                await log_message("email", to, kind, f"failed: provider {r.status_code}", subject)
-            else:
+    for attempt, delay in enumerate((0,) + RETRY_DELAYS, start=1):
+        if delay:
+            await asyncio.sleep(delay)
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                r = await client.post(
+                    "https://api.resend.com/emails",
+                    headers={
+                        "Authorization": f"Bearer {RESEND_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={"from": RESEND_FROM, "to": [to], "subject": subject, "html": html,
+                          **({"headers": extra_headers} if extra_headers else {})},
+                )
+        except Exception as e:
+            logger.warning("Email try %s to=%s could not reach provider: %s", attempt, mask(to), e)
+            code, fault = None, "could not reach provider"
+        else:
+            if r.status_code < 300:
                 logger.info("Email sent to=%s subject=%r", mask(to), subject)
                 try:
                     provider_id = r.json().get("id") or ""
                 except Exception:
                     provider_id = ""
-                await log_message("email", to, kind, "sent", subject, provider_id=provider_id)
-    except Exception as e:
-        logger.exception("Email send failed to=%s: %s", mask(to), e)
-        await log_message("email", to, kind, "failed: could not reach provider", subject)
+                await log_message("email", to, kind, "sent" if attempt == 1 else f"sent after {attempt} tries", subject, provider_id=provider_id)
+                return
+            logger.error("Resend error %s (try %s) → %s: %s", r.status_code, attempt, mask(to), r.text[:400])
+            code, fault = r.status_code, f"provider {r.status_code}"
+        if not _again(code):
+            await log_message("email", to, kind, f"failed: {fault}", subject)
+            return
+    await _gave_up("email", to, kind, subject, fault, attempt)
 
 
 async def _send_sms_now(to: str, body: str, kind: str = "service") -> None:
@@ -221,23 +248,31 @@ async def _send_sms_now(to: str, body: str, kind: str = "service") -> None:
     if not to_clean.startswith("+"):
         logger.warning("SMS 'to' is not E.164 (%s) — skipping", mask(to_clean))
         return
-    try:
-        async with httpx.AsyncClient(
-            timeout=15, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-        ) as client:
-            r = await client.post(
-                f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Messages.json",
-                data={"From": TWILIO_FROM_NUMBER, "To": to_clean, "Body": body[:480]},
-            )
-            if r.status_code >= 300:
-                logger.error("Twilio error %s → %s: %s", r.status_code, mask(to_clean), r.text[:400])
-                await log_message("sms", to_clean, kind, f"failed: provider {r.status_code}", body[:60])
-            else:
+    for attempt, delay in enumerate((0,) + RETRY_DELAYS, start=1):
+        if delay:
+            await asyncio.sleep(delay)
+        try:
+            async with httpx.AsyncClient(
+                timeout=15, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+            ) as client:
+                r = await client.post(
+                    f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Messages.json",
+                    data={"From": TWILIO_FROM_NUMBER, "To": to_clean, "Body": body[:480]},
+                )
+        except Exception as e:
+            logger.warning("SMS try %s to=%s could not reach provider: %s", attempt, mask(to_clean), e)
+            code, fault = None, "could not reach provider"
+        else:
+            if r.status_code < 300:
                 logger.info("SMS sent to=%s", mask(to_clean))
-                await log_message("sms", to_clean, kind, "sent", body[:60])
-    except Exception as e:
-        logger.exception("SMS send failed to=%s: %s", mask(to_clean), e)
-        await log_message("sms", to_clean, kind, "failed: could not reach provider", body[:60])
+                await log_message("sms", to_clean, kind, "sent" if attempt == 1 else f"sent after {attempt} tries", body[:60])
+                return
+            logger.error("Twilio error %s (try %s) → %s: %s", r.status_code, attempt, mask(to_clean), r.text[:400])
+            code, fault = r.status_code, f"provider {r.status_code}"
+        if not _again(code):
+            await log_message("sms", to_clean, kind, f"failed: {fault}", body[:60])
+            return
+    await _gave_up("sms", to_clean, kind, body[:60], fault, attempt)
 
 
 # ── Public fire-and-forget API ───────────────────────────────────────────────
@@ -271,7 +306,7 @@ def send_sms(to: str, body: str, kind: str = "service") -> None:
 
 
 def notify_admin(subject: str, html: str) -> None:
-    send_email(ADMIN_ALERT_EMAIL, subject, html)
+    send_email(ADMIN_ALERT_EMAIL, subject, html, kind="alert")   # to the owner; never carries an unsubscribe link, never alerts about itself
 
 
 async def send_push_notification(token: str, title: str, body: str, data: Optional[dict] = None) -> None:

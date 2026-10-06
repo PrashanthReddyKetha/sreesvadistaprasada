@@ -15,7 +15,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from database import db
+from database import db
 from security import RateLimit
 from auth import require_admin, get_optional_user
 
@@ -300,10 +300,27 @@ async def kitchen_reopen_subscribe(body: ReopenSubscribe, user: Optional[dict] =
     return {"ok": True}
 
 
-async def broadcast_kitchen_reopened():
-    """Fire-and-forget: push to every push subscriber + email everyone who asked."""
-    from notifications import send_email, _wrap, SITE_URL
+REOPEN_QUIET_HOURS = 12      # one "we're open" message to everyone at most this often
+REOPEN_MIN_CLOSED_MINUTES = 30   # a closed-and-reopened within this is a slip of the switch, not news
+
+
+async def broadcast_kitchen_reopened(closed_at: Optional[datetime] = None):
+    """Fire-and-forget: push to every push subscriber + email everyone who asked.
+    Held back when the kitchen was only closed for a moment, or when everyone was told within the last 12 hours —
+    so a switch flicked twice cannot message every customer twice."""
+    from notifications import send_email, _wrap, SITE_URL, log_message
     from web_push import new_campaign, send_to_all
+
+    now = datetime.utcnow()
+    if closed_at and (now - closed_at) < timedelta(minutes=REOPEN_MIN_CLOSED_MINUTES):
+        await log_message("push", "everyone", "marketing", f"skipped: kitchen was closed for under {REOPEN_MIN_CLOSED_MINUTES} minutes", "Kitchen reopened")
+        return
+    settings = await db.settings.find_one({"_id": SETTINGS_ID}, {"_id": 0, "last_reopen_broadcast_at": 1}) or {}
+    last = settings.get("last_reopen_broadcast_at")
+    if last and (now - datetime.fromisoformat(last)) < timedelta(hours=REOPEN_QUIET_HOURS):
+        await log_message("push", "everyone", "marketing", f"skipped: everyone was told within the last {REOPEN_QUIET_HOURS} hours", "Kitchen reopened")
+        return
+    await db.settings.update_one({"_id": SETTINGS_ID}, {"$set": {"last_reopen_broadcast_at": now.isoformat()}}, upsert=True)
 
     title = "We're open! 🍛"
     body = "The kitchen is cooking again — order now for today's fresh Andhra meals."
@@ -357,11 +374,19 @@ async def update_settings_admin(payload: PickupSlotSettingsUpdate, admin: dict =
         raise HTTPException(400, "Nothing to update")
     updates["updated_at"] = datetime.utcnow().isoformat()
     updates["updated_by"] = admin.get("sub")
-    was_paused = bool((await get_slot_settings()).get("paused"))
+    before = await get_slot_settings()
+    was_paused = bool(before.get("paused"))
+    if updates.get("paused") is True and not was_paused:
+        updates["paused_at"] = datetime.utcnow().isoformat()        # so a reopening knows how long the kitchen was closed
     await db.settings.update_one({"_id": SETTINGS_ID}, {"$set": updates}, upsert=True)
     settings = await get_slot_settings()
     settings.pop("_id", None)
     # Closed → open transition: tell everyone who's waiting
     if was_paused and updates.get("paused") is False:
-        asyncio.create_task(broadcast_kitchen_reopened())
+        closed_at = None
+        try:
+            closed_at = datetime.fromisoformat(before["paused_at"]) if before.get("paused_at") else None
+        except (TypeError, ValueError):
+            pass
+        asyncio.create_task(broadcast_kitchen_reopened(closed_at))
     return settings

@@ -126,3 +126,108 @@ def test_admin_can_see_what_was_sent(client, db):
     assert len(r["messages"]) == 2 and r["unsubscribed"] == 1
     assert {(s["channel"], s["kind"], s["outcome"], s["count"]) for s in r["summary"]} == {
         ("email", "service", "sent", 1), ("email", "marketing", "skipped", 1)}
+
+
+# ── A provider that is down is tried again; a message the customer is owed raises an alert ──
+
+class _Reply:
+    def __init__(self, status):
+        self.status_code, self.text = status, "x"
+
+    def json(self):
+        return {"id": "re_1"}
+
+
+def _provider(monkeypatch, answers):
+    """Fake httpx client: each call takes the next answer — a status code, or an exception to raise."""
+    calls, pauses, alerts = [], [], []
+
+    class Client:
+        def __init__(self, *a, **k):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+        async def post(self, url, **kw):
+            calls.append(url)
+            answer = answers.pop(0)
+            if isinstance(answer, Exception):
+                raise answer
+            return _Reply(answer)
+
+    async def sleep(seconds):
+        pauses.append(seconds)
+    monkeypatch.setattr(notifications.httpx, "AsyncClient", Client)
+    monkeypatch.setattr(notifications.asyncio, "sleep", sleep)
+    monkeypatch.setattr(notifications, "RESEND_API_KEY", "re_test")
+    monkeypatch.setattr(notifications, "notify_admin", lambda subject, html: alerts.append(subject))
+    for name in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER"):
+        monkeypatch.setattr(notifications, name, "x")
+    return calls, pauses, alerts
+
+
+def test_an_email_is_tried_again_when_the_provider_is_down_then_sent(db, monkeypatch):
+    calls, pauses, alerts = _provider(monkeypatch, [ConnectionError("boom"), 503, 200])
+    run(notifications._send_email_now(EMAIL, "Your order", "<p>x</p>", "service"))
+    assert len(calls) == 3 and pauses == [20, 120]
+    assert [r["status"] for r in log(db)] == ["sent after 3 tries"] and alerts == []
+
+
+def test_a_service_email_that_keeps_failing_alerts_the_owner_a_marketing_one_does_not(db, monkeypatch):
+    calls, pauses, alerts = _provider(monkeypatch, [500, 500, 500, 500, 500, 500, 500, 500])
+    run(notifications._send_email_now(EMAIL, "Your order", "<p>x</p>", "service"))
+    run(notifications._send_email_now(EMAIL, "Come back", "<p>x</p>", "marketing"))
+    assert len(calls) == 8 and pauses == [20, 120, 600, 20, 120, 600]
+    assert [r["status"] for r in log(db)] == ["failed: provider 500 after 4 tries"] * 2
+    assert alerts == ["A email to a customer could not be sent"]
+
+
+def test_a_refused_address_is_not_tried_again(db, monkeypatch):
+    calls, pauses, alerts = _provider(monkeypatch, [422, 400])
+    run(notifications._send_email_now("nobody@nowhere", "Your order", "<p>x</p>", "service"))
+    run(notifications._send_sms_now("+447700900123", "Your order is ready", "service"))      # texts: same rule
+    assert len(calls) == 2 and pauses == [] and alerts == []
+    assert sorted(r["status"] for r in log(db)) == ["failed: provider 400", "failed: provider 422"]
+
+
+def test_a_text_is_tried_again_too(db, monkeypatch):
+    calls, pauses, alerts = _provider(monkeypatch, [429, 201])
+    run(notifications._send_sms_now("+447700900123", "Your order is ready", "service"))
+    assert len(calls) == 2 and pauses == [20] and [r["status"] for r in log(db)] == ["sent after 2 tries"]
+
+
+# ── "We're open" goes to everyone at most once in 12 hours, and not for a slip of the switch ──
+
+def test_kitchen_reopened_message_is_held_back_for_a_quick_flick_and_for_a_repeat(db, monkeypatch):
+    from routes import pickup_slots
+    sent = []
+
+    async def no_push(campaign):
+        sent.append("push")
+        return {}
+    monkeypatch.setattr("web_push.send_to_all", no_push)
+    monkeypatch.setattr("web_push.new_campaign", lambda *a, **k: {"stats": {}})
+    monkeypatch.setattr(notifications, "send_email", lambda to, subject, html, kind="service": sent.append(to))
+    run(db.reopen_subs.insert_one({"id": "r1", "email": EMAIL, "name": "Asha"}))
+    now = datetime.utcnow()
+    run(pickup_slots.broadcast_kitchen_reopened(closed_at=now - timedelta(minutes=5)))          # flicked off and on
+    assert sent == [] and run(db.reopen_subs.count_documents({})) == 1
+    run(pickup_slots.broadcast_kitchen_reopened(closed_at=now - timedelta(hours=3)))            # a real reopening
+    assert sent == ["push", EMAIL] and run(db.reopen_subs.count_documents({})) == 0
+    run(db.reopen_subs.insert_one({"id": "r2", "email": "ravi@example.com"}))
+    run(pickup_slots.broadcast_kitchen_reopened(closed_at=now - timedelta(hours=3)))            # closed and reopened again the same evening
+    assert sent == ["push", EMAIL]
+    statuses = [r["status"] for r in log(db)]
+    assert any("under 30 minutes" in s for s in statuses) and any("within the last 12 hours" in s for s in statuses)
+
+
+def test_whatsapp_records_carry_a_real_date_for_automatic_deletion(db, monkeypatch):
+    monkeypatch.setattr(whatsapp, "whatsapp_enabled", lambda event=None: False)
+    monkeypatch.setattr(notifications, "send_sms", lambda *a, **k: None)
+    run(whatsapp._notify_customer_now("order_confirmed", "+447700900123", ["Asha"], "wa-test-1", "fallback text"))
+    rec = run(db.wa_messages.find_one({"dedupe_key": "wa-test-1"}))
+    assert rec is not None and isinstance(rec["at"], datetime)

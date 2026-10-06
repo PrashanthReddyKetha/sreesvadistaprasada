@@ -8,7 +8,7 @@ import api from '@/api';
 const P = '#800020';
 const card = { boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
 const CHANNEL = { email: 'Email', sms: 'Text message', whatsapp: 'WhatsApp' };
-const KIND = { service: 'About an order or plan', marketing: 'Reminder or invitation' };
+const KIND = { service: 'About an order or plan', marketing: 'Reminder or invitation', alert: 'To you, from the system' };
 const OUTCOME = { sent: { label: 'Sent', color: '#2E7D32' }, skipped: { label: 'Not sent', color: '#8D6E00' }, failed: { label: 'Failed', color: '#B91C1C' } };
 const when = (iso) => new Date(iso + (/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? '' : 'Z')).toLocaleString('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 const outcomeOf = (status) => (status || '').split(':')[0];

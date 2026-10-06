@@ -57,6 +57,11 @@ async def lifespan(app: FastAPI):
     # The send log: who was sent what. Deleted automatically after the retention period.
     from notifications import MESSAGE_LOG_DAYS
     await db.message_log.create_index("at", expireAfterSeconds=MESSAGE_LOG_DAYS * 86400)
+    # WhatsApp records keep the same period. Older records only carry a text date: clear those by hand once.
+    await db.wa_messages.create_index("at", expireAfterSeconds=MESSAGE_LOG_DAYS * 86400, sparse=True)
+    from datetime import datetime, timedelta
+    await db.wa_messages.delete_many({"at": {"$exists": False},
+                                      "created_at": {"$lt": (datetime.utcnow() - timedelta(days=MESSAGE_LOG_DAYS)).isoformat()}})
     await db.email_optouts.create_index("email", unique=True)
     # An automation message goes to a customer once per reason; the unique key is what guarantees it
     await db.automation_sends.create_index([("automation", 1), ("email", 1), ("reason", 1)], unique=True)

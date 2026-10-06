@@ -163,6 +163,7 @@ async def _notify_customer_now(
         "status": "queued",
         "sid": None,
         "created_at": datetime.utcnow().isoformat(),
+        "at": datetime.utcnow(),           # a real date, so the record can be deleted automatically after MESSAGE_LOG_DAYS
     }
     try:
         await db.wa_messages.insert_one(record)
