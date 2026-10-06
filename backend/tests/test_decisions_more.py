@@ -257,8 +257,8 @@ def test_journey_reports_landing_funnels_drop_off_removals_and_dabba_steps(clien
     stopped = {s["step"]: s["visits"] for s in r["stopped_at"]}
     assert stopped["Added to basket"] == 1 and stopped["Started checkout"] == 1 and stopped["Arrived"] == 2
     assert r["last_action_before_leaving_checkout"] == [{"name": "coupon failed: This code has expired on /checkout", "count": 1}]
-    assert r["last_action_before_leaving_with_a_basket"][0]["name"] == "click: Close basket on /order"
-    assert r["abandoned"] == {"visits": 2, "basket_value": 6.99}                # one basket was emptied again; one left with a dosa in it
+    assert r["last_action_before_leaving_with_a_basket"] == []                  # the one basket left outside checkout had been emptied again
+    assert r["abandoned"] == {"visits": 1, "basket_value": 6.99}                # so only the visit that left checkout with a dosa counts
     assert r["removals"] == [{"name": "Masala Dosa", "removed": 1, "added": 3, "removal_rate": 0.33}]
     assert r["minutes_to_order"]["orders_measured"] == 1
     steps = {s["step"]: s["visits"] for s in r["subscription_funnel"]}

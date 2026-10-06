@@ -7,12 +7,11 @@ Privacy: no name, email, phone or address is stored here. A returning-visitor id
 sent by the browser when the visitor has accepted analytics cookies. IP addresses are not
 stored. Events are deleted automatically after RETENTION_DAYS.
 
-What counts as one visit: for a visitor who accepted cookies, the browser keeps the visit
-number for the session. For everyone else nothing is kept on their device, so page loads are
-joined on the server instead: the visitor's address and browser type are combined with a
-random value that is replaced every day, turned into a short code, and the address is thrown
-away. Page loads with the same code less than 30 minutes apart are one visit. The code cannot
-be turned back into an address and cannot link one day to the next.
+What counts as one visit: everything the same browser does with no pause longer than 30 minutes.
+"The same browser" is the visitor id for someone who accepted cookies. For everyone else nothing
+is kept on their device, so the visitor's address and browser type are combined with a random
+value that is replaced every day, turned into a short code, and the address is thrown away. The
+code cannot be turned back into an address and cannot link one day to the next.
 """
 import hashlib
 import re
@@ -21,19 +20,24 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel, Field, ValidationError
 
 from auth import require_admin
 from database import db
 from audit_log import record_admin_action
 from security import RateLimit, client_ip
+from routes.customers import is_test_account
 
 router = APIRouter(tags=["Events"])
 
 RETENTION_DAYS = 400
 LONDON = ZoneInfo("Europe/London")   # days and hours are the kitchen's, not UTC
+UTC = ZoneInfo("UTC")
+EPOCH = datetime(1970, 1, 1)
 MAX_BATCH = 25
+MAX_BODY = 200_000          # bytes; a full batch is a few thousand
+MAX_HELD_MS = 10 * 60000    # an event older than this when its batch left is stamped with the arrival time instead
 VISIT_GAP_MINUTES = 30      # a pause longer than this starts a new visit
 JOIN_PAGE_LOADS = True      # see "What counts as one visit" above
 MENU_PATHS = ("/order", "/menu", "/breakfast", "/prasada", "/svadista", "/street-food", "/drinks", "/ragi-specials", "/snacks")
@@ -44,10 +48,24 @@ _NAME = re.compile(r"^[a-z][a-z0-9_]{1,39}$")
 FUNNEL = ["page_view", "looked_at_menu", "add_to_cart", "begin_checkout", "purchase"]
 PROP_KEYS = {"value", "transaction_id", "coupon", "plan", "box_type", "step_number", "step_name", "source",
              "enquiry_type", "category", "location", "item_id", "item_name", "quantity", "term", "method", "reason",
-             "label", "area", "href", "seconds", "percent", "status", "message"}
+             "label", "area", "href", "seconds", "percent", "status", "message", "view"}
 _EMAIL = re.compile(r"[^\s@]+@[^\s@]+")
 _DIGITS = re.compile(r"\d[\d\s-]{5,}\d")
 _ID = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
+# Search-engine crawlers, link checkers, speed tests and scripts run the site's code too. They are not visitors.
+_ROBOT = re.compile(
+    r"bot/|bot;|googlebot|bingbot|petalbot|crawler|spider|slurp|headless|lighthouse|page ?speed|gtmetrix|pingdom|ptst|prerender|"
+    r"phantomjs|datadog|site24x7|uptime|statuscake|screaming frog|facebookexternalhit|bingpreview|mediapartners|"
+    r"google-inspectiontool|googleother|feedfetcher|google-read-aloud|adsbot|apis-google|chatgpt|oai-search|gptbot|"
+    r"claudebot|claude-user|perplexity|bytespider|ia_archiver|python|curl/|wget|java/|go-http|node-fetch|axios|okhttp|"
+    r"libwww|httpclient", re.I)
+
+
+_MEANT_TO_REPEAT = re.compile(r"\s*(increase|decrease|one more|one less|next|previous)\b", re.I)
+
+
+def is_robot(user_agent: str) -> bool:
+    return bool(_ROBOT.search(user_agent or ""))
 
 
 def _clean(value, limit=120):
@@ -66,6 +84,7 @@ class EventIn(BaseModel):
     path: str = Field(default="", max_length=200)
     props: dict = Field(default_factory=dict)
     items: List[dict] = Field(default_factory=list)
+    ts: Optional[float] = None                           # the browser's clock when it happened, in milliseconds
 
 
 class Attribution(BaseModel):
@@ -82,6 +101,7 @@ class Batch(BaseModel):
     signed_in: bool = False                              # a flag only — never who
     device: str = Field(default="", max_length=10)       # phone | desktop
     attribution: Attribution = Field(default_factory=Attribution)
+    sent: Optional[float] = None                         # the browser's clock when the batch left, in milliseconds
     events: List[EventIn] = Field(max_length=MAX_BATCH)
 
 
@@ -90,32 +110,67 @@ async def _day_code(request: Request, day: str) -> str:
     browser type is stored."""
     doc = await db.settings.find_one({"_id": "event_salt"})
     if not doc or doc.get("day") != day:
-        doc = {"day": day, "salt": secrets.token_hex(16)}
-        await db.settings.update_one({"_id": "event_salt"}, {"$set": doc}, upsert=True)
+        try:
+            # only one of two requests arriving together at midnight may set the day's value
+            await db.settings.update_one({"_id": "event_salt", "day": {"$ne": day}},
+                                         {"$set": {"day": day, "salt": secrets.token_hex(16)}}, upsert=True)
+        except Exception:
+            pass                                         # the other request set it first
+        doc = await db.settings.find_one({"_id": "event_salt"})
     raw = f'{doc["salt"]}|{client_ip(request)}|{request.headers.get("user-agent", "")}'
     return hashlib.sha256(raw.encode()).hexdigest()[:20]
 
 
+async def _latest(query: dict) -> Optional[dict]:
+    found = await db.events.find(query, {"_id": 0, "visit_id": 1, "at": 1}).sort("at", -1).limit(1).to_list(1)
+    return found[0] if found else None
+
+
 @router.post("/events", status_code=202)
-async def record_events(batch: Batch, request: Request, _=Depends(_rate)):
+async def record_events(request: Request, _=Depends(_rate)):
+    # The body is read as text whatever its declared type. The site sends plain text, so the browser needs no
+    # permission round-trip first and a batch sent as the page closes is not lost; older pages send JSON.
+    raw = await request.body()
+    if len(raw) > MAX_BODY:
+        raise HTTPException(status_code=413, detail="Batch too large")
+    try:
+        batch = Batch.model_validate_json(raw)
+    except ValidationError:
+        raise HTTPException(status_code=422, detail="Badly formed batch")
     if not _ID.match(batch.visit_id) or (batch.visitor_id and not _ID.match(batch.visitor_id)):
         return {"stored": 0}
+    if is_robot(request.headers.get("user-agent", "")):
+        return {"stored": 0}
     now = datetime.utcnow()
-    local = datetime.now(LONDON)
     visit_id, day_code = batch.visit_id, None
-    if JOIN_PAGE_LOADS and not batch.visitor_id:
-        # No cookie consent, so the browser forgets its visit number on every full page load. Join them here.
-        day_code = await _day_code(request, local.strftime("%Y-%m-%d"))
-        recent = await db.events.find({"day_code": day_code, "at": {"$gte": now - timedelta(minutes=VISIT_GAP_MINUTES)}},
-                                      {"_id": 0, "visit_id": 1}).sort("at", -1).limit(1).to_list(1)
-        if recent:
-            visit_id = recent[0]["visit_id"]
+    if JOIN_PAGE_LOADS:
+        since = now - timedelta(minutes=VISIT_GAP_MINUTES)
+        if batch.visitor_id:
+            who = {"visitor_id": batch.visitor_id}
+        else:
+            # No cookie consent, so the browser forgets its visit number on every full page load
+            day_code = await _day_code(request, datetime.now(LONDON).strftime("%Y-%m-%d"))
+            who = {"day_code": day_code}
+        last = await _latest(who)                        # this browser's latest event, whenever it was
+        if last and last["at"] >= since:
+            visit_id = last["visit_id"]
+        else:
+            same = await _latest({"visit_id": batch.visit_id})
+            if same and same["at"] < since:
+                # The browser kept its visit number through a long pause (a tab left open). This is a new visit.
+                anchor = max(same["at"], last["at"]) if last else same["at"]
+                visit_id = hashlib.sha256(f"{batch.visit_id}|{anchor.isoformat()}".encode()).hexdigest()[:24]
     docs = []
     for e in batch.events:
         if not _NAME.match(e.name):
             continue
+        # Events wait a few seconds in the browser before they are sent: stamp each with when it happened
+        held = (batch.sent - e.ts) if (batch.sent and e.ts) else 0
+        at = now - timedelta(milliseconds=held) if 0 < held <= MAX_HELD_MS else now
+        local = at.replace(tzinfo=UTC).astimezone(LONDON)
         docs.append({
-            "name": e.name, "path": e.path.split("?")[0], "at": now, "day": local.strftime("%Y-%m-%d"), "hour": local.hour,
+            "name": e.name, "path": e.path.split("?")[0], "at": at, "day": local.strftime("%Y-%m-%d"), "hour": local.hour,
+            "ts": int(e.ts) if e.ts and e.ts > 0 else None,
             "visit_id": visit_id, "day_code": day_code, "visitor_id": batch.visitor_id, "signed_in": batch.signed_in, "device": batch.device,
             "source": batch.attribution.source, "medium": batch.attribution.medium, "campaign": batch.attribution.campaign,
             "referrer": batch.attribution.referrer, "landing": batch.attribution.landing.split("?")[0],
@@ -125,7 +180,36 @@ async def record_events(batch: Batch, request: Request, _=Depends(_rate)):
         })
     if docs:
         await db.events.insert_many(docs)
-    return {"stored": len(docs)}
+    out = {"stored": len(docs)}
+    if visit_id != batch.visit_id:
+        out["visit"] = visit_id                          # the browser carries on with the number the visit already has
+    return out
+
+
+# Where a visit came from, by the referring site's host name (from an Android app: the app's package name).
+# A host matches when it is that domain or sits under it — never because the letters merely appear in it.
+_NOT_A_SOURCE = ("sreesvadistaprasada.com", "sreesvadistaprasada.vercel.app", "ssp-nextjs.vercel.app", "stripe.com")
+_SOURCES = (
+    ("Gmail", ("mail.google.com", "com.google.android.gm")),
+    ("Google search", ("com.google.android.googlequicksearchbox",)),
+    ("Bing search", ("bing.com",)), ("DuckDuckGo search", ("duckduckgo.com",)), ("Yahoo Mail", ("mail.yahoo.com",)),
+    ("Yahoo search", ("search.yahoo.com",)), ("Ecosia search", ("ecosia.org",)), ("Brave search", ("search.brave.com",)),
+    ("Instagram", ("instagram.com", "com.instagram.android")),
+    ("Facebook", ("facebook.com", "fb.com", "fb.me", "messenger.com", "com.facebook.katana", "com.facebook.orca")),
+    ("WhatsApp", ("whatsapp.com", "wa.me", "com.whatsapp", "com.whatsapp.w4b")),
+    ("X / Twitter", ("t.co", "twitter.com", "x.com", "com.twitter.android")),
+    ("YouTube", ("youtube.com", "youtu.be", "com.google.android.youtube")),
+    ("TikTok", ("tiktok.com", "com.zhiliaoapp.musically")),
+    ("LinkedIn", ("linkedin.com", "lnkd.in")), ("Reddit", ("reddit.com",)), ("Snapchat", ("snapchat.com",)),
+    ("Nextdoor", ("nextdoor.co.uk", "nextdoor.com")),
+    ("Outlook", ("outlook.live.com", "outlook.office.com", "outlook.office365.com")),
+)
+_GOOGLE_SEARCH = re.compile(r"^(www\.|m\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$")
+_PINTEREST = re.compile(r"(^|\.)pinterest\.[a-z]{2,3}(\.[a-z]{2})?$")
+
+
+def _is(host: str, domain: str) -> bool:
+    return host == domain or host.endswith("." + domain)
 
 
 def channel(e: dict) -> str:
@@ -133,21 +217,98 @@ def channel(e: dict) -> str:
     src, med, ref = (e.get("source") or "").lower(), (e.get("medium") or "").lower(), (e.get("referrer") or "").lower()
     if src:
         return f"{src} ({med})" if med else src
-    if not ref:
+    host = ref.split("/")[0].split(":")[0]
+    if not host or any(_is(host, own) for own in _NOT_A_SOURCE):
         return "Direct or unknown"
-    for needle, label in (("google", "Google search"), ("bing", "Bing search"), ("duckduckgo", "DuckDuckGo search"),
-                          ("instagram", "Instagram"), ("facebook", "Facebook"), ("fb.", "Facebook"), ("whatsapp", "WhatsApp"),
-                          ("wa.me", "WhatsApp"), ("t.co", "X / Twitter"), ("youtube", "YouTube"), ("tiktok", "TikTok")):
-        if needle in ref:
+    for label, domains in _SOURCES:
+        if any(_is(host, d) for d in domains):
             return label
-    return ref
+    if _GOOGLE_SEARCH.match(host):
+        return "Google search"
+    if _is(host, "google.com") or host.startswith("com.google."):
+        return "Google (other)"                          # Maps, Business Profile, sign-in and other Google pages
+    if _PINTEREST.search(host):
+        return "Pinterest"
+    return host
+
+
+def _in_order(events: list) -> list:
+    """The events in the order they happened, each with the time it happened ("when"); of the several time-on-page
+    reports one page view can send, only the last is kept.
+
+    Events are stamped on arrival, and a batch that waited for the server to wake arrives late. The browser's own
+    clock gives the true order and gaps within a visit; the smallest delay seen in the visit puts it on our clock."""
+    by_visit: dict = {}
+    for e in events:
+        by_visit.setdefault(e["visit_id"], []).append(e)
+    out = []
+    for evs in by_visit.values():
+        stamped = [e for e in evs if e.get("ts")]
+        shift = min((e["at"] - EPOCH).total_seconds() * 1000 - e["ts"] for e in stamped) if stamped else 0
+        final: dict = {}
+        for e in evs:
+            e["when"] = EPOCH + timedelta(milliseconds=e["ts"] + shift) if e.get("ts") else e["at"]
+            view = (e.get("props") or {}).get("view") if e["name"] == "page_leave" else None
+            if view and (view not in final or (e["props"].get("seconds") or 0) >= (final[view]["props"].get("seconds") or 0)):
+                final[view] = e
+        out += [e for e in evs if e["name"] != "page_leave" or not (e.get("props") or {}).get("view") or final[e["props"]["view"]] is e]
+    out.sort(key=lambda e: e["when"])
+    return out
+
+
+def _step(e: dict) -> str:
+    """The name an event goes by in the order funnel. Paying for a meal plan is not a step towards a food order."""
+    if e["name"] in ("payment_started", "payment_started_failed") and (e.get("props") or {}).get("method") == "subscription":
+        return "plan_" + e["name"]
+    return e["name"]
+
+
+def _units(e: dict) -> int:
+    return sum(i.get("quantity") or 1 for i in e.get("items") or []) or 1
+
+
+async def _first_seen(events: list) -> dict:
+    """When each visitor who accepted cookies was first seen, over the whole record — not only the period asked for."""
+    ids = list({e["visitor_id"] for e in events if e.get("visitor_id")})
+    if not ids:
+        return {}
+    rows = await db.events.aggregate([{"$match": {"visitor_id": {"$in": ids}}},
+                                      {"$group": {"_id": "$visitor_id", "first": {"$min": "$at"}}}]).to_list(None)
+    return {r["_id"]: r["first"] for r in rows}
+
+
+def _came_back(evs: list, first_seen: dict) -> Optional[bool]:
+    """None: cookies not accepted, so it cannot be known. True: this visitor had been here before this visit."""
+    known = [e for e in evs if e.get("visitor_id")]
+    if not known:
+        return None
+    first = first_seen.get(known[0]["visitor_id"])
+    return bool(first and first < min(e["at"] for e in known))
+
+
+async def _order_book(since: datetime, events: list) -> dict:
+    """Orders and plans as the order book has them. The visit record only knows the orders it saw being placed."""
+    staff ={u["id"] async for u in db.users.find({}, {"_id": 0, "id": 1, "email": 1, "role": 1})
+             if u.get("role") == "admin" or is_test_account(u.get("email"))}
+
+    def real(doc: dict) -> bool:
+        return doc.get("user_id") not in staff and not is_test_account(doc.get("customer_email"))
+    period = {"created_at": {"$gte": since}, "status": {"$ne": "cancelled"}}
+    orders = [o async for o in db.orders.find(period, {"_id": 0, "id": 1, "order_number": 1, "total": 1, "user_id": 1, "customer_email": 1}) if real(o)]
+    plans = [s async for s in db.subscriptions.find(period, {"_id": 0, "price": 1, "user_id": 1, "customer_email": 1}) if real(s)]
+    seen = {str(e["props"]["transaction_id"]) for e in events if e["name"] == "purchase" and (e.get("props") or {}).get("transaction_id")}
+    return {
+        "orders": len(orders), "income": round(sum(float(o.get("total") or 0) for o in orders), 2),
+        "orders_seen_in_a_visit": sum(1 for o in orders if (o.get("order_number") or str(o.get("id") or "")[-6:].upper()) in seen),
+        "plans_sold": len(plans), "plan_income": round(sum(float(s.get("price") or 0) for s in plans), 2),
+    }
 
 
 @router.get("/admin/analytics")
 async def analytics(days: int = 30, _: dict = Depends(require_admin)):
     days = max(1, min(days, RETENTION_DAYS))
     since = datetime.utcnow() - timedelta(days=days)
-    events = await db.events.find({"at": {"$gte": since}}, {"_id": 0, "day_code": 0}).sort("at", 1).to_list(None)
+    events = _in_order(await db.events.find({"at": {"$gte": since}}, {"_id": 0, "day_code": 0}).sort("at", 1).to_list(None))
 
     visits, by_day, pages, viewed, added, sources, devices = {}, {}, {}, {}, {}, {}, {}
     clicks, searches, problems, hours, stay, action_visits = {}, {}, {}, {}, {}, {}
@@ -173,12 +334,12 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
                     ordered_dishes[i["name"]] = ordered_dishes.get(i["name"], 0) + (i.get("quantity") or 1)
         if e["name"] == "page_view":
             prev = last_page.get(e["visit_id"])
-            if prev is None or e["at"] >= prev[0]:
-                last_page[e["visit_id"]] = (e["at"], e["path"])
+            if prev is None or e["when"] >= prev[0]:
+                last_page[e["visit_id"]] = (e["when"], e["path"])
             h = (e.get("hour") if e.get("hour") is not None else e["at"].hour)
             hours[h] = hours.get(h, 0) + 1
         v = visits.setdefault(e["visit_id"], {"names": set(), "first": e, "value": 0.0, "order": None})
-        v["names"].add(e["name"])
+        v["names"].add(_step(e))
         v["names"].add("page_view")          # every visit arrived, whether or not that first event was kept
         if e["name"] in ("view_item", "menu_category_view", "add_to_cart") or (e["name"] == "page_view" and e["path"].startswith(MENU_PATHS)):
             v["names"].add("looked_at_menu")
@@ -199,6 +360,14 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
                 if i.get("name"):
                     bucket[i["name"]] = bucket.get(i["name"], 0) + (1 if e["name"] == "view_item" else i.get("quantity") or 1)
 
+    # Reaching a later step means the earlier ones were reached too: a basket saved on an earlier visit still had to
+    # exist for checkout to start, and an order placed from a reloaded checkout page still went through checkout.
+    for v in visits.values():
+        for later, earlier in (("purchase", "begin_checkout"), ("payment_started", "begin_checkout"),
+                               ("begin_checkout", "add_to_cart"), ("add_to_cart", "looked_at_menu")):
+            if later in v["names"]:
+                v["names"].add(earlier)
+
     for v in visits.values():
         ch = channel(v["first"])
         s = sources.setdefault(ch, {"source": ch, "visits": 0, "added_to_basket": 0, "orders": 0, "income": 0.0})
@@ -213,7 +382,7 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
     STEPS = [("page_view", "Arrived"), ("looked_at_menu", "Looked at the menu"), ("add_to_cart", "Added to basket"),
              ("begin_checkout", "Started checkout"), ("payment_started", "Started paying"), ("purchase", "Ordered")]
     ordered_events: dict = {}
-    for e in sorted(events, key=lambda e: e["at"]):
+    for e in events:
         ordered_events.setdefault(e["visit_id"], []).append(e)
 
     def funnel_row(label: str, group: list) -> dict:
@@ -228,14 +397,10 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         first = v["first"]
         by_landing.setdefault(first.get("landing") or first.get("path") or "/", []).append(vid)
         by_device.setdefault(first.get("device") or "unknown", []).append(vid)
-    seen_before = set()
-    for vid, evs in sorted(ordered_events.items(), key=lambda kv: kv[1][0]["at"]):
-        visitor = evs[0].get("visitor_id")
-        if not visitor:
-            by_kind["Cookies not accepted"].append(vid)
-        else:
-            by_kind["Returning visitor" if visitor in seen_before else "First visit"].append(vid)
-            seen_before.add(visitor)
+    first_seen = await _first_seen(events)
+    for vid, evs in ordered_events.items():
+        back = _came_back(evs, first_seen)
+        by_kind["Cookies not accepted" if back is None else "Returning visitor" if back else "First visit"].append(vid)
     landing_funnels = [funnel_row(path, group) for path, group in sorted(by_landing.items(), key=lambda kv: -len(kv[1]))[:12]]
     device_funnels = [funnel_row(d, group) for d, group in sorted(by_device.items(), key=lambda kv: -len(kv[1]))]
     visitor_funnels = [funnel_row(k, group) for k, group in by_kind.items() if group]
@@ -246,8 +411,8 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
     for vid, evs in ordered_events.items():
         names = visits[vid]["names"]
         if "purchase" in names:
-            bought_at = next(e["at"] for e in evs if e["name"] == "purchase")
-            minutes_to_order.append((bought_at - evs[0]["at"]).total_seconds() / 60)
+            bought_at = next(e["when"] for e in evs if e["name"] == "purchase")
+            minutes_to_order.append(max((bought_at - evs[0]["when"]).total_seconds(), 0) / 60)
             continue
         reached = next(label for name, label in reversed(STEPS) if name in names or name == "page_view")
         furthest[reached] = furthest.get(reached, 0) + 1
@@ -255,17 +420,19 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         last = meaningful[-1] if meaningful else evs[-1]
         what = (last.get("props") or {}).get("label") or (last.get("props") or {}).get("reason") or ""
         last_text = f'{last["name"].replace("_", " ")}{": " + str(what) if what else ""} on {last["path"]}'
+        # What was still in the basket: everything added in this visit, less everything taken back out
+        worth = lambda name: sum(float((e.get("props") or {}).get("value") or 0) for e in evs if e["name"] == name)   # noqa: E731
+        still_in = sum(_units(e) for e in evs if e["name"] == "add_to_cart") - sum(_units(e) for e in evs if e["name"] == "remove_from_cart")
         if "begin_checkout" in names:
             last_at_checkout[last_text] = last_at_checkout.get(last_text, 0) + 1
-        elif "add_to_cart" in names:
+            abandoned_baskets += 1
+            # the basket as it stood when checkout began — it may have been filled on an earlier visit
+            began = [float(e["props"]["value"]) for e in evs if e["name"] == "begin_checkout" and isinstance((e.get("props") or {}).get("value"), (int, float))]
+            abandoned_value += began[-1] if began else max(worth("add_to_cart") - worth("remove_from_cart"), 0)
+        elif still_in > 0:
             last_at_basket[last_text] = last_at_basket.get(last_text, 0) + 1
             abandoned_baskets += 1
-            abandoned_value += sum(float((e.get("props") or {}).get("value") or 0) for e in evs if e["name"] == "add_to_cart") \
-                - sum(float((e.get("props") or {}).get("value") or 0) for e in evs if e["name"] == "remove_from_cart")
-        if "begin_checkout" in names:
-            abandoned_baskets += 1
-            abandoned_value += sum(float((e.get("props") or {}).get("value") or 0) for e in evs if e["name"] == "add_to_cart") \
-                - sum(float((e.get("props") or {}).get("value") or 0) for e in evs if e["name"] == "remove_from_cart")
+            abandoned_value += max(worth("add_to_cart") - worth("remove_from_cart"), 0)
     minutes_to_order.sort()
 
     def median(values: list):
@@ -291,9 +458,9 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
     for vid, evs in ordered_events.items():
         first_at = {}
         for e in evs:
-            first_at.setdefault(e["name"], e["at"])
+            first_at.setdefault(_step(e), e["when"])
         for label, a, b in pairs:
-            start = evs[0]["at"] if a is None else first_at.get(a)
+            start = evs[0]["when"] if a is None else first_at.get(a)
             if start and first_at.get(b) and first_at[b] >= start:
                 gaps[label].append((first_at[b] - start).total_seconds() / 60)
         route = []
@@ -309,27 +476,38 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         except (KeyError, ValueError):
             pass
         done = visits[vid]["names"] & {"purchase", "subscription_purchase", "login", "sign_up", "enquiry_submit"}
-        focused = [e for e in evs if e["name"] == "field_focus"]
+        # a search box is not a form to be given up on; searches have their own table
+        focused = [e for e in evs if e["name"] == "field_focus" and not str((e.get("props") or {}).get("label") or "").lower().startswith("search")]
         if focused and not done:
             last = focused[-1]
             k = (last["path"], (last.get("props") or {}).get("area") or "", (last.get("props") or {}).get("label") or "")
             field_last[k] = field_last.get(k, 0) + 1
+        opened_here: dict = {}        # dish -> [price band, times opened, times added after being opened]
         for e in evs:
             p = e.get("props") or {}
             if e["name"] == "repeated_taps":
-                k = (p.get("label") or "", e["path"])
-                taps[k] = taps.get(k, 0) + 1
+                # quantity buttons are meant to be tapped several times; older records still hold them
+                if not _MEANT_TO_REPEAT.match(str(p.get("label") or "")):
+                    k = (p.get("label") or "", e["path"])
+                    taps[k] = taps.get(k, 0) + 1
             elif e["name"] == "view_item" and band(p.get("value")):
-                bands.setdefault(band(p.get("value")), {"opened": 0, "added": 0})["opened"] += 1
-            elif e["name"] == "add_to_cart" and p.get("value") is not None:
-                qty = sum(i.get("quantity") or 1 for i in e.get("items") or []) or 1
-                b = band(float(p["value"]) / qty)
-                if b:
-                    bands.setdefault(b, {"opened": 0, "added": 0})["added"] += 1
+                for i in e.get("items") or []:
+                    if i.get("name"):
+                        opened_here.setdefault(i["name"], [band(p.get("value")), 0, 0])[1] += 1
+            elif e["name"] == "add_to_cart":
+                for i in e.get("items") or []:
+                    if i.get("name") in opened_here:
+                        opened_here[i["name"]][2] += 1
             elif e["name"] == "slots_viewed" and p.get("method") in slot_views and p.get("percent") is not None:
                 slot_views[p["method"]].append(float(p["percent"]))
             elif e["name"] == "slot_selected" and p.get("label"):
                 slot_picks[str(p["label"])] = slot_picks.get(str(p["label"]), 0) + 1
+        # Of the times a dish was opened, how many were followed by adding that dish. Dishes added straight from a
+        # list were never opened, so they say nothing about whether a price puts people off.
+        for b, opens, adds in opened_here.values():
+            row = bands.setdefault(b, {"opened": 0, "added": 0})
+            row["opened"] += opens
+            row["added"] += min(adds, opens)
     band_order = ["Under £5", "£5 to £7.99", "£8 to £10.99", "£11 and over"]
     total_picks = sum(slot_picks.values())
 
@@ -412,6 +590,7 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
             "income": round(sum(v["value"] for v in visits.values()), 2),
             "plans_sold": counts.get("subscription_purchase", 0),
         },
+        "order_book": await _order_book(since, events),
         "funnel": funnel,
         "by_day": [{**d, "visits": len(d["visits"]), "income": round(d["income"], 2)} for d in sorted(by_day.values(), key=lambda d: d["day"])],
         "sources": sorted(({**s, "income": round(s["income"], 2)} for s in sources.values()), key=lambda s: -s["visits"]),
@@ -479,7 +658,8 @@ async def recent_visits(limit: int = 40, _: dict = Depends(require_admin)):
         {"$sort": {"last": -1}}, {"$limit": limit},
     ]).to_list(None)
     ids = [v["_id"] for v in latest]
-    events = await db.events.find({"visit_id": {"$in": ids}}, {"_id": 0}).sort("at", 1).to_list(None)
+    events = _in_order(await db.events.find({"visit_id": {"$in": ids}}, {"_id": 0}).sort("at", 1).to_list(None))
+    first_seen = await _first_seen(events)
     by_visit: dict = {}
     for e in events:
         by_visit.setdefault(e["visit_id"], []).append(e)
@@ -490,12 +670,12 @@ async def recent_visits(limit: int = 40, _: dict = Depends(require_admin)):
             continue
         names = {e["name"] for e in evs}
         out.append({
-            "visit_id": v["_id"][:8], "started": v["first"].isoformat(), "ended": v["last"].isoformat(),
-            "minutes": round((v["last"] - v["first"]).total_seconds() / 60, 1),
+            "visit_id": v["_id"][:8], "started": evs[0]["when"].isoformat(), "ended": evs[-1]["when"].isoformat(),
+            "minutes": round((evs[-1]["when"] - evs[0]["when"]).total_seconds() / 60, 1),
             "source": channel(evs[0]), "landing": evs[0].get("landing") or evs[0]["path"], "device": evs[0].get("device") or "",
-            "returning": bool(evs[0].get("visitor_id")), "signed_in": any(e.get("signed_in") for e in evs), "ordered": "purchase" in names or "order_placed" in names,
+            "returning": bool(_came_back(evs, first_seen)), "signed_in": any(e.get("signed_in") for e in evs), "ordered": "purchase" in names or "order_placed" in names,
             "added_to_basket": "add_to_cart" in names,
-            "events": [{"at": e["at"].isoformat(), "name": e["name"], "path": e["path"], "props": e.get("props") or {},
+            "events": [{"at": e["when"].isoformat(), "name": e["name"], "path": e["path"], "props": e.get("props") or {},
                         "items": [i.get("name") for i in e.get("items") or [] if i.get("name")]} for e in evs[:300]],
         })
     return {"visits": out}
