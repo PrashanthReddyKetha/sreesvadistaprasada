@@ -145,6 +145,7 @@ export default function SystemLogTab() {
         })}
       </div>
       <AdminActions />
+      <SiteErrors />
       <p className="text-xs text-gray-400">
         Rules it follows: featured dishes follow sales once {data.rules.featured_from_portions} portions have sold in {data.rules.featured_window_days} days; a pairing needs two dishes bought together {data.rules.bought_together_from} times;
         an automation is switched off if more than {data.rules.unsubscribe_limit_percent}% of recipients unsubscribe; each action is checked again after {data.rules.review_after_days} days. Below those minimums it watches and changes nothing.
@@ -211,6 +212,27 @@ function AdminActions() {
             {rows.length > count && <button onClick={() => setCount(count + 25)} className="w-full py-2 text-xs font-semibold border-t" style={{ borderColor: '#f0ebe6', color: P }}>Show more ({rows.length - count} left)</button>}
           </>
         )}
+    </div>
+  );
+}
+
+/* Requests that failed on the server. Customers saw an apology; this is what happened. */
+function SiteErrors() {
+  const [rows, setRows] = useState(null);
+  useEffect(() => { api.get('/admin/system-log/errors', { params: { days: 7 } }).then(r => setRows(r.data.errors)).catch(() => setRows([])); }, []);
+  if (rows && rows.length === 0) return null;
+  return (
+    <div className="bg-white rounded-xl overflow-hidden" style={card}>
+      <h3 className="px-4 py-3 font-bold border-b" style={{ fontFamily: "'Playfair Display', serif", color: '#B91C1C', borderColor: '#f0ebe6' }}>Site errors, last 7 days</h3>
+      {rows === null ? <p className="text-center text-gray-400 py-6 text-sm">Loading…</p> : rows.slice(0, 30).map((e, i) => (
+        <div key={i} className="px-4 py-2 border-t text-sm flex flex-wrap gap-x-4" style={{ borderColor: '#f9f6ee' }}>
+          <span className="text-gray-400 text-xs w-32 shrink-0">{when(e.at)}</span>
+          <span className="font-medium">{e.kind}</span>
+          <span className="text-gray-600 break-all">{e.method} {e.path}</span>
+          {e.message && <span className="text-xs text-gray-500 w-full">{e.message}</span>}
+        </div>
+      ))}
+      <p className="px-4 py-2 text-xs text-gray-400">You are emailed when three or more happen within an hour, at most once every six hours.</p>
     </div>
   );
 }

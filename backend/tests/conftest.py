@@ -41,8 +41,16 @@ def run(coro):
 
 from audit_log import AdminActionLog  # noqa: E402
 
+from error_log import unhandled  # noqa: E402
+
 app = FastAPI()
 app.add_middleware(AdminActionLog)
+app.add_exception_handler(Exception, unhandled)
+
+
+@app.get("/api/__boom")
+async def _boom():
+    raise RuntimeError("test failure")
 for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries, customers, events, comms, automation_routes, intelligence_routes, health):
     app.include_router(r.router, prefix="/api")
 

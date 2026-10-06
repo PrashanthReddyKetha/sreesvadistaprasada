@@ -68,6 +68,8 @@ async def lifespan(app: FastAPI):
     await db.automation_sends.create_index([("automation", 1), ("email", 1), ("reason", 1)], unique=True)
     await db.automation_sends.create_index("at")
     await db.admin_audit.create_index("at")
+    from error_log import ERROR_LOG_DAYS
+    await db.error_log.create_index("at", expireAfterSeconds=ERROR_LOG_DAYS * 86400)
     await db.decision_log.create_index("at")
     await db.daily_metrics.create_index("day", unique=True)
     # Lookups that run on every dashboard, kitchen and item page
@@ -142,6 +144,8 @@ app.add_middleware(
 )
 from audit_log import AdminActionLog  # noqa: E402
 app.add_middleware(AdminActionLog)     # every admin change recorded, shown in Admin › System log
+from error_log import unhandled  # noqa: E402
+app.add_exception_handler(Exception, unhandled)   # errors recorded and the owner told when they pile up
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(menu.router, prefix="/api")

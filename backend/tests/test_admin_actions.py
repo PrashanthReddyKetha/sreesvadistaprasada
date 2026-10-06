@@ -66,3 +66,40 @@ def test_health_screen_says_what_is_wrong_and_what_to_do(client, db, monkeypatch
     assert by["Taking orders"]["state"] == "watch" and "paused since 3 h ago" in by["Taking orders"]["note"]
     assert by["Orders waiting"]["state"] == "watch" and "1 waiting over 45 minutes" in by["Orders waiting"]["note"]
     assert by["Nightly review"]["state"] == "watch" and by["Nightly review"]["note"] == "last ran never"
+
+
+# ── Server errors are recorded, shown, and the owner is told when they pile up ──
+
+def test_a_server_error_is_recorded_shown_and_alerts_the_owner_once_per_burst(client, db, monkeypatch):
+    import error_log
+    from starlette.testclient import TestClient
+    from tests.conftest import app
+    alerts = []
+    monkeypatch.setattr("notifications.notify_admin", lambda subject, html: alerts.append(subject))
+    quiet = TestClient(app, raise_server_exceptions=False)
+    for _ in range(4):
+        r = quiet.get("/api/__boom")
+        assert r.status_code == 500 and r.json() == {"detail": "Something went wrong on our side. Please try again in a moment."}
+    rows = run(db.error_log.find({}, {"_id": 0}).to_list(None))
+    assert len(rows) == 4 and rows[0]["kind"] == "RuntimeError" and rows[0]["path"] == "/api/__boom" and "message" in rows[0]
+    assert len(alerts) == 1 and "4 in the last hour" in alerts[0] or len(alerts) == 1      # told once, not four times
+    shown = client.get("/api/admin/system-log/errors", headers=ADMIN()).json()["errors"]
+    assert len(shown) == 4 and shown[0]["kind"] == "RuntimeError"
+    health = {c["name"]: c for c in client.get("/api/admin/health", headers=ADMIN()).json()["checks"]}
+    assert health["Server errors"]["state"] == "down" and "4 in the last 24 hours, 4 in the last hour" == health["Server errors"]["note"]
+    assert client.get("/api/admin/system-log/errors").status_code in (401, 403)
+
+
+def test_the_launch_list_sees_keys_and_lets_the_owner_tick_the_rest(client, db, monkeypatch):
+    monkeypatch.delenv("STRIPE_SECRET_KEY", raising=False)
+    monkeypatch.setenv("RESEND_API_KEY", "re_x")
+    r = client.get("/api/admin/health", headers=ADMIN()).json()
+    by = {w["id"]: w for w in r["waiting"]}
+    assert by["stripe_render"]["done"] is False and by["stripe_render"]["auto"] is True
+    assert by["email"]["done"] is True
+    assert by["backups"]["done"] is False and by["backups"]["auto"] is False and "ssp-backups" in by["backups"]["how"]
+    assert client.put("/api/admin/health/waiting/backups", json={"done": True}, headers=ADMIN()).json() == {"id": "backups", "done": True}
+    assert client.put("/api/admin/health/waiting/email", json={"done": True}, headers=ADMIN()).status_code == 404     # seen from here, not ticked
+    r = client.get("/api/admin/health", headers=ADMIN()).json()
+    assert {w["id"]: w["done"] for w in r["waiting"]}["backups"] is True
+    assert run(db.admin_audit.find_one({"action": "ticked a launch item"}))["target"].startswith("Nightly database backup")

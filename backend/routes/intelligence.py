@@ -66,6 +66,13 @@ async def admin_actions(days: int = 30, limit: int = 200, _: dict = Depends(requ
     return {"days": days, "actions": [{**r, "at": r["at"].isoformat()} for r in rows]}
 
 
+@router.get("/errors")
+async def server_errors(days: int = 7, _: dict = Depends(require_admin)):
+    """Requests that failed on the server: when, which route, what kind of error. No customer details are kept."""
+    rows = await db.error_log.find({"at": {"$gte": datetime.utcnow() - timedelta(days=max(1, min(days, 90)))}}, {"_id": 0}).sort("at", -1).to_list(200)
+    return {"errors": [{**r, "at": r["at"].isoformat()} for r in rows]}
+
+
 @router.post("/run")
 async def run_now(admin: dict = Depends(require_admin)):
     result = await brain.run_review()

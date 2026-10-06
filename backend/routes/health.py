@@ -6,8 +6,9 @@ import asyncio
 import os
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
+from audit_log import record_admin_action
 from auth import require_admin
 from database import db
 
@@ -105,5 +106,51 @@ async def health(_: dict = Depends(require_admin)):
                          f"last visit recorded {_ago(last_event['at'].isoformat()) if last_event else 'never'}",
                          "" if last_event and last_event["at"] > now - timedelta(hours=36) else "Open the site in a private window and check Admin › Analytics after a minute"))
 
+    # errors on the server
+    errors_day = await db.error_log.count_documents({"at": {"$gte": day_ago}})
+    errors_hour = await db.error_log.count_documents({"at": {"$gte": now - timedelta(hours=1)}})
+    checks.append(_check("Server errors", "down" if errors_hour >= 3 else "watch" if errors_day else "ok",
+                         f"{errors_day} in the last 24 hours" + (f", {errors_hour} in the last hour" if errors_hour else ""),
+                         "See System log › Site errors; if checkout is affected, pause ordering" if errors_day else ""))
+
     worst = "down" if any(c["state"] == "down" for c in checks) else "watch" if any(c["state"] == "watch" for c in checks) else "ok"
-    return {"checked_at": now.isoformat(), "overall": worst, "checks": checks}
+    return {"checked_at": now.isoformat(), "overall": worst, "checks": checks, "waiting": await waiting_list()}
+
+
+# ── Before launch: what still needs a person ──────────────────────────────────
+# Some can be seen from here (a key is set or not); the rest the owner ticks off when done.
+
+MANUAL = [
+    ("stripe_vercel", "Stripe publishable key on Vercel (then redeploy)", "Vercel › Project › Settings › Environment Variables › NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"),
+    ("test_order", "One real test order placed, received by email and text, and refunded by hand in Stripe", "Order on the live site with your own card once the keys are in"),
+    ("hosting", "Backend off the free tier (no cold starts) — Render Starter", "Render › svadista-backend › Settings › Instance type"),
+    ("backups", "Nightly database backup running", "Create the private ssp-backups repository and its three secrets — README in C:/Users/prash/ssp-backups"),
+    ("privacy", "Privacy policy published to match what the site does", "Approve the wording in docs/ops/phase-13/PRIVACY_POLICY_DRAFT.md (P-02)"),
+    ("gbp", "Google Business Profile opened; tagged links in the bio, status and leaflets", "Business Profile › Opening date; links with ?utm_source=…"),
+    ("hygiene", "Food hygiene inspection passed (booked 15 Oct 2026)", "Display the rating on the site when it arrives"),
+]
+AUTO = [
+    ("stripe_render", "Stripe secret key on Render", lambda: bool(os.getenv("STRIPE_SECRET_KEY")), "Render › Environment › STRIPE_SECRET_KEY"),
+    ("email", "Email sending set up (Resend)", lambda: bool(os.getenv("RESEND_API_KEY")), "Render › Environment › RESEND_API_KEY"),
+    ("texts", "Text messages set up (Twilio)", lambda: bool(os.getenv("TWILIO_ACCOUNT_SID") and os.getenv("TWILIO_AUTH_TOKEN") and os.getenv("TWILIO_FROM_NUMBER")), "Render › Environment › the three TWILIO_* values"),
+    ("email_reports", "Email delivery reports connected (Resend webhook)", lambda: bool(os.getenv("RESEND_WEBHOOK_SECRET")), "Resend › Webhooks → Render › RESEND_WEBHOOK_SECRET"),
+    ("production_flag", "Server marked as production (hides the API documentation pages)", lambda: os.getenv("ENVIRONMENT") == "production", "Render › Environment › ENVIRONMENT=production"),
+]
+
+
+async def waiting_list() -> list:
+    ticked = (await db.settings.find_one({"_id": "launch_checklist"}, {"_id": 0}) or {}).get("done", {})
+    out = [{"id": i, "label": label, "how": how, "done": fn(), "auto": True} for i, label, fn, how in AUTO]
+    out += [{"id": i, "label": label, "how": how, "done": bool(ticked.get(i)), "auto": False} for i, label, how in MANUAL]
+    return out
+
+
+@router.put("/waiting/{item_id}")
+async def tick(item_id: str, payload: dict, admin: dict = Depends(require_admin)):
+    """The owner marks a manual item done (or not). Items seen from here cannot be ticked by hand."""
+    if item_id not in {i for i, *_ in MANUAL}:
+        raise HTTPException(status_code=404, detail="No such item.")
+    done = bool(payload.get("done"))
+    await db.settings.update_one({"_id": "launch_checklist"}, {"$set": {f"done.{item_id}": done}}, upsert=True)
+    await record_admin_action(admin, "ticked a launch item" if done else "unticked a launch item", dict((i, label) for i, label, _ in MANUAL)[item_id])
+    return {"id": item_id, "done": done}

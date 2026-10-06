@@ -35,3 +35,10 @@ jobs:
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://sreesvadistaprasada.com/order || echo "000")
           echo "Site /order: HTTP $STATUS"
           [ "$STATUS" = "200" ] || { echo "❌ Website is not responding"; exit 1; }
+
+      - name: Check the visit record accepts batches
+        # An invalid visit id is refused without storing anything; a 202 proves the intake is up
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 -X POST https://svadista-backend.onrender.com/api/events             -H "Content-Type: text/plain;charset=UTF-8" -H "Origin: https://sreesvadistaprasada.com" --data '{"visit_id":"short","events":[]}' || echo "000")
+          echo "Events intake: HTTP $STATUS"
+          [ "$STATUS" = "202" ] || { echo "❌ The visit record is not accepting batches"; exit 1; }

@@ -47,6 +47,37 @@ export default function HealthPanel() {
         </div>
       )}
       {open && failed && <p className="border-t px-5 py-3 text-sm" style={{ borderColor: '#f0ebe6', color: '#B91C1C' }}>The server did not answer. If this lasts more than a minute, customers cannot order either — check the hosting status page.</p>}
+      {data?.waiting?.some(w => !w.done) && <Waiting items={data.waiting} onChange={load} />}
+    </div>
+  );
+}
+
+/* Before launch — what still needs a person. Keys are seen from the server; the rest the owner ticks off. */
+function Waiting({ items, onChange }) {
+  const [open, setOpen] = useState(true);
+  const left = items.filter(w => !w.done);
+  const tick = async (w, done) => { try { await api.put(`/admin/health/waiting/${w.id}`, { done }); onChange(); } catch {} };
+  return (
+    <div className="border-t" style={{ borderColor: '#f0ebe6' }}>
+      <button onClick={() => setOpen(!open)} className="w-full px-5 py-3 flex items-center gap-2 text-left text-sm">
+        <span className="font-semibold" style={{ color: '#8D6E00' }}>Before launch — {left.length} thing{left.length === 1 ? '' : 's'} waiting for you</span>
+        <span className="ml-auto text-xs text-gray-400">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <ul className="px-5 pb-4 space-y-2 text-sm">
+          {items.map(w => (
+            <li key={w.id} className="flex gap-3 items-start">
+              {w.auto
+                ? <span className="mt-1 w-4 h-4 rounded-full shrink-0 text-[10px] text-white flex items-center justify-center" style={{ backgroundColor: w.done ? '#2E7D32' : '#D97706' }}>{w.done ? '✓' : '!'}</span>
+                : <input type="checkbox" className="mt-1" checked={w.done} onChange={e => tick(w, e.target.checked)} />}
+              <span style={{ opacity: w.done ? 0.55 : 1 }}>
+                <span style={{ textDecoration: w.done ? 'line-through' : 'none' }}>{w.label}</span>
+                {!w.done && <span className="block text-xs text-gray-500">{w.how}{w.auto ? ' — seen by the server; ticks itself when set' : ''}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
