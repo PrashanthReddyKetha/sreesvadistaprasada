@@ -13,8 +13,9 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 
-from auth import require_admin
+from auth import get_current_user, require_admin
 from database import db
 from notifications import SITE_URL, unsubscribe_token
 
@@ -53,6 +54,32 @@ async def unsubscribe(e: str = "", t: str = ""):
 async def unsubscribe_one_click(e: str = "", t: str = ""):
     """Used by mail apps that offer their own unsubscribe button."""
     return {"ok": await _unsubscribe(e, t)}
+
+
+# ── A signed-in customer's own choice, in My Account ──────────────────────────
+
+class Preference(BaseModel):
+    marketing_email: bool
+
+
+@router.get("/me/preferences")
+async def my_preferences(user: dict = Depends(get_current_user)):
+    email = (user.get("email") or "").strip().lower()
+    return {"marketing_email": not await db.email_optouts.find_one({"email": email}, {"_id": 1}) if email else False}
+
+
+@router.put("/me/preferences")
+async def set_my_preferences(payload: Preference, user: dict = Depends(get_current_user)):
+    """Offers, reminders and review requests by email: on or off. Emails about an order or plan are always sent."""
+    email = (user.get("email") or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Your account has no email address.")
+    if payload.marketing_email:
+        await db.email_optouts.delete_one({"email": email})
+    else:
+        await db.email_optouts.update_one({"email": email}, {"$setOnInsert": {"email": email, "at": datetime.utcnow(), "source": "my account"}}, upsert=True)
+        await db.newsletter.update_many({"email": {"$regex": f"^{__import__('re').escape(email)}$", "$options": "i"}}, {"$set": {"active": False}})
+    return {"marketing_email": payload.marketing_email}
 
 
 def _resend_signature_ok(secret: str, msg_id: str, timestamp: str, body: bytes, header: str) -> bool:

@@ -733,9 +733,34 @@ function AccountTab({ user, login }) {
 
       <AddressBookCard />
 
+      <EmailPreferenceCard />
+
       <div className="rounded-2xl p-4 text-sm" style={{ backgroundColor: '#FEF9C3', border: '1px solid #FDE68A', color: '#854D0E' }}>
         Need help with an order? Call us on <a href="tel:+447307119962" className="font-bold">+44 7307 119962</a> or WhatsApp us.
       </div>
+    </div>
+  );
+}
+
+/* Offers, reminders and review requests by email: the customer's own switch. Emails about an order or plan always come. */
+function EmailPreferenceCard() {
+  const [on, setOn] = useState(null);
+  const [note, setNote] = useState('');
+  useEffect(() => { api.get('/me/preferences').then(r => setOn(r.data.marketing_email)).catch(() => setOn(null)); }, []);
+  const change = async (next) => {
+    setOn(next); setNote('');
+    try { await api.put('/me/preferences', { marketing_email: next }); setNote(next ? 'You will hear from us now and then.' : 'We will only email you about your orders and plans.'); }
+    catch { setOn(!next); setNote('That did not save. Please try again.'); }
+  };
+  return (
+    <div className="rounded-2xl p-6 shadow-sm" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(244,196,48,0.2)' }}>
+      <h3 className="font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Emails from us</h3>
+      <label className="flex items-start gap-3 text-sm cursor-pointer" style={{ color: '#3D2B1F' }}>
+        <input type="checkbox" className="mt-1" checked={!!on} disabled={on === null} onChange={e => change(e.target.checked)} />
+        <span>Send me offers, reminders and the occasional note from the kitchen.<br />
+          <span className="text-xs" style={{ color: '#7A5C50' }}>Emails about an order or meal plan you have with us are always sent.</span></span>
+      </label>
+      {note && <p className="text-xs mt-2" style={{ color: '#166534' }} role="status">{note}</p>}
     </div>
   );
 }

@@ -231,3 +231,17 @@ def test_whatsapp_records_carry_a_real_date_for_automatic_deletion(db, monkeypat
     run(whatsapp._notify_customer_now("order_confirmed", "+447700900123", ["Asha"], "wa-test-1", "fallback text"))
     rec = run(db.wa_messages.find_one({"dedupe_key": "wa-test-1"}))
     assert rec is not None and isinstance(rec["at"], datetime)
+
+
+# ── A signed-in customer's own switch for marketing email ────────────────────
+
+def test_a_customer_can_turn_marketing_email_off_and_on_in_their_account(client, db, user_headers):
+    run(db.newsletter.insert_one({"id": "n1", "email": "U1@example.com", "active": True}))
+    assert client.get("/api/me/preferences").status_code in (401, 403)
+    assert client.get("/api/me/preferences", headers=user_headers).json() == {"marketing_email": True}
+    assert client.put("/api/me/preferences", json={"marketing_email": False}, headers=user_headers).json() == {"marketing_email": False}
+    assert run(db.email_optouts.find_one({"email": "u1@example.com"}))["source"] == "my account"
+    assert run(db.newsletter.find_one({"id": "n1"}))["active"] is False
+    assert client.get("/api/me/preferences", headers=user_headers).json() == {"marketing_email": False}
+    assert client.put("/api/me/preferences", json={"marketing_email": True}, headers=user_headers).json() == {"marketing_email": True}
+    assert run(db.email_optouts.count_documents({})) == 0
