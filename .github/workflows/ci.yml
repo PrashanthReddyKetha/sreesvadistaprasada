@@ -48,12 +48,13 @@ jobs:
       - run: npm run type-check
       - run: npm run build
 
-  tracking:
-    # Scripted visits to the built site, judged by the real events code on an in-memory database
-    # (ssp-nextjs/tests/tracking). Nothing is sent to the live record; the menu is read from the live backend.
-    name: Tracking test
+  journeys:
+    # The built site against the whole backend run locally (real app, in-memory database, seeded menu, no provider
+    # keys so nothing leaves the runner): the visit-record checks (tests/tracking) and the customer and owner
+    # journeys (tests/e2e). Nothing is sent to the live site.
+    name: Browser journeys and tracking
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: ssp-nextjs
@@ -74,15 +75,22 @@ jobs:
           cache-dependency-path: ssp-nextjs/package-lock.json
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Start the stand-in backend
+      - name: Start the local backend
         run: |
-          (python tests/tracking/stand_in_backend.py > /tmp/stand_in.log 2>&1 &)
-          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8765/__dump > /dev/null && break; sleep 1; done
+          (python tests/e2e/local_backend.py > /tmp/backend.log 2>&1 &)
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8765/api/health > /dev/null && break; sleep 1; done
+          curl -sf http://127.0.0.1:8765/api/health
       - run: npm run build
         env:
           NEXT_PUBLIC_BACKEND_URL: http://127.0.0.1:8765
-      - name: Serve the built site and replay the visits
+      - name: Serve the built site
         run: |
           (npx next start -p 3001 > /tmp/site.log 2>&1 &)
           for i in $(seq 1 60); do curl -sf http://localhost:3001/story > /dev/null && break; sleep 1; done
-          node tests/tracking/journeys.js http://localhost:3001
+      - name: Visit record (tracking) checks
+        run: node tests/tracking/journeys.js http://localhost:3001
+      - name: Customer and owner journeys
+        run: node tests/e2e/customer.js http://localhost:3001
+      - name: Backend log on failure
+        if: failure()
+        run: tail -100 /tmp/backend.log; tail -50 /tmp/site.log

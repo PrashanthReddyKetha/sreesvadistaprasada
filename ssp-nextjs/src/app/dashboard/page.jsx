@@ -210,7 +210,8 @@ function DashboardInner() {
             {activeTab === 'orders'        && <OrdersTab orders={orders} reload={load} expandedOrder={expandedOrder} setExpandedOrder={setExpandedOrder} />}
             {activeTab === 'subscriptions' && <SubsTab subs={subs} reload={load} />}
             {activeTab === 'loyalty'       && <LoyaltyTab />}
-            {activeTab === 'enquiries'     && <EnquiriesTab enquiries={enquiries} reload={load} />}
+            {/* a silent reload: a full one shows the loading screen, which unmounts the tab and closes the conversation just opened */}
+            {activeTab === 'enquiries'     && <EnquiriesTab enquiries={enquiries} reload={() => load(true)} />}
             {activeTab === 'reviews'       && <ReviewsTab reviews={reviews} reload={load} />}
             {activeTab === 'account'       && <AccountTab user={user} login={login} />}
           </>

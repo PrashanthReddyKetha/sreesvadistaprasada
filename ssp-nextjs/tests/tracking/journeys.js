@@ -1,9 +1,9 @@
-// The tracking test: scripted visits to the built site, judged by the real events code (stand_in_backend.py).
+// The tracking test: scripted visits to the built site, judged by the real events code (tests/e2e/local_backend.py).
 // Each visitor is its own browser with a plain browser name, nothing is intercepted and Google is cut off by
 // name resolution, so the browser behaves as it does for a real visitor. Fails (exit 1) when what was done
 // does not match what was recorded. Found-and-fixed faults from audit A-0002 are pinned here.
 //
-//   node journeys.js [site url]        site: http://localhost:3001 (built with NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8765)
+//   node journeys.js [site url]        site: http://localhost:3001, built with NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8765 against tests/e2e/local_backend.py
 const { chromium } = require('playwright');
 const BASE = process.argv[2] || 'http://localhost:3001';
 const LOCAL = 'http://127.0.0.1:8765';
