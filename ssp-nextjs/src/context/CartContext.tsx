@@ -87,6 +87,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [pickupSlot, setPickupSlotRaw]     = useState<PickupSlot | null>(null);
   const [hydrated, setHydrated]            = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The basket as last rendered, so the analytics calls below can read it without going through a state updater
+  // (updaters may run more than once, and must not have side effects)
+  const cartRef = useRef<CartItem[]>([]);
+  useEffect(() => { cartRef.current = cartItems; }, [cartItems]);
   const { deliveryEnabled, loaded: kitchenLoaded } = useKitchen();
 
   // Hydrate from storage once on mount
@@ -175,31 +179,36 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     // Sections that are still "coming soon" (pickles, podis) cannot be bought, whichever button was pressed
     const category = (item as { category?: string }).category;
     if (category && !isOrderable(category)) return;
+    trackAddToCart(item, 1);
     setCartItems(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
         showToast({ type: 'update', name: item.name, qty: existing.quantity + 1 });
-        trackAddToCart(item, 1);
         return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
       showToast({ type: 'add', name: item.name, price: item.price });
-      trackAddToCart(item, 1);
       return [...prev, { ...item, quantity: 1 }];
     });
   }, [showToast]);
 
   const removeFromCart = useCallback((id: string) => {
+    const item = cartRef.current.find(i => i.id === id);
+    if (item) trackRemoveFromCart(item, item.quantity);
     setCartItems(prev => {
-      const item = prev.find(i => i.id === id);
-      if (item) {
-        showToast({ type: 'remove', name: item.name });
-        trackRemoveFromCart(item, item.quantity);
-      }
+      const gone = prev.find(i => i.id === id);
+      if (gone) showToast({ type: 'remove', name: gone.name });
       return prev.filter(i => i.id !== id);
     });
   }, [showToast]);
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
+    // The + and − buttons add to or take from the basket just as the Add and Remove buttons do, and are counted the same way
+    const item = cartRef.current.find(i => i.id === id);
+    if (item) {
+      const change = quantity - item.quantity;
+      if (change > 0) trackAddToCart(item, change);
+      else if (change < 0) trackRemoveFromCart(item, Math.min(-change, item.quantity));
+    }
     if (quantity > 0) record('cart_quantity_change', { item_id: id, quantity });
     if (quantity <= 0) {
       setCartItems(prev => {

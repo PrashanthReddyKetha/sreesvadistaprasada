@@ -10,6 +10,7 @@ import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackMenuCategoryView } from '@/lib/analytics';
+import { recordSearch } from '@/lib/track';
 
 const TABS = ['All', 'Bites & Starters', 'Curries', 'Biriyanis & Rice', 'Thalis & Rice Bowls', 'Indo Chinese', '🪔 Naivedyam', 'Ragi Specials', 'Protein & Healthy Bowls'];
 
@@ -149,7 +150,7 @@ const Prasada = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
           <div className="flex items-center gap-3 mb-2">
             <div className="relative flex-1 max-w-sm">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dishes..."
+              <input value={search} onChange={e => { setSearch(e.target.value); recordSearch(e.target.value); }} placeholder="Search dishes..."
                 className="w-full pl-9 pr-8 py-2 rounded-full text-sm border outline-none transition-colors"
                 style={{ borderColor: 'rgba(22,101,52,0.3)', backgroundColor: 'white', color: '#374151' }} />
               {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"><X size={13} /></button>}

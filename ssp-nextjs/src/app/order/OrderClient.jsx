@@ -16,6 +16,8 @@ import SlotPicker from '@/components/SlotPicker';
 import IntroPricesBanner from '@/components/IntroPricesBanner';
 import RestockBell from '@/components/RestockBell';
 import PushOptIn from '@/components/PushOptIn';
+import { trackViewItem } from '@/lib/analytics';
+import { recordSearch } from '@/lib/track';
 
 const SECTIONS = [
   { id: 'breakfast',    name: 'Breakfast' },
@@ -44,10 +46,10 @@ function VegDot({ isVeg }) {
 function Stepper({ qty, onChange }) {
   return (
     <div className="flex items-center rounded-full shrink-0" style={{ backgroundColor: C.burgundy, color: '#fff' }}>
-      <button aria-label="Decrease quantity" onClick={() => onChange(qty - 1)}
+      <button aria-label="Decrease quantity" onClick={() => onChange(qty - 1)} data-repeat-ok
         className="w-8 h-9 font-black text-base">−</button>
       <span className="min-w-[16px] text-center text-sm font-black tabular-nums">{qty}</span>
-      <button aria-label="Increase quantity" onClick={() => onChange(qty + 1)}
+      <button aria-label="Increase quantity" onClick={() => onChange(qty + 1)} data-repeat-ok
         className="w-8 h-9 font-black text-base">+</button>
     </div>
   );
@@ -169,9 +171,10 @@ export default function OrderClient({ initialItems = [] }) {
     }
   }, [loading, dishes.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Lock page scroll while the item sheet is open
+  // Lock page scroll while the item sheet is open; opening the sheet is looking at the dish
   useEffect(() => {
     document.body.style.overflow = sheetItem ? 'hidden' : '';
+    if (sheetItem) trackViewItem(sheetItem);
     return () => { document.body.style.overflow = ''; };
   }, [sheetItem]);
 
@@ -359,7 +362,7 @@ export default function OrderClient({ initialItems = [] }) {
             <div className="flex flex-1 items-center gap-2 rounded-full px-4 py-2"
               style={{ backgroundColor: '#fff', border: `1.5px solid ${searchMode ? C.saffron : C.line}` }}>
               <Search size={15} style={{ color: C.muted }} />
-              <input ref={searchInputRef} value={search} onChange={e => setSearch(e.target.value)}
+              <input ref={searchInputRef} value={search} onChange={e => { setSearch(e.target.value); recordSearch(e.target.value); }}
                 onFocus={() => setSearchMode(true)}
                 onBlur={() => { if (!search.trim()) setSearchMode(false); }}
                 placeholder="Search dishes…"

@@ -763,7 +763,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       if (stripeError) { setSubmitStatus('error'); setErrorMessage(stripeError.message || 'Payment failed. Please try again.'); return; }
       if (paymentIntent.status !== 'succeeded') { setSubmitStatus('error'); setErrorMessage('Payment was not completed. Please try again.'); return; }
       // 3. Create subscription
-      await api.post('/subscriptions', {
+      const subRes = await api.post('/subscriptions', {
         customer_name: customer.name,
         customer_email: customer.email,
         customer_phone: customer.phone,
@@ -790,7 +790,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       localStorage.setItem('ssp_subscription_success', JSON.stringify({
         plan: selectedPlan, box: selectedBox, startWeek: selectedStartWeek,
       }));
-      trackSubscriptionPurchase(selectedPlan, selectedBox, fresh.total, planData?.meals || 0, planData?.perMeal || 0);
+      trackSubscriptionPurchase(selectedPlan, selectedBox, fresh.total, planData?.meals || 0, planData?.perMeal || 0, subRes.data?.id);
       setSubmitStatus('success');
     } catch (e) {
       setSubmitStatus('error');

@@ -11,6 +11,7 @@ import { isOrderable } from '@/config/softLaunch';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
+import { recordSearch } from '@/lib/track';
 import RestockBell from '@/components/RestockBell';
 import IntroPricesBanner from '@/components/IntroPricesBanner';
 
@@ -187,7 +188,7 @@ const Menu = ({ initialItems = [], seoLine }) => {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); if (e.target.value.trim()) setActiveCategory('all'); }}
+                onChange={(e) => { setSearchQuery(e.target.value); recordSearch(e.target.value); if (e.target.value.trim()) setActiveCategory('all'); }}
                 placeholder="Search dishes..."
                 className="w-full pl-9 pr-4 py-2 rounded-full border border-gray-200 text-sm focus:outline-none focus:border-[#800020] transition-colors"
                 data-testid="menu-search"

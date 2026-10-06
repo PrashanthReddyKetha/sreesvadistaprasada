@@ -160,8 +160,8 @@ export function trackSelectSubscriptionPlan(plan, price) {
   });
 }
 
-/** Fired when subscription payment succeeds */
-export function trackSubscriptionPurchase(plan, boxType, price, meals, perMeal) {
+/** Fired when subscription payment succeeds. `planId` is the plan's own number from the server. */
+export function trackSubscriptionPurchase(plan, boxType, price, meals, perMeal, planId) {
   push({ ecommerce: null });
   push({
     event: 'subscription_purchase',
@@ -170,7 +170,7 @@ export function trackSubscriptionPurchase(plan, boxType, price, meals, perMeal) 
     meals:     meals   || 0,
     per_meal:  perMeal || 0,
     ecommerce: {
-      transaction_id: `sub_${Date.now()}`,
+      transaction_id: planId || `sub_${Date.now()}`,
       currency: 'GBP',
       value:    price,
       items: [{

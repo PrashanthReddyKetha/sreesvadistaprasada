@@ -6,21 +6,33 @@
  * - No name, email, phone or address is ever sent.
  * - Unless the visitor pressed "Accept all" on the cookie banner, nothing is stored
  *   on their device: the visit id lives in memory only and ends with the page.
- * - With consent, the visit id is kept for the browser session and a visitor id is
- *   kept so a returning visitor can be recognised.
+ * - With consent, the visit (id, where it came from, when last active) is kept in the
+ *   browser so every tab shares it, and a visitor id is kept so a return visit can be
+ *   recognised. A pause of more than 30 minutes starts a new visit either way.
+ *
+ * Sending: the first batch of a page load goes almost at once, later ones every few
+ * seconds, as plain text so the browser needs no permission round-trip first. When the
+ * page is hidden or closed whatever is left goes by sendBeacon, which outlives the page.
  */
 
 const ENDPOINT = (process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com') + '/api/events';
 const CONSENT_KEY = 'ssp_cookie_consent';
 const VISIT_KEY = 'ssp_visit';
 const VISITOR_KEY = 'ssp_visitor';
+const TEST_KEY = 'ssp_track_test';
 const FLUSH_MS = 4000;
+const FIRST_FLUSH_MS = 400;
+const VISIT_GAP_MS = 30 * 60000;
 const MAX_BATCH = 25;
+const SITE = /(^|\.)sreesvadistaprasada\.com$/;
+// Crawlers, link checkers, speed tests and scripts run this code too. They are not visitors.
+const ROBOT = /bot\/|bot;|googlebot|bingbot|petalbot|crawler|spider|slurp|headless|lighthouse|page ?speed|gtmetrix|pingdom|ptst|prerender|phantomjs|datadog|site24x7|uptime|statuscake|screaming frog|facebookexternalhit|bingpreview|mediapartners|google-inspectiontool|googleother|feedfetcher|google-read-aloud|adsbot|apis-google|chatgpt|oai-search|gptbot|claudebot|claude-user|perplexity|bytespider|ia_archiver/i;
 
-let visit = null;      // { id, attribution }
+let visit = null;      // { id, attribution, seen }
 let queue = [];
 let timer = null;
 let listening = false;
+let sentOnce = false;
 
 const newId = () => {
   const a = new Uint8Array(12);
@@ -49,25 +61,40 @@ function readAttribution() {
 }
 
 function getVisit() {
-  if (visit) return visit;
+  const now = Date.now();
   const consent = hasConsent();
   if (consent) {
+    // every tab shares one visit; the most recently active word wins
     try {
-      const stored = JSON.parse(sessionStorage.getItem(VISIT_KEY) || 'null');
-      if (stored && stored.id) { visit = stored; return visit; }
-    } catch { /* fall through to a new visit */ }
+      const stored = JSON.parse(localStorage.getItem(VISIT_KEY) || 'null');
+      if (stored && stored.id && now - (stored.seen || 0) < VISIT_GAP_MS && (!visit || (stored.seen || 0) >= (visit.seen || 0))) visit = stored;
+    } catch { /* fall through */ }
   }
-  visit = { id: newId(), attribution: readAttribution() };
-  if (consent) { try { sessionStorage.setItem(VISIT_KEY, JSON.stringify(visit)); } catch { /* storage unavailable */ } }
+  if (visit && now - (visit.seen || now) > VISIT_GAP_MS) {
+    // the same tab picked up again after a long pause: a new visit, still credited to where the visitor first came from
+    visit = { id: newId(), attribution: { ...visit.attribution, landing: window.location.pathname }, seen: now };
+  }
+  if (!visit) visit = { id: newId(), attribution: readAttribution(), seen: now };
+  visit.seen = now;
+  if (consent) { try { localStorage.setItem(VISIT_KEY, JSON.stringify(visit)); } catch { /* storage unavailable */ } }
   return visit;
 }
 
-/** The owner signed in as admin, and automated browsers (monitoring, crawlers, our own checks), are not customers.
- *  A check script can opt back in by setting localStorage "ssp_track_test" = "1". */
+/** The server may answer with the number the visit already has (another tab, or pages opened before cookies were accepted). */
+function adopt(id, sentAs) {
+  if (!id || !visit || visit.id !== sentAs || id === sentAs) return;
+  visit.id = id;
+  if (hasConsent()) { try { localStorage.setItem(VISIT_KEY, JSON.stringify(visit)); } catch { /* storage unavailable */ } }
+}
+
+/** The owner signed in as admin, automated browsers and crawlers, and copies of the site being worked on
+ *  (anything not on our own domain) are not visitors. A check script can opt back in by setting
+ *  localStorage "ssp_track_test" = "1". */
 const isStaffOrRobot = () => {
   try {
-    if (localStorage.getItem('ssp_track_test') === '1') return false;
-    if (navigator.webdriver) return true;
+    if (localStorage.getItem(TEST_KEY) === '1') return false;
+    if (navigator.webdriver || ROBOT.test(navigator.userAgent)) return true;
+    if (!SITE.test(window.location.hostname)) return true;
     return JSON.parse(localStorage.getItem('ssp_user') || 'null')?.role === 'admin';
   } catch { return false; }
 };
@@ -85,40 +112,69 @@ function getVisitorId() {
   } catch { return null; }
 }
 
-function flush() {
-  timer = null;
+function send(body, sentAs, leaving) {
+  if (leaving && navigator.sendBeacon) {
+    try { if (navigator.sendBeacon(ENDPOINT, body)) return; } catch { /* fall back to fetch */ }
+  }
+  // keepalive lets the request finish even if the page is being closed
+  fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body, keepalive: true })
+    .then(r => (r.ok ? r.json() : null))
+    .then(d => { if (d && d.visit) adopt(d.visit, sentAs); })
+    .catch(() => {});
+}
+
+function flush(leaving = false) {
+  if (timer) { clearTimeout(timer); timer = null; }
   if (!queue.length) return;
   const v = getVisit();
-  const events = queue.splice(0, MAX_BATCH);
-  const body = JSON.stringify({
+  const events = queue.splice(0, MAX_BATCH).map(({ t, ...e }) => ({ ...e, ts: t }));
+  sentOnce = true;
+  send(JSON.stringify({
     visit_id: v.id,
     visitor_id: getVisitorId(),
     signed_in: isSignedIn(),
     device: window.innerWidth < 768 ? 'phone' : 'desktop',
     attribution: v.attribution,
+    sent: Date.now(),
     events,
+  }), v.id, leaving);
+  if (queue.length) { if (leaving) flush(true); else timer = setTimeout(flush, FLUSH_MS); }
+}
+
+function schedule() {
+  if (!timer) timer = setTimeout(flush, sentOnce ? FLUSH_MS : FIRST_FLUSH_MS);
+}
+
+function listen() {
+  if (listening) return;
+  listening = true;
+  window.addEventListener('pagehide', () => { pageHidden(); flush(true); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { pageHidden(); flush(true); } else pageShown();
   });
-  // keepalive lets the request finish even if the page is being closed
-  fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
-  if (queue.length) timer = setTimeout(flush, FLUSH_MS);
+}
+
+const allowed = () => !window.location.pathname.startsWith('/admin') && !isStaffOrRobot();   // staff screens are not visits
+
+function enqueue(name, props, items, path) {
+  if (!allowed()) return;
+  getVisit();
+  listen();
+  queue.push({ name, path, props, items, t: Date.now() });
+  if (queue.length >= MAX_BATCH) flush();
+  else schedule();
 }
 
 /** Record one event. `props` are plain values; `items` are [{ id, name, quantity }]. */
 export function record(name, props = {}, items = []) {
   if (typeof window === 'undefined') return;
-  const path = window.location.pathname;
-  if (path.startsWith('/admin')) return;           // staff screens are not visits
-  if (isStaffOrRobot()) return;                    // nor is the owner browsing, or an automated browser
-  getVisit();
-  queue.push({ name, path, props, items });
-  if (!listening) {
-    listening = true;
-    const now = () => { if (timer) clearTimeout(timer); flush(); };
-    window.addEventListener('pagehide', now);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') now(); });
+  if (document.prerendering) {
+    // the browser is loading the page ahead of time; nobody has seen it yet
+    document.addEventListener('prerenderingchange', () => record(name, props, items), { once: true });
+    return;
   }
-  if (queue.length >= MAX_BATCH) { if (timer) clearTimeout(timer); flush(); }
-  else if (!timer) timer = setTimeout(flush, FLUSH_MS);
+  if (name === 'page_view') turnPage();
+  enqueue(name, props, items, window.location.pathname);
 }
 
 /** Turn a dataLayer object (the shape Google Tag Manager receives) into one of our events. */
@@ -133,6 +189,22 @@ export function recordFromDataLayer(obj) {
   }
   delete props.page_location; delete props.page_title; delete props.page_path;
   record(event, props, items);
+}
+
+/** A menu search, recorded once the visitor stops typing — once per term per page. */
+const searched = new Set();
+let searchTimer = null;
+export function recordSearch(term) {
+  if (typeof window === 'undefined') return;
+  if (searchTimer) clearTimeout(searchTimer);
+  const q = String(term || '').trim().toLowerCase().slice(0, 60);
+  if (q.length < 2) return;
+  searchTimer = setTimeout(() => {
+    const key = `${window.location.pathname}|${q}`;
+    if (searched.has(key)) return;
+    searched.add(key);
+    record('search', { term: q });
+  }, 1200);
 }
 
 // ── Everything a visitor does, captured without each screen having to ask ─────────────
@@ -155,12 +227,54 @@ function areaOf(el) {
   return 'page';
 }
 
+// ── Reading: how long each page is actually on screen, and how far down it is read ──────
+// One record per page view (identified by `view`), sent when the page is hidden and again, with more seconds, if
+// the visitor comes back and reads on; the server keeps the last. Time with the tab in the background does not count.
+let page = null;   // { path, view, since, ms, maxY, total, marks, told }
+
+function startPage() {
+  page = { path: window.location.pathname, view: newId().slice(0, 8), since: document.visibilityState === 'hidden' ? null : Date.now(),
+           ms: 0, maxY: 0, total: 0, marks: new Set(), told: 0 };
+  measure();
+}
+function measure() {
+  page.total = document.documentElement.scrollHeight - window.innerHeight;
+  page.maxY = Math.max(page.maxY, window.scrollY);
+}
+const percent = () => (page.total > 0 ? Math.min(100, Math.round((page.maxY / page.total) * 100)) : 100);
+const onScreenMs = () => page.ms + (page.since ? Date.now() - page.since : 0);
+
+function reportPage() {
+  if (!page) return;
+  const seconds = Math.min(Math.round(onScreenMs() / 1000), 3600);
+  if (seconds < 1 || seconds === page.told) return;
+  page.told = seconds;
+  if (window.location.pathname === page.path) measure();
+  enqueue('page_leave', { seconds, percent: percent(), view: page.view }, [], page.path);
+}
+function turnPage() {
+  if (!page) { startPage(); return; }
+  if (window.location.pathname === page.path) return;
+  reportPage();
+  startPage();
+}
+function pageHidden() {
+  if (!page) return;
+  reportPage();
+  if (page.since) { page.ms += Date.now() - page.since; page.since = null; }
+}
+function pageShown() {
+  if (page && !page.since) page.since = Date.now();
+}
+
 let capturing = false;
+const MEANT_TO_REPEAT = /^\s*(increase|decrease|one more|one less|next|previous)\b/i;   // buttons made to be tapped several times
 
 /** Start once per page load: taps and clicks, form submissions, scroll depth, time on page, script errors. */
 export function startAutoCapture() {
   if (capturing || typeof window === 'undefined') return;
   capturing = true;
+  startPage();
 
   document.addEventListener('click', (e) => {
     const el = e.target instanceof Element ? e.target.closest('a, button, [role="button"], summary') : null;
@@ -181,16 +295,17 @@ export function startAutoCapture() {
     record('click', props);
   }, { capture: true, passive: true });
 
-  // Which field someone was on — the field's name only, never what was typed
+  // Which field someone was on — the field's name only, never what was typed. Search boxes have their own record.
   const fieldsSeen = new Set();
   document.addEventListener('focusin', (e) => {
     const el = e.target instanceof Element ? e.target.closest('input, select, textarea') : null;
-    if (!el || el.closest('[data-notrack]') || el.type === 'hidden') return;
+    if (!el || el.closest('[data-notrack]') || el.type === 'hidden' || el.type === 'search') return;
+    if (/search/i.test(`${el.getAttribute('aria-label') || ''} ${el.getAttribute('placeholder') || ''} ${el.getAttribute('name') || ''}`)) return;
     const id = el.getAttribute('id');
     const labelEl = (id && document.querySelector(`label[for="${CSS.escape(id)}"]`)) || el.closest('label')
       || el.parentElement?.querySelector('label') || el.parentElement?.parentElement?.querySelector('label');
     // A real label first; then the kind of field; a placeholder is the last resort because it is usually an example value
-    const byType = { email: 'Email', tel: 'Phone number', password: 'Password', search: 'Search', date: 'Date', number: 'Number' }[el.type];
+    const byType = { email: 'Email', tel: 'Phone number', password: 'Password', date: 'Date', number: 'Number' }[el.type];
     const name = tidy(el.getAttribute('aria-label') || labelEl?.textContent || byType || el.getAttribute('name') || el.getAttribute('placeholder') || 'Field', 40);
     const key = `${window.location.pathname}|${name}`;
     if (fieldsSeen.has(key)) return;
@@ -211,7 +326,9 @@ export function startAutoCapture() {
     if (lastTap.times.length >= 3 && !tapsReported.has(el)) {
       tapsReported.add(el);
       const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
-      record('repeated_taps', { label: tidy(el.getAttribute('aria-label') || (text.length <= 50 ? text : '') || `(${el.tagName.toLowerCase()})`), area: areaOf(el) });
+      const label = tidy(el.getAttribute('aria-label') || (text.length <= 50 ? text : '') || `(${el.tagName.toLowerCase()})`);
+      if (MEANT_TO_REPEAT.test(label) || el.closest('[data-repeat-ok]')) return;
+      record('repeated_taps', { label, area: areaOf(el) });
     }
   }, { capture: true, passive: true });
 
@@ -222,25 +339,12 @@ export function startAutoCapture() {
     record('form_submit', { label: tidy(f.getAttribute('aria-label') || f.getAttribute('name') || f.id || heading?.textContent || 'form'), area: areaOf(f) });
   }, { capture: true, passive: true });
 
-  // How far down each page people get, and how long they stay
-  let path = window.location.pathname, started = Date.now(), deepest = 0, sent = new Set();
-  const leave = () => {
-    const seconds = Math.round((Date.now() - started) / 1000);
-    if (seconds >= 1 && !path.startsWith('/admin')) queue.push({ name: 'page_leave', path, props: { seconds: Math.min(seconds, 3600), percent: deepest }, items: [] });
-  };
-  const turnPage = () => {
-    if (window.location.pathname === path) return;
-    leave(); path = window.location.pathname; started = Date.now(); deepest = 0; sent = new Set();
-  };
+  // How far down each page people get
   window.addEventListener('scroll', () => {
     turnPage();
-    const total = document.documentElement.scrollHeight - window.innerHeight;
-    const now = total > 0 ? Math.min(100, Math.round((window.scrollY / total) * 100)) : 100;
-    if (now > deepest) deepest = now;
-    for (const mark of [50, 90]) if (deepest >= mark && !sent.has(mark)) { sent.add(mark); record('scroll_depth', { percent: mark }); }
+    measure();
+    for (const mark of [50, 90]) if (percent() >= mark && !page.marks.has(mark) && page.maxY > 0) { page.marks.add(mark); record('scroll_depth', { percent: mark }); }
   }, { passive: true });
-  document.addEventListener('click', () => setTimeout(turnPage, 800), { passive: true });
-  window.addEventListener('pagehide', leave, { capture: true });
 
   window.addEventListener('error', (e) => { record('site_error', { message: tidy(e.message, 120) }); });
   window.addEventListener('unhandledrejection', (e) => { record('site_error', { message: tidy(e.reason?.message || e.reason, 120) }); });
@@ -297,14 +401,14 @@ export function recordApi(method, url, status, requestData, responseData) {
     }
     const hit = API_EVENTS.find(([mm, re]) => mm === m && re.test(path));
     if (!hit) return;
+    // paying for a meal plan and paying for an order are told apart by `method`
+    const props = hit[2] === 'payment_started' ? { value: req?.amount, method: req?.purpose } : {};
     if (ok) {
       if (hit[2] === 'order_placed' || hit[2] === 'plan_purchased') return;
-      const props = {};
-      if (hit[2] === 'payment_started') { props.value = req?.amount; props.method = req?.purpose; }
       record(hit[2], props);
     } else if (status) {
       const detail = responseData?.detail;
-      record(`${hit[2]}_failed`, { status, reason: tidy(typeof detail === 'string' ? detail : 'error', 100) });
+      record(`${hit[2]}_failed`, { ...props, status, reason: tidy(typeof detail === 'string' ? detail : 'error', 100) });
     }
   } catch { /* tracking must never break the site */ }
 }

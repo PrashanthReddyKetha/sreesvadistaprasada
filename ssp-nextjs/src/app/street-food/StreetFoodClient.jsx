@@ -9,6 +9,7 @@ import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import api from '@/api';
 import { trackMenuCategoryView } from '@/lib/analytics';
+import { recordSearch } from '@/lib/track';
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
@@ -60,7 +61,7 @@ const StreetFood = ({ initialItems = [] }) => {
         <div className="max-w-7xl mx-auto flex justify-end">
           <div className="relative">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dishes…"
+            <input value={search} onChange={e => { setSearch(e.target.value); recordSearch(e.target.value); }} placeholder="Search dishes…"
               className="pl-7 pr-7 py-1.5 rounded-full text-xs border outline-none focus:ring-2 w-48 md:w-64"
               style={{ borderColor: 'rgba(30,58,138,0.3)', backgroundColor: 'white', color: '#374151' }} />
             {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"><X size={11} /></button>}

@@ -142,8 +142,10 @@ function sections(data, days) {
   const f = (list) => (list || []).map(x => [x.name, x.visits, x.looked_at_menu, x.add_to_cart, x.begin_checkout, x.payment_started, x.purchase]);
   const fh = (first) => [first, 'Visits', 'Looked at the menu', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered'];
   const t = data.totals;
+  const book = data.order_book || { orders: t.orders, income: t.income, orders_seen_in_a_visit: t.orders, plans_sold: t.plans_sold };
   return [
-    [`Totals, last ${days} days`, ['Visits', 'Pages viewed', 'Orders', 'Order income', 'Plans sold'], [[t.visits, t.page_views, t.orders, t.income, t.plans_sold]]],
+    [`Totals, last ${days} days`, ['Visits', 'Pages viewed', 'Orders', 'Order income', 'Plans sold', 'Orders traced to a visit'],
+      [[t.visits, t.page_views, book.orders, book.income, book.plans_sold, book.orders_seen_in_a_visit]]],
     ['From visit to order', ['Step', 'Visits'], data.funnel.map(x => [STEP[x.step] || x.step, x.visits])],
     ['Where visitors came from', ['Source', 'Visits', 'Added to basket', 'Orders', 'Income'], data.sources.map(x => [x.source, x.visits, x.added_to_basket, x.orders, x.income])],
     ['By landing page', fh('Landed on'), f(data.landing_funnels)],
@@ -200,13 +202,15 @@ export default function AnalyticsTab() {
   if (error) return <p className="text-center py-16" style={{ color: '#B91C1C' }}>{error} <button onClick={load} className="underline ml-2">Retry</button></p>;
 
   const t = data.totals;
+  // Orders and income come from the order book, which is the truth; the visit record only knows the orders it saw placed
+  const book = data.order_book || { orders: t.orders, income: t.income, orders_seen_in_a_visit: t.orders, plans_sold: t.plans_sold };
   const top = data.funnel[0]?.visits || 0;
   const maxDay = Math.max(1, ...data.by_day.map(d => d.visits));
   const cards = [
     ['Visits', t.visits, `${t.page_views} pages viewed`],
-    ['Orders', t.orders, `${pct(t.orders, t.visits)} of visits`],
-    ['Order income', fmt(t.income), t.orders ? `average ${fmt(t.income / t.orders)}` : 'no orders in this period'],
-    ['Dabba Wala plans sold', t.plans_sold, `${t.returning_visitors_known} visitors accepted cookies`],
+    ['Orders', book.orders, `${pct(book.orders, t.visits)} of visits${book.orders_seen_in_a_visit < book.orders ? ` · ${book.orders_seen_in_a_visit} traced to a visit` : ''}`],
+    ['Order income', fmt(book.income), book.orders ? `average ${fmt(book.income / book.orders)}` : 'no orders in this period'],
+    ['Dabba Wala plans sold', book.plans_sold, `${t.returning_visitors_known} visitors accepted cookies`],
   ];
 
   return (
@@ -435,8 +439,9 @@ export default function AnalyticsTab() {
       </>)}
 
       <p className="text-xs text-gray-400">
-        This is the site's own count, kept on our server. It will not match Google Analytics exactly. A visit is one sitting: pages opened less than 30 minutes apart by the same browser.
-        Your own visits while signed in as admin, and automated browsers, are not counted. All times are UK time. Phones: {data.devices.phone || 0} · computers: {data.devices.desktop || 0}. No names or contact details are recorded here.
+        This is the site's own count, kept on our server. It will not match Google Analytics exactly. A visit is one sitting: everything the same browser does with no pause longer than 30 minutes.
+        Your own visits while signed in as admin, automated browsers and search-engine crawlers are not counted. Orders and income are taken from the order book; the funnel counts the orders seen being placed.
+        Time on a page counts only while the page is on screen. All times are UK time. Phones: {data.devices.phone || 0} · computers: {data.devices.desktop || 0}. No names or contact details are recorded here.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={() => setConfirmReset(true)} className="px-3 py-2 rounded-lg text-xs font-semibold border" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}>Start counting afresh…</button>

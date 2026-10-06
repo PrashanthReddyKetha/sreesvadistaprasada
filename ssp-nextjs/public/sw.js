@@ -43,7 +43,16 @@ self.addEventListener('notificationclick', (event) => {
   ]));
 });
 
-self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('install', (event) => {
+  // Requests this worker never handles must not pass through it: in Chrome a request that is still on its way
+  // through the worker when the page closes is dropped, which lost the site's own visit record for anyone who
+  // left a page within a few seconds. Browsers without this API keep the fetch handler below as before.
+  if (event.addRoutes) {
+    try { event.addRoutes(['POST', 'PUT', 'PATCH', 'DELETE'].map(m => ({ condition: { requestMethod: m }, source: 'network' }))).catch(() => {}); } catch {}
+    try { event.addRoutes([{ condition: { urlPattern: new URLPattern({ hostname: new URL(API).hostname }) }, source: 'network' }]).catch(() => {}); } catch {}
+  }
+  self.skipWaiting();
+});
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(

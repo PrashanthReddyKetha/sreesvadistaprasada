@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useKitchen } from '@/context/KitchenContext';
 import KitchenClosedNotify from '@/components/KitchenClosedNotify';
 import api from '../api';
-import { trackViewCart, trackBeginCheckout } from '@/lib/analytics';
+import { trackViewCart } from '@/lib/analytics';
 import { isOrderable } from '@/config/softLaunch';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 
@@ -353,7 +353,7 @@ const CartDrawer = () => {
       // deliveryType + zoneInfo already live in context/storage; only freeItem needs handoff
       sessionStorage.setItem('ssp_checkout_state', JSON.stringify({ freeItem }));
     } catch {}
-    trackBeginCheckout(cartItems, grandTotal);
+    // "begin_checkout" is recorded by the checkout page itself, whichever way it is reached
     setCartOpen(false);
     router.push('/checkout');
   };

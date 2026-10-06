@@ -21,7 +21,8 @@ import SlotPicker from '@/components/SlotPicker';
 import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import AddToHomeScreen from '@/components/AddToHomeScreen';
 import { getCached, setCached } from '@/api/menuCache';
-import { trackPurchase } from '@/lib/analytics';
+import { trackPurchase, trackBeginCheckout } from '@/lib/analytics';
+import { recordSearch } from '@/lib/track';
 import { isOrderable } from '@/config/softLaunch';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 import CouponPanel from '@/components/CouponPanel';
@@ -167,13 +168,13 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
                 </p>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
-                <button onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                <button onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label={item.quantity === 1 ? `Remove ${item.name}` : `One less ${item.name}`}
                   className="w-7 h-7 rounded-full border flex items-center justify-center transition-all hover:bg-[#800020] hover:border-[#800020] hover:text-white"
                   style={{ borderColor: '#ddd', color: '#5C4B47' }}>
                   {item.quantity === 1 ? <Trash2 size={11} /> : <Minus size={11} />}
                 </button>
                 <span className="w-6 text-center text-sm font-bold" style={{ color: '#2D2422' }}>{item.quantity}</span>
-                <button onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                <button onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label={`One more ${item.name}`}
                   className="w-7 h-7 rounded-full border flex items-center justify-center transition-all hover:bg-[#800020] hover:border-[#800020] hover:text-white"
                   style={{ borderColor: '#ddd', color: '#5C4B47' }}>
                   <Plus size={11} />
@@ -569,7 +570,7 @@ function BrowseModal({ cartItems, onAdd, onClose, cartTotal, freeDeliveryAt }) {
           <div className="flex items-center gap-2 rounded-full px-3.5 py-2"
             style={{ backgroundColor: '#F6F1E7', border: '1px solid rgba(128,0,32,0.12)' }}>
             <Search size={14} className="text-gray-500 flex-shrink-0" />
-            <input value={search} onChange={e => setSearch(e.target.value)}
+            <input value={search} onChange={e => { setSearch(e.target.value); recordSearch(e.target.value); }}
               placeholder="Search dishes…"
               className="flex-1 bg-transparent outline-none text-sm" style={{ color: '#2D2422' }} />
             {search && (
@@ -732,6 +733,15 @@ const CheckoutInner = () => {
       }
     } catch {}
   }, []);
+
+  // Checkout has begun once this page shows a basket — however it was reached (basket drawer, the order page's
+  // bar, a saved link, a reload). Once per visit to the page.
+  const checkoutBegan = useRef(false);
+  useEffect(() => {
+    if (checkoutBegan.current || success || cartItems.length === 0) return;
+    checkoutBegan.current = true;
+    trackBeginCheckout(cartItems, cartTotal);
+  }, [cartItems, cartTotal, success]);
 
   // Pre-fill from user
   useEffect(() => {
