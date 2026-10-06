@@ -186,6 +186,13 @@ export default function AnalyticsTab() {
   const [confirmReset, setConfirmReset] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // "Don't count this device": kept in this browser only, so it holds when the owner browses signed out
+  const [deviceOff, setDeviceOff] = useState(false);
+  useEffect(() => { try { setDeviceOff(localStorage.getItem('ssp_no_track') === '1'); } catch {} }, []);
+  const setDevice = (off) => {
+    try { if (off) localStorage.setItem('ssp_no_track', '1'); else localStorage.removeItem('ssp_no_track'); } catch {}
+    setDeviceOff(off);
+  };
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -446,6 +453,15 @@ export default function AnalyticsTab() {
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={() => setConfirmReset(true)} className="px-3 py-2 rounded-lg text-xs font-semibold border" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}>Start counting afresh…</button>
         <span className="text-xs text-gray-400">Empties the visit record, for example to clear visits made while the site was being tested.</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 text-xs font-semibold" style={{ color: '#5C4B47' }}>
+          <input type="checkbox" checked={deviceOff} onChange={e => setDevice(e.target.checked)} /> Don't count visits from this device
+        </label>
+        <span className="text-xs text-gray-400">
+          {deviceOff ? 'This browser is not counted, even when signed out. ' : 'Signed-out browsing from this browser counts as visits. '}
+          Set it on each phone or computer you test from, by opening this screen there.
+        </span>
       </div>
       {confirmReset && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-label="Confirm" data-notrack>

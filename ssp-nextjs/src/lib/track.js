@@ -20,6 +20,7 @@ const CONSENT_KEY = 'ssp_cookie_consent';
 const VISIT_KEY = 'ssp_visit';
 const VISITOR_KEY = 'ssp_visitor';
 const TEST_KEY = 'ssp_track_test';
+const NO_TRACK_KEY = 'ssp_no_track';    // set from Admin › Analytics: "don't count visits from this device"
 const FLUSH_MS = 4000;
 const FIRST_FLUSH_MS = 400;
 const VISIT_GAP_MS = 30 * 60000;
@@ -87,12 +88,13 @@ function adopt(id, sentAs) {
   if (hasConsent()) { try { localStorage.setItem(VISIT_KEY, JSON.stringify(visit)); } catch { /* storage unavailable */ } }
 }
 
-/** The owner signed in as admin, automated browsers and crawlers, and copies of the site being worked on
- *  (anything not on our own domain) are not visitors. A check script can opt back in by setting
- *  localStorage "ssp_track_test" = "1". */
+/** The owner signed in as admin, a device the owner has switched off in Admin › Analytics, automated browsers
+ *  and crawlers, and copies of the site being worked on (anything not on our own domain) are not visitors.
+ *  A check script can opt back in by setting localStorage "ssp_track_test" = "1". */
 const isStaffOrRobot = () => {
   try {
     if (localStorage.getItem(TEST_KEY) === '1') return false;
+    if (localStorage.getItem(NO_TRACK_KEY) === '1') return true;
     if (navigator.webdriver || ROBOT.test(navigator.userAgent)) return true;
     if (!SITE.test(window.location.hostname)) return true;
     return JSON.parse(localStorage.getItem('ssp_user') || 'null')?.role === 'admin';
