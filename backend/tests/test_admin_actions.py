@@ -78,10 +78,13 @@ def test_a_server_error_is_recorded_shown_and_alerts_the_owner_once_per_burst(cl
     monkeypatch.setattr("notifications.notify_admin", lambda subject, html: alerts.append(subject))
     quiet = TestClient(app, raise_server_exceptions=False)
     for _ in range(4):
-        r = quiet.get("/api/__boom")
+        r = quiet.get("/api/__boom", headers={"Origin": "https://sreesvadistaprasada.com"})
         assert r.status_code == 500 and r.json() == {"detail": "Something went wrong on our side. Please try again in a moment."}
+        assert r.headers.get("access-control-allow-origin") == "https://sreesvadistaprasada.com"   # the browser can read the apology
     rows = run(db.error_log.find({}, {"_id": 0}).to_list(None))
-    assert len(rows) == 4 and rows[0]["kind"] == "RuntimeError" and rows[0]["path"] == "/api/__boom" and "message" in rows[0]
+    assert len(rows) == 4 and rows[0]["kind"] == "RuntimeError" and rows[0]["path"] == "/api/__boom"
+    assert "asha@example.com" not in rows[0]["message"] and "900123" not in rows[0]["message"]   # no customer details kept
+    assert "[email]" in rows[0]["message"] and "[phone]" in rows[0]["message"]
     assert len(alerts) == 1 and "4 in the last hour" in alerts[0] or len(alerts) == 1      # told once, not four times
     shown = client.get("/api/admin/system-log/errors", headers=ADMIN()).json()["errors"]
     assert len(shown) == 4 and shown[0]["kind"] == "RuntimeError"
@@ -103,3 +106,15 @@ def test_the_launch_list_sees_keys_and_lets_the_owner_tick_the_rest(client, db, 
     r = client.get("/api/admin/health", headers=ADMIN()).json()
     assert {w["id"]: w["done"] for w in r["waiting"]}["backups"] is True
     assert run(db.admin_audit.find_one({"action": "ticked a launch item"}))["target"].startswith("Nightly database backup")
+
+
+def test_menu_changes_are_recorded_and_customer_paths_are_not(client, db):
+    """Audit A-0003 SEC-006: the exclusion for /api/me must not swallow /api/menu."""
+    from audit_log import NOT_ADMIN_CHANGES, SELF_LOGGED
+    for path in ("/api/menu", "/api/menu/abc", "/api/menu/ai/enhance", "/api/admin/coupons"):
+        assert not NOT_ADMIN_CHANGES.search(path), path
+    for path in ("/api/auth/me", "/api/me/preferences", "/api/orders", "/api/orders/calculate", "/api/loyalty/redeem",
+                 "/api/enquiries/contact", "/api/menu/x/like", "/api/subscriptions/x/skip"):
+        assert NOT_ADMIN_CHANGES.search(path), path
+    for path in ("/api/orders/abc/status", "/api/subscriptions/x/status"):
+        assert not NOT_ADMIN_CHANGES.search(path) and SELF_LOGGED.search(path), path

@@ -41,16 +41,19 @@ def run(coro):
 
 from audit_log import AdminActionLog  # noqa: E402
 
-from error_log import unhandled  # noqa: E402
+from error_log import CatchErrors, unhandled  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 app = FastAPI()
+app.add_middleware(CatchErrors)           # same order as server.py: inside CORS
+app.add_middleware(CORSMiddleware, allow_origins=["https://sreesvadistaprasada.com"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(AdminActionLog)
 app.add_exception_handler(Exception, unhandled)
 
 
 @app.get("/api/__boom")
 async def _boom():
-    raise RuntimeError("test failure")
+    raise RuntimeError("test failure for asha@example.com on +44 7700 900123")
 for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries, customers, events, comms, automation_routes, intelligence_routes, health):
     app.include_router(r.router, prefix="/api")
 
@@ -93,6 +96,11 @@ def fresh_state(monkeypatch):
 
     async def _no_ai(_figures):
         return {"ok": False, "why": "AI is switched off in tests"}
+    monkeypatch.setattr(pickup_slots, "open_now", lambda settings, now=None: True)   # tests run at any hour; the hours rule has its own test
+
+    async def _deliveries_on():
+        return None
+    monkeypatch.setattr(subscriptions, "refuse_if_deliveries_paused", _deliveries_on)   # Dabba sells in tests; the pause has its own test
     monkeypatch.setattr(events, "JOIN_PAGE_LOADS", False)      # tests name their visits; joining is tested on its own
     monkeypatch.setattr(intelligence, "site_check", _no_site_check)
     monkeypatch.setattr(intelligence, "WEEKLY_DAY", 99)      # weekly jobs only run in the tests that ask for them

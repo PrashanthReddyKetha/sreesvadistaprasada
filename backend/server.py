@@ -5,7 +5,7 @@ import os
 import logging
 
 from database import client
-from seed import seed_menu, create_indexes, create_admin_user, seed_daily_specials, seed_content
+from seed import seed_menu, create_indexes, create_admin_user, seed_daily_specials, seed_content, normalise_order_dates
 from routes import auth, menu, orders, subscriptions, enquiries, delivery, admin_dabba_wala, payments, reviews, daily_specials, loyalty, admin_loyalty, pickup_slots, push
 from routes import content as content_routes
 from routes import whatsapp as whatsapp_routes
@@ -37,6 +37,7 @@ async def lifespan(app: FastAPI):
     await migrate_slugs()
     await seed_slot_settings()
     await apply_menu_additions()
+    await normalise_order_dates()
     from allergen_fill import apply_allergen_fill
     await apply_allergen_fill()
     from menu_text_fix import apply_menu_text_fix
@@ -135,6 +136,8 @@ ALLOWED_ORIGINS = [
     "http://localhost:3001",
 ]
 
+from error_log import CatchErrors
+app.add_middleware(CatchErrors)   # inside CORS: browsers get the apology, with CORS headers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,

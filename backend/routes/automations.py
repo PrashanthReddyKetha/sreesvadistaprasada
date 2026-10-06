@@ -42,7 +42,7 @@ async def list_automations(_: dict = Depends(require_admin)):
             "results": await engine.results(a["id"]),
         })
     return {
-        "automations": out, "unavailable": engine.UNAVAILABLE, "built_in": engine.BUILT_IN,
+        "automations": out, "unavailable": engine.UNAVAILABLE, "built_in": engine.BUILT_IN, "all_paused": await engine.all_paused(),
         "rules": {"daily_cap": engine.DAILY_CAP, "quiet_days": engine.QUIET_DAYS, "result_window_days": engine.RESULT_WINDOW_DAYS,
                   "hours": "10:00 to 18:00, UK time"},
     }
@@ -135,6 +135,17 @@ class AutomationUpdate(BaseModel):
     enabled: Optional[bool] = None
     coupon_code: Optional[str] = Field(default=None, max_length=40)
     clear_coupon: bool = False
+
+
+@router.put("/pause-all")
+async def pause_all(payload: dict, admin: dict = Depends(require_admin)):
+    """Stop (or resume) every automation, the review prompts and the reopen message in one go."""
+    paused = bool(payload.get("paused"))
+    before = await engine.all_paused()
+    await db.settings.update_one({"_id": "automations"}, {"$set": {"paused": paused, "changed_at": datetime.utcnow().isoformat(), "by": admin["sub"]}}, upsert=True)
+    await record_admin_action(admin, "paused all customer messages" if paused else "resumed customer messages", "every automation",
+                              {"paused": before}, {"paused": paused})
+    return {"ok": True, "all_paused": paused}
 
 
 @router.put("/{automation_id}")

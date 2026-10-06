@@ -307,7 +307,9 @@ async def _order_book(since: datetime, events: list) -> dict:
 @router.get("/admin/analytics")
 async def analytics(days: int = 30, _: dict = Depends(require_admin)):
     days = max(1, min(days, RETENTION_DAYS))
-    since = datetime.utcnow() - timedelta(days=days)
+    # "Last N days" = today and the N-1 London calendar days before it, so every day row is a whole day (A-0003, ANA-005)
+    start_ldn = datetime.now(LONDON).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days - 1)
+    since = start_ldn.astimezone(UTC).replace(tzinfo=None)
     events = _in_order(await db.events.find({"at": {"$gte": since}}, {"_id": 0, "day_code": 0}).sort("at", 1).to_list(None))
 
     visits, by_day, pages, viewed, added, sources, devices = {}, {}, {}, {}, {}, {}, {}

@@ -54,6 +54,14 @@ async def health(_: dict = Depends(require_admin)):
         state = "watch" if unmatched else "ok"
         note = f"last payment {_ago(last['received_at']) if last else 'never'}" + (f"; {unmatched} payment{'s' if unmatched != 1 else ''} taken with no order — see your email" if unmatched else "")
         checks.append(_check("Card payments", state, note, "Open the payment in Stripe, then place the order by hand or refund" if unmatched else ""))
+        if not os.getenv("STRIPE_WEBHOOK_SECRET"):
+            checks.append(_check("Payment alerts", "down", "Stripe is not telling the server about payments — a payment with no order would go unnoticed",
+                                 "In Stripe › Developers › Webhooks add the endpoint /api/payments/webhook, then set STRIPE_WEBHOOK_SECRET on Render"))
+        else:
+            seen = await db.payments.find_one({}, {"_id": 0, "received_at": 1}, sort=[("received_at", -1)])
+            checks.append(_check("Payment alerts", "ok" if seen or not last else "watch",
+                                 f"last message from Stripe {_ago(seen['received_at']) if seen else 'never'}",
+                                 "" if seen or not last else "Payments exist but Stripe has sent no webhook — check the endpoint in Stripe › Webhooks"))
 
     # messages out
     day_ago = now - timedelta(hours=24)
@@ -135,6 +143,9 @@ AUTO = [
     ("texts", "Text messages set up (Twilio)", lambda: bool(os.getenv("TWILIO_ACCOUNT_SID") and os.getenv("TWILIO_AUTH_TOKEN") and os.getenv("TWILIO_FROM_NUMBER")), "Render › Environment › the three TWILIO_* values"),
     ("email_reports", "Email delivery reports connected (Resend webhook)", lambda: bool(os.getenv("RESEND_WEBHOOK_SECRET")), "Resend › Webhooks → Render › RESEND_WEBHOOK_SECRET"),
     ("production_flag", "Server marked as production (hides the API documentation pages)", lambda: os.getenv("ENVIRONMENT") == "production", "Render › Environment › ENVIRONMENT=production"),
+    ("stripe_webhook", "Stripe tells the server about payments (webhook)", lambda: bool(os.getenv("STRIPE_WEBHOOK_SECRET")), "Stripe › Developers › Webhooks → endpoint /api/payments/webhook → Render › STRIPE_WEBHOOK_SECRET"),
+    ("firebase", "Phone-number verification at sign-up (Firebase)", lambda: bool(os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")), "Render › Environment › FIREBASE_SERVICE_ACCOUNT_JSON — in production sign-up refuses without it"),
+    ("alert_email", "Alerts go to your own address", lambda: bool(os.getenv("ADMIN_ALERT_EMAIL") or os.getenv("ADMIN_EMAIL")), "Render › Environment › ADMIN_ALERT_EMAIL"),
 ]
 
 

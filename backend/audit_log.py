@@ -60,9 +60,10 @@ WORDING = [
 # might make while signed in (ordering, paying, a review) are not admin changes.
 SELF_LOGGED = re.compile(r"^/api/(admin/(automations|system-log|newsletter/send|analytics/reset|settings/pickup-slots)|events"
                          r"|orders/[^/]+/status$|subscriptions/[^/]+/status$)")
-NOT_ADMIN_CHANGES = re.compile(r"^/api/(auth|payments|push/(subscribe|unsubscribe|track)|me|loyalty|reviews|delivery|kitchen-status/notify-me"
-                               r"|orders$|orders/calculate|subscriptions$|subscriptions/quote|subscriptions/[^/]+/skip|enquiries/(contact|catering|newsletter|waitlist)$|enquiries/notifications"
-                               r"|menu/[^/]+/(like|reviews|notify-restock))")
+# Every alternative ends at a path boundary: "me" must not swallow "menu" (audit A-0003, SEC-006).
+NOT_ADMIN_CHANGES = re.compile(r"^/api/(?:(?:auth|payments|push/(?:subscribe|unsubscribe|track)|me|loyalty|reviews|delivery|kitchen-status/notify-me|enquiries/notifications)(?:/|$)"
+                               r"|(?:orders|orders/calculate|subscriptions|subscriptions/quote|subscriptions/[^/]+/skip|enquiries/(?:contact|catering|newsletter|waitlist)"
+                               r"|menu/[^/]+/(?:like|reviews|notify-restock))$)")
 
 
 def wording(method: str, path: str) -> str:

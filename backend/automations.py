@@ -283,6 +283,20 @@ async def settings_for(automation_id: str) -> dict:
     return doc or {"id": automation_id, "enabled": False, "coupon_code": None}
 
 
+async def marketing_consented(email: str) -> bool:
+    """True when the person ticked "send me offers" at sign-up or checkout, or signed up to the newsletter."""
+    key = (email or "").strip().lower()
+    if not key:
+        return False
+    if await db.users.find_one({"email": key, "marketing_consent": True}, {"_id": 1}):
+        return True
+    if await db.orders.find_one({"customer_email": key, "marketing_consent": True}, {"_id": 1}):
+        return True
+    if await db.subscriptions.find_one({"customer_email": key, "marketing_consent": True}, {"_id": 1}):
+        return True
+    return bool(await db.newsletter.find_one({"email": key, "active": {"$ne": False}}, {"_id": 1}))
+
+
 async def audience(automation_id: str, now: Optional[datetime] = None) -> list:
     """Everyone who would be sent this automation right now, after every safeguard."""
     from routes.customers import build_customers
@@ -298,6 +312,8 @@ async def audience(automation_id: str, now: Optional[datetime] = None) -> list:
         skip = None
         if await email_opted_out(c["email"]):
             skip = "unsubscribed"
+        elif not await marketing_consented(c["email"]):
+            skip = "has not asked for offers"                     # consent-based since 2026-10-07 (owner decision, A-0003 MKT-001)
         elif c["email"] in recently:
             skip = f"had another message in the last {QUIET_DAYS} days"
         elif await db.automation_sends.find_one({"automation": automation_id, "email": c["email"], "reason": reason}, {"_id": 1}):
@@ -306,12 +322,20 @@ async def audience(automation_id: str, now: Optional[datetime] = None) -> list:
     return out
 
 
+async def all_paused() -> bool:
+    """One switch that stops every customer message the system sends on its own (A-0003, MKT-006)."""
+    doc = await db.settings.find_one({"_id": "automations"}, {"_id": 0, "paused": 1})
+    return bool(doc and doc.get("paused"))
+
+
 async def run(automation_id: str, now: Optional[datetime] = None, local_hour: Optional[int] = None) -> dict:
     """Send to today's audience. Returns counts. Safe to call repeatedly."""
     now = now or datetime.utcnow()
     a, cfg = BY_ID[automation_id], await settings_for(automation_id)
     if not cfg.get("enabled"):
         return {"sent": 0, "skipped": 0, "reason": "switched off"}
+    if await all_paused():
+        return {"sent": 0, "skipped": 0, "reason": "all messages paused"}
     start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
     sent_today = await db.automation_sends.count_documents({"automation": automation_id, "at": {"$gte": start_of_day}})
     sent = skipped = 0

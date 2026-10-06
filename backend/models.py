@@ -71,6 +71,7 @@ class SavedAddress(BaseModel):
 
 class UserCreate(BaseModel):
     name: str
+    marketing_consent: Optional[bool] = None   # tick-box at sign-up: "send me offers and news" (A-0003, MKT-001)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     phone: Optional[str] = None
@@ -256,6 +257,7 @@ class OrderItem(BaseModel):
 
 class OrderCreate(BaseModel):
     customer_name: str
+    marketing_consent: Optional[bool] = None   # tick-box at checkout; None = not asked / unchanged
     customer_email: EmailStr
     customer_phone: str
     delivery_address: Optional[Address] = None
@@ -307,6 +309,7 @@ class Order(OrderCreate):
 
 class SubscriptionCreate(BaseModel):
     customer_name: str
+    marketing_consent: Optional[bool] = None   # tick-box in the Dabba wizard
     customer_email: EmailStr
     customer_phone: str
     plan: str                       # weekly | monthly

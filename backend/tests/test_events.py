@@ -143,7 +143,7 @@ def test_each_event_is_stamped_with_when_it_happened_and_a_late_batch_keeps_its_
     visit = client.get("/api/admin/analytics/visits", headers=ADMIN()).json()["visits"][0]
     assert [e["name"] for e in visit["events"]] == ["page_view", "click", "add_to_cart"]
     assert visit["minutes"] == 0.1                                                    # 6.9 seconds from first to last
-    r = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    r = client.get("/api/admin/analytics?days=2", headers=ADMIN()).json()
     assert r["step_times"][0] == {"between": "Arriving to first dish added", "median_minutes": 0.1, "visits": 1}
 
 
@@ -165,7 +165,7 @@ def test_a_visit_is_one_sitting_for_a_visitor_with_cookies_too(client, db, monke
     run(db.events.update_many({}, {"$set": {"at": datetime.utcnow() - timedelta(minutes=90)}}))
     third = load("visit-tab00001", "/story")["visit"]
     assert len({"visit-tab00001", second, third}) == 3
-    r = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    r = client.get("/api/admin/analytics?days=2", headers=ADMIN()).json()
     assert r["totals"]["visits"] == 3 and r["totals"]["returning_visitors_known"] == 1
 
 
@@ -174,7 +174,7 @@ def test_accepting_cookies_part_way_through_does_not_split_the_visit(client, db,
     post(client, {"visit_id": VISIT_A, "attribution": {"referrer": "www.google.com", "landing": "/"}, "events": [{"name": "page_view", "path": "/"}]})
     post(client, {"visit_id": VISIT_A, "visitor_id": "visitor-bbbb2222", "events": [{"name": "click", "path": "/"}, {"name": "page_view", "path": "/order"}]})
     post(client, {"visit_id": "visit-newtab01", "visitor_id": "visitor-bbbb2222", "events": [{"name": "page_view", "path": "/menu"}]})
-    r = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    r = client.get("/api/admin/analytics?days=2", headers=ADMIN()).json()
     assert r["totals"]["visits"] == 1 and r["sources"][0]["source"] == "Google search"
     assert [(f["name"], f["visits"]) for f in r["visitor_funnels"]] == [("First visit", 1)]   # not "cookies not accepted", not "returning"
     assert client.get("/api/admin/analytics/visits", headers=ADMIN()).json()["visits"][0]["returning"] is False
@@ -211,7 +211,7 @@ def test_paying_for_a_meal_plan_is_not_a_step_in_the_food_order_funnel(client):
          payment_started={"props": {"method": "subscription", "value": 60}})
     send(client, VISIT_B, ["page_view", "payment_started_failed"], payment_started_failed={"props": {"method": "subscription", "status": 400}})
     send(client, "visit-cccccccc", ["page_view", "add_to_cart", "begin_checkout", "payment_started"], payment_started={"props": {"method": "order", "value": 20}})
-    r = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    r = client.get("/api/admin/analytics?days=2", headers=ADMIN()).json()
     assert r["checkout"] == [{"step": "Started checkout", "visits": 1}, {"step": "Started paying", "visits": 1},
                              {"step": "Order placed", "visits": 0}, {"step": "Payment or order failed", "visits": 0}]
     stopped = {s["step"]: s["visits"] for s in r["stopped_at"]}
@@ -232,7 +232,7 @@ def test_later_steps_count_for_earlier_ones_and_only_baskets_with_food_in_them_a
     # ordered from a reloaded checkout page: no "started checkout" was seen
     post(client, {"visit_id": "visit-dddddddd", "events": [{"name": "page_view", "path": "/checkout"},
                                                            {"name": "purchase", "path": "/checkout", "props": {"value": 18.0, "transaction_id": "SP2001"}}]})
-    r = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    r = client.get("/api/admin/analytics?days=2", headers=ADMIN()).json()
     assert [(f["step"], f["visits"]) for f in r["funnel"]] == [("page_view", 4), ("looked_at_menu", 4), ("add_to_cart", 4), ("begin_checkout", 2), ("purchase", 1)]
     assert r["abandoned"] == {"visits": 2, "basket_value": 37.48}                           # 23.50 at checkout + two dosas at 6.99
     assert r["removals"] == [{"name": "Masala Dosa", "removed": 2, "added": 4, "removal_rate": 0.5}]
@@ -243,7 +243,7 @@ def test_time_on_page_counts_each_page_view_once(client):
     # one page view reported twice (tab hidden, then left for good), one reported once, one from before page views had numbers
     post(client, {"visit_id": VISIT_A, "events": [{"name": "page_view", "path": "/menu"}, leave(5, 20, "aaaa1111"), leave(12, 60, "aaaa1111"),
                                                   leave(4, 100, "bbbb2222"), leave(8, 40)]})
-    r = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    r = client.get("/api/admin/analytics?days=2", headers=ADMIN()).json()
     assert r["time_on_page"] == [{"page": "/menu", "views": 3, "average_seconds": 8, "average_scroll": 67}]
     assert [a["count"] for a in r["actions"] if a["name"] == "page_leave"] == [3]
     shown = client.get("/api/admin/analytics/visits", headers=ADMIN()).json()["visits"][0]["events"]
@@ -255,7 +255,7 @@ def test_dishes_added_straight_from_a_list_do_not_count_as_opened_then_added(cli
     upma = {"items": [{"id": "m1", "name": "Upma", "quantity": 1}], "props": {"value": 3.99}}
     send(client, VISIT_A, ["page_view", "add_to_cart", "view_item"], add_to_cart=upma, view_item=thali)      # upma added from the list; thali only looked at
     send(client, VISIT_B, ["page_view", "view_item", "add_to_cart"], view_item=thali, add_to_cart=thali)     # thali opened, then added
-    r = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    r = client.get("/api/admin/analytics?days=2", headers=ADMIN()).json()
     assert r["price_bands"] == [{"band": "£11 and over", "opened": 2, "added": 1, "add_rate": 0.5}]
 
 
@@ -264,7 +264,7 @@ def test_search_boxes_and_quantity_buttons_are_not_reported_as_problems(client):
          repeated_taps={"props": {"label": "Increase quantity", "area": "page"}})
     send(client, VISIT_B, ["page_view", "field_focus", "repeated_taps"], field_focus={"props": {"label": "Phone number", "area": "Your details"}},
          repeated_taps={"props": {"label": "Pay now", "area": "page"}})
-    r = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    r = client.get("/api/admin/analytics?days=2", headers=ADMIN()).json()
     assert [f["last_field"] for f in r["field_drop_off"]] == ["Phone number"]
     assert [t["label"] for t in r["repeated_taps"]] == ["Pay now"]
 

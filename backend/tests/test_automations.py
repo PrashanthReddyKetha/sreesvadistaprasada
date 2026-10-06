@@ -11,10 +11,11 @@ URL = "/api/admin/automations"
 ADMIN = lambda: token("boss", "admin")   # noqa: E731
 
 
-def order(db, email, days_ago, n, total=20.0, status="delivered"):
+def order(db, email, days_ago, n, total=20.0, status="delivered", consent=True):
+    # Customers in these tests ticked "send me offers" at checkout unless a test says otherwise (consent-based since 2026-10-07)
     run(db.orders.insert_one({"id": f"o{n}", "customer_email": email, "customer_name": "Asha Rao", "customer_phone": "+447000000001",
                               "items": [], "total": total, "status": status, "user_id": None, "order_number": f"SP{n}",
-                              "delivery_type": "takeaway", "created_at": NOW - timedelta(days=days_ago)}))
+                              "delivery_type": "takeaway", "created_at": NOW - timedelta(days=days_ago), "marketing_consent": consent}))
 
 
 @pytest.fixture
@@ -83,7 +84,7 @@ def test_going_quiet_lapsed_and_plan_finished_pick_the_right_customers(client, d
     order(db, "quiet@example.com", 45, 1); order(db, "quiet@example.com", 50, 2)
     order(db, "lapsed@example.com", 90, 3)
     run(db.subscriptions.insert_one({"id": "p1", "customer_email": "tiffin@example.com", "email_key": "tiffin@example.com", "customer_name": "T",
-                                     "plan": "weekly", "box_type": "prasada", "price": 75.0, "status": "expired", "user_id": None,
+                                     "plan": "weekly", "box_type": "prasada", "price": 75.0, "status": "expired", "user_id": None, "marketing_consent": True,
                                      "end_date": (NOW - timedelta(days=10)).strftime("%Y-%m-%d"), "created_at": NOW - timedelta(days=17)}))
     listing = {a["id"]: a["would_send_now"] for a in client.get(URL, headers=ADMIN()).json()["automations"]}
     assert {k: listing[k] for k in ("first_order", "going_quiet", "lapsed", "plan_finished")} == {
@@ -98,7 +99,7 @@ def test_going_quiet_lapsed_and_plan_finished_pick_the_right_customers(client, d
 
 def test_the_seven_further_automations_pick_the_right_customers(client, db, sent):
     def acct(uid, email, days_ago, **extra):
-        run(db.users.insert_one({"id": uid, "name": "Mira Rao", "email": email, "role": "customer",
+        run(db.users.insert_one({"id": uid, "name": "Mira Rao", "email": email, "role": "customer", "marketing_consent": True,
                                  "created_at": NOW - timedelta(days=days_ago), **extra}))
     order(db, "two@example.com", 4, 1); order(db, "two@example.com", 12, 2)                    # second order 4 days ago
     acct("u1", "reward@example.com", 60, loyalty_order_count=5, loyalty_pending_reward=True)
@@ -183,3 +184,25 @@ def test_the_owner_can_change_the_words_try_them_out_and_put_them_back(client, d
     assert client.delete(f"{URL}/first_order/text", headers=ADMIN()).json()["current"]["subject"] == "How was your first order?"
     assert client.get(f"{URL}/first_order/text", headers=ADMIN()).json()["is_custom"] is False
     assert client.get(f"{URL}/first_order/text").status_code in (401, 403)
+
+
+def test_nobody_is_messaged_without_having_asked_for_offers(client, db, sent):
+    """Owner decision 2026-10-07 (A-0003, MKT-001): marketing goes only to people who ticked the box or joined the newsletter."""
+    order(db, "silent@example.com", 5, 1, consent=False)
+    order(db, "keen@example.com", 5, 2, consent=False)
+    run(db.newsletter.insert_one({"email": "keen@example.com", "active": True}))
+    switch_on(client)
+    p = client.get(f"{URL}/first_order/preview", headers=ADMIN()).json()
+    assert [h["email"] for h in p["would_send"]] == ["keen@example.com"]
+    assert {h["email"]: h["why"] for h in p["held_back"]} == {"silent@example.com": "has not asked for offers"}
+
+
+def test_pause_all_stops_every_automation_until_resumed(client, db, sent):
+    order(db, "a@example.com", 5, 1)
+    switch_on(client)
+    r = client.put(f"{URL}/pause-all", json={"paused": True}, headers=ADMIN())
+    assert r.status_code == 200 and r.json()["all_paused"] is True
+    assert run(engine.run("first_order")) == {"sent": 0, "skipped": 0, "reason": "all messages paused"} and sent == []
+    assert client.get(URL, headers=ADMIN()).json()["all_paused"] is True
+    client.put(f"{URL}/pause-all", json={"paused": False}, headers=ADMIN())
+    assert run(engine.run("first_order"))["sent"] == 1

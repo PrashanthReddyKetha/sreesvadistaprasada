@@ -954,3 +954,23 @@ async def seed_content():
     if not await db.faq_data.count_documents({}):
         await db.faq_data.insert_many(FAQ_SEED)
         print(f"Seeded {len(FAQ_SEED)} FAQ categories")
+
+
+async def normalise_order_dates():
+    """orders.updated_at was written as an ISO string by status changes and as a datetime at creation; the nightly
+    review compares datetimes, so cancelled orders were never counted (audit A-0003, BE-002). Runs once."""
+    from datetime import datetime as _dt
+    marker = await db.settings.find_one({"_id": "order_dates_v1"}, {"_id": 1})
+    if marker:
+        return
+    fixed = 0
+    async for doc in db.orders.find({"updated_at": {"$type": "string"}}, {"_id": 0, "id": 1, "updated_at": 1}):
+        try:
+            when = _dt.fromisoformat(str(doc["updated_at"]).replace("Z", ""))
+        except ValueError:
+            continue
+        await db.orders.update_one({"id": doc["id"]}, {"$set": {"updated_at": when}})
+        fixed += 1
+    await db.settings.update_one({"_id": "order_dates_v1"}, {"$set": {"applied_at": _dt.utcnow().isoformat(), "fixed": fixed}}, upsert=True)
+    if fixed:
+        print(f"normalised updated_at on {fixed} orders")

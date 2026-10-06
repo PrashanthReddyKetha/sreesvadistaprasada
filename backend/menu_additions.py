@@ -159,7 +159,19 @@ COMMON_DEFAULTS = {
 }
 
 
+MENU_ADDITIONS_VERSION = 1   # bump when the additions below change; between bumps the admin's menu is left alone
+
+
 async def apply_menu_additions():
+    """Runs once per version (audit A-0003, BE-004): a restart must never re-insert a dish the admin deleted."""
+    marker = await db.settings.find_one({"_id": "menu_additions"}, {"_id": 0, "version": 1})
+    if marker and marker.get("version") == MENU_ADDITIONS_VERSION:
+        return
+    await _apply_menu_additions()
+    await db.settings.update_one({"_id": "menu_additions"}, {"$set": {"version": MENU_ADDITIONS_VERSION}}, upsert=True)
+
+
+async def _apply_menu_additions():
     # Pre-order flow is built but parked (docs/PREORDER.md) — Overnight Oats
     # sell as normal add-to-cart items for now. Set True again to re-enable.
     await db.menu_items.update_many(

@@ -289,3 +289,44 @@ def test_makeup_meal_rules(client, pay, user_headers, admin_headers):
     assert client.get(base, headers=user_headers).status_code == 403
     client.put(f"{SUBS}/{sub['id']}/status", json={"status": "cancelled"}, headers=admin_headers)
     assert client.post(f"{base}/{day}/make-up", headers=admin_headers).status_code == 400           # cancelled plan
+
+
+# ── Owner decisions 2026-10-07 (audit A-0003) ─────────────────────────────────
+
+def test_no_new_plan_while_deliveries_are_paused(client, monkeypatch, db):
+    """DAB-006: Dabba Wala is delivered, so the delivery switch covers it."""
+    from routes import subscriptions
+    import importlib.util, pathlib
+    spec = importlib.util.spec_from_file_location("subs_fresh", pathlib.Path(subscriptions.__file__))
+    fresh = importlib.util.module_from_spec(spec); spec.loader.exec_module(fresh)
+    monkeypatch.setattr(subscriptions, "refuse_if_deliveries_paused", fresh.refuse_if_deliveries_paused)
+    body = {"customer_name": "A", "customer_email": "a@example.com", "customer_phone": "+447000000001", "plan": "weekly",
+            "box_type": "svadista", "delivery_address": {"line1": "1 St", "city": "MK", "postcode": "MK9 1AA"}}
+    r = client.post("/api/subscriptions/quote", json=body)
+    assert r.status_code == 400 and "paused" in r.json()["detail"]
+    run(db.settings.update_one({"_id": "pickup_slots"}, {"$set": {"delivery_enabled": True}}, upsert=True))
+    assert client.post("/api/subscriptions/quote", json=body).status_code == 200
+
+
+def test_the_next_plan_can_be_bought_while_one_runs_but_starts_after_it(client, db, user_headers, pay, state):
+    """DAB-001: the renewal reminder must lead somewhere that sells."""
+    from datetime import datetime, timedelta
+    from routes import subscriptions
+    today = datetime.strptime(subscriptions.london_today(), "%Y-%m-%d")
+    next_monday = today + timedelta(days=(7 - today.weekday()) % 7 or 7)
+    run(db.subscriptions.insert_one({"id": "s-live", "user_id": "u1", "customer_email": "u1@example.com", "status": "active",
+                                     "plan": "weekly", "start_date": today.strftime("%Y-%m-%d"), "end_date": (next_monday + timedelta(days=4)).strftime("%Y-%m-%d")}))
+    body = {"customer_name": "Test User", "customer_email": "u1@example.com", "customer_phone": "+447000000001", "plan": "weekly",
+            "box_type": "svadista", "delivery_address": {"line1": "1 St", "city": "MK", "postcode": "MK9 1AA"}}
+    r = client.post("/api/subscriptions/quote", json={**body, "start_date": next_monday.strftime("%Y-%m-%d")}, headers=user_headers)
+    assert r.status_code == 400 and "current plan runs until" in r.json()["detail"]
+    r = client.post("/api/subscriptions/quote", json={**body, "start_date": (next_monday + timedelta(days=7)).strftime("%Y-%m-%d")}, headers=user_headers)
+    assert r.status_code == 200, r.text
+
+
+def test_an_ended_plan_cannot_be_set_back_to_active(client, db, admin_headers):
+    """DAB-003: the loop would expire it again within minutes; the dialog must not promise otherwise."""
+    run(db.subscriptions.insert_one({"id": "s-old", "user_id": "u9", "customer_email": "o@example.com", "status": "cancelled",
+                                     "plan": "weekly", "start_date": "2026-01-05", "end_date": "2026-01-09", "status_history": []}))
+    r = client.put("/api/subscriptions/s-old/status", json={"status": "active"}, headers=admin_headers)
+    assert r.status_code == 400 and "ended on 2026-01-09" in r.json()["detail"]

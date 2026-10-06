@@ -341,3 +341,71 @@ def test_opening_hours_are_public_and_follow_admin_settings(client, admin_header
     client.put("/api/admin/settings/pickup-slots", headers=admin_headers,
                json={"days": {"sun": {"closed": True, "open": "08:00", "close": "20:30"}}})
     assert client.get("/api/opening-hours").json()["days"]["sun"]["closed"] is True
+
+
+# ── Closed by hours (audit A-0003, COM-001 / COM-007) ─────────────────────────
+
+def _next(settings, now, limit=3):
+    from routes import pickup_slots
+    from datetime import timedelta
+    out = []
+    for offset in (0, 1):
+        for s in pickup_slots.generate_slots(settings, now.date() + timedelta(days=offset), now):
+            out.append({**s, "day": "today" if offset == 0 else "tomorrow"})
+            if len(out) >= limit:
+                return out
+    return out
+
+
+def test_outside_opening_hours_an_asap_order_is_refused_with_the_next_times(client, menu, monkeypatch):
+    from routes import pickup_slots
+    from datetime import datetime
+    late = datetime(2026, 10, 7, 23, 30, tzinfo=pickup_slots.LONDON)          # a Wednesday night
+    monkeypatch.setattr(pickup_slots, "open_now", lambda settings, now=None: False)
+    monkeypatch.setattr(pickup_slots, "next_slots", lambda settings, now=None, limit=3: _next(settings, late, limit))
+    r = calc(client, [("curry", 1), ("biryani", 1)])
+    assert r.status_code == 400
+    assert "closed right now" in r.json()["detail"] and "tomorrow" in r.json()["detail"]
+
+
+def test_open_now_follows_the_opening_hours():
+    from routes import pickup_slots
+    from datetime import datetime
+    settings = pickup_slots.DEFAULT_SETTINGS
+    hours = settings["days"]["wed"]
+    noon = datetime(2026, 10, 7, 12, 0, tzinfo=pickup_slots.LONDON)
+    late = datetime(2026, 10, 7, 23, 30, tzinfo=pickup_slots.LONDON)
+    open_fn = _real_open_now()
+    assert open_fn(settings, noon) is (not hours.get("closed"))
+    assert open_fn(settings, late) is False
+
+
+def _real_open_now():
+    import importlib.util, pathlib
+    from routes import pickup_slots
+    spec = importlib.util.spec_from_file_location("ps_fresh", pathlib.Path(pickup_slots.__file__))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.open_now
+
+
+def test_a_paid_order_arriving_after_closing_is_taken_moved_to_the_next_slot_and_the_owner_told(client, menu, pay, state, monkeypatch, db, user_headers):
+    from routes import pickup_slots
+    from datetime import datetime, timedelta
+    monkeypatch.setattr(pickup_slots, "open_now", lambda settings, now=None: False)
+    tomorrow = (datetime.now(pickup_slots.LONDON) + timedelta(days=1)).date()
+    first = pickup_slots.generate_slots(pickup_slots.DEFAULT_SETTINGS, tomorrow)[0]["iso"]
+    monkeypatch.setattr(pickup_slots, "next_slots", lambda settings, now=None, limit=3: [{"iso": first, "label": "8:45 am", "end_label": "09:00", "day": "tomorrow"}])
+    pi = pay(18.88)
+    r = client.post("/api/orders", json=order_body(menu, [("curry", 1), ("biryani", 1)], pi), headers=user_headers)
+    assert r.status_code == 200, r.text
+    assert r.json()["scheduled_slot_final"] == first                   # never rejected after payment; moved forward
+    assert any("needs a look" in s and "outside opening hours" in s for s in state.outbox.admin)
+
+
+def test_a_paid_order_arriving_while_paused_is_taken_and_the_owner_told(client, menu, pay, state, db, user_headers):
+    run(db.settings.update_one({"_id": "pickup_slots"}, {"$set": {"paused": True}}, upsert=True))
+    pi = pay(18.88)
+    r = client.post("/api/orders", json=order_body(menu, [("curry", 1), ("biryani", 1)], pi), headers=user_headers)
+    assert r.status_code == 200, r.text
+    assert any("paid while ordering was paused" in s for s in state.outbox.admin)

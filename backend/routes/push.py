@@ -56,8 +56,26 @@ async def public_key():
     return {"public_key": keys["public_key"]}
 
 
+_subscribe_limit = RateLimit(10, 600, "Too many attempts. Please try again later.")
+PUSH_HOSTS = ("push.services.mozilla.com", "fcm.googleapis.com", "android.googleapis.com", "updates.push.services.mozilla.com",
+              "web.push.apple.com", "notify.windows.com", "wns2-", "push.apple.com")
+
+
+def _push_endpoint_ok(url: str) -> bool:
+    """Only real browser push services, over https — the server will POST to this address (A-0003, SEC-009)."""
+    from urllib.parse import urlparse
+    try:
+        u = urlparse(url)
+    except ValueError:
+        return False
+    host = (u.hostname or "").lower()
+    return u.scheme == "https" and bool(host) and (any(host.endswith(h) or host.startswith(h) for h in PUSH_HOSTS) or host.endswith(".notify.windows.com"))
+
+
 @router.post("/push/subscribe")
-async def subscribe(sub: PushSubscription, current_user: Optional[dict] = Depends(get_optional_user)):
+async def subscribe(sub: PushSubscription, current_user: Optional[dict] = Depends(get_optional_user), _: None = Depends(_subscribe_limit)):
+    if not _push_endpoint_ok(sub.endpoint) or len(sub.endpoint) > 1024:
+        raise HTTPException(400, "That browser's notification service is not supported.")
     await db.push_subs.update_one(
         {"endpoint": sub.endpoint},
         {"$set": {

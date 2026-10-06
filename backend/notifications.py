@@ -201,6 +201,9 @@ async def _send_email_now(to: str, subject: str, html: str, kind: str = "service
         logger.warning("RESEND_API_KEY not set — skipping email to %s (%s)", mask(to), subject)
         await log_message("email", to, kind, "skipped: email not set up", subject)
         return
+    # One key for all tries of this message: Resend treats a repeat with the same key as the same email, so a retry
+    # after a timeout that actually went through cannot send it twice (A-0003, MKT-004).
+    idempotency_key = hashlib.sha256(f"{to}|{subject}|{html[:2000]}|{datetime.utcnow():%Y-%m-%d %H:%M}".encode()).hexdigest()[:48]
     for attempt, delay in enumerate((0,) + RETRY_DELAYS, start=1):
         if delay:
             await asyncio.sleep(delay)
@@ -211,6 +214,7 @@ async def _send_email_now(to: str, subject: str, html: str, kind: str = "service
                     headers={
                         "Authorization": f"Bearer {RESEND_API_KEY}",
                         "Content-Type": "application/json",
+                        "Idempotency-Key": idempotency_key,
                     },
                     json={"from": RESEND_FROM, "to": [to], "subject": subject, "html": html,
                           **({"headers": extra_headers} if extra_headers else {})},

@@ -69,7 +69,7 @@ def test_message_waits_for_the_hour_the_customer_usually_orders(client, db, monk
     run(db.automation_sends.create_index([("automation", 1), ("email", 1), ("reason", 1)], unique=True))
     evening = (datetime.now(LONDON).replace(hour=17, minute=0)).astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
     for n, d in enumerate((45, 52)):
-        run(db.orders.insert_one({"id": f"e{n}", "customer_email": "evening@example.com", "customer_name": "E", "customer_phone": "", "items": [],
+        run(db.orders.insert_one({"id": f"e{n}", "customer_email": "evening@example.com", "customer_name": "E", "customer_phone": "", "items": [], "marketing_consent": True,
                                   "total": 20.0, "status": "delivered", "user_id": None, "created_at": evening - timedelta(days=d)}))
     client.put("/api/admin/automations/going_quiet", json={"enabled": True}, headers=ADMIN())
     assert run(engine.run("going_quiet", local_hour=10))["sent"] == 0 and sent == []      # 10:00 is too early for a 17:00 customer
@@ -353,7 +353,7 @@ def test_page_loads_from_the_same_browser_are_joined_into_one_visit_without_stor
     run(db.events.update_many({"visit_id": "visit-load0001"}, {"$set": {"at": datetime.utcnow() - timedelta(minutes=45)}}))
     load("visit-load0004", "/menu")
     assert run(db.events.find_one({"path": "/menu"}))["visit_id"] == "visit-load0004"
-    report = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    report = client.get("/api/admin/analytics?days=2", headers=ADMIN()).json()
     assert report["totals"]["visits"] == 4 and "day_code" not in str(report)
     landed = {f["name"]: f["visits"] for f in report["landing_funnels"]}
     assert landed == {"/": 3, "/menu": 1}                                                  # the joined visit landed on the home page
@@ -367,7 +367,7 @@ def test_every_dish_on_the_menu_is_listed_and_the_funnel_counts_looking_at_the_m
         {"name": "page_view", "path": "/"}, {"name": "page_view", "path": "/order"},
         {"name": "add_to_cart", "path": "/order", "items": [{"id": "d1", "name": "Dish 1", "quantity": 1}], "props": {"value": 6.0}}]})
     client.post("/api/events", json={"visit_id": "visit-home0009", "events": [{"name": "page_view", "path": "/story"}]})
-    r = client.get("/api/admin/analytics?days=1", headers=ADMIN()).json()
+    r = client.get("/api/admin/analytics?days=2", headers=ADMIN()).json()
     ranking = {d["name"]: d for d in r["dish_ranking"]}
     assert set(ranking) == {"Dish 0", "Dish 1", "Dish 2"}                                  # all three on sale; the hidden one is not
     assert ranking["Dish 1"]["added"] == 1 and ranking["Dish 1"]["section"] == "Prasada (veg)" and ranking["Dish 1"]["price"] == 6.0

@@ -86,7 +86,8 @@ def verify_firebase_phone_token(token: str) -> str | None:
     """
     app = _get_firebase_app()
     if not app:
-        is_production = bool(os.environ.get("JWT_SECRET")) and bool(os.environ.get("STRIPE_SECRET_KEY"))
+        # One definition of production for the whole server (audit A-0003, SEC-003): never tied to the Stripe key.
+        is_production = os.environ.get("ENVIRONMENT") == "production"
         if is_production:
             raise HTTPException(
                 status_code=503,
@@ -141,7 +142,10 @@ async def register(request: Request, payload: UserCreate):
         phone_verified=True,
         password_hash=hash_password(payload.password),
     )
-    await db.users.insert_one(user.model_dump())
+    doc = user.model_dump()
+    if payload.marketing_consent is not None:
+        doc.update({"marketing_consent": bool(payload.marketing_consent), "marketing_consent_at": datetime.utcnow(), "marketing_consent_source": "sign-up"})
+    await db.users.insert_one(doc)
     subj, html = email_welcome(user.name)
     send_email(user.email, subj, html)
     await create_notification(

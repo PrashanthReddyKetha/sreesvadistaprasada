@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from datetime import datetime, timedelta
@@ -8,6 +9,7 @@ from auth import require_admin, get_current_user, get_optional_user
 from restock import is_sold_out_today, sweep_expired_sold_outs, notify_restock, add_restock_sub
 
 router = APIRouter(prefix="/menu", tags=["menu"])
+logger = logging.getLogger(__name__)
 
 
 def slugify(text: str) -> str:
@@ -239,6 +241,11 @@ async def ai_enhance_item(payload: dict):
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         raise HTTPException(status_code=503, detail="AI features not configured. Set ANTHROPIC_API_KEY in Render environment.")
+    # The same monthly cap as every other AI call (audit A-0003, BE-001)
+    from ai_ops import allowed, record_usage
+    ok, why = await allowed()
+    if not ok:
+        raise HTTPException(status_code=429, detail=f"AI auto-fill is paused: {why}.")
 
     try:
         import anthropic
@@ -275,7 +282,6 @@ Return ONLY valid JSON with exactly these keys:
             timeout=30,
             messages=[{"role": "user", "content": prompt}]
         ))
-        from ai_ops import record_usage
         await record_usage("dish auto-fill", "claude-haiku-4-5-20251001", message.usage.input_tokens, message.usage.output_tokens, "answered")
         raw = message.content[0].text.strip()
         # Strip markdown fences if present
@@ -286,9 +292,14 @@ Return ONLY valid JSON with exactly these keys:
         result = json.loads(raw.strip())
         return result
     except json.JSONDecodeError:
+        await record_usage("dish auto-fill", "claude-haiku-4-5-20251001", 0, 0, "invalid response")
         raise HTTPException(status_code=500, detail="AI returned invalid response. Try again.")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception as e:  # noqa: BLE001 — the provider's message is logged, never shown (SEC: BE-009)
+        logger.error("dish auto-fill failed: %s", e)
+        await record_usage("dish auto-fill", "claude-haiku-4-5-20251001", 0, 0, "failed")
+        raise HTTPException(status_code=500, detail="The AI helper did not answer. Try again in a moment.")
 
 
 # ── Reviews ───────────────────────────────────────────────────────────────────

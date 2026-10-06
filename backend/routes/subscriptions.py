@@ -47,6 +47,9 @@ def status_change(old, new, by: str, reason: str = None) -> dict:
     return {"at": datetime.utcnow().isoformat(), "from": old, "to": new, "by": by, "reason": reason}
 
 
+CUT_OFF_SUNDAY = (17, 0)   # Sunday 17:00 London — last moment to start a plan the next day
+
+
 def london_today() -> str:
     return datetime.now(LONDON).strftime("%Y-%m-%d")
 
@@ -59,12 +62,38 @@ def validate_start_date(start_date: str, *, allow_today: bool = False) -> dateti
         raise ValueError("Please choose a start date for your plan.")
     if start.weekday() != 0:
         raise ValueError("Dabba Wala plans start on a Monday — please pick a start week.")
+    now_ldn = datetime.now(LONDON)
     today = datetime.strptime(london_today(), "%Y-%m-%d")
     if start < today or (start == today and not allow_today):
         raise ValueError("That start week has already begun — please pick a later one.")
+    # The kitchen shops on Sunday evening: a plan starting tomorrow must be in by Sunday 17:00 London (audit A-0003, DAB-004)
+    if start == today + timedelta(days=1) and (now_ldn.hour, now_ldn.minute) >= CUT_OFF_SUNDAY and not allow_today:
+        raise ValueError("Orders for next week close on Sunday at 5pm — please pick the following week.")
     if start > today + timedelta(days=MAX_START_DAYS_AHEAD):
         raise ValueError("That start date is too far ahead — please pick one within the next five weeks.")
     return start
+
+
+
+DABBA_PAUSED_MESSAGE = ("Dabba Wala deliveries are paused at the moment, so we can't start a new plan today. "
+                        "Leave your details and we'll tell you the moment they're back.")
+
+
+async def refuse_if_deliveries_paused():
+    """Dabba Wala is a delivered plan: when delivery is switched off, no new plan is sold (owner decision, A-0003 DAB-006)."""
+    from routes.pickup_slots import get_slot_settings
+    settings = await get_slot_settings()
+    if not settings.get("delivery_enabled"):
+        raise HTTPException(status_code=400, detail=DABBA_PAUSED_MESSAGE)
+
+
+async def next_start_after_active_plan(user_id: Optional[str], email: str, start: datetime):
+    """A customer may buy the next plan while one runs, but it starts after the current one ends (A-0003 DAB-001)."""
+    query = {"status": "active", "$or": [{"user_id": user_id}] if user_id else []}
+    query["$or"].append({"customer_email": (email or "").strip().lower()})
+    active = await db.subscriptions.find_one(query, {"_id": 0, "end_date": 1})
+    if active and active.get("end_date") and start.strftime("%Y-%m-%d") <= active["end_date"]:
+        raise ValueError(f"Your current plan runs until {active['end_date']} — please start the next one the following Monday.")
 
 
 def plan_delivery_dates(sub: dict) -> list:
@@ -176,8 +205,10 @@ async def quote(
     welcome applied or not. Same function create_subscription charges against.
     """
     try:
+        await refuse_if_deliveries_paused()
         if payload.start_date is not None:
-            validate_start_date(payload.start_date)
+            start = validate_start_date(payload.start_date)
+            await next_start_after_active_plan(current_user["sub"] if current_user else None, payload.customer_email, start)
         result = await quote_subscription(
             payload.plan, payload.customer_email, payload.delivery_address.postcode,
             current_user["sub"] if current_user else None,
@@ -196,6 +227,7 @@ async def create_subscription(
     _: None = Depends(_check_sub_rate),
 ):
     user_id = current_user["sub"] if current_user else None
+    await refuse_if_deliveries_paused()
 
     # Same payment submitted twice — return the plan that already exists
     if payload.payment_intent_id:
@@ -209,6 +241,7 @@ async def create_subscription(
         # The quote step already refused a bad start week before payment; today is
         # tolerated here so a payment that lands just after midnight is not rejected.
         start = validate_start_date(payload.start_date, allow_today=True)
+        await next_start_after_active_plan(user_id, payload.customer_email, start)
         pricing = await quote_subscription(
             payload.plan, payload.customer_email, payload.delivery_address.postcode, user_id,
             coupon_code=payload.coupon_code, box_type=payload.box_type,
@@ -259,8 +292,12 @@ async def create_subscription(
     try:
         await db.subscriptions.insert_one({
             **subscription.model_dump(),
+            **({"marketing_consent": bool(payload.marketing_consent), "marketing_consent_at": datetime.utcnow()} if payload.marketing_consent is not None else {}),
             "status_history": [status_change(None, "active", "customer", f"Bought a {payload.plan} plan")],
         })
+        if payload.marketing_consent is not None and user_id:
+            await db.users.update_one({"id": user_id}, {"$set": {"marketing_consent": bool(payload.marketing_consent),
+                                                                 "marketing_consent_at": datetime.utcnow(), "marketing_consent_source": "dabba"}})
     except DuplicateKeyError:
         existing = await db.subscriptions.find_one({"payment_intent_id": payload.payment_intent_id}, {"_id": 0})
         if existing and existing.get("user_id") == user_id:
@@ -462,6 +499,10 @@ async def update_subscription_status(
         return doc
     if new_status not in STATUS_TRANSITIONS.get(old_status, set()):
         raise HTTPException(status_code=400, detail=f"A plan that is {old_status} can't be changed to {new_status}.")
+    if new_status == "active" and doc.get("end_date") and doc["end_date"] < london_today():
+        raise HTTPException(status_code=400, detail=(
+            f"This plan ended on {doc['end_date']}, so it cannot be made active again — it would expire within minutes. "
+            "Give a make-up meal to extend it, or ask the customer to start a new plan."))
     update = {"status": new_status}
     if new_status == "cancelled":
         update["cancelled_at"] = datetime.utcnow().isoformat()

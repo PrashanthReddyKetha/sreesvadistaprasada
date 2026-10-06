@@ -34,6 +34,9 @@ def _check_pi_rate(request: Request):
     _pi_rate_store[ip].append(now)
 
 
+MAX_INTENT_PENCE = 50000   # £500 — a monthly plan with delivery is about £320; nothing legitimate comes near it (audit A-0003, SEC-005; owner approved)
+
+
 class PaymentIntentRequest(BaseModel):
     amount: float  # in GBP
     # What the payment is for. Stamped on the intent so an order payment can
@@ -56,6 +59,8 @@ async def create_payment_intent(request: Request, payload: PaymentIntentRequest,
     amount_pence = round(payload.amount * 100)
     if amount_pence < 50:
         raise HTTPException(status_code=400, detail="Amount too small")
+    if amount_pence > MAX_INTENT_PENCE:
+        raise HTTPException(status_code=400, detail="That total is above what we can take online — please get in touch and we'll arrange it.")
     try:
         loop = asyncio.get_event_loop()
         intent = await loop.run_in_executor(None, lambda: stripe.PaymentIntent.create(
@@ -67,7 +72,8 @@ async def create_payment_intent(request: Request, payload: PaymentIntentRequest,
         ))
         return {"client_secret": intent.client_secret, "payment_intent_id": intent.id}
     except stripe.StripeError as e:
-        raise HTTPException(status_code=400, detail=str(e.user_message))
+        logger.error("create-intent failed: %s", e)
+        raise HTTPException(status_code=400, detail="The card service did not answer — please try again in a moment.")
 
 
 @router.post("/webhook")
@@ -87,7 +93,7 @@ async def stripe_webhook(request: Request):
         pi_id = obj["id"]
         await db.orders.update_one(
             {"payment_intent_id": pi_id},
-            {"$set": {"payment_status": "paid", "updated_at": datetime.utcnow().isoformat()}},
+            {"$set": {"payment_status": "paid", "updated_at": datetime.utcnow()}},
         )
         # Ledger of money actually taken — orphan_payment_loop checks each row
         # ends up attached to an order or subscription.
@@ -108,7 +114,7 @@ async def stripe_webhook(request: Request):
         pi_id = event["data"]["object"]["id"]
         await db.orders.update_one(
             {"payment_intent_id": pi_id},
-            {"$set": {"payment_status": "failed", "updated_at": datetime.utcnow().isoformat()}},
+            {"$set": {"payment_status": "failed", "updated_at": datetime.utcnow()}},
         )
 
     return {"ok": True}

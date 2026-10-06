@@ -228,13 +228,14 @@ async def _update_loyalty_on_completion(user_id: str, order_id: str):
     if not user:
         return
 
-    new_count = user.get("loyalty_order_count", 0) + 1
+    # Atomic: two orders completed at once each get their own number (audit A-0003, BE-003)
+    bumped = await db.users.find_one_and_update(
+        {"id": user_id}, {"$inc": {"loyalty_order_count": 1}}, return_document=ReturnDocument.AFTER,
+    )
+    new_count = (bumped or {}).get("loyalty_order_count") or user.get("loyalty_order_count", 0) + 1
     position = new_count % 5
 
-    update_data = {
-        "loyalty_order_count": new_count,
-        "loyalty_last_updated": datetime.utcnow().isoformat(),
-    }
+    update_data = {"loyalty_last_updated": datetime.utcnow().isoformat()}
 
     # Tag order with its sequence number
     await db.orders.update_one(
@@ -314,7 +315,8 @@ async def _update_loyalty_on_completion(user_id: str, order_id: str):
             action_url="/dashboard?tab=loyalty",
         )
 
-    await db.users.update_one({"id": user_id}, {"$set": update_data})
+    if update_data:
+        await db.users.update_one({"id": user_id}, {"$set": update_data})
 
 
 # ── Pricing endpoints ─────────────────────────────────────────────────────────
@@ -363,7 +365,7 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
     the server-verified total used at order creation.
     Does NOT create an order or charge anything.
     """
-    from routes.pickup_slots import get_slot_settings, slot_in_grid, slot_remaining
+    from routes.pickup_slots import get_slot_settings, slot_in_grid, slot_remaining, open_now, closed_message
     slot_settings = await get_slot_settings()
     if slot_settings.get("paused"):
         raise HTTPException(status_code=400, detail=(
@@ -400,6 +402,8 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
                 "Pre-order items are prepared the night before — "
                 "please choose a collection slot for tomorrow."))
 
+    if body.order_type == "takeaway" and not body.scheduled_slot and body.items and not open_now(slot_settings):
+        raise HTTPException(status_code=400, detail=closed_message(slot_settings))
     if body.scheduled_slot and body.order_type == "takeaway":
         if not slot_in_grid(slot_settings, body.scheduled_slot):
             raise HTTPException(status_code=400, detail="That collection time has just passed — please pick another.")
@@ -509,6 +513,7 @@ async def create_order(
     # Verify payment with Stripe before creating the order
     if not payload.payment_intent_id:
         raise HTTPException(400, "Payment is required to place an order")
+
     try:
         loop = asyncio.get_event_loop()
         pi = await loop.run_in_executor(None, lambda: stripe.PaymentIntent.retrieve(payload.payment_intent_id))
@@ -527,10 +532,22 @@ async def create_order(
     # passed slot must NEVER reject the order — bump forward, else fall back to ASAP.
     scheduled_final = None
     slot_was_bumped = False
+    from routes.pickup_slots import get_slot_settings, slot_in_grid, try_reserve_slot, generate_slots, next_slots, open_now, LONDON
+    slot_settings = await get_slot_settings()
+    now_ldn = datetime.now(LONDON)
+    # The customer has paid. If the kitchen closed (by hours or by the pause switch) between pricing and payment, the
+    # order is still taken — moved to the next collection time where needed — and the owner is told (A-0003 COM-001/007).
+    kitchen_note = None
+    if slot_settings.get("paused"):
+        kitchen_note = "paid while ordering was paused"
+    if payload.delivery_type == "takeaway" and not payload.scheduled_slot and not open_now(slot_settings, now_ldn):
+        for cand in next_slots(slot_settings, now_ldn, limit=12):
+            if await try_reserve_slot(slot_settings, cand["iso"]):
+                scheduled_final = cand["iso"]
+                slot_was_bumped = True
+                break
+        kitchen_note = (kitchen_note + "; " if kitchen_note else "") + "paid outside opening hours"
     if payload.delivery_type == "takeaway" and payload.scheduled_slot:
-        from routes.pickup_slots import get_slot_settings, slot_in_grid, try_reserve_slot, generate_slots, LONDON
-        slot_settings = await get_slot_settings()
-        now_ldn = datetime.now(LONDON)
         if slot_in_grid(slot_settings, payload.scheduled_slot, now_ldn) and await try_reserve_slot(slot_settings, payload.scheduled_slot):
             scheduled_final = payload.scheduled_slot
         else:
@@ -562,7 +579,13 @@ async def create_order(
     order.order_number = await next_order_number()
     order.scheduled_slot_final = scheduled_final
     try:
-        await db.orders.insert_one(order.model_dump())
+        order_doc = order.model_dump()
+        if payload.marketing_consent is not None:                      # tick-box at checkout (A-0003, MKT-001)
+            order_doc.update({"marketing_consent": bool(payload.marketing_consent), "marketing_consent_at": datetime.utcnow()})
+            if user_id:
+                await db.users.update_one({"id": user_id}, {"$set": {"marketing_consent": bool(payload.marketing_consent),
+                                                                     "marketing_consent_at": datetime.utcnow(), "marketing_consent_source": "checkout"}})
+        await db.orders.insert_one(order_doc)
     except DuplicateKeyError:
         # Lost a race with an identical submit — the other request made the order
         existing = await db.orders.find_one({"payment_intent_id": payload.payment_intent_id}, {"_id": 0})
@@ -596,13 +619,24 @@ async def create_order(
                 "had already been used by another order placed at the same moment. The order was honoured.</p>",
             )
 
+    if kitchen_note:
+        from security import esc
+        notify_admin(
+            f"Order #{order.order_number} needs a look · {kitchen_note}",
+            f"<p>Order <b>#{order.order_number}</b> for {esc(payload.customer_name)} (£{order.total:.2f}) was <b>{esc(kitchen_note)}</b>. "
+            f"It has been taken{' and moved to ' + esc(slot_label(scheduled_final)) if slot_was_bumped and scheduled_final else ''}. "
+            "If you cannot make it, cancel it in Admin › Orders and refund in Stripe.</p>",
+        )
+
     subj, html = email_order_confirmation(order.model_dump(), payload.customer_name)
     send_email(payload.customer_email, subj, html)
     short_id = order.order_number
     if payload.delivery_type == "takeaway":
         when = f"Collect at {slot_label(scheduled_final)}." if scheduled_final else "We'll text you when it's ready to collect."
-        if slot_was_bumped:
+        if slot_was_bumped and payload.scheduled_slot:
             when = f"Your requested time was full — new collection time {slot_label(scheduled_final)}."
+        elif slot_was_bumped:
+            when = f"We were closed when you ordered — your collection time is {slot_label(scheduled_final)}."
         sms_body = f"Sree Svadista Prasada: order #{short_id} received — £{order.total:.2f}. {when}"
     else:
         when = "We'll message you when it's on the way."
@@ -667,12 +701,13 @@ async def update_order_status(
     allowed = ALLOWED_TRANSITIONS.get(current_status, set())
     if payload.status.value not in allowed:
         raise HTTPException(status_code=400, detail=f"Cannot move order from '{current_status}' to '{payload.status.value}'")
+    # Conditioned on the status we checked: two taps at once cannot both pass and both send messages
     result = await db.orders.update_one(
-        {"id": order_id},
-        {"$set": {"status": payload.status.value, "updated_at": datetime.utcnow().isoformat()}},
+        {"id": order_id, "status": current_status},
+        {"$set": {"status": payload.status.value, "updated_at": datetime.utcnow()}},
     )
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(status_code=409, detail="This order was just changed by someone else — refresh and look again.")
 
     doc = await db.orders.find_one({"id": order_id}, {"_id": 0})
     if doc:
@@ -804,10 +839,12 @@ async def cancel_order(order_id: str, current_user: dict = Depends(get_current_u
     if doc["status"] not in ("pending", "confirmed"):
         raise HTTPException(status_code=400, detail="Order cannot be cancelled at this stage")
 
-    await db.orders.update_one(
-        {"id": order_id},
-        {"$set": {"status": OrderStatus.cancelled.value, "updated_at": datetime.utcnow().isoformat()}},
+    result = await db.orders.update_one(
+        {"id": order_id, "status": doc["status"]},
+        {"$set": {"status": OrderStatus.cancelled.value, "updated_at": datetime.utcnow()}},
     )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=409, detail="This order was just updated — refresh and look again.")
     if doc.get("scheduled_slot_final"):
         from routes.pickup_slots import release_slot
         await release_slot(doc["scheduled_slot_final"])

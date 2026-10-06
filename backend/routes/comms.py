@@ -11,6 +11,7 @@ import os
 import time
 from datetime import datetime, timedelta
 
+from pymongo.errors import DuplicateKeyError
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -114,7 +115,12 @@ async def newsletter_send(payload: Newsletter, admin: dict = Depends(require_adm
     if not recipients:
         raise HTTPException(status_code=400, detail="Nobody is on the list.")
     html = _newsletter_html(payload)
-    await db.newsletter_sends.insert_one({"at": datetime.utcnow(), "subject": payload.subject, "recipients": len(recipients), "by": admin.get("sub")})
+    # The claim is the record itself, keyed on subject + day: two confirmed taps at once cannot both send (A-0003, MKT-005)
+    claim_id = f"{payload.subject.strip().lower()}|{datetime.utcnow():%Y-%m-%d}"
+    try:
+        await db.newsletter_sends.insert_one({"_id": claim_id, "at": datetime.utcnow(), "subject": payload.subject, "recipients": len(recipients), "by": admin.get("sub")})
+    except DuplicateKeyError:
+        raise HTTPException(status_code=409, detail="This newsletter is already being sent.")
     for email in recipients:
         send_email(email, payload.subject, html, kind="marketing")
     await record_admin_action(admin, "newsletter sent", payload.subject, None, {"recipients": len(recipients)})

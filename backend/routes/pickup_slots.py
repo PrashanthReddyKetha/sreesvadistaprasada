@@ -144,6 +144,36 @@ def generate_slots(settings: dict, day: date, now: Optional[datetime] = None) ->
     return slots
 
 
+def open_now(settings: dict, now: Optional[datetime] = None) -> bool:
+    """Within today's opening hours (London). "Open" on the kitchen switch alone is not enough to take an ASAP order
+    (audit A-0003, COM-001)."""
+    now = now or datetime.now(LONDON)
+    hours = settings["days"].get(DAY_KEYS[now.weekday()], {})
+    if not hours or hours.get("closed"):
+        return False
+    return _parse_hhmm(now.date(), hours.get("open", "00:00")) <= now <= _parse_hhmm(now.date(), hours.get("close", "00:00"))
+
+
+def next_slots(settings: dict, now: Optional[datetime] = None, limit: int = 3) -> list[dict]:
+    """The next bookable collection times (today, then tomorrow), for the message that refuses an out-of-hours order."""
+    now = now or datetime.now(LONDON)
+    out = []
+    for offset in (0, 1):
+        for s in generate_slots(settings, now.date() + timedelta(days=offset), now):
+            out.append({**s, "day": "today" if offset == 0 else "tomorrow"})
+            if len(out) >= limit:
+                return out
+    return out
+
+
+def closed_message(settings: dict, now: Optional[datetime] = None) -> str:
+    coming = next_slots(settings, now)
+    if not coming:
+        return "We're closed right now and have no collection times open yet — please check back later."
+    when = ", ".join(f"{c['day']} {c['label']}" for c in coming)
+    return f"We're closed right now. Pick a collection time to pre-order — next available: {when}."
+
+
 def slot_in_grid(settings: dict, slot_iso: str, now: Optional[datetime] = None) -> bool:
     """True if slot_iso is a currently bookable slot (today or tomorrow, London time)."""
     try:
@@ -309,6 +339,9 @@ async def broadcast_kitchen_reopened(closed_at: Optional[datetime] = None):
     """Fire-and-forget: push to every push subscriber + email everyone who asked.
     Held back when the kitchen was only closed for a moment, or when everyone was told within the last 12 hours —
     so a switch flicked twice cannot message every customer twice."""
+    from automations import all_paused
+    if await all_paused():
+        return
     from notifications import send_email, _wrap, SITE_URL, log_message
     from web_push import new_campaign, send_to_all
 
