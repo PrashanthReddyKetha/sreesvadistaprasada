@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import api from '@/api';
+import { words, CATEGORY } from '@/lib/adminLabels';
 import { Plus, Edit2, Trash2, Eye, EyeOff, RefreshCw, X, Search } from 'lucide-react';
 import { buildItemUrl } from '@/lib/itemUrl';
 
@@ -247,7 +248,7 @@ const DailySpecialsTab = () => {
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold truncate" style={{ color: '#2D2422' }}>{item.name}</p>
-                          <p className="text-xs text-gray-400 capitalize">{item.category}</p>
+                          <p className="text-xs text-gray-400">{words(item.category, CATEGORY)}</p>
                         </div>
                         {item.price != null && (
                           <span className="text-xs font-bold flex-shrink-0" style={{ color: '#800020' }}>£{Number(item.price).toFixed(2)}</span>

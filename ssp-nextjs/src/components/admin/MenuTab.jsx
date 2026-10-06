@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Plus, X, Save, RefreshCw, Utensils, Leaf, Flame, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
 import api from '@/api';
+import { words, CATEGORY } from '@/lib/adminLabels';
 import { clearMenuCache } from '@/api/menuCache';
 
 const CATEGORIES = ['nonVeg','veg','breakfast','pickles','podis','drinks','streetFood','ragiSpecials'];
@@ -75,7 +76,7 @@ const PairsWithPicker = ({ value=[], onChange, allItems, currentId }) => {
             <button key={i.id} type="button" onClick={() => { if(!value.includes(i.id)) onChange([...value,i.id]); setSearch(''); }}
               className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center justify-between">
               <span>{i.name}</span>
-              <span className="text-xs text-gray-400 capitalize">{i.category}</span>
+              <span className="text-xs text-gray-400">{words(i.category, CATEGORY)}</span>
             </button>
           ))}
         </div>

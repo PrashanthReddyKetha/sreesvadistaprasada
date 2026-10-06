@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, RefreshCw, CheckCircle, Printer, Copy, AlertTriangle, X } from 'lucide-react';
 import api from '@/api';
+import { words, BOX_TYPE, PLAN_NAME, PLAN_STATUS } from '@/lib/adminLabels';
 import WhatsAppSend from '@/components/admin/WhatsAppSend';
 import { dabbaDeliveryMessage, dabbaWelcomeMessage, dabbaRenewalMessage } from '@/lib/whatsappMessages';
 
@@ -25,8 +26,8 @@ const STATUS_COLORS = {
 const Badge = ({ status }) => {
   const c = STATUS_COLORS[status] || { bg:'#F5F5F5', text:'#666', border:'#CCC' };
   return (
-    <span className="px-2.5 py-1 rounded-full text-xs font-semibold capitalize"
-      style={{ backgroundColor:c.bg, color:c.text, border:`1px solid ${c.border}` }}>{status}</span>
+    <span className="px-2.5 py-1 rounded-full text-xs font-semibold"
+      style={{ backgroundColor:c.bg, color:c.text, border:`1px solid ${c.border}` }}>{PLAN_STATUS[status] || words(status)}</span>
   );
 };
 
@@ -901,7 +902,7 @@ function DabbaAnalytics() {
                 return (
                   <tr key={s.id} className="border-b" style={{ borderColor:'rgba(128,0,32,0.06)' }}>
                     <td className="px-4 py-3">{s.customer_name}</td>
-                    <td className="px-4 py-3 capitalize">{s.plan}</td>
+                    <td className="px-4 py-3">{words(s.plan, PLAN_NAME)}</td>
                     <td className="px-4 py-3">{new Date(s.end_date+'T12:00:00').toLocaleDateString('en-GB')}</td>
                     <td className="px-4 py-3"><span style={{ color:days<=3?'#DC2626':'#8B6914', fontWeight:500 }}>{days}d</span></td>
                     <td className="px-4 py-3">
@@ -928,8 +929,8 @@ function DabbaAnalytics() {
               {churn.map(s => (
                 <tr key={s.id} className="border-b" style={{ borderColor:'rgba(128,0,32,0.06)' }}>
                   <td className="px-4 py-3">{s.customer_name}</td>
-                  <td className="px-4 py-3 capitalize">{s.plan}</td>
-                  <td className="px-4 py-3 capitalize">{s.box_type}</td>
+                  <td className="px-4 py-3">{words(s.plan, PLAN_NAME)}</td>
+                  <td className="px-4 py-3">{words(s.box_type, BOX_TYPE)}</td>
                   <td className="px-4 py-3">{fmtDate(s.created_at)}</td>
                   <td className="px-4 py-3">{fmtDate(s.updated_at||s.created_at)}</td>
                 </tr>

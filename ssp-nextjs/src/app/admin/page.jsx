@@ -28,6 +28,7 @@ import AutomationsTab from '@/components/admin/AutomationsTab';
 import SystemLogTab from '@/components/admin/SystemLogTab';
 import ConfirmAction from '@/components/admin/ConfirmAction';
 import HealthPanel from '@/components/admin/HealthPanel';
+import { statusWords, words, BOX_TYPE, PLAN_NAME, PLAN_STATUS, ORDER_STATUS } from '@/lib/adminLabels';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -51,8 +52,8 @@ const STATUS_COLORS = {
 const Badge = ({ status }) => {
   const c = STATUS_COLORS[status] || { bg:'#F5F5F5', text:'#666', border:'#CCC' };
   return (
-    <span className="px-2.5 py-1 rounded-full text-xs font-semibold capitalize"
-      style={{ backgroundColor:c.bg, color:c.text, border:`1px solid ${c.border}` }}>{status}</span>
+    <span className="px-2.5 py-1 rounded-full text-xs font-semibold"
+      style={{ backgroundColor:c.bg, color:c.text, border:`1px solid ${c.border}` }}>{statusWords(status)}</span>
   );
 };
 
@@ -100,7 +101,7 @@ const OrderActions = ({ order, onUpdate }) => {
           onCancel={() => setAskCancel(false)} onConfirm={() => handle('cancelled')}
           rows={[
             ['Customer', `${order.customer_name || '—'}${order.customer_phone ? ` · ${order.customer_phone}` : ''}`],
-            ['Now', `${(order.status || '').replace(/_/g, ' ')} · ${order.items?.length || 0} item${order.items?.length === 1 ? '' : 's'} · £${Number(order.total || 0).toFixed(2)}${order.payment_intent_id ? ' · paid' : ''}`],
+            ['Now', `${statusWords(order.status)} · ${order.items?.length || 0} item${order.items?.length === 1 ? '' : 's'} · £${Number(order.total || 0).toFixed(2)}${order.payment_intent_id ? ' · paid' : ''}`],
             ['After', 'cancelled; it leaves the kitchen list'],
             ['The customer', 'gets an email and a text saying the order was cancelled'],
             ['Money', 'nothing is refunded by itself — refund by hand in Stripe if you owe one'],
@@ -215,13 +216,13 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
           const count = s === 'all' ? orders.length : orders.filter(o => o.status === s).length;
           return (
             <button key={s} onClick={() => setFilter(s)}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all capitalize"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
               style={{
                 backgroundColor: filter === s ? '#800020' : 'white',
                 color: filter === s ? 'white' : '#5C4B47',
                 border: '1px solid rgba(128,0,32,0.2)',
               }}>
-              {s} ({count})
+              {s === 'all' ? 'All' : ORDER_STATUS[s] || words(s)} ({count})
             </button>
           );
         })}
@@ -335,12 +336,12 @@ const SubscriptionsTab = ({ subscriptions, onStatusUpdate }) => {
   return (
     <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
       {ask && (
-        <ConfirmAction title={`Change ${ask.sub.customer_name}'s plan to ${ask.status}?`} danger={ask.status === 'cancelled'} confirmLabel={`Yes, mark it ${ask.status}`} busy={updatingId === ask.sub.id}
+        <ConfirmAction title={`Mark ${ask.sub.customer_name}'s plan as ${(PLAN_STATUS[ask.status] || ask.status).toLowerCase()}?`} danger={ask.status === 'cancelled'} confirmLabel={`Yes, mark it ${(PLAN_STATUS[ask.status] || ask.status).toLowerCase()}`} busy={updatingId === ask.sub.id}
           onCancel={() => setAsk(null)} onConfirm={() => handle(ask.sub.id, ask.status)}
           rows={[
-            ['Plan', `${ask.sub.plan} · ${ask.sub.box_type} · £${Number(ask.sub.price || 0).toFixed(2)} · from ${fmtDate(ask.sub.start_date)}`],
-            ['Now', ask.sub.status],
-            ['After', ask.status],
+            ['Plan', `${words(ask.sub.plan, PLAN_NAME)} · ${words(ask.sub.box_type, BOX_TYPE)} · £${Number(ask.sub.price || 0).toFixed(2)} · from ${fmtDate(ask.sub.start_date)}`],
+            ['Now', PLAN_STATUS[ask.sub.status] || words(ask.sub.status)],
+            ['After', PLAN_STATUS[ask.status] || words(ask.status)],
             ['What happens', PLAN_EFFECT[ask.status] || ''],
             ['Undo', ask.status === 'active' ? 'you can cancel it again' : 'a cancelled or finished plan can be set back to active from here'],
           ]} />
@@ -360,8 +361,8 @@ const SubscriptionsTab = ({ subscriptions, onStatusUpdate }) => {
               {subscriptions.map(s=>(
                 <tr key={s.id} className="border-t hover:bg-gray-50" style={{ borderColor:'#f9f6ee' }}>
                   <td className="px-4 py-3"><p className="font-medium whitespace-nowrap">{s.customer_name}</p><p className="text-xs text-gray-400">{s.customer_email}</p></td>
-                  <td className="px-4 py-3 capitalize font-medium" style={{ color:'#800020' }}>{s.plan}</td>
-                  <td className="px-4 py-3 capitalize">{s.box_type}</td>
+                  <td className="px-4 py-3 font-medium" style={{ color:'#800020' }}>{words(s.plan, PLAN_NAME)}</td>
+                  <td className="px-4 py-3">{words(s.box_type, BOX_TYPE)}</td>
                   <td className="px-4 py-3 text-xs text-gray-500 max-w-[120px]">{s.preferences?.length?s.preferences.join(', '):'—'}</td>
                   <td className="px-4 py-3 text-xs text-gray-600">{s.delivery_address?.line1}, {s.delivery_address?.city}</td>
                   <td className="px-4 py-3 text-xs whitespace-nowrap">{fmtDate(s.start_date)}</td>
@@ -373,7 +374,7 @@ const SubscriptionsTab = ({ subscriptions, onStatusUpdate }) => {
                         disabled={updatingId===s.id}
                         className="text-xs border rounded-lg px-2 py-1.5 pr-6 font-semibold appearance-none cursor-pointer"
                         style={{ borderColor:'#800020', color:'#800020', backgroundColor:'#FDFBF7' }}>
-                        {SUB_STATUSES.map(st=><option key={st} value={st}>{st}</option>)}
+                        {SUB_STATUSES.map(st=><option key={st} value={st}>{PLAN_STATUS[st] || words(st)}</option>)}
                       </select>
                     </div>
                   </td>
@@ -490,7 +491,7 @@ const EnquiriesTab = ({ contacts, catering, onStatusUpdate, reload }) => {
                           <span className="text-xs text-gray-500">· {enq.subject}</span>
                         )}
                         {!isContact && (
-                          <span className="text-xs text-gray-500 capitalize">· {enq.event_type} · {enq.guest_count} guests</span>
+                          <span className="text-xs text-gray-500">· {words(enq.event_type)} · {enq.guest_count} guests</span>
                         )}
                       </div>
                       <p className="text-xs text-gray-500 mb-1">{enq.email}{enq.phone ? ` · ${enq.phone}` : ''}</p>
@@ -529,7 +530,7 @@ const EnquiriesTab = ({ contacts, catering, onStatusUpdate, reload }) => {
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
             <h3 className="font-bold text-gray-900">{enq.name}</h3>
             <Badge status={enq.status} />
-            <span className="text-xs text-gray-400 capitalize">{type} enquiry</span>
+            <span className="text-xs text-gray-400">{type === 'catering' ? 'Catering enquiry' : 'Message from the contact form'}</span>
           </div>
           <p className="text-sm text-gray-500">{enq.email}{enq.phone ? ` · ${enq.phone}` : ''}</p>
           {isContact && enq.subject && <p className="text-sm font-medium mt-0.5" style={{ color:'#800020' }}>Re: {enq.subject}</p>}
