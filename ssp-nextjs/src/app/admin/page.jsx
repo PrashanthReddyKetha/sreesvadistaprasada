@@ -27,6 +27,7 @@ import MessagesTab from '@/components/admin/MessagesTab';
 import AutomationsTab from '@/components/admin/AutomationsTab';
 import SystemLogTab from '@/components/admin/SystemLogTab';
 import ConfirmAction from '@/components/admin/ConfirmAction';
+import HealthPanel from '@/components/admin/HealthPanel';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -137,6 +138,7 @@ const Overview = ({ orders, subscriptions, users, contacts, catering, newsletter
   }, []);
   return (
     <div className="space-y-8">
+      <HealthPanel />
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard icon={TrendingUp}  label="Total Revenue"        value={`£${revenue.toFixed(2)}`} color="#4A7C59" />
         <StatCard icon={ShoppingBag} label="Total Orders"         value={orders.length}             color="#800020" />

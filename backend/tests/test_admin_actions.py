@@ -46,3 +46,23 @@ def test_the_log_is_shown_to_admins_only_newest_first(client, db):
     assert client.get("/api/admin/system-log/actions", headers=token("u1")).status_code == 403
     r = client.get("/api/admin/system-log/actions?days=400", headers=ADMIN()).json()
     assert [a["action"] for a in r["actions"]] == ["b", "a"] and r["actions"][0]["at"].startswith("2026-10-02")
+
+
+# ── Health: is everything working, in plain words ─────────────────────────────
+
+def test_health_screen_says_what_is_wrong_and_what_to_do(client, db, monkeypatch):
+    from datetime import timedelta
+    monkeypatch.delenv("RESEND_API_KEY", raising=False)
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_fake")
+    run(db.payments.insert_one({"pi_id": "pi_x", "received_at": datetime.utcnow().isoformat(), "reconciled": False, "alerted": True, "amount_pence": 2150}))
+    run(db.orders.insert_one({"id": "o1", "status": "pending", "created_at": datetime.utcnow() - timedelta(hours=2), "items": [], "total": 10.0}))
+    run(db.settings.insert_one({"_id": "pickup_slots", "paused": True, "paused_at": (datetime.utcnow() - timedelta(hours=3)).isoformat()}))
+    assert client.get("/api/admin/health").status_code in (401, 403)
+    r = client.get("/api/admin/health", headers=ADMIN()).json()
+    by = {c["name"]: c for c in r["checks"]}
+    assert r["overall"] == "down" and by["Database"]["state"] == "ok"
+    assert by["Email"]["state"] == "down" and "RESEND_API_KEY" in by["Email"]["fix"]
+    assert by["Card payments"]["state"] == "watch" and "1 payment taken with no order" in by["Card payments"]["note"]
+    assert by["Taking orders"]["state"] == "watch" and "paused since 3 h ago" in by["Taking orders"]["note"]
+    assert by["Orders waiting"]["state"] == "watch" and "1 waiting over 45 minutes" in by["Orders waiting"]["note"]
+    assert by["Nightly review"]["state"] == "watch" and by["Nightly review"]["note"] == "last ran never"

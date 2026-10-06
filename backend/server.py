@@ -15,6 +15,7 @@ from routes import events as event_routes
 from routes import comms as comms_routes
 from routes import automations as automation_routes
 from routes import intelligence as intelligence_routes
+from routes import health as health_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings
 from menu_additions import apply_menu_additions
@@ -164,6 +165,7 @@ app.include_router(event_routes.router, prefix="/api")
 app.include_router(comms_routes.router, prefix="/api")
 app.include_router(automation_routes.router, prefix="/api")
 app.include_router(intelligence_routes.router, prefix="/api")
+app.include_router(health_routes.router, prefix="/api")
 
 
 @app.get("/api")

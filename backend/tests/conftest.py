@@ -29,7 +29,7 @@ import auth  # noqa: E402
 import notifications  # noqa: E402
 from routes import (  # noqa: E402
     orders, payments, pickup_slots, reviews, subscriptions, coupons as coupon_routes, loyalty, admin_dabba_wala,
-    auth as auth_routes, enquiries, customers, events, comms, automations as automation_routes, intelligence as intelligence_routes,
+    auth as auth_routes, enquiries, customers, events, comms, automations as automation_routes, intelligence as intelligence_routes, health,
 )
 
 _loop = asyncio.new_event_loop()
@@ -43,7 +43,7 @@ from audit_log import AdminActionLog  # noqa: E402
 
 app = FastAPI()
 app.add_middleware(AdminActionLog)
-for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries, customers, events, comms, automation_routes, intelligence_routes):
+for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries, customers, events, comms, automation_routes, intelligence_routes, health):
     app.include_router(r.router, prefix="/api")
 
 
