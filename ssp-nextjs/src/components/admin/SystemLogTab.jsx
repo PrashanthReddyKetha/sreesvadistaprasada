@@ -144,6 +144,7 @@ export default function SystemLogTab() {
           );
         })}
       </div>
+      <AdminActions />
       <p className="text-xs text-gray-400">
         Rules it follows: featured dishes follow sales once {data.rules.featured_from_portions} portions have sold in {data.rules.featured_window_days} days; a pairing needs two dishes bought together {data.rules.bought_together_from} times;
         an automation is switched off if more than {data.rules.unsubscribe_limit_percent}% of recipients unsubscribe; each action is checked again after {data.rules.review_after_days} days. Below those minimums it watches and changes nothing.
@@ -164,6 +165,52 @@ export default function SystemLogTab() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* What people changed in admin: who, when, what, and before → after. Every admin change is recorded, whichever screen it was made from. */
+const plain = (v) => {
+  if (v == null || v === '') return '';
+  if (typeof v !== 'object') return String(v);
+  const parts = Object.entries(v).filter(([, x]) => x !== null && x !== undefined && x !== '').map(([k, x]) => `${k.replace(/_/g, ' ')}: ${typeof x === 'object' ? JSON.stringify(x) : x}`);
+  return parts.join(' · ').slice(0, 240);
+};
+
+function AdminActions() {
+  const [rows, setRows] = useState(null);
+  const [count, setCount] = useState(15);
+  const [days, setDays] = useState(30);
+  useEffect(() => {
+    let live = true;
+    api.get('/admin/system-log/actions', { params: { days } }).then(r => { if (live) setRows(r.data.actions); }).catch(() => { if (live) setRows([]); });
+    return () => { live = false; };
+  }, [days]);
+  return (
+    <div className="bg-white rounded-xl overflow-hidden" style={card}>
+      <div className="px-4 py-3 border-b flex flex-wrap items-center gap-2" style={{ borderColor: '#f0ebe6' }}>
+        <h3 className="font-bold flex-1" style={{ fontFamily: "'Playfair Display', serif", color: P }}>What you changed</h3>
+        {[7, 30, 90].map(d => <button key={d} onClick={() => setDays(d)} className="px-2.5 py-1 rounded-full text-xs font-semibold border" style={days === d ? { backgroundColor: P, color: '#fff', borderColor: P } : { borderColor: '#e0d9d0', color: '#5C4B47' }}>{d} days</button>)}
+      </div>
+      {rows === null ? <p className="text-center text-gray-400 py-8 text-sm">Loading…</p>
+        : rows.length === 0 ? <p className="text-center text-gray-400 py-8 text-sm">No changes made from admin in this period.</p> : (
+          <>
+            {rows.slice(0, count).map((a, i) => (
+              <div key={i} className="px-4 py-2.5 border-t text-sm flex flex-wrap gap-x-4 gap-y-1" style={{ borderColor: '#f9f6ee' }}>
+                <span className="text-gray-400 text-xs w-32 shrink-0">{when(a.at)}</span>
+                <span className="font-medium w-24 shrink-0">{a.admin_name}</span>
+                <span className="flex-1 min-w-[200px]"><span style={{ color: P }}>{a.action}</span>{a.target ? <span className="text-gray-500"> — {a.target}</span> : null}
+                  {(a.before || a.after) && (
+                    <span className="block text-xs text-gray-500 mt-0.5">
+                      {a.before ? <>Before: {plain(a.before)}{a.after ? ' · ' : ''}</> : null}{a.after ? <>After: {plain(a.after)}</> : null}
+                    </span>
+                  )}
+                </span>
+              </div>
+            ))}
+            {rows.length > count && <button onClick={() => setCount(count + 25)} className="w-full py-2 text-xs font-semibold border-t" style={{ borderColor: '#f0ebe6', color: P }}>Show more ({rows.length - count} left)</button>}
+          </>
+        )}
     </div>
   );
 }

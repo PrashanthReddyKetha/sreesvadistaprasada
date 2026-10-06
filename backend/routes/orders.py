@@ -14,6 +14,7 @@ from database import db
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 from models import Order, OrderCreate, OrderStatusUpdate, OrderStatus
+from audit_log import record_admin_action
 from auth import get_current_user, get_optional_user, require_admin
 from notifications import (
     send_email, send_sms, notify_admin,
@@ -657,7 +658,7 @@ async def get_order(order_id: str, current_user: dict = Depends(get_current_user
 async def update_order_status(
     order_id: str,
     payload: OrderStatusUpdate,
-    _: dict = Depends(require_admin),
+    admin: dict = Depends(require_admin),
 ):
     current_doc = await db.orders.find_one({"id": order_id}, {"_id": 0, "status": 1})
     if not current_doc:
@@ -675,6 +676,8 @@ async def update_order_status(
 
     doc = await db.orders.find_one({"id": order_id}, {"_id": 0})
     if doc:
+        await record_admin_action(admin, "changed an order's status", f"order {display_order_number(doc)} for {doc.get('customer_name') or 'a customer'}",
+                                  {"status": current_status}, {"status": payload.status.value, "total": doc.get("total")})
         name = doc.get("customer_name") or "Customer"
         subj, html = email_order_status(doc, name, payload.status.value)
         if doc.get("customer_email"):

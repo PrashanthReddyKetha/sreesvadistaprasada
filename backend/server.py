@@ -139,6 +139,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+from audit_log import AdminActionLog  # noqa: E402
+app.add_middleware(AdminActionLog)     # every admin change recorded, shown in Admin › System log
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(menu.router, prefix="/api")

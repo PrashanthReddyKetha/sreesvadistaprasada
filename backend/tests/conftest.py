@@ -39,7 +39,10 @@ def run(coro):
     return _loop.run_until_complete(coro)
 
 
+from audit_log import AdminActionLog  # noqa: E402
+
 app = FastAPI()
+app.add_middleware(AdminActionLog)
 for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries, customers, events, comms, automation_routes, intelligence_routes):
     app.include_router(r.router, prefix="/api")
 

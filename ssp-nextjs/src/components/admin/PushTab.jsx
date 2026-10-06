@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Bell, Send, Clock, Trash2, RefreshCw } from 'lucide-react';
 import api from '@/api';
+import ConfirmAction from '@/components/admin/ConfirmAction';
 
 /**
  * Push notifications — compose, send now or schedule (London time), and see
@@ -29,6 +30,7 @@ export default function PushTab() {
   const [mode, setMode] = useState('now'); // 'now' | 'schedule'
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [ask, setAsk] = useState(null);   // 'send' | { cancel: campaign }
 
   const load = useCallback(async () => {
     try {
@@ -44,6 +46,10 @@ export default function PushTab() {
   const submit = async () => {
     if (!form.title.trim() || !form.body.trim()) { flash('Title and message are both needed.'); return; }
     if (mode === 'schedule' && !form.schedule_at) { flash('Pick a date & time, or switch to Send now.'); return; }
+    setAsk('send');
+  };
+  const reallySubmit = async () => {
+    setAsk(null);
     setBusy(true);
     try {
       const payload = {
@@ -60,14 +66,33 @@ export default function PushTab() {
   };
 
   const cancel = async (id) => {
+    setAsk(null);
     try { await api.delete(`/admin/push/campaigns/${id}`); load(); }
     catch (e) { flash(e.response?.data?.detail || 'Could not cancel.'); }
   };
 
   const inputCls = 'w-full px-3 py-2.5 rounded-lg border text-sm outline-none focus:ring-2';
   const inputStyle = { borderColor: C.line, color: C.ink };
+  const devices = overview?.subscribers ?? 0;
 
-  return (
+  const confirmBox = ask === 'send' ? (
+    <ConfirmAction title={mode === 'schedule' ? 'Schedule this notification?' : 'Send this notification now?'} confirmLabel={mode === 'schedule' ? 'Yes, schedule it' : 'Yes, send to everyone'}
+      onCancel={() => setAsk(null)} onConfirm={reallySubmit} busy={busy}
+      rows={[
+        ['Goes to', `${devices} device${devices === 1 ? '' : 's'} — everyone who installed the app and turned notifications on`],
+        ['When', mode === 'schedule' ? `${fmtWhen(form.schedule_at)} (UK time)` : 'straight away'],
+        ['It says', `${form.title} — ${form.body}`],
+        ['Tapping it opens', form.url || '/order'],
+        ['Undo', mode === 'schedule' ? 'a scheduled send can be cancelled from the list below until it goes' : 'a sent notification cannot be taken back'],
+      ]} />
+  ) : ask?.cancel ? (
+    <ConfirmAction title="Cancel this scheduled notification?" danger confirmLabel="Yes, cancel it" cancelLabel="Keep it"
+      onCancel={() => setAsk(null)} onConfirm={() => cancel(ask.cancel.id)}
+      rows={[['Scheduled for', fmtWhen(ask.cancel.schedule_at || ask.cancel.scheduled_for)], ['It says', `${ask.cancel.title || ''} — ${ask.cancel.body || ''}`], ['After', 'it is not sent; nothing reaches anyone'], ['Undo', 'write it again if you change your mind']]} />
+  ) : null;
+
+  return (<>
+    {confirmBox}
     <div className="space-y-6">
       {/* Header + subscriber count */}
       <div className="flex items-center justify-between">
@@ -162,7 +187,7 @@ export default function PushTab() {
                   <td className="px-3 py-2.5 tabular-nums">{c.stats?.clicked ?? 0}</td>
                   <td className="px-3 py-2.5">
                     {c.status === 'scheduled' && (
-                      <button onClick={() => cancel(c.id)} title="Cancel scheduled send"
+                      <button onClick={() => setAsk({ cancel: c })} title="Cancel scheduled send"
                         className="p-1.5 rounded text-red-500 hover:bg-red-50"><Trash2 size={14} /></button>
                     )}
                   </td>
@@ -180,5 +205,5 @@ export default function PushTab() {
         </table>
       </div>
     </div>
-  );
+  </>);
 }

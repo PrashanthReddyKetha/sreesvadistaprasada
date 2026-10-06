@@ -17,6 +17,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from database import db
 from security import RateLimit
+from audit_log import record_admin_action
 from auth import require_admin, get_optional_user
 
 logger = logging.getLogger(__name__)
@@ -381,6 +382,9 @@ async def update_settings_admin(payload: PickupSlotSettingsUpdate, admin: dict =
     await db.settings.update_one({"_id": SETTINGS_ID}, {"$set": updates}, upsert=True)
     settings = await get_slot_settings()
     settings.pop("_id", None)
+    changed = {k: v for k, v in updates.items() if k not in ("updated_at", "updated_by", "paused_at")}
+    words = "paused ordering" if changed.get("paused") is True else "resumed ordering" if changed.get("paused") is False         else "switched delivery on" if changed.get("delivery_enabled") is True else "switched delivery off" if changed.get("delivery_enabled") is False         else "changed ordering settings"
+    await record_admin_action(admin, words, "ordering settings", {k: before.get(k) for k in changed}, changed)
     # Closed → open transition: tell everyone who's waiting
     if was_paused and updates.get("paused") is False:
         closed_at = None

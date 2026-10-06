@@ -58,6 +58,14 @@ async def system_log(days: int = 30, _: dict = Depends(require_admin)):
     }
 
 
+@router.get("/actions")
+async def admin_actions(days: int = 30, limit: int = 200, _: dict = Depends(require_admin)):
+    """What people changed in admin: who, when, what, before and after. The system's own actions are in the decision log."""
+    days, limit = max(1, min(days, 400)), max(1, min(limit, 500))
+    rows = await db.admin_audit.find({"at": {"$gte": datetime.utcnow() - timedelta(days=days)}}, {"_id": 0}).sort("at", -1).to_list(limit)
+    return {"days": days, "actions": [{**r, "at": r["at"].isoformat()} for r in rows]}
+
+
 @router.post("/run")
 async def run_now(admin: dict = Depends(require_admin)):
     result = await brain.run_review()

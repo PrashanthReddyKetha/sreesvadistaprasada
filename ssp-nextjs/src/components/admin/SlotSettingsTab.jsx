@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, PauseCircle, PlayCircle } from 'lucide-react';
 import api from '@/api';
+import ConfirmAction from '@/components/admin/ConfirmAction';
 
 /** Collection Times — admin UI for GET/PUT /admin/settings/pickup-slots. */
 
@@ -15,6 +16,7 @@ export default function SlotSettingsTab() {
   const [settings, setSettings] = useState(null);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [askPause, setAskPause] = useState(false);
 
   useEffect(() => {
     api.get('/admin/settings/pickup-slots')
@@ -45,6 +47,21 @@ export default function SlotSettingsTab() {
 
   return (
     <div className="max-w-2xl space-y-5">
+      {askPause && (
+        <ConfirmAction title={settings.paused ? 'Resume orders?' : 'Pause orders?'} danger={!settings.paused} busy={saving}
+          confirmLabel={settings.paused ? 'Yes, resume' : 'Yes, pause'} onCancel={() => setAskPause(false)}
+          onConfirm={async () => { await save({ paused: !settings.paused }); setAskPause(false); }}
+          rows={settings.paused ? [
+            ['Now', 'paused — checkout is switched off'],
+            ['After', 'live — customers can order again'],
+            ['Who is told', 'everyone who asked to be told and every device with notifications on — once, and only if orders were paused for over 30 minutes'],
+          ] : [
+            ['Now', 'live — customers can order'],
+            ['After', 'paused — checkout is switched off and every page shows the message below'],
+            ['Orders already placed', 'are not affected'],
+            ['Undo', 'press Resume orders'],
+          ]} />
+      )}
       {/* Pause switch */}
       <div className="bg-white rounded-xl p-5" style={{ border: `1px solid ${C.line}` }}>
         <div className="flex items-center justify-between gap-4">
@@ -56,7 +73,7 @@ export default function SlotSettingsTab() {
               Pause instantly stops new checkout orders — for sick days, sold-out days, or festival rushes.
             </p>
           </div>
-          <button onClick={() => save({ paused: !settings.paused })} disabled={saving}
+          <button onClick={() => setAskPause(true)} disabled={saving}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black text-white shrink-0 disabled:opacity-50"
             style={{ backgroundColor: settings.paused ? C.green : C.red }}>
             {settings.paused ? <><PlayCircle size={16} /> Resume orders</> : <><PauseCircle size={16} /> Pause orders</>}

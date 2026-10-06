@@ -26,6 +26,7 @@ import AnalyticsTab from '@/components/admin/AnalyticsTab';
 import MessagesTab from '@/components/admin/MessagesTab';
 import AutomationsTab from '@/components/admin/AutomationsTab';
 import SystemLogTab from '@/components/admin/SystemLogTab';
+import ConfirmAction from '@/components/admin/ConfirmAction';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt     = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -81,16 +82,30 @@ const flowFor = (order) => order.status === 'preparing' && order.delivery_type =
 
 const OrderActions = ({ order, onUpdate }) => {
   const [busy, setBusy] = useState(null);
+  const [askCancel, setAskCancel] = useState(false);
   const flow = flowFor(order);
 
   const handle = async (status) => {
     setBusy(status);
     await onUpdate('orders', order.id, status);
     setBusy(null);
+    setAskCancel(false);
   };
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
+      {askCancel && (
+        <ConfirmAction title={`Cancel order ${order.order_number || order.id.slice(-6).toUpperCase()}?`} danger confirmLabel="Yes, cancel the order" cancelLabel="Keep the order" busy={busy === 'cancelled'}
+          onCancel={() => setAskCancel(false)} onConfirm={() => handle('cancelled')}
+          rows={[
+            ['Customer', `${order.customer_name || '—'}${order.customer_phone ? ` · ${order.customer_phone}` : ''}`],
+            ['Now', `${(order.status || '').replace(/_/g, ' ')} · ${order.items?.length || 0} item${order.items?.length === 1 ? '' : 's'} · £${Number(order.total || 0).toFixed(2)}${order.payment_intent_id ? ' · paid' : ''}`],
+            ['After', 'cancelled; it leaves the kitchen list'],
+            ['The customer', 'gets an email and a text saying the order was cancelled'],
+            ['Money', 'nothing is refunded by itself — refund by hand in Stripe if you owe one'],
+            ['Undo', 'cannot be undone'],
+          ]} />
+      )}
       {flow && (
         <button onClick={() => handle(flow.next)} disabled={!!busy}
           className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-50 whitespace-nowrap"
@@ -100,7 +115,7 @@ const OrderActions = ({ order, onUpdate }) => {
         </button>
       )}
       {['pending','confirmed','preparing','ready','out_for_delivery'].includes(order.status) && (
-        <button onClick={() => handle('cancelled')} disabled={!!busy}
+        <button onClick={() => setAskCancel(true)} disabled={!!busy}
           className="px-2 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
           style={{ border:'1px solid #EF5350', color:'#C62828', backgroundColor:'transparent' }}>
           {busy === 'cancelled' ? <RefreshCw size={11} className="animate-spin inline" /> : 'Cancel'}
@@ -300,16 +315,34 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
 };
 
 // ─── Subscriptions ────────────────────────────────────────────────────────────
+const PLAN_EFFECT = {
+  cancelled: 'deliveries stop; the customer gets an email saying the plan was cancelled; nothing is refunded by itself',
+  expired: 'the plan is marked finished; no more deliveries; no email is sent',
+  active: 'deliveries carry on from the next delivery day',
+};
 const SubscriptionsTab = ({ subscriptions, onStatusUpdate }) => {
   const [updatingId, setUpdatingId] = useState(null);
+  const [ask, setAsk] = useState(null);   // { sub, status }
   const SUB_STATUSES = ['active','cancelled','expired'];
   const handle = async (id, status) => {
     setUpdatingId(id);
     await onStatusUpdate('subscriptions', id, status);
     setUpdatingId(null);
+    setAsk(null);
   };
   return (
     <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
+      {ask && (
+        <ConfirmAction title={`Change ${ask.sub.customer_name}'s plan to ${ask.status}?`} danger={ask.status === 'cancelled'} confirmLabel={`Yes, mark it ${ask.status}`} busy={updatingId === ask.sub.id}
+          onCancel={() => setAsk(null)} onConfirm={() => handle(ask.sub.id, ask.status)}
+          rows={[
+            ['Plan', `${ask.sub.plan} · ${ask.sub.box_type} · £${Number(ask.sub.price || 0).toFixed(2)} · from ${fmtDate(ask.sub.start_date)}`],
+            ['Now', ask.sub.status],
+            ['After', ask.status],
+            ['What happens', PLAN_EFFECT[ask.status] || ''],
+            ['Undo', ask.status === 'active' ? 'you can cancel it again' : 'a cancelled or finished plan can be set back to active from here'],
+          ]} />
+      )}
       <div className="px-6 py-4 border-b" style={{ borderColor:'#f0ebe6' }}>
         <h3 className="font-bold" style={{ fontFamily:"'Playfair Display', serif", color:'#800020' }}>Dabba Wala Subscriptions ({subscriptions.length})</h3>
       </div>
@@ -334,7 +367,7 @@ const SubscriptionsTab = ({ subscriptions, onStatusUpdate }) => {
                   <td className="px-4 py-3"><Badge status={s.status} /></td>
                   <td className="px-4 py-3">
                     <div className="relative inline-block">
-                      <select value={s.status} onChange={e=>handle(s.id,e.target.value)}
+                      <select value={s.status} onChange={e=>setAsk({ sub: s, status: e.target.value })}
                         disabled={updatingId===s.id}
                         className="text-xs border rounded-lg px-2 py-1.5 pr-6 font-semibold appearance-none cursor-pointer"
                         style={{ borderColor:'#800020', color:'#800020', backgroundColor:'#FDFBF7' }}>
@@ -803,30 +836,47 @@ const ReviewsTab = () => {
 
 // ─── Main Admin Page ──────────────────────────────────────────────────────────
 /* ── Kitchen Open/Closed toggle ─────────────────────────────────────────── */
+const DEFAULT_CLOSED_MESSAGE = "Our kitchen is closed today — we're not taking orders right now. Please check back soon.";
 const KitchenToggle = () => {
   const kitchen = useKitchen();
   const [busy, setBusy] = useState(false);
+  const [ask, setAsk] = useState(false);
+  const [message, setMessage] = useState(DEFAULT_CLOSED_MESSAGE);
 
   const toggle = async () => {
     if (busy) return;
-    let paused_message;
-    if (kitchen.open) {
-      if (!window.confirm('Close the kitchen? Customers will see a "Kitchen closed" banner and checkout will be disabled until you reopen.')) return;
-      const msg = window.prompt('Message to show customers (optional):', "Our kitchen is closed today — we're not taking orders right now. Please check back soon.");
-      if (msg === null) return;
-      paused_message = msg.trim();
-    }
     setBusy(true);
     try {
-      await api.put('/admin/settings/pickup-slots', kitchen.open ? { paused: true, paused_message } : { paused: false });
+      await api.put('/admin/settings/pickup-slots', kitchen.open ? { paused: true, paused_message: message.trim() } : { paused: false });
       await kitchen.refresh();
+      setAsk(false);
     } catch (e) {
       alert(e.response?.data?.detail || 'Could not update kitchen status.');
     } finally { setBusy(false); }
   };
 
-  return (
-    <button onClick={toggle} disabled={busy} data-testid="kitchen-toggle"
+  return (<>
+    {ask && (
+      <ConfirmAction title={kitchen.open ? 'Close the kitchen?' : 'Open the kitchen?'} danger={kitchen.open} busy={busy}
+        confirmLabel={kitchen.open ? 'Yes, close it' : 'Yes, open it'} onCancel={() => setAsk(false)} onConfirm={toggle}
+        rows={kitchen.open ? [
+          ['Now', 'open — customers can order'],
+          ['After', 'closed — checkout is switched off and every page shows a "kitchen closed" notice'],
+          ['Orders already placed', 'are not affected; finish them as usual'],
+          ['Undo', 'press the same switch to open again. If it was closed for more than 30 minutes, everyone who asked is told you are open (at most once in 12 hours)'],
+        ] : [
+          ['Now', 'closed — checkout is switched off'],
+          ['After', 'open — customers can order again'],
+          ['Who is told', 'everyone who pressed "tell me when you reopen", and every device with notifications on — once, and only if the kitchen was closed for over 30 minutes'],
+        ]}>
+        {kitchen.open && (
+          <label className="block text-sm"><span className="text-gray-500">What customers will read</span>
+            <textarea value={message} rows={3} maxLength={200} onChange={e => setMessage(e.target.value)} className="mt-1 w-full px-3 py-2 border rounded-lg" style={{ borderColor: '#e0d9d0' }} />
+          </label>
+        )}
+      </ConfirmAction>
+    )}
+    <button onClick={() => setAsk(true)} disabled={busy} data-testid="kitchen-toggle"
       className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-60"
       style={kitchen.open
         ? { backgroundColor: '#2E7D32', color: 'white' }
@@ -835,7 +885,7 @@ const KitchenToggle = () => {
       <Power size={14} className={busy ? 'animate-pulse' : ''} />
       {kitchen.open ? 'Kitchen: OPEN' : 'Kitchen: CLOSED'}
     </button>
-  );
+  </>);
 };
 
 /* ── Delivery On/Off toggle ─────────────────────────────────────────────── */

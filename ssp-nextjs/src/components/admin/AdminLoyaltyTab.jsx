@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Gift, Users, TrendingUp, AlertCircle, ChevronDown, ChevronUp, Plus, Minus } from 'lucide-react';
 import api from '@/api';
+import ConfirmAction from '@/components/admin/ConfirmAction';
 
 const fmt = (iso) => {
   if (!iso) return '—';
@@ -162,6 +163,7 @@ export default function AdminLoyaltyTab() {
   const [showAdjust, setShowAdjust] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [backfillState, setBackfillState] = useState(null);
+  const [askBackfill, setAskBackfill] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -204,6 +206,7 @@ export default function AdminLoyaltyTab() {
 
   const handleBackfill = async () => {
     if (backfillState && backfillState !== 'loading') return;
+    setAskBackfill(false);
     setBackfillState('loading');
     try {
       const r = await api.post('/admin/loyalty/backfill');
@@ -236,6 +239,15 @@ export default function AdminLoyaltyTab() {
         />
       )}
 
+      {askBackfill && (
+        <ConfirmAction title="Credit existing customers with their past orders?" confirmLabel="Yes, run it once" onCancel={() => setAskBackfill(false)} onConfirm={handleBackfill}
+          rows={[
+            ['Who', 'account holders who have no loyalty count yet'],
+            ['What happens', 'their past delivered orders are counted; anyone reaching five earns a free dish straight away'],
+            ['Not affected', 'customers who already have a count; nothing is sent to anyone'],
+            ['Undo', 'counts can be adjusted one customer at a time from the list above'],
+          ]} />
+      )}
       {/* Backfill banner */}
       <div className="rounded-xl border px-5 py-4 flex items-center justify-between gap-4"
         style={{ borderColor: 'rgba(128,0,32,0.15)', backgroundColor: 'rgba(244,196,48,0.06)' }}>
@@ -252,7 +264,7 @@ export default function AdminLoyaltyTab() {
           )}
         </div>
         <button
-          onClick={handleBackfill}
+          onClick={() => setAskBackfill(true)}
           disabled={backfillState === 'loading' || (backfillState && backfillState !== 'loading')}
           className="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
           style={{ backgroundColor: '#800020' }}>

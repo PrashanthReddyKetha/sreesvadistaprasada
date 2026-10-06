@@ -8,13 +8,15 @@ import os
 import time
 import stripe
 from pymongo.errors import DuplicateKeyError
-from database import db
+from database import db
+
 from security import client_ip
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
 from pydantic import BaseModel
 from models import Subscription, SubscriptionCreate, SubscriptionStatusUpdate, SubscriptionStatus, Address
+from audit_log import record_admin_action
 from auth import get_current_user, get_optional_user, require_admin
 from notifications import (
     send_email, send_sms, notify_admin,
@@ -469,6 +471,8 @@ async def update_subscription_status(
         ops["$unset"] = {"cancelled_at": ""}
     await db.subscriptions.update_one({"id": sub_id}, ops)
     doc.update(update)
+    await record_admin_action(current_user, "changed a plan's status", f"{doc.get('plan', '')} plan for {doc.get('customer_name') or 'a customer'}",
+                              {"status": old_status}, {"status": new_status})
 
     if old_status != new_status and new_status == "cancelled":
         name = doc.get("customer_name") or "there"
