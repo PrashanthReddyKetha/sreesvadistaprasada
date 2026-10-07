@@ -11,7 +11,6 @@ import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import CouponPanel from '@/components/CouponPanel';
 import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase, trackSubscriptionStepView } from '@/lib/analytics';
 import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
-import { useKitchen } from '@/context/KitchenContext';
 
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 // Created on demand (see Subscriptions below) so the landing page never downloads Stripe.js
@@ -148,33 +147,6 @@ const STEPS = [
  *
  * Returns { weeks[], startIdx, closedMessage }. Caller slices based on plan.
  */
-function DabbaInterestForm() {
-  const [phone, setPhone] = useState('');
-  const [state, setState] = useState('idle');
-  const submit = async (e) => {
-    e.preventDefault();
-    if (!phone.trim()) return;
-    setState('busy');
-    try {
-      await api.post('/enquiries/waitlist', { phone: phone.trim(), category: 'dabba', item_name: 'Dabba Wala restart' });
-      setState('done');
-    } catch { setState('error'); }
-  };
-  if (state === 'done') return <p className="text-sm font-semibold" style={{ color: C.greenText }}>Thank you — we will message you when Dabba Wala is back.</p>;
-  return (
-    <form onSubmit={submit} className="flex flex-col sm:flex-row gap-3 justify-center">
-      <label className="sr-only" htmlFor="dabba-interest-phone">Your mobile number</label>
-      <input id="dabba-interest-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Your mobile number" autoComplete="tel"
-        className="px-4 py-3 rounded-sm border text-sm" style={{ borderColor: '#E8DFCE' }} />
-      <button type="submit" disabled={state === 'busy'} className="px-6 py-3 text-sm font-bold text-white rounded-sm disabled:opacity-60" style={{ backgroundColor: C.primary }}>
-        {state === 'busy' ? 'Saving…' : 'Tell me when it is back'}
-      </button>
-      {state === 'error' && <p className="text-xs text-red-600 self-center">That did not save — please try again.</p>}
-    </form>
-  );
-}
-
-
 function getWeekConfig(notBefore = null) {
   const now = new Date();
   const day = now.getDay();
@@ -566,7 +538,6 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [savedProgress, setSavedProgress] = useState(null);
   const [pageState, setPageState] = useState('loading'); // loading | wizard | active | lapsed
-  const kitchen = useKitchen();
   const [activeSub, setActiveSub] = useState(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [lapsedSub, setLapsedSub] = useState(null);
@@ -860,23 +831,6 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   if (pageState === 'loading') return (
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.cream }}>
       <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: C.primary, borderTopColor: 'transparent' }} />
-    </div>
-  );
-
-  /* ── deliveries paused: Dabba Wala follows the delivery switch (owner decision 2026-10-07, A-0003 DAB-006) ── */
-  if (kitchen.loaded && !kitchen.deliveryEnabled && pageState !== 'active') return (
-    <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
-      <div className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" />
-      <div className="max-w-xl mx-auto px-4 py-16 text-center">
-        <div className="text-5xl mb-5">🍱</div>
-        <h1 className="text-3xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Dabba Wala deliveries are paused</h1>
-        <p className="text-sm mb-8" style={{ color: C.muted }}>
-          We are not starting new tiffin plans at the moment. Leave your number and we will message you the day they are back —
-          weekly £75, monthly £275, Monday to Friday across Milton Keynes.
-        </p>
-        <DabbaInterestForm />
-        <p className="text-xs mt-8" style={{ color: C.muted }}>Hungry now? <Link href="/order" className="underline font-semibold" style={{ color: C.primary }}>Order from the menu for collection</Link>.</p>
-      </div>
     </div>
   );
 

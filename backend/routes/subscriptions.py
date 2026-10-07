@@ -80,11 +80,9 @@ DABBA_PAUSED_MESSAGE = ("Dabba Wala deliveries are paused at the moment, so we c
 
 
 async def refuse_if_deliveries_paused():
-    """Dabba Wala is a delivered plan: when delivery is switched off, no new plan is sold (owner decision, A-0003 DAB-006)."""
-    from routes.pickup_slots import get_slot_settings
-    settings = await get_slot_settings()
-    if not settings.get("delivery_enabled"):
-        raise HTTPException(status_code=400, detail=DABBA_PAUSED_MESSAGE)
+    """Owner decision D-042 (2026-10-07): Dabba Wala is EXEMPT from the single-order delivery pause — the tiffin round is
+    its own delivery. Plans sell whatever the switch says. Kept as a hook so the choice is one line to reverse."""
+    return None
 
 
 async def next_start_after_active_plan(user_id: Optional[str], email: str, start: datetime):

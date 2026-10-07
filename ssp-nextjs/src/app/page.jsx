@@ -24,18 +24,13 @@ const jsonLd = {
       priceRange: '££',
       servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian'],
       knowsAbout: ['Gongura', 'Andhra cuisine', 'Telugu food', 'Dabba Wala', 'Ragi', 'Pulihora', 'Avakaya', 'Chicken 65', 'Gutti Vankaya'],
-      hasMap: 'https://maps.google.com/?q=24+Oxman+Ln,+Greenleys,+Milton+Keynes+MK12+6LF',
       address: {
         '@type': 'PostalAddress',
-        streetAddress: '24 Oxman Ln',
         addressLocality: 'Greenleys, Milton Keynes',
         addressRegion: 'Buckinghamshire',
-        postalCode: 'MK12 6LF',
         addressCountry: 'GB',
       },
-      // MK12 6LF postcode centroid (ONS via postcodes.io) — swap for the GBP
       // pin coordinates once the Business Profile goes live
-      geo: { '@type': 'GeoCoordinates', latitude: 52.05313, longitude: -0.828507 },
       areaServed: [
         { '@type': 'City', name: 'Milton Keynes' },
       ],

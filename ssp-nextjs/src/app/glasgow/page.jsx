@@ -8,6 +8,7 @@ export const metadata = {
   title: { absolute: 'South Indian Food Glasgow — Coming Soon | Sree Svadista Prasada' },
   description: 'Authentic Andhra South Indian food is coming to Glasgow. Register your interest for Dabba Wala tiffins and fresh Indian meals across G postcodes.',
   alternates: { canonical: `${BASE_URL}/glasgow` },
+  robots: { index: false, follow: true },   // hidden from search until the city is really served (owner decision D-045)
   openGraph: {
     title: 'South Indian Food Glasgow — Coming Soon | Sree Svadista Prasada',
     description: 'Authentic Andhra South Indian food is coming to Glasgow. Register your interest for Dabba Wala tiffin subscriptions and fresh Indian meals.',

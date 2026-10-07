@@ -33,6 +33,8 @@ const Snacks = ({ seoLine }) => {
               {seoLine && <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">{seoLine}</span>}
             </h1>
             <p className="text-lg text-gray-100 leading-relaxed mb-2">Real taste, like never before.</p>
+            {/* The name in the menu, explained once (owner decision D-046, A-0003 CON-004) */}
+            <p className="text-sm text-yellow-100 leading-relaxed mb-2"><strong>Lucky&apos;s Pantry</strong> is the name of this range — our pickles, podis and sweets by post, coming soon.</p>
             <p className="text-sm sm:text-base text-gray-200 leading-relaxed max-w-xl mb-7">
               No more asking someone to carry jars over from your home country — handmade Andhra pickles, fiery podis and traditional sweets are now coming to your city, made fresh, the way your grandmother made them.
             </p>

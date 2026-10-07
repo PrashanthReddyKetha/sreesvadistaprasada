@@ -240,6 +240,14 @@ async def _send_email_now(to: str, subject: str, html: str, kind: str = "service
 
 
 async def _send_sms_now(to: str, body: str, kind: str = "service") -> None:
+    # A marketing text goes only to a number that has not said STOP, and always says how to (owner decision D-041, A-0003 MKT-002)
+    if kind == "marketing" and to:
+        from whatsapp import is_opted_out
+        if await is_opted_out(to):
+            await log_message("sms", to, kind, "skipped: opted out", body[:60])
+            return
+        if "STOP" not in body:
+            body = body.rstrip() + " Reply STOP to opt out."
     if not (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER):
         logger.warning("Twilio not configured — skipping SMS to %s", mask(to))
         if to:

@@ -293,18 +293,16 @@ def test_makeup_meal_rules(client, pay, user_headers, admin_headers):
 
 # ── Owner decisions 2026-10-07 (audit A-0003) ─────────────────────────────────
 
-def test_no_new_plan_while_deliveries_are_paused(client, monkeypatch, db):
-    """DAB-006: Dabba Wala is delivered, so the delivery switch covers it."""
+def test_dabba_sells_whatever_the_delivery_switch_says(client, db, monkeypatch):
+    """D-042: Dabba Wala is exempt from the single-order delivery pause."""
     from routes import subscriptions
     import importlib.util, pathlib
     spec = importlib.util.spec_from_file_location("subs_fresh", pathlib.Path(subscriptions.__file__))
     fresh = importlib.util.module_from_spec(spec); spec.loader.exec_module(fresh)
     monkeypatch.setattr(subscriptions, "refuse_if_deliveries_paused", fresh.refuse_if_deliveries_paused)
+    run(db.settings.update_one({"_id": "pickup_slots"}, {"$set": {"delivery_enabled": False}}, upsert=True))
     body = {"customer_name": "A", "customer_email": "a@example.com", "customer_phone": "+447000000001", "plan": "weekly",
             "box_type": "svadista", "delivery_address": {"line1": "1 St", "city": "MK", "postcode": "MK9 1AA"}}
-    r = client.post("/api/subscriptions/quote", json=body)
-    assert r.status_code == 400 and "paused" in r.json()["detail"]
-    run(db.settings.update_one({"_id": "pickup_slots"}, {"$set": {"delivery_enabled": True}}, upsert=True))
     assert client.post("/api/subscriptions/quote", json=body).status_code == 200
 
 

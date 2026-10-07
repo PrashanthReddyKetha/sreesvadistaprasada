@@ -68,8 +68,7 @@ from contextlib import asynccontextmanager  # noqa: E402
 
 @asynccontextmanager
 async def _lifespan(a):
-    """The app's own start-up, then: Dabba Wala follows the delivery switch (D-034) and the journeys exercise the
-    wizard, so delivery is switched on for this stand-in."""
+    """The app's own start-up, then delivery switched on so the journeys can exercise the delivery choices too."""
     async with server.lifespan(a):
         await db.settings.update_one({"_id": "pickup_slots"}, {"$set": {"delivery_enabled": True}}, upsert=True)
         yield

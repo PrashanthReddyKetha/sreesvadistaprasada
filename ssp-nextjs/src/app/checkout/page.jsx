@@ -1626,7 +1626,7 @@ const CheckoutInner = () => {
                 {deliveryType === 'takeaway' && (
                   <div className="rounded-xl p-4 text-sm" style={{ backgroundColor: 'rgba(244,196,48,0.1)', border: '1px solid rgba(244,196,48,0.4)' }}>
                     <p className="font-semibold mb-1" style={{ color: '#2D2422' }}>🛵 Collection from our Greenleys kitchen</p>
-                    <p className="text-xs text-gray-500 mb-2">24 Oxman Lane, Greenleys, Milton Keynes, MK12 6LF</p>
+                    <p className="text-xs text-gray-500 mb-2">Greenleys, Milton Keynes (MK12) — the full address is on your confirmation</p>
                     <p className="text-xs font-semibold" style={{ color: '#166534' }}>10% discount applied automatically</p>
                   </div>
                 )}

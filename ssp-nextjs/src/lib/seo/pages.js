@@ -237,7 +237,7 @@ export const PAGE_SEO = {
   '/contact': {
     primary: 'indian takeaway greenleys milton keynes',
     title: `Contact Us — Greenleys, Milton Keynes MK12${B}`,
-    description: 'Contact Sree Svadista Prasada — Indian takeaway kitchen at 24 Oxman Lane, Greenleys, Milton Keynes MK12 6LF, near Wolverton and Stony Stratford. WhatsApp us.',
+    description: 'Contact Sree Svadista Prasada — Indian takeaway kitchen in Greenleys, Milton Keynes MK12 6LF, near Wolverton and Stony Stratford. WhatsApp us.',
     keywords: ['Indian takeaway Greenleys', 'Indian takeaway Wolverton', 'Indian takeaway Stony Stratford', 'Indian takeaway MK12', 'contact Sree Svadista Prasada'],
     h1: 'Indian takeaway kitchen in Greenleys, Milton Keynes — near Wolverton & Stony Stratford',
   },

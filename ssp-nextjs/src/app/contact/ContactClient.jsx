@@ -63,7 +63,7 @@ const Contact = ({ seoLine, hours, deliveryEnabled }) => {
                     <h3 className="text-sm font-bold mb-2" style={{ color: '#800020' }}>Our Kitchen</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
                       <strong style={{ color: '#800020' }}>Milton Keynes</strong><br />
-                      24 Oxman Ln, Greenleys, MK12 6LF<br /><br />
+                      Greenleys, Milton Keynes (MK12) — the full address comes with your order confirmation<br /><br />
                       <span className="block mb-3">
                         An Indian takeaway in Greenleys, MK12 — a few minutes from Wolverton and Stony Stratford.
                         Order online and collect from the kitchen, or have it delivered across Milton Keynes.

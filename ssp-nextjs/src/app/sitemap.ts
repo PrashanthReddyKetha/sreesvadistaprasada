@@ -68,8 +68,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/breakfast/about`,      priority: 0.75, changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
     // City landing pages
     { url: `${BASE_URL}/milton-keynes`,  priority: 0.9,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
-    { url: `${BASE_URL}/edinburgh`,      priority: 0.3,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
-    { url: `${BASE_URL}/glasgow`,        priority: 0.3,  changeFrequency: 'monthly', lastModified: STATIC_LASTMOD },
     // Blog + long-form content
     { url: `${BASE_URL}/blog`,                                       priority: 0.7, changeFrequency: 'weekly',  lastModified: STATIC_LASTMOD },
     { url: `${BASE_URL}/blog/dosa-milton-keynes`,                    priority: 0.7, changeFrequency: 'monthly', lastModified: new Date('2026-09-13') },

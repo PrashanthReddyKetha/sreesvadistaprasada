@@ -157,10 +157,16 @@ async def _schedule_sms_reminder(user_id: str, review_type: str, ref_id: str):
         "meal_day": "today's meal",
         "week_summary": "this week's meals",
     }.get(review_type, "your delivery")
-    # No text message: a review request is marketing and a text has no unsubscribe link (A-0003, MKT-002). The email asks.
     from automations import all_paused
     if await all_paused():
         return
+    # Owner decision D-041: the text stays, as marketing — skipped for anyone who replied STOP, and it says how to
+    if user.get("phone"):
+        send_sms(
+            user["phone"],
+            f"Sree Svadista Prasada: How was {when_label}? Rate it in 10 seconds → {SITE_URL}/dashboard",
+            kind="marketing",
+        )
     if user.get("email"):
         subj, html = email_review_prompt(name, when_label)
         send_email(user["email"], subj, html, kind="marketing")

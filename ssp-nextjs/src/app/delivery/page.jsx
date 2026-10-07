@@ -122,7 +122,7 @@ export default async function DeliveryPage() {
               </h2>
               <p className="text-sm text-gray-600 leading-relaxed mb-4">
                 Order online, pick a 15-minute collection slot, and your food is freshly packed when you arrive at our
-                Greenleys kitchen — 24 Oxman Ln, Milton Keynes MK12 6LF. Collection orders get 10% off automatically,
+                Greenleys kitchen in Milton Keynes (MK12) — the full address is in your order confirmation. Collection orders get 10% off automatically,
                 with no delivery or small-order fees.
               </p>
               <Link href="/order" className="inline-block px-6 py-3 text-sm font-semibold rounded-sm text-white" style={{ backgroundColor: '#800020' }}>

@@ -96,7 +96,7 @@ const Footer = () => {
               Taste for your heart · memories on a plate
             </span>
             <p className="text-sm leading-relaxed mb-4" style={{ color: '#A09890' }}>
-              Grandmother's recipes, slow tadkas, and the patient kind of love that fills a house with aroma. Cooked in Milton Keynes, with Edinburgh &amp; Glasgow coming soon. Pickles and podis by post are coming soon too.
+              Grandmother's recipes, slow tadkas, and the patient kind of love that fills a house with aroma. Cooked in Milton Keynes, with Edinburgh &amp; Glasgow coming soon. Lucky&apos;s Pantry — our pickles and podis by post — is coming soon too.
             </p>
             <p className="text-sm italic" style={{ color: '#F4C430' }}>
               "Cooked with care. Served with love."
@@ -209,10 +209,8 @@ const Footer = () => {
                   className="text-sm"
                 >
                   <strong className="text-white">Sree Svadista Prasada</strong><br />
-                  <span itemProp="streetAddress">24 Oxman Ln</span>,{' '}
                   <span itemProp="addressLocality">Greenleys</span>,{' '}
-                  <span itemProp="addressRegion">Milton Keynes</span>{' '}
-                  <span itemProp="postalCode">MK12 6LF</span><br />
+                  <span itemProp="addressRegion">Milton Keynes</span>{' '}<br />
                   <span style={{ color: '#A09890' }}>Edinburgh &amp; Glasgow coming soon</span>
                 </address>
               </div>

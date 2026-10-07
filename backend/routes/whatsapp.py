@@ -62,7 +62,7 @@ async def whatsapp_inbound(request: Request):
     if not phone:
         return _twiml()
 
-    if word in STOP_WORDS:
+    if word in STOP_WORDS or word.split()[:1] == ["stop"]:      # "STOP please" counts too (A-0003, MKT-016)
         await db.wa_optouts.update_one(
             {"phone": phone},
             {"$set": {"phone": phone, "opted_out_at": datetime.utcnow().isoformat()}},

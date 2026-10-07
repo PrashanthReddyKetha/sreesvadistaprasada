@@ -8,6 +8,7 @@ export const metadata = {
   title: { absolute: 'South Indian Food Edinburgh — Coming Soon | Sree Svadista Prasada' },
   description: 'Authentic Andhra South Indian food is coming to Edinburgh. Register your interest for Dabba Wala tiffins and fresh Indian meals across EH postcodes.',
   alternates: { canonical: `${BASE_URL}/edinburgh` },
+  robots: { index: false, follow: true },   // hidden from search until the city is really served (owner decision D-045)
   openGraph: {
     title: 'South Indian Food Edinburgh — Coming Soon | Sree Svadista Prasada',
     description: 'Authentic Andhra South Indian food is coming to Edinburgh. Register your interest for Dabba Wala tiffin subscriptions and fresh Indian meals.',

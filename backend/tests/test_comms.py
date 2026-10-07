@@ -265,3 +265,34 @@ def test_a_newsletter_goes_once_to_the_active_list_minus_opt_outs(client, db, mo
     assert client.post("/api/admin/newsletter/send", json={**letter, "confirm": True}, headers=token("boss", "admin")).status_code == 409   # not twice in a day
     assert run(db.admin_audit.find_one({"action": "newsletter sent"}))["after"] == {"recipients": 1}
     assert client.post("/api/admin/newsletter/send", json={**letter, "confirm": True}, headers=token("u1")).status_code == 403
+
+
+def test_marketing_texts_respect_stop_and_say_how_to_opt_out(db, state, monkeypatch):
+    """D-041: the review text stays, as marketing — never to a number that said STOP, and always with the way out."""
+    import asyncio
+    import notifications
+    monkeypatch.setenv("TWILIO_ACCOUNT_SID", "AC"); monkeypatch.setenv("TWILIO_AUTH_TOKEN", "t"); monkeypatch.setenv("TWILIO_FROM_NUMBER", "+440000")
+    monkeypatch.setattr(notifications, "TWILIO_ACCOUNT_SID", "AC"); monkeypatch.setattr(notifications, "TWILIO_AUTH_TOKEN", "t"); monkeypatch.setattr(notifications, "TWILIO_FROM_NUMBER", "+440000")
+    sent = []
+
+    class FakeResp:
+        status_code = 201
+        text = ""
+        def json(self): return {"sid": "SM1"}
+
+    class FakeClient:
+        def __init__(self, *a, **k): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def post(self, url, **kw): sent.append(kw.get("data") or kw.get("json") or {}); return FakeResp()
+
+    monkeypatch.setattr(notifications.httpx, "AsyncClient", FakeClient)
+    run(db.wa_optouts.insert_one({"phone": "+447000000009"}))
+    run(notifications._send_sms_now("+447000000009", "How was your order?", kind="marketing"))
+    run(notifications._send_sms_now("+447000000001", "How was your order?", kind="marketing"))
+    run(notifications._send_sms_now("+447000000009", "Your order is ready", kind="service"))
+    bodies = [str(d.get("Body") or d.get("body") or d) for d in sent]
+    assert len(sent) == 2                                      # the opted-out number got the service text only
+    assert any("Reply STOP to opt out" in b for b in bodies) and any("ready" in b for b in bodies)
+    logged = run(db.message_log.find({"channel": "sms"}, {"_id": 0, "status": 1}).to_list(None))
+    assert any(l["status"] == "skipped: opted out" for l in logged)

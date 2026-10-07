@@ -11,7 +11,7 @@ export const metadata = pageMeta('/milton-keynes', { image: 'https://images.unsp
 // requires FAQ rich-result content to appear on the page.
 const FAQS = [
   { q: 'Is there a South Indian restaurant in Milton Keynes for Telugu and Andhra food?', a: 'Yes. Sree Svadista Prasada cooks Telugu home food from Andhra Pradesh — gongura chicken, pappu, pulusu, ragi sangati, dosa, idli and dum biryani. We are a takeaway kitchen rather than a dine-in restaurant: order online for delivery across Milton Keynes or collection from Greenleys.' },
-  { q: 'Is there an Indian takeaway near Wolverton or Stony Stratford?', a: 'Yes — our kitchen is at 24 Oxman Lane, Greenleys (MK12 6LF), a few minutes from both Wolverton and Stony Stratford. Order online and collect, or have it delivered.' },
+  { q: 'Is there an Indian takeaway near Wolverton or Stony Stratford?', a: 'Yes — our kitchen is in Greenleys (MK12), a few minutes from both Wolverton and Stony Stratford. Order online and collect, or have it delivered.' },
   { q: 'What South Indian restaurants deliver in Milton Keynes?', a: 'Sree Svadista Prasada is a dedicated authentic Andhra South Indian kitchen in Milton Keynes. We deliver across all MK postcodes (MK1–MK19) including Wolverton, Stony Stratford, Bletchley, Newport Pagnell, Central MK, and surrounding areas.' },
   { q: 'How long does South Indian food delivery take in Milton Keynes?', a: 'Delivery across Milton Keynes takes 30–60 minutes from our Greenleys kitchen. Free delivery kicks in from £28–£40 depending on your zone.' },
   { q: 'What is the Dabba Wala meal subscription in Milton Keynes?', a: 'Dabba Wala is our weekly South Indian tiffin subscription service — fresh home-style meals delivered to your door in Milton Keynes from £13.75 per meal. Choose a Prasada (pure veg) or Svadista (non-veg) box.' },
@@ -49,16 +49,11 @@ const baseJsonLd = [
     servesCuisine: ['South Indian', 'Andhra', 'Telugu', 'Indian', 'Vegetarian'],
     address: {
       '@type': 'PostalAddress',
-      streetAddress: '24 Oxman Ln',
       addressLocality: 'Greenleys, Milton Keynes',
       addressRegion: 'Buckinghamshire',
-      postalCode: 'MK12 6LF',
       addressCountry: 'GB',
     },
-    // MK12 6LF postcode centroid (ONS via postcodes.io)
-    geo: { '@type': 'GeoCoordinates', latitude: 52.05313, longitude: -0.828507 },
     areaServed: { '@type': 'City', name: 'Milton Keynes' },
-    hasMap: 'https://maps.google.com/?q=24+Oxman+Ln,+Greenleys,+Milton+Keynes+MK12+6LF',
     sameAs: ['https://sreesvadistaprasada.com'],
     openingHoursSpecification: [
       { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '11:00', closes: '22:00' },
