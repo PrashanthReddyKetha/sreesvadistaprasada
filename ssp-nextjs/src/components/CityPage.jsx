@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { MapPin, Clock, ShoppingBag, CheckCircle } from 'lucide-react';
 import FaqSection from '@/components/FaqSection';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 const MENU_CATEGORIES = [
   { label: 'Prasada — Pure Vegetarian', sub: 'Andhra curries, veg thali, rice dishes & more', href: '/prasada', emoji: '🌿' },
@@ -26,7 +27,7 @@ export default function CityPage({ data, jsonLd }) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
 
       {/* Hero */}

@@ -1,5 +1,6 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 export const metadata = pageMeta('/ragi-specials/about');
 
@@ -73,7 +74,7 @@ export default function RagiAboutPage() {
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }}
       />
 
       <div className="max-w-3xl mx-auto px-4 py-16 md:py-20">

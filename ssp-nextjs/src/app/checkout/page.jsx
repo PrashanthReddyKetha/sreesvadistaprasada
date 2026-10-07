@@ -22,7 +22,7 @@ import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import AddToHomeScreen from '@/components/AddToHomeScreen';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackPurchase, trackBeginCheckout } from '@/lib/analytics';
-import { recordSearch } from '@/lib/track';
+import { recordSearch, record } from '@/lib/track';
 import { isOrderable } from '@/config/softLaunch';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 import CouponPanel from '@/components/CouponPanel';
@@ -55,16 +55,22 @@ const slotLabel = (iso) => {
 };
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
-function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange, locked, hint, required: req }) {
+function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange, locked, hint, required: req, autoComplete }) {
+  // Label and field are joined by id, so screen readers and autofill know what each box is (audit A-0003, A11Y-002)
+  const id = 'f-' + String(label).toLowerCase().replace(/[^a-z0-9]+/g, '-');
   return (
     <div>
-      <label className="text-xs font-semibold block mb-1" style={{ color: '#5C4B47' }}>
+      <label htmlFor={id} className="text-xs font-semibold block mb-1" style={{ color: '#5C4B47' }}>
         {label}{req && <span className="text-red-400 ml-0.5">*</span>}
       </label>
       <div className="relative">
         {Icon && <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />}
         <input
+          id={id}
           type={type}
+          autoComplete={autoComplete}
+          aria-required={req || undefined}
+          aria-describedby={hint ? id + '-hint' : undefined}
           placeholder={placeholder}
           value={value}
           onChange={e => onChange(e.target.value)}
@@ -80,7 +86,7 @@ function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange,
         />
         {locked && <CheckCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#166534' }} />}
       </div>
-      {hint && <p className="text-[10px] mt-0.5" style={{ color: '#7A5C50' }}>{hint}</p>}
+      {hint && <p id={id + '-hint'} className="text-[10px] mt-0.5" style={{ color: '#7A5C50' }}>{hint}</p>}
     </div>
   );
 }
@@ -704,7 +710,7 @@ const CheckoutInner = () => {
   const [form, setForm] = useState({
     name: '', email: '', phone: '',
     line1: '', line2: '', city: '', postcode: '',
-    notes: '',
+    notes: '', marketing_consent: false,
   });
 
   const pcDebounceRef = useRef(null);
@@ -846,13 +852,17 @@ const CheckoutInner = () => {
   const freeItemDiscount = freeItem ? price(freeItem.price) : 0;
   const effectiveSubtotal = cartTotal + freeItemDiscount;
 
-  // Call /orders/calculate for live server pricing
+  // Call /orders/calculate for live server pricing. Every change starts a new request; only the newest answer is
+  // kept, so a slow older reply can never become the amount charged (audit A-0003, COM-004).
+  const calcSeq = useRef(0);
   const recalculate = useCallback(async () => {
+    const seq = ++calcSeq.current;
     const postcode = form.postcode.replace(/\s/g, '');
     if (deliveryType === 'delivery' && postcode.length < 3) {
       setServerPricing(null); // clear stale data when postcode missing
       return;
     }
+    setServerPricing(null);   // the total is unknown until the newest answer arrives
     try {
       const items = cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity }));
       const r = await api.post('/orders/calculate', {
@@ -864,6 +874,7 @@ const CheckoutInner = () => {
         coupon_code: couponCode || undefined,
         customer_email: form.email || undefined,
       });
+      if (seq !== calcSeq.current) return;   // a newer request is in flight; this answer is stale
       setServerPricing(r.data);
       setCalcError('');
       setUnavailableItems([]);
@@ -878,6 +889,7 @@ const CheckoutInner = () => {
         });
       }
     } catch (e) {
+      if (seq !== calcSeq.current) return;
       // Any failure here (bad postcode, validation error, network) means we do not
       // have a trustworthy total — never fall back to a client-guessed price for
       // what gets charged. handleOrder refuses to charge while this is null.
@@ -1019,6 +1031,7 @@ const CheckoutInner = () => {
             city: ctx.form.city, postcode: ctx.form.postcode,
           } : undefined,
           notes: ctx.form.notes || undefined,
+          marketing_consent: !!ctx.form.marketing_consent,
           scheduled_slot: ctx.deliveryType === 'takeaway' ? ctx.pickupSlot?.iso : undefined,
           payment_intent_id,
           coupon_code: ctx.couponCode,
@@ -1114,6 +1127,11 @@ const CheckoutInner = () => {
         payment_intent_id = paidIntent.current.id;
         capturedPI = payment_intent_id;
         paymentSucceeded = true;
+      } else if (paidIntent.current) {
+        // The card was charged for a different basket and that order never completed: never charge a second time
+        // (audit A-0003, COM-005). The customer is told exactly what to do instead.
+        setError(`Your card was already charged ${fmt(paidIntent.current.amount)} (ref: ${paidIntent.current.id.slice(-8).toUpperCase()}) for your earlier basket. Put the basket back to that total and tap Pay again, or WhatsApp or call us quoting the reference — we will sort it out and never charge you twice.`);
+        return;
       } else {
         const intentRes = await api.post('/payments/create-intent', { amount: chargeAmount, purpose: 'order' });
         const { client_secret } = intentRes.data;
@@ -1126,7 +1144,11 @@ const CheckoutInner = () => {
             billing_details: { name: form.name, email: form.email, address: { postal_code: billingPostcode || form.postcode } },
           },
         });
-        if (stripeError) { setError(stripeError.message || 'Payment failed. Please try again.'); return; }
+        if (stripeError) {
+          record('payment_failed', { reason: stripeError.code || stripeError.type || 'card_error', value: chargeAmount });   // declines are a fact, not a drop-off (A-0003, ANA-003)
+          setError(stripeError.message || 'Payment failed. Please try again.');
+          return;
+        }
         if (paymentIntent.status !== 'succeeded') { setError('Payment was not completed. Please try again.'); return; }
         paymentSucceeded = true;
         paidIntent.current = { id: payment_intent_id, amount: chargeAmount };
@@ -1150,6 +1172,7 @@ const CheckoutInner = () => {
           postcode: form.postcode,
         } : undefined,
         notes: form.notes || undefined,
+        marketing_consent: !!form.marketing_consent,
         scheduled_slot: deliveryType === 'takeaway' ? pickupSlot?.iso : undefined,
         payment_intent_id,
         coupon_code: validPricing.coupon_code || undefined,
@@ -1201,7 +1224,10 @@ const CheckoutInner = () => {
   /* ── SUCCESS ─────────────────────────────────────────────────────────── */
   if (success) {
     const loyaltyPending = postOrderLoyalty?.pending_reward ?? false;
-    const position = loyaltyPending ? 0 : ((postOrderLoyalty?.order_count ?? 0) % 5);
+    // Orders count towards the free dish when they are collected, so this order is not in order_count yet
+    // (audit A-0003, COM-003: a first-time customer was told they had earned a free dish)
+    const done = (postOrderLoyalty?.order_count ?? 0) % 5;
+    const afterThis = done + 1;
 
     const LoyaltyBanner = () => {
       if (!user || !postOrderLoyalty) return null;
@@ -1211,26 +1237,21 @@ const CheckoutInner = () => {
           <p className="text-xs mt-1 opacity-85">Your next loyalty cycle has started — 5 more orders for your next free dish.</p>
         </div>
       );
-      if (loyaltyPending || position === 0) return (
+      if (loyaltyPending) return (
         <div className="rounded-xl px-4 py-3 text-center mb-6" style={{ backgroundColor: '#800020', color: 'white' }}>
           <p className="font-semibold text-sm">🎁 You&apos;ve earned a free dish!</p>
           <p className="text-xs mt-1 opacity-85">Choose any item on your next order — completely free.</p>
         </div>
       );
-      if (position === 4) return (
+      if (afterThis >= 5) return (
         <div className="rounded-xl px-4 py-3 text-center mb-6" style={{ backgroundColor: '#FEF9C3', color: '#854D0E' }}>
-          <p className="font-semibold text-sm">⭐ One more order and your free dish is yours!</p>
+          <p className="font-semibold text-sm">⭐ This is your 5th order — once it&apos;s collected, a free dish is yours!</p>
         </div>
       );
-      if (position === 3) return (
-        <div className="rounded-xl px-4 py-3 text-center mb-6" style={{ backgroundColor: '#F0FFF4', color: '#166534' }}>
-          <p className="font-semibold text-sm">🌿 Halfway there — 3 orders done, 2 to go!</p>
-        </div>
-      );
-      if (position === 1) return (
+      if (afterThis === 1) return (
         <div className="rounded-xl px-4 py-3 text-center mb-6" style={{ backgroundColor: '#EFF6FF', color: '#1E40AF' }}>
           <p className="font-semibold text-sm">🍱 Your loyalty journey has started!</p>
-          <p className="text-xs mt-1 opacity-80">5 orders earns you a free dish. You&apos;re 1 down.</p>
+          <p className="text-xs mt-1 opacity-80">5 collected orders earn you a free dish. This one counts once it&apos;s collected.</p>
         </div>
       );
       return (
@@ -1612,7 +1633,7 @@ const CheckoutInner = () => {
 
                 {/* Contact */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="Full Name" icon={User} value={form.name} onChange={set('name')}
+                  <Field label="Full Name" icon={User} autoComplete="name" value={form.name} onChange={set('name')}
                     placeholder="Your name" locked={!!user?.name && form.name === user.name} required />
                   <PhoneField value={form.phone} onChange={set('phone')}
                     locked={!!user?.phone && form.phone === user.phone} required />
@@ -1624,7 +1645,7 @@ const CheckoutInner = () => {
                     onVerified={setVerifiedPhone}
                   />
                 )}
-                <Field label="Email" icon={Mail} type="email" value={form.email} onChange={set('email')}
+                <Field label="Email" icon={Mail} type="email" autoComplete="email" value={form.email} onChange={set('email')}
                   placeholder="you@example.com" locked={!!user?.email && form.email === user.email}
                   hint={user ? 'Order confirmation will be sent here' : ''} required />
 
@@ -1684,11 +1705,11 @@ const CheckoutInner = () => {
 
                 {deliveryType === 'delivery' && (!user || addrMode === 'new') && form.postcode.replace(/\s/g, '').length >= 5 && (
                   <div className="space-y-4">
-                    <Field label="Address Line 1" icon={MapPin} value={form.line1} onChange={set('line1')}
+                    <Field label="Address Line 1" icon={MapPin} autoComplete="address-line1" value={form.line1} onChange={set('line1')}
                       placeholder="123 High Street" locked={!!form.line1 && !addressDropdown} required />
-                    <Field label="Address Line 2 (optional)" icon={null} value={form.line2} onChange={set('line2')}
+                    <Field label="Address Line 2 (optional)" icon={null} autoComplete="address-line2" value={form.line2} onChange={set('line2')}
                       placeholder="Flat / Apartment" />
-                    <Field label="Town / City" icon={null} value={form.city} onChange={set('city')}
+                    <Field label="Town / City" icon={null} autoComplete="address-level2" value={form.city} onChange={set('city')}
                       placeholder="Milton Keynes" locked={!!form.city && !addressDropdown} required />
 
                     {user && form.line1 && (
@@ -1726,6 +1747,11 @@ const CheckoutInner = () => {
                   className="w-full px-4 py-3 rounded-xl border-2 text-sm resize-none focus:outline-none focus:border-[#800020] transition-colors"
                   style={{ borderColor: '#E5E7EB', color: '#2D2422' }}
                 />
+                {/* Marketing is sent only to people who ask for it (owner decision 2026-10-07, audit A-0003 MKT-001) */}
+                <label className="flex items-start gap-2 text-xs cursor-pointer mt-3" style={{ color: '#5C4B47' }}>
+                  <input type="checkbox" className="mt-0.5" checked={!!form.marketing_consent} onChange={e => set('marketing_consent')(e.target.checked)} />
+                  <span>Email me offers and news from Sree Svadista Prasada now and then. You can stop any time with one tap.</span>
+                </label>
               </div>
             )}
 
@@ -1845,6 +1871,16 @@ const CheckoutInner = () => {
                       </div>
                     </div>
                   )}
+                  {!STRIPE_KEY && (
+                    // Card payments are not switched on yet: say so instead of showing empty boxes and a Pay button that
+                    // can never work (audit A-0003, COM-018 / UX-007)
+                    <div className="rounded-xl px-4 py-3 text-sm mb-3" role="alert" style={{ backgroundColor: '#FEF3C7', color: '#854D0E' }}>
+                      <p className="font-semibold">Online card payments aren't switched on yet.</p>
+                      <p className="text-xs mt-1">Send us your basket on WhatsApp and we'll confirm your order and collection time by hand.</p>
+                      <a href={`https://wa.me/447307119962?text=${encodeURIComponent('Hi, I would like to order: ' + cartItems.map(i => `${i.quantity} x ${i.name}`).join(', ') + ' for collection.')}`}
+                         className="inline-block mt-2 px-4 py-2 text-xs font-bold text-white rounded-lg" style={{ backgroundColor: '#2E7D32' }}>Order on WhatsApp</a>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     {/* Card number - full width */}
                     <div className="px-3 py-3 rounded-xl border-2 flex items-center gap-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
@@ -1895,7 +1931,7 @@ const CheckoutInner = () => {
                 <p role="alert" className="text-sm font-medium p-3 rounded-xl" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{error}</p>
               )}
               {canCheckout && kitchen.open && (
-                <button onClick={handleOrder} disabled={submitting || !meetsMinimum || !validPricing}
+                <button onClick={handleOrder} disabled={submitting || !meetsMinimum || !validPricing || !STRIPE_KEY}
                   className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-60"
                   style={{ background: meetsMinimum ? 'linear-gradient(135deg, #800020, #5C0018)' : '#9CA3AF', cursor: meetsMinimum ? 'pointer' : 'not-allowed' }}>
                   {submitting

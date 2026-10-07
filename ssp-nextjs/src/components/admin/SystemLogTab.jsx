@@ -18,7 +18,7 @@ const SWITCHES = [
   ['menu_decisions', 'Menu decisions', 'Featured dishes follow what sells; dishes with no “goes well with” get one from what is bought together.'],
   ['owner_alerts', 'Alerts to you', 'An email when visits, orders, income or failures move sharply against a normal day.'],
   ['ai_investigation', 'Ask Claude when something is unexplained', 'When a figure falls sharply and no rule explains it, Claude is shown summary figures (never customer details) and writes what it thinks happened. At most once a day, within the monthly limit below.'],
-  ['customer_messages', 'Customer messages', 'Lets the system switch on the four customer messages under Automations by itself. Off until you allow it.'],
+  ['customer_messages', 'Customer messages', 'Lets the nightly review switch on EVERY automation under Automations (all eleven) by itself. Off until you allow it; most owners leave it off and switch messages on one by one.'],
 ];
 const show = (v, metric) => v == null ? '—' : metric === 'income' ? `£${Number(v).toFixed(2)}` : /rate|done/.test(metric) ? `${Math.round(v * 100)}%` : Math.round(v * 10) / 10;
 

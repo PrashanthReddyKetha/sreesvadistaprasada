@@ -149,6 +149,7 @@ function Insights({ data }) {
           {data.next_week_meals && tile('Meals to cook next week', data.next_week_meals.meals, 'from plans already bought')}
         </div>
         {(data.dabba_forecast || []).some(w => w.plans_ending > 0) && (
+          <div className="overflow-x-auto -mx-1 px-1">
           <table className="w-full text-xs mt-4">
             <thead><tr className="text-left text-gray-500">{['Week starting', 'Plans ending', 'Renewals to expect'].map(h => <th key={h} className="py-1 pr-3 font-semibold">{h}</th>)}</tr></thead>
             <tbody>{data.dabba_forecast.map(w => (
@@ -158,6 +159,7 @@ function Insights({ data }) {
               </tr>
             ))}</tbody>
           </table>
+          </div>
         )}
       </div>
       {(data.sells_together || []).length > 0 && (

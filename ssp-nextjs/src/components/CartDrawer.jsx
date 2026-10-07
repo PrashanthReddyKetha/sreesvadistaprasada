@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, Truck, Zap, Gift, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useKitchen } from '@/context/KitchenContext';
 import KitchenClosedNotify from '@/components/KitchenClosedNotify';
 import api from '../api';
+import useDialog from '@/lib/useDialog';
 import { trackViewCart } from '@/lib/analytics';
 import { isOrderable } from '@/config/softLaunch';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
@@ -272,13 +273,9 @@ const CartDrawer = () => {
   const { user } = useAuth();
   const kitchen = useKitchen();
 
-  // Escape closes the basket
-  useEffect(() => {
-    if (!cartOpen) return;
-    const onKey = (e) => { if (e.key === 'Escape') setCartOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [cartOpen, setCartOpen]);
+  // Escape closes the basket; focus moves in and back out; Tab stays inside (A-0003, A11Y-010)
+  const closeDrawer = useCallback(() => setCartOpen(false), [setCartOpen]);
+  const drawerRef = useDialog(cartOpen, closeDrawer);
 
   const [loyaltyStatus, setLoyaltyStatus] = useState(null);
   const [freeItem, setFreeItem]           = useState(null);
@@ -363,7 +360,7 @@ const CartDrawer = () => {
   return (
     <>
       <div className="fixed inset-0 z-[200] bg-black/50" onClick={() => setCartOpen(false)} />
-      <div className="fixed right-0 top-0 bottom-0 z-[201] w-full max-w-md flex flex-col bg-white shadow-2xl">
+      <div ref={drawerRef} role="dialog" aria-modal="true" aria-label="Your basket" className="fixed right-0 top-0 bottom-0 z-[201] w-full max-w-md flex flex-col bg-white shadow-2xl">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"

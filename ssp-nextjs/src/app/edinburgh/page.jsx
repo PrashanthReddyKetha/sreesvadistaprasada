@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import FaqSection, { faqSchema } from '@/components/FaqSection';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 const BASE_URL = 'https://sreesvadistaprasada.com';
 
@@ -49,7 +50,7 @@ const AREAS = [
 export default function EdinburghPage() {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
 
       <main className="min-h-screen">
         {/* Hero */}

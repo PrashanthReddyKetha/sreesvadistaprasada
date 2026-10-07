@@ -1,6 +1,7 @@
 import SeoSection from '@/components/SeoSection';
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import MenuClient from './MenuClient';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 export const revalidate = 3600;
 
@@ -50,7 +51,7 @@ export default async function FullMenuPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <MenuClient initialItems={initialItems} seoLine={PAGE_SEO['/menu'].h1} />
       <SeoSection heading={PAGE_SEO['/menu'].content.heading} paragraphs={PAGE_SEO['/menu'].content.paragraphs} links={PAGE_SEO['/menu'].content.links} />

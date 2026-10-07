@@ -46,10 +46,11 @@ export default function CookieConsent() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-[9999] px-4 py-4 md:px-8"
+      // On a phone the banner sits above the basket / order bar instead of on top of it (audit A-0003, UX-001)
+      className="fixed bottom-[76px] md:bottom-0 left-0 right-0 z-[150] px-4 py-3 md:py-4 md:px-8"
       style={{ backgroundColor: '#1C0A06', borderTop: '2px solid #800020' }}
-      role="dialog"
-      aria-label="Cookie consent"
+      role="region"
+      aria-label="Cookie choices"
     >
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center gap-4">
         <div className="flex-1 text-sm" style={{ color: '#E8D5C4' }}>
@@ -57,8 +58,8 @@ export default function CookieConsent() {
             🍪 We use cookies
           </p>
           <p className="text-xs leading-relaxed" style={{ color: '#B8A090' }}>
-            We use analytics cookies to understand how visitors use our site so we can improve it.
-            No personal data is sold. See our{' '}
+            Accept all to let Google Analytics set cookies. Either way our own server counts visits without cookies
+            and without storing your address. Nothing is sold. See our{' '}
             <a href="/privacy-policy" className="underline hover:opacity-80" style={{ color: '#F4C430' }}>
               Privacy Policy
             </a>

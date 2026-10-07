@@ -10,6 +10,8 @@ import api from '@/api';
 import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import CouponPanel from '@/components/CouponPanel';
 import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase, trackSubscriptionStepView } from '@/lib/analytics';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
+import { useKitchen } from '@/context/KitchenContext';
 
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 // Created on demand (see Subscriptions below) so the landing page never downloads Stripe.js
@@ -66,7 +68,7 @@ function UpgradeModal({ user, activeSub, onClose }) {
           <div className="text-center py-4">
             <div className="text-4xl mb-3">🎉</div>
             <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Thank you!</h3>
-            <p className="text-sm mb-5" style={{ color: '#5C4B47' }}>We've received your upgrade request and will reach out within 2 hours with your exclusive offer.</p>
+            <p className="text-sm mb-5" style={{ color: '#5C4B47' }}>We've received your upgrade request and will get back to you soon.</p>
             <button onClick={onClose} className="px-5 py-2.5 text-sm font-semibold text-white rounded-sm" style={{ backgroundColor: '#800020' }}>Close</button>
           </div>
         ) : (
@@ -74,7 +76,7 @@ function UpgradeModal({ user, activeSub, onClose }) {
             <div className="text-3xl mb-2">✨</div>
             <h3 className="text-xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>That's awesome!</h3>
             <p className="text-sm mb-4" style={{ color: '#5C4B47' }}>
-              We truly appreciate you planning to make our food part of your monthly rhythm. Fill the form below and we'll send you an <strong>exclusive offer</strong> for your upgrade.
+              We truly appreciate you planning to make our food part of your monthly rhythm. Fill the form below and we'll get in touch about your upgrade.
             </p>
             <form onSubmit={submit} className="space-y-3">
               <input required type="text" placeholder="Your name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 text-sm rounded-sm focus:outline-none" style={{ border: '1px solid #e0d9d0' }} />
@@ -146,7 +148,34 @@ const STEPS = [
  *
  * Returns { weeks[], startIdx, closedMessage }. Caller slices based on plan.
  */
-function getWeekConfig() {
+function DabbaInterestForm() {
+  const [phone, setPhone] = useState('');
+  const [state, setState] = useState('idle');
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!phone.trim()) return;
+    setState('busy');
+    try {
+      await api.post('/enquiries/waitlist', { phone: phone.trim(), category: 'dabba', item_name: 'Dabba Wala restart' });
+      setState('done');
+    } catch { setState('error'); }
+  };
+  if (state === 'done') return <p className="text-sm font-semibold" style={{ color: C.greenText }}>Thank you — we will message you when Dabba Wala is back.</p>;
+  return (
+    <form onSubmit={submit} className="flex flex-col sm:flex-row gap-3 justify-center">
+      <label className="sr-only" htmlFor="dabba-interest-phone">Your mobile number</label>
+      <input id="dabba-interest-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Your mobile number" autoComplete="tel"
+        className="px-4 py-3 rounded-sm border text-sm" style={{ borderColor: '#E8DFCE' }} />
+      <button type="submit" disabled={state === 'busy'} className="px-6 py-3 text-sm font-bold text-white rounded-sm disabled:opacity-60" style={{ backgroundColor: C.primary }}>
+        {state === 'busy' ? 'Saving…' : 'Tell me when it is back'}
+      </button>
+      {state === 'error' && <p className="text-xs text-red-600 self-center">That did not save — please try again.</p>}
+    </form>
+  );
+}
+
+
+function getWeekConfig(notBefore = null) {
   const now = new Date();
   const day = now.getDay();
   const hour = now.getHours();
@@ -165,6 +194,11 @@ function getWeekConfig() {
 
   const firstMonday = getMonday(now);
   if (nextMondayClosed) firstMonday.setDate(firstMonday.getDate() + 7);
+  // Renewing while a plan runs: the next plan starts the Monday after the current one ends
+  if (notBefore) {
+    const after = new Date(notBefore + 'T12:00:00');
+    while (firstMonday <= after) firstMonday.setDate(firstMonday.getDate() + 7);
+  }
 
   const weeks = [];
   for (let i = 0; i < 4; i++) {
@@ -418,7 +452,7 @@ function LandingFaq() {
           ))}
         </div>
       </div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd({
         '@context': 'https://schema.org', '@type': 'FAQPage',
         mainEntity: LANDING_FAQS.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
       }) }} />
@@ -503,7 +537,8 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   const { user, setAuthOpen } = useAuth();
   // useMemo prevents getWeekConfig() from returning a new object reference every render,
   // which would break useCallback(fetchMenu) and cause an infinite fetch loop.
-  const weekCfg = useMemo(() => getWeekConfig(), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [renewAfter, setRenewAfter] = useState(null);   // end date of the running plan when renewing from the active screen
+  const weekCfg = useMemo(() => getWeekConfig(renewAfter), [renewAfter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // wizard state
   const [step, setStep] = useState(1);
@@ -522,6 +557,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   const [neighbourName, setNeighbourName] = useState('');
   const [neighbourDoor, setNeighbourDoor] = useState('');
   const [safePlaceDesc, setSafePlaceDesc] = useState('');
+  const [offers, setOffers] = useState(false);
   const [postcodeStatus, setPostcodeStatus] = useState(null); // null | 'checking' | {ok, city, msg}
   const subAddrMode = useRef('new'); // 'saved' | 'new' — whether a stored address is selected
   const [isGuest, setIsGuest] = useState(false);
@@ -530,6 +566,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [savedProgress, setSavedProgress] = useState(null);
   const [pageState, setPageState] = useState('loading'); // loading | wizard | active | lapsed
+  const kitchen = useKitchen();
   const [activeSub, setActiveSub] = useState(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [lapsedSub, setLapsedSub] = useState(null);
@@ -781,6 +818,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
         user_id: user?.id || undefined,
         payment_intent_id,
         coupon_code: fresh.coupon_code || undefined,
+        marketing_consent: offers,
       });
       clearProg();
       // Address-book bookkeeping — fire-and-forget, never blocks the subscription
@@ -825,6 +863,23 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
     </div>
   );
 
+  /* ── deliveries paused: Dabba Wala follows the delivery switch (owner decision 2026-10-07, A-0003 DAB-006) ── */
+  if (kitchen.loaded && !kitchen.deliveryEnabled && pageState !== 'active') return (
+    <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
+      <div className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" />
+      <div className="max-w-xl mx-auto px-4 py-16 text-center">
+        <div className="text-5xl mb-5">🍱</div>
+        <h1 className="text-3xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Dabba Wala deliveries are paused</h1>
+        <p className="text-sm mb-8" style={{ color: C.muted }}>
+          We are not starting new tiffin plans at the moment. Leave your number and we will message you the day they are back —
+          weekly £75, monthly £275, Monday to Friday across Milton Keynes.
+        </p>
+        <DabbaInterestForm />
+        <p className="text-xs mt-8" style={{ color: C.muted }}>Hungry now? <Link href="/order" className="underline font-semibold" style={{ color: C.primary }}>Order from the menu for collection</Link>.</p>
+      </div>
+    </div>
+  );
+
   /* ── active subscriber ── */
   if (pageState === 'active' && activeSub) return (
     <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
@@ -839,7 +894,13 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
             {activeSub.plan?.charAt(0).toUpperCase() + activeSub.plan?.slice(1)} Plan — {activeSub.box_type} Box
           </p>
           <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.7)' }}>Delivering to {activeSub.delivery_address?.city}</p>
+          {activeSub.end_date && <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>Runs until {activeSub.end_date}.</p>}
           <div className="flex gap-3 flex-wrap">
+            {/* The renewal reminder points here: the next plan can be bought now and starts after this one ends (A-0003, DAB-001) */}
+            <button onClick={() => { setRenewAfter(activeSub.end_date || null); setSelectedStartWeek(null); setPageState('wizard'); }}
+              className="px-5 py-2.5 rounded text-sm font-bold" style={{ backgroundColor: C.gold, color: C.primary }}>
+              Renew — book the next plan
+            </button>
             <Link href="/dashboard" className="px-5 py-2.5 rounded text-sm font-semibold text-white" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>Manage subscription</Link>
             <button onClick={() => setUpgradeOpen(true)} className="px-5 py-2.5 rounded text-sm font-semibold" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>
               Upgrade plan
@@ -904,7 +965,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
             <h1 className="text-4xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Welcome to the family!</h1>
             <p className="text-base leading-relaxed" style={{ color: '#5C4B47' }}>
               Your Dabba Wala starts <strong>{fmtFull(startMonday)}</strong>. Freshly cooked meals are being planned for you right now.
-              Check your email for your full meal calendar and delivery details.
+              Your confirmation email is on its way; your meal days and skip options are in My Account › Dabba Wala.
             </p>
           </div>
 
@@ -1600,6 +1661,12 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
                   </div>
                 </div>
               )}
+
+              {/* Marketing only to people who ask (owner decision 2026-10-07, audit A-0003 MKT-001) */}
+              <label className="flex items-start gap-2 text-xs cursor-pointer mt-5" style={{ color: '#5C4B47' }}>
+                <input type="checkbox" className="mt-0.5" checked={offers} onChange={e => setOffers(e.target.checked)} />
+                <span>Email me offers and news now and then. Optional — stop any time with one tap.</span>
+              </label>
 
               {/* Delivery price for this address */}
               {postcodeStatus?.ok && quote && (

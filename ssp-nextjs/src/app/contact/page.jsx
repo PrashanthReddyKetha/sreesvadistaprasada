@@ -1,6 +1,7 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import ContactClient from './ContactClient';
 import { getOpeningHoursText, getDeliveryEnabled } from '@/lib/siteStatus';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 // Re-read the opening hours set in admin every 10 minutes
 export const revalidate = 600;
@@ -19,7 +20,7 @@ export default async function Page() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <ContactClient seoLine={PAGE_SEO['/contact'].h1} hours={hours} deliveryEnabled={deliveryEnabled} />
     </>

@@ -2,6 +2,7 @@ import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 import { getDeliveryEnabled } from '@/lib/siteStatus';
 import FaqSection, { faqSchema } from '@/components/FaqSection';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 const BASE_URL = 'https://sreesvadistaprasada.com';
 
@@ -43,7 +44,7 @@ export default async function DeliveryPage() {
   const delivery = await getDeliveryEnabled();
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <main className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
         {/* Hero */}
         <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor: '#800020' }}>

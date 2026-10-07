@@ -258,8 +258,7 @@ export default function NotifyMeDrawer({ isOpen, onClose, itemName, category }: 
               </h3>
               <p className="text-sm leading-relaxed" style={{ color: '#5C4B47' }}>
                 We'll text you the moment{' '}
-                <span className="font-semibold">{itemName}</span> launches — along with
-                your exclusive offer. See you at the table. 🙏
+                <span className="font-semibold">{itemName}</span> launches. See you at the table. 🙏
               </p>
             </div>
           )}

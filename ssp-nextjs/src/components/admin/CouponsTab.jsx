@@ -164,7 +164,7 @@ function CouponForm({ initial, mode, onDone, onCancel }) {
             <input type="number" step="0.01" min="0" value={f.max_discount} onChange={set('max_discount')} className={inp} style={inpStyle} />
           </Field>
         )}
-        <Field label={scopeIsOrders ? 'Minimum basket (£, optional)' : 'Minimum plan price (£, optional)'} hint={scopeIsOrders ? 'Food total before fees. Orders already need £15 minimum.' : 'Weekly is £75, monthly £250'}>
+        <Field label={scopeIsOrders ? 'Minimum basket (£, optional)' : 'Minimum plan price (£, optional)'} hint={scopeIsOrders ? 'Food total before fees. Orders already need £15 minimum.' : 'Weekly is £75, monthly £275'}>
           <input type="number" step="0.01" min="0" value={f.min_subtotal} onChange={set('min_subtotal')} className={inp} style={inpStyle} />
         </Field>
       </div>
@@ -247,6 +247,7 @@ function Redemptions({ coupon }) {
   if (!rows) return <p className="text-xs py-2" style={{ color: '#7A5C50' }}>Loading…</p>;
   if (!rows.length) return <p className="text-xs py-2" style={{ color: '#7A5C50' }}>Not used yet.</p>;
   return (
+    <div className="overflow-x-auto -mx-1 px-1">
     <table className="w-full text-xs mt-2">
       <thead><tr style={{ color: '#7A5C50' }}><th className="text-left py-1">When</th><th className="text-left py-1">Customer</th><th className="text-left py-1">Saving</th><th className="text-left py-1">Ref</th></tr></thead>
       <tbody>
@@ -260,6 +261,7 @@ function Redemptions({ coupon }) {
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 

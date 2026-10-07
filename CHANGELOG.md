@@ -1,5 +1,7 @@
 # Changelog
 
+> Retired 2026-08-28. Changes since then are recorded in `docs/ops/BUILD_LEDGER.md` and per-phase folders under `docs/ops/`.
+
 All changes listed in reverse chronological order. Each entry: `[YYYY-MM-DD] scope: description`.
 
 ---

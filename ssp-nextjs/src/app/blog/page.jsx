@@ -1,6 +1,7 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
 import Image from 'next/image';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 const SITE = 'https://sreesvadistaprasada.com';
 
@@ -83,7 +84,7 @@ const jsonLd = [
 export default function BlogPage() {
   return (
     <main className="min-h-screen bg-amber-50">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] bg-gradient-to-br from-amber-900 via-amber-800 to-orange-900 text-white py-16 px-6">
         <div className="max-w-4xl mx-auto">

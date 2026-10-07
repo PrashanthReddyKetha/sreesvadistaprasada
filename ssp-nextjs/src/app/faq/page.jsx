@@ -1,6 +1,7 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import FaqClient from './FaqClient';
 import { faqData } from '@/data/mockData';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 export const metadata = pageMeta('/faq', { image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80' });
 
@@ -13,16 +14,18 @@ const extraQAs = [
   },
   {
     q: 'Do you deliver to Edinburgh?',
-    a: 'Not yet — we currently deliver across Milton Keynes only. Edinburgh is coming soon; join the waitlist and we\'ll let you know the moment we launch there.',
+    a: 'Not yet — we currently deliver across Milton Keynes only. Edinburgh is coming soon; register your interest on our Edinburgh page and we\'ll let you know the moment we launch there.',
   },
   {
     q: 'Do you deliver to Glasgow?',
-    a: 'Not yet — we currently deliver across Milton Keynes only. Glasgow is coming soon; join the waitlist and we\'ll let you know the moment we launch there.',
+    a: 'Not yet — we currently deliver across Milton Keynes only. Glasgow is coming soon; register your interest on our Glasgow page and we\'ll let you know the moment we launch there.',
   },
 ];
 
 export default function Page() {
-  const allQAs = [...faqData.flatMap(cat => cat.items), ...extraQAs];
+  // The schema lists exactly what the page shows (A-0003, SEO-002): the extra questions are rendered too
+  const visibleFaq = [...faqData, { category: 'Where we deliver', items: extraQAs }];
+  const allQAs = visibleFaq.flatMap(cat => cat.items);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -41,9 +44,9 @@ export default function Page() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
-      <FaqClient seoLine={PAGE_SEO['/faq'].h1} />
+      <FaqClient seoLine={PAGE_SEO['/faq'].h1} data={visibleFaq} />
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 const SITE = 'https://sreesvadistaprasada.com';
 
@@ -49,8 +50,8 @@ const jsonLd = [
       url: SITE,
       logo: { '@type': 'ImageObject', url: `${SITE}/logo.png` },
     },
-    datePublished: '2025-01-01',
-    dateModified: '2026-07-01',
+    datePublished: '2026-07-17',
+    dateModified: '2026-10-07',
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE}/gongura` },
     image: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?w=1200&q=80',
     about: {
@@ -105,7 +106,7 @@ export default function GonguraPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
 
       <main className="min-h-screen bg-amber-50">

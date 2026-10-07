@@ -1,6 +1,7 @@
 import SeoSection from '@/components/SeoSection';
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import CateringClient from './CateringClient';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 export const metadata = pageMeta('/catering', { image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80' });
 
@@ -26,7 +27,7 @@ export default function Page() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <CateringClient />
       <SeoSection heading={PAGE_SEO['/catering'].content.heading} paragraphs={PAGE_SEO['/catering'].content.paragraphs} links={PAGE_SEO['/catering'].content.links} />

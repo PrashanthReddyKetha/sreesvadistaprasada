@@ -1,9 +1,10 @@
 'use client';
 import React, { useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
-import { faqData } from '@/data/mockData';
+import { faqData as defaultFaqData } from '@/data/mockData';
 
-const FAQ = ({ seoLine }) => {
+const FAQ = ({ seoLine, data }) => {
+  const faqData = data || defaultFaqData;
   const [openItems, setOpenItems] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
 

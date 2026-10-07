@@ -2,6 +2,7 @@ import SeoSection from '@/components/SeoSection';
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import BreakfastClient from './BreakfastClient';
 import FaqSection, { faqSchema } from '@/components/FaqSection';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 export const revalidate = 3600;
 
@@ -38,7 +39,7 @@ export default async function BreakfastPage() {
   const initialItems = await getItems();
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(FAQS)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema(FAQS)) }} />
       <BreakfastClient initialItems={initialItems} initialTab="Idli & Vada" />
       <SeoSection heading={PAGE_SEO['/breakfast'].content.heading} paragraphs={PAGE_SEO['/breakfast'].content.paragraphs} />
       <FaqSection title="South Indian breakfast — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse breakfast by section" />

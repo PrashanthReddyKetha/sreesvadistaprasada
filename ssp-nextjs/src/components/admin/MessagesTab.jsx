@@ -59,6 +59,7 @@ export default function MessagesTab() {
         ) : data.email_reports.sent === 0 ? <p className="text-sm text-gray-400">Connected. No emails in this period yet.</p> : (
           <>
             <p className="text-sm text-gray-600 mb-3">{data.email_reports.sent} sent · {data.email_reports.delivered} delivered · {data.email_reports.opened} opened · {data.email_reports.clicked} clicked</p>
+            <div className="overflow-x-auto -mx-1 px-1">
             <table className="w-full text-sm">
               <thead><tr className="text-left text-xs text-gray-500 uppercase tracking-wider">{['Email', 'Sent', 'Opened', 'Clicked'].map(h => <th key={h} className="py-1 pr-4 font-semibold">{h}</th>)}</tr></thead>
               <tbody>{data.email_reports.by_subject.map(b => (
@@ -69,6 +70,7 @@ export default function MessagesTab() {
                 </tr>
               ))}</tbody>
             </table>
+            </div>
           </>
         )}
       </div>
@@ -76,6 +78,7 @@ export default function MessagesTab() {
       <div className="bg-white rounded-xl overflow-hidden" style={card}>
         <h3 className="px-4 py-3 font-bold border-b" style={{ fontFamily: "'Playfair Display', serif", color: P, borderColor: '#f0ebe6' }}>By channel</h3>
         {data.summary.length === 0 ? <p className="text-center text-gray-400 py-8 text-sm">Nothing sent in this period.</p> : (
+          <div className="overflow-x-auto -mx-1 px-1">
           <table className="w-full text-sm">
             <thead style={{ backgroundColor: '#FDFBF7' }}><tr>{['Channel', 'Type', 'Result', 'Messages'].map(h => <th key={h} className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>)}</tr></thead>
             <tbody>{data.summary.map((s, i) => (
@@ -87,6 +90,7 @@ export default function MessagesTab() {
               </tr>
             ))}</tbody>
           </table>
+          </div>
         )}
       </div>
 

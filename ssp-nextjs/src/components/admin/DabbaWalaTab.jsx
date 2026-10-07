@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, RefreshCw, CheckCircle, Printer, Copy, AlertTriangle, X } from 'lucide-react';
 import api from '@/api';
+import ConfirmAction from '@/components/admin/ConfirmAction';
 import { words, BOX_TYPE, PLAN_NAME, PLAN_STATUS } from '@/lib/adminLabels';
 import WhatsAppSend from '@/components/admin/WhatsAppSend';
 import { dabbaDeliveryMessage, dabbaWelcomeMessage, dabbaRenewalMessage } from '@/lib/whatsappMessages';
@@ -856,6 +857,15 @@ function DabbaAnalytics() {
   const [churn, setChurn]     = useState([]);
   const [ending, setEnding]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const [remindAsk, setRemindAsk] = useState(null);   // a reminder emails a customer: ask first, say what happened (A-0003, ADM-003)
+  const [remindBusy, setRemindBusy] = useState(false);
+  const [remindNote, setRemindNote] = useState('');
+  const sendReminder = async (s) => {
+    setRemindBusy(true); setRemindNote('');
+    try { await api.post(`/admin/subscriptions/${s.id}/send-renewal-reminder`); setRemindNote(`Renewal reminder sent to ${s.customer_name}.`); }
+    catch (e) { setRemindNote(e.response?.status === 409 ? `${s.customer_name} was already reminded about this plan — it is sent once per plan.` : (e.response?.data?.detail || 'The reminder could not be sent.')); }
+    finally { setRemindBusy(false); setRemindAsk(null); }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -892,6 +902,13 @@ function DabbaAnalytics() {
           <div className="p-4 border-b flex items-center justify-between" style={{ borderColor:'rgba(128,0,32,0.08)' }}>
             <p className="font-semibold text-sm" style={{ color:'#800020' }}>Ending within 30 days ({ending.length})</p>
           </div>
+          <div className="overflow-x-auto -mx-1 px-1">
+          {remindNote && <p className="px-4 py-2 text-xs font-semibold" style={{ color: '#800020' }} role="status">{remindNote}</p>}
+          {remindAsk && (
+            <ConfirmAction title={`Send a renewal reminder to ${remindAsk.customer_name}?`} busy={remindBusy} confirmLabel="Send the reminder" onCancel={() => setRemindAsk(null)} onConfirm={() => sendReminder(remindAsk)}
+              rows={[['Now', 'One email (and WhatsApp or text if set up) saying their plan ends on ' + remindAsk.end_date + ' with a link to book the next one.'],
+                     ['Limit', 'Sent once per plan; a second tap is refused.'], ['Undo', 'Cannot be unsent.']]} />
+          )}
           <table className="w-full text-sm">
             <thead><tr style={{ backgroundColor:'#F9F6EE' }}>
               {['Name','Plan','End date','Days remaining','Action'].map(h => <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color:'#7A5C50' }}>{h}</th>)}
@@ -906,13 +923,14 @@ function DabbaAnalytics() {
                     <td className="px-4 py-3">{new Date(s.end_date+'T12:00:00').toLocaleDateString('en-GB')}</td>
                     <td className="px-4 py-3"><span style={{ color:days<=3?'#DC2626':'#8B6914', fontWeight:500 }}>{days}d</span></td>
                     <td className="px-4 py-3">
-                      <button onClick={() => api.post(`/admin/subscriptions/${s.id}/send-renewal-reminder`)} className="px-3 py-1 text-xs font-semibold rounded-lg" style={{ backgroundColor:'#F9F6EE', color:'#800020' }}>Send reminder</button>
+                      <button onClick={() => setRemindAsk(s)} className="px-3 py-1 text-xs font-semibold rounded-lg" style={{ backgroundColor:'#F9F6EE', color:'#800020' }}>Send reminder</button>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -921,6 +939,7 @@ function DabbaAnalytics() {
           <div className="p-4 border-b" style={{ borderColor:'rgba(128,0,32,0.08)' }}>
             <p className="font-semibold text-sm" style={{ color:'#800020' }}>Cancelled in last 30 days ({churn.length})</p>
           </div>
+          <div className="overflow-x-auto -mx-1 px-1">
           <table className="w-full text-sm">
             <thead><tr style={{ backgroundColor:'#F9F6EE' }}>
               {['Name','Plan','Box','Subscribed','Cancelled'].map(h => <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color:'#7A5C50' }}>{h}</th>)}
@@ -937,6 +956,7 @@ function DabbaAnalytics() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

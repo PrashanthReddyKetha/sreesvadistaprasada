@@ -137,9 +137,24 @@ const Overview = ({ orders, subscriptions, users, contacts, catering, newsletter
   useEffect(() => {
     api.get('/reviews/admin/stats').then(r => setReviewStats(r.data)).catch(() => {});
   }, []);
+  // Today, in London time — the first thing the owner needs on opening the phone (audit A-0003, ADM-002)
+  const todayKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+  const dayOf = (iso) => iso ? new Date(/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + 'Z').toLocaleDateString('en-CA', { timeZone: 'Europe/London' }) : '';
+  const todays = orders.filter(o => dayOf(o.created_at) === todayKey);
+  const todaysLive = todays.filter(o => o.status !== 'cancelled');
+  const takingsToday = todaysLive.reduce((s, o) => s + (o.total || 0), 0);
+  const toCook = orders.filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status)).length;
+  const nextSlot = orders.filter(o => ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status) && o.scheduled_slot_final)
+    .map(o => o.scheduled_slot_final).sort()[0];
+  const slotLabel = nextSlot ? new Date(nextSlot).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + (nextSlot.slice(0, 10) !== todayKey ? ' (' + nextSlot.slice(5, 10).split('-').reverse().join('/') + ')' : '') : '—';
   return (
     <div className="space-y-8">
       <HealthPanel />
+      <div className="rounded-xl px-5 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-white" style={{ background: 'linear-gradient(135deg, #800020, #5C0018)' }}>
+        {[['Orders today', todaysLive.length], ['Takings today', `£${takingsToday.toFixed(2)}`], ['To cook now', toCook], ['Next collection', slotLabel]].map(([k, v]) => (
+          <div key={k}><p className="text-[10px] uppercase tracking-wider opacity-70">{k}</p><p className="text-xl font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>{v}</p></div>
+        ))}
+      </div>
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard icon={TrendingUp}  label="Total Revenue"        value={`£${revenue.toFixed(2)}`} color="#4A7C59" />
         <StatCard icon={ShoppingBag} label="Total Orders"         value={orders.length}             color="#800020" />
@@ -947,6 +962,18 @@ const TABS = [
   { id:'push',          label:'Push',          icon:Bell         },
 ];
 
+/* Nineteen screens in five groups, so the owner's phone shows five buttons instead of a swipe strip
+   (audit A-0003, ADM-001; grouping approved by the owner 2026-10-07). */
+const GROUPS = [
+  { id: 'today',     label: 'Today',               icon: Utensils,    tabs: ['kitchen', 'overview', 'specials', 'slots'] },
+  { id: 'orders',    label: 'Orders & Dabba',      icon: ShoppingBag, tabs: ['orders', 'dabba', 'subscriptions'] },
+  { id: 'menu',      label: 'Menu',                icon: Tag,         tabs: ['menu', 'coupons', 'loyalty', 'reviews'] },
+  { id: 'customers', label: 'Customers & Messages', icon: Users,      tabs: ['users', 'enquiries', 'messages', 'automations', 'newsletter', 'push'] },
+  { id: 'system',    label: 'System',              icon: CheckCircle, tabs: ['analytics', 'systemlog'] },
+];
+const groupOf = (tabId) => GROUPS.find(g => g.tabs.includes(tabId)) || GROUPS[0];
+const TAB_BY_ID = Object.fromEntries(TABS.map(t => [t.id, t]));
+
 const Admin = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('kitchen');
@@ -1035,13 +1062,18 @@ const Admin = () => {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="hidden md:flex flex-col w-52 min-h-[calc(100vh-8rem)] pt-6 px-3 bg-white border-r" style={{ borderColor:'rgba(128,0,32,0.1)' }}>
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setActiveTab(id)}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-left mb-1 transition-all"
-              style={{ backgroundColor: activeTab===id?'rgba(128,0,32,0.08)':'transparent', color: activeTab===id?'#800020':'#5C4B47', fontWeight: activeTab===id?700:500 }}>
-              <Icon size={17} /> {label}
-            </button>
+        <aside className="hidden md:flex flex-col w-56 min-h-[calc(100vh-8rem)] pt-6 px-3 bg-white border-r" style={{ borderColor:'rgba(128,0,32,0.1)' }}>
+          {GROUPS.map(g => (
+            <div key={g.id} className="mb-3">
+              <p className="px-4 pb-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: '#9CA3AF' }}>{g.label}</p>
+              {g.tabs.map(id => { const { label, icon: Icon } = TAB_BY_ID[id]; return (
+                <button key={id} onClick={() => setActiveTab(id)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-left mb-0.5 transition-all"
+                  style={{ backgroundColor: activeTab===id?'rgba(128,0,32,0.08)':'transparent', color: activeTab===id?'#800020':'#5C4B47', fontWeight: activeTab===id?700:500 }}>
+                  <Icon size={16} /> {label}
+                </button>
+              ); })}
+            </div>
           ))}
           <div className="mt-auto pb-6 px-1">
             <Link href="/dashboard" className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all" style={{ color:'#7A5C50' }}>
@@ -1054,19 +1086,34 @@ const Admin = () => {
         </aside>
 
         {/* Mobile tab bar */}
-        <div className="md:hidden w-full fixed bottom-0 left-0 z-30 flex bg-white border-t shadow-lg overflow-x-auto" style={{ borderColor:'rgba(128,0,32,0.12)' }}>
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setActiveTab(id)}
-              className="flex-shrink-0 flex flex-col items-center py-2 px-3 gap-0.5 text-[10px] font-medium transition-colors"
-              style={{ color: activeTab===id?'#800020':'#9CA3AF' }}>
+        <nav className="md:hidden w-full fixed bottom-0 left-0 z-30 grid grid-cols-5 bg-white border-t shadow-lg" style={{ borderColor:'rgba(128,0,32,0.12)' }} aria-label="Admin sections">
+          {GROUPS.map(({ id, label, icon: Icon, tabs }) => { const on = groupOf(activeTab).id === id; return (
+            <button key={id} onClick={() => setActiveTab(tabs[0])} aria-current={on ? 'page' : undefined}
+              className="flex flex-col items-center py-2 px-1 gap-0.5 text-[10px] font-semibold leading-tight text-center transition-colors"
+              style={{ color: on ? '#800020' : '#6B7280', borderTop: on ? '2px solid #800020' : '2px solid transparent' }}>
               <Icon size={18} />
               <span>{label}</span>
             </button>
-          ))}
-        </div>
+          ); })}
+        </nav>
 
         {/* Content */}
         <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8 overflow-x-hidden">
+          {/* On a phone: which screen this is, and the other screens in the same group */}
+          <div className="md:hidden mb-4">
+            <h2 className="text-lg font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>{TAB_BY_ID[activeTab]?.label}</h2>
+            {groupOf(activeTab).tabs.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label={groupOf(activeTab).label}>
+                {groupOf(activeTab).tabs.map(id => (
+                  <button key={id} role="tab" aria-selected={activeTab === id} onClick={() => setActiveTab(id)}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border"
+                    style={{ backgroundColor: activeTab === id ? '#800020' : 'white', color: activeTab === id ? 'white' : '#5C4B47', borderColor: activeTab === id ? '#800020' : '#E5E7EB' }}>
+                    {TAB_BY_ID[id].label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {error && <div className="mb-4 p-4 rounded-lg text-sm font-medium" style={{ backgroundColor:'#FFF0F0', color:'#800020' }}>{error}</div>}
           {loading ? (
             <div className="flex items-center justify-center py-32">

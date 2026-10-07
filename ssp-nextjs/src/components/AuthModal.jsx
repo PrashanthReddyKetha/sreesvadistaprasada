@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   X, Eye, EyeOff, User, Mail, Phone, Lock,
   CheckCircle, Shield, AlertCircle, Info
@@ -9,6 +9,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { auth } from '../firebase';
 import api from '../api';
+import useDialog from '@/lib/useDialog';
 
 /* ── Google SVG ─────────────────────────────────────────────────────────── */
 const GoogleIcon = () => (
@@ -183,6 +184,7 @@ const AuthModal = () => {
   const [pw, setPw]       = useState('');
   const [showPw, setShowPw] = useState(false);
   const [terms, setTerms]   = useState(false);
+  const [offers, setOffers] = useState(false);
   const [otp, setOtp]       = useState('');
   const [regError, setRegError] = useState('');
 
@@ -230,14 +232,11 @@ const AuthModal = () => {
     onError: () => { setLoginError('Google sign-in was cancelled.'); setRegError('Google sign-in was cancelled.'); },
   });
 
-  // Escape closes the dialog, like the X button (hook must sit above the early return)
+  // Escape closes the dialog like the X button; focus moves in, stays inside and returns afterwards
+  // (hooks sit above the early return; A-0003, A11Y-010)
   const closeRef = useRef(null);
-  useEffect(() => {
-    if (!authOpen) return;
-    const onKey = (e) => { if (e.key === 'Escape') closeRef.current?.(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [authOpen]);
+  const stableClose = useCallback(() => closeRef.current?.(), []);
+  const modalRef = useDialog(authOpen, stableClose);
 
   if (!authOpen) return null;
 
@@ -263,7 +262,7 @@ const AuthModal = () => {
     setTab('login'); setStep(1); setLoading(false); setOtpLoading(false); setCountdown(0);
     setLoginEmail(''); setLoginPw(''); setLoginError('');
     setForgotEmail(''); setForgotSent(false); setForgotError(''); setForgotLoading(false);
-    setName(''); setEmail(''); setPhone(''); setPw(''); setTerms(false); setOtp(''); setRegError('');
+    setName(''); setEmail(''); setPhone(''); setPw(''); setTerms(false); setOffers(false); setOtp(''); setRegError('');
     setEmailStatus(null); setPhoneStatus(null); setNameError(''); setPhoneError(''); setPwError('');
     setGoogleCred(null); setGoogleEmail(''); setGoogleName(''); setGooglePhone('');
     setGoogleOtp(''); setGoogleStep(null); setGoogleError('');
@@ -393,6 +392,7 @@ const AuthModal = () => {
         phone: toE164UK(phone.trim()),
         password: pw,
         firebase_token: firebaseToken,
+        marketing_consent: offers,
       });
       login(res.data.user, res.data.access_token);
       close();
@@ -494,11 +494,11 @@ const AuthModal = () => {
       : 'Sign in — your orders and subscription are right where you left them.';
 
   return (
-    <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Sign in or create an account">
+    <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center p-4">
       {/* Invisible reCAPTCHA container */}
       <div id="recaptcha-container" />
 
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] flex flex-col"
+      <div ref={modalRef} role="dialog" aria-modal="true" aria-label="Sign in or create an account" className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] flex flex-col"
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
@@ -715,6 +715,15 @@ const AuthModal = () => {
                   <a href="/privacy-policy" target="_blank" className="font-semibold hover:underline" style={{ color: '#800020' }}>Privacy Policy</a>.
                   Your data is never sold or shared.
                 </span>
+              </label>
+              {/* Separate, optional: marketing only to people who ask (owner decision 2026-10-07, audit A-0003 MKT-001) */}
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
+                  offers ? 'border-[#800020] bg-[#800020]' : 'border-gray-300'
+                }`} onClick={() => setOffers(v => !v)}>
+                  {offers && <CheckCircle size={12} className="text-white" />}
+                </div>
+                <span className="text-xs text-gray-500 leading-relaxed">Email me offers and news now and then. Optional — stop any time with one tap.</span>
               </label>
 
               <button type="submit" disabled={otpLoading || emailStatus === 'taken' || emailStatus === 'taken_google' || phoneStatus === 'taken' || !terms}

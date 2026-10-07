@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, memo, startTransitio
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import useDialog from '@/lib/useDialog';
 import { Flame, ShoppingBag, ChevronRight, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { isOrderable } from '@/config/softLaunch';
@@ -223,14 +224,24 @@ export default function OrderClient({ initialItems = [] }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, [stickyH, searchMode]);
 
+  // The kitchen's server sleeps when quiet and takes up to a minute to wake: say so, and tell a failure apart from an
+  // empty search (audit A-0003, UX-002)
+  const [slowLoad, setSlowLoad] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const closeSheet = useCallback(() => setSheetItem(null), []);
+  const sheetRef = useDialog(!!sheetItem, closeSheet);   // focus, Escape and Tab behave like a real dialog (A-0003, A11Y-001)
   useEffect(() => {
     const cached = getCached('all');
     if (cached) { setDishes(cached); setLoading(false); }
+    setLoadFailed(false);
+    const slow = setTimeout(() => setSlowLoad(true), 4000);
     api.get('/menu?available=true')
       .then(res => { startTransition(() => setDishes(res.data)); setCached('all', res.data); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+      .catch(() => { if (!getCached('all')) setLoadFailed(true); })
+      .finally(() => { clearTimeout(slow); setSlowLoad(false); setLoading(false); });
+    return () => clearTimeout(slow);
+  }, [loadAttempt]);
 
   const qtyOf = useCallback(
     (id) => cartItems.find(i => i.id === id)?.quantity || 0,
@@ -411,8 +422,23 @@ export default function OrderClient({ initialItems = [] }) {
       {/* overflow-anchor off: the sticky block above changes height when it
           collapses, and browser scroll anchoring would fight it (flicker) */}
       <div className="max-w-3xl mx-auto px-4 pb-40" style={{ overflowAnchor: 'none' }}>
-        {loading && <p className="py-10 text-center text-sm" style={{ color: C.muted }}>Loading menu…</p>}
-        {!loading && bySection.length === 0 && (
+        {loading && (
+          <div className="py-10 text-center text-sm" style={{ color: C.muted }} role="status" aria-live="polite">
+            <p>Loading menu…</p>
+            {slowLoad && <p className="mt-2 text-xs">Our kitchen's server is waking up — this can take up to a minute the first time. Thanks for waiting.</p>}
+          </div>
+        )}
+        {!loading && loadFailed && dishes.length === 0 && (
+          <div className="py-10 text-center text-sm" style={{ color: C.muted }} role="alert">
+            <p className="font-semibold" style={{ color: C.burgundy }}>We couldn't load the menu.</p>
+            <p className="mt-1">Please try again in a moment, or message us on WhatsApp and we'll take your order by hand.</p>
+            <div className="mt-4 flex gap-3 justify-center">
+              <button onClick={() => { setLoading(true); setLoadAttempt(a => a + 1); }} className="px-4 py-2 text-xs font-semibold text-white rounded-sm" style={{ backgroundColor: C.burgundy }}>Try again</button>
+              <a href="https://wa.me/447307119962" className="px-4 py-2 text-xs font-semibold rounded-sm border" style={{ borderColor: C.burgundy, color: C.burgundy }}>WhatsApp us</a>
+            </div>
+          </div>
+        )}
+        {!loading && !loadFailed && bySection.length === 0 && (
           <p className="py-10 text-center text-sm" style={{ color: C.muted }}>No dishes match your search.</p>
         )}
         {bySection.map((sec, si) => (
@@ -436,7 +462,8 @@ export default function OrderClient({ initialItems = [] }) {
         return (
           <>
             <div className="fixed inset-0 z-[60] bg-black/40" onClick={() => setSheetItem(null)} />
-            <div className="fixed bottom-0 left-0 right-0 z-[70] animate-slide-up rounded-t-3xl overflow-hidden
+            <div ref={sheetRef} role="dialog" aria-modal="true" aria-label={d.name}
+              className="fixed bottom-0 left-0 right-0 z-[70] animate-slide-up rounded-t-3xl overflow-hidden
                 md:bottom-auto md:left-1/2 md:right-auto md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2
                 md:rounded-3xl md:w-[880px] md:max-w-[92vw] md:flex md:animate-none"
               style={{ backgroundColor: C.ivory, boxShadow: '0 -10px 40px rgba(45,36,34,0.35)', maxHeight: '85vh' }}>

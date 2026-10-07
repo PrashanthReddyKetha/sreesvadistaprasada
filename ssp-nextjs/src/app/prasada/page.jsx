@@ -2,6 +2,7 @@ import SeoSection from '@/components/SeoSection';
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import PrasadaClient from './PrasadaClient';
 import FaqSection, { faqSchema } from '@/components/FaqSection';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 export const revalidate = 3600;
 
@@ -39,7 +40,7 @@ export default async function PrasadaPage() {
   const initialItems = await getItems();
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(FAQS)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema(FAQS)) }} />
       <PrasadaClient initialItems={initialItems} initialTab="Bites & Starters" />
       <SeoSection heading={PAGE_SEO['/prasada'].content.heading} paragraphs={PAGE_SEO['/prasada'].content.paragraphs} />
       <FaqSection title="Prasada pure-veg menu — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse Prasada by section" />

@@ -1,6 +1,7 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import SubscriptionsClient from './SubscriptionsClient';
 import { getDishPhotos } from '@/lib/siteStatus';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 export const revalidate = 600;
 
@@ -43,7 +44,7 @@ export default async function Page() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <SubscriptionsClient art={art} />
       {/* Server-rendered content — visible twin of what used to be sr-only */}
@@ -58,7 +59,7 @@ export default async function Page() {
               delivered to your door, Monday to Friday, across
               Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley,
               Westcroft, Emerson Valley and all MK postcodes (MK1–MK19).
-              Edinburgh and Glasgow subscriptions are coming soon — join the waitlist.
+              Edinburgh and Glasgow subscriptions are coming soon — register your interest on those city pages.
             </p>
           </div>
           <div>

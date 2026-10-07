@@ -63,6 +63,21 @@ async def dump():
     return docs
 
 
+from contextlib import asynccontextmanager  # noqa: E402
+
+
+@asynccontextmanager
+async def _lifespan(a):
+    """The app's own start-up, then: Dabba Wala follows the delivery switch (D-034) and the journeys exercise the
+    wizard, so delivery is switched on for this stand-in."""
+    async with server.lifespan(a):
+        await db.settings.update_one({"_id": "pickup_slots"}, {"$set": {"delivery_enabled": True}}, upsert=True)
+        yield
+
+
+app.router.lifespan_context = _lifespan
+
+
 @app.post("/__reset")
 async def reset():
     """Empty the visit record and forget rate limits (the tests send more than one visitor ever would from one address)."""

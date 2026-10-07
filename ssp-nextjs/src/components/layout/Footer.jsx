@@ -96,7 +96,7 @@ const Footer = () => {
               Taste for your heart · memories on a plate
             </span>
             <p className="text-sm leading-relaxed mb-4" style={{ color: '#A09890' }}>
-              Grandmother's recipes, slow tadkas, and the patient kind of love that fills a house with aroma. Cooked in Milton Keynes, with Edinburgh &amp; Glasgow coming soon. Sent across the UK in small, careful jars.
+              Grandmother's recipes, slow tadkas, and the patient kind of love that fills a house with aroma. Cooked in Milton Keynes, with Edinburgh &amp; Glasgow coming soon. Pickles and podis by post are coming soon too.
             </p>
             <p className="text-sm italic" style={{ color: '#F4C430' }}>
               "Cooked with care. Served with love."

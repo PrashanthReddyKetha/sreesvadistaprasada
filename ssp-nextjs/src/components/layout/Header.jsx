@@ -173,8 +173,14 @@ const Header = () => {
                     className="relative dropdown-trigger"
                     onMouseEnter={() => setOpenDropdown(item.name)}
                     onMouseLeave={() => setOpenDropdown(null)}
+                    onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOpenDropdown(null); }}
                   >
                     <button
+                      type="button"
+                      aria-haspopup="menu"
+                      aria-expanded={openDropdown === item.name}
+                      onClick={() => setOpenDropdown(openDropdown === item.name ? null : item.name)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') setOpenDropdown(null); }}
                       className="flex items-center gap-1 px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 whitespace-nowrap"
                       style={{ color: openDropdown === item.name ? '#800020' : '#5C4B47' }}
                       data-testid={`nav-${item.name.toLowerCase().replace(/\s/g, '-')}`}

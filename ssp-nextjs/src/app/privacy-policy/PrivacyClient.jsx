@@ -22,7 +22,7 @@ const PrivacyPolicy = () => (
         <h1 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
           Privacy Policy
         </h1>
-        <p className="text-sm text-gray-300 mt-2">Last updated: 11 April 2026</p>
+        <p className="text-sm text-gray-300 mt-2">Last updated: 7 October 2026</p>
       </div>
     </section>
 
@@ -31,7 +31,7 @@ const PrivacyPolicy = () => (
       <Section title="1. Who We Are">
         <p>
           Sree Svadista Prasada ("<strong>we</strong>", "<strong>us</strong>", "<strong>our</strong>") is a South Indian food ordering
-          and meal-subscription service operating in Milton Keynes, Edinburgh, and Glasgow, United Kingdom.
+          and meal-subscription service run from a home kitchen in Milton Keynes, United Kingdom (Edinburgh and Glasgow are planned, not yet served).
         </p>
         <p>
           For the purposes of UK data-protection law, we are the <strong>Data Controller</strong>.
@@ -59,9 +59,9 @@ const PrivacyPolicy = () => (
               ['Identity', 'Name, email address', 'Account creation, order fulfilment'],
               ['Contact', 'Phone number, delivery address', 'Delivery, customer support'],
               ['Transaction', 'Order history, subscription status', 'Fulfilment, billing, dispute resolution'],
-              ['Technical', 'IP address, browser type, session data', 'Security, fraud prevention, analytics'],
+              ['Technical', 'Browser type and an anonymous daily code made from your internet address (the address itself is not stored)', 'Security, rate limiting, counting visits'],
               ['Communications', 'Enquiry content, support messages', 'Responding to enquiries'],
-              ['Marketing', 'Email address (opt-in only)', 'Newsletter and promotional updates'],
+              ['Marketing', 'Email address, and the date you ticked the box (opt-in only)', 'Offers and news you asked for'],
             ].map(([cat, ex, why]) => (
               <tr key={cat}>
                 <td className="p-3 border font-medium" style={{ borderColor: 'rgba(128,0,32,0.1)' }}>{cat}</td>
@@ -86,12 +86,13 @@ const PrivacyPolicy = () => (
 
       <Section title="4. Artificial Intelligence (AI) Processing">
         <p>
-          We use an AI language model provided by <strong>Anthropic (Claude)</strong> solely to assist our kitchen team with
-          generating menu item descriptions and suggestions. This AI tool:
+          We use an AI language model provided by <strong>Anthropic (Claude)</strong> for two internal jobs: helping our kitchen
+          write menu descriptions, and, at most a few times a month, explaining a sharp change in our overall figures
+          (for example "orders fell this week"). This AI tool:
         </p>
         <ul className="list-disc ml-5 space-y-1">
-          <li>Is used only for internal content generation, <strong>not for automated decisions about customers</strong>.</li>
-          <li>Does not receive, store, or process any personal data about customers or website visitors.</li>
+          <li>Is used only for internal content and for reading <strong>totals</strong>, <strong>not for automated decisions about customers</strong>.</li>
+          <li>Never receives names, email addresses, phone numbers, addresses, order contents or anything typed by a visitor, only aggregate counts.</li>
           <li>Is operated in compliance with the EU AI Act's requirements for general-purpose AI systems (GPAI) used in low-risk administrative contexts.</li>
           <li>Does not perform any profiling, automated decision-making, or high-risk AI processing as defined under the EU AI Act or UK GDPR Article 22.</li>
         </ul>
@@ -100,13 +101,36 @@ const PrivacyPolicy = () => (
         </p>
       </Section>
 
-      <Section title="5. Cookies">
-        <p>We use the following types of cookies:</p>
+      <Section title="5. Cookies and Similar Storage">
+        <p>We use a small number of cookies and browser storage:</p>
         <ul className="list-disc ml-5 space-y-1">
-          <li><strong>Strictly necessary cookies</strong> — Authentication tokens stored in <code>localStorage</code> (<code>ssp_token</code>) and your basket state (<code>ssp_cart</code>). These are essential for the service to function and do not require consent.</li>
-          <li><strong>Analytics cookies</strong> — If we use analytics services in future, we will seek your consent beforehand.</li>
+          <li><strong>Essential</strong> — to keep your basket, keep you signed in and remember your cookie choice. These are always on and need no consent.</li>
+          <li><strong>Analytics</strong> — only if you choose "Accept all". We use Google Analytics (loaded through Google Tag Manager) to understand how the site is used. If you choose "Essential only", Google Analytics sets no cookies and receives only anonymous, cookieless signals.</li>
         </ul>
-        <p>You can clear stored data at any time via your browser's developer tools or settings.</p>
+        <p>You can change your choice at any time by clearing this site&apos;s data in your browser; the banner will appear again.</p>
+      </Section>
+
+      <Section title="5a. Our Own Visit Record">
+        <p>
+          We keep our own count of visits to this site: which pages and dishes are viewed, which buttons are used, and which
+          website or campaign link brought the visitor. This record does not contain your name, email address, phone number
+          or postal address, and anything typed into our forms is not read. To tell that several pages were opened in the
+          same visit, your internet address and browser type are used for a moment to make an anonymous code that changes
+          every day; the address itself is not stored, and the code cannot be turned back into it or used to follow you from
+          one day to the next. If you accept analytics cookies, an anonymous number is kept in your browser so that a return
+          visit can be recognised; if you do not, nothing is stored on your device for this purpose. Visits are not linked to
+          customer accounts. The record is deleted automatically after 400 days.
+        </p>
+      </Section>
+
+      <Section title="5b. Messages We Send">
+        <p>
+          We send messages about your order or meal plan by email, WhatsApp or text message; these are part of the service.
+          We send offers, news and reminders (such as a request for a review, or notice that your plan is about to end)
+          <strong> only if you have ticked the &quot;email me offers&quot; box</strong> at sign-up, at checkout or in the Dabba Wala wizard,
+          or joined our newsletter. Every such email has a one-tap unsubscribe link, you can reply STOP on WhatsApp, and you
+          can change your choice in My Account at any time. We keep a record of the messages we send for 400 days.
+        </p>
       </Section>
 
       <Section title="6. Data Sharing and Third Parties">
@@ -115,6 +139,11 @@ const PrivacyPolicy = () => (
           <li><strong>MongoDB Atlas (MongoDB, Inc.)</strong> — our cloud database provider, storing orders, accounts, and enquiries. Data is processed under a Data Processing Agreement.</li>
           <li><strong>Vercel</strong> — hosting our frontend application. No personal data is stored by Vercel beyond standard server logs.</li>
           <li><strong>Render</strong> — hosting our backend API. Standard server logs apply.</li>
+          <li><strong>Stripe</strong> — takes card payments. Your card details go to Stripe directly and never touch our servers; we receive a payment reference and the amount.</li>
+          <li><strong>Resend</strong> — sends our emails (order confirmations, replies, and offers you have asked for).</li>
+          <li><strong>Twilio</strong> — sends WhatsApp and text messages about your order or plan.</li>
+          <li><strong>Google (Firebase)</strong> — verifies your phone number with a one-time code when you create an account.</li>
+          <li><strong>Google Tag Manager / Google Analytics</strong> — only if you accept analytics cookies (Section 5).</li>
           <li><strong>Google OAuth</strong> — optional login via Google. We receive only your name and email address; Google's privacy policy governs their processing.</li>
           <li><strong>Delivery and postcode services</strong> — we use <em>postcodes.io</em> (a public UK postcode API) and <em>getAddress.io</em> for address lookup. Your postcode is sent to these services only during checkout address lookup; they do not receive any other personal data.</li>
           <li><strong>Anthropic</strong> — as described in Section 4, for AI-assisted menu content only. No customer data is shared.</li>
@@ -124,7 +153,7 @@ const PrivacyPolicy = () => (
 
       <Section title="7. International Transfers">
         <p>
-          Some of our service providers (MongoDB Atlas, Vercel, Anthropic) may process data outside the UK and EEA.
+          Some of our service providers (MongoDB Atlas, Vercel, Render, Stripe, Resend, Twilio, Google, Anthropic) may process data outside the UK and EEA.
           Where this occurs, we rely on adequacy decisions or standard contractual clauses (SCCs) approved by the UK ICO
           to ensure your data receives an equivalent level of protection.
         </p>
@@ -133,10 +162,11 @@ const PrivacyPolicy = () => (
       <Section title="8. Data Retention">
         <p>We retain your personal data for the following periods:</p>
         <ul className="list-disc ml-5 space-y-1">
-          <li><strong>Account data</strong> — for as long as your account is active, plus 12 months after account deletion.</li>
-          <li><strong>Order and transaction data</strong> — 7 years, as required by UK tax law (HMRC).</li>
+          <li><strong>Account data</strong> — until you ask us to delete your account.</li>
+          <li><strong>Order and payment records</strong> — 6 years, as required for UK tax records, with your name and contact details removed if you delete your account.</li>
           <li><strong>Enquiries and support messages</strong> — 2 years from last correspondence.</li>
-          <li><strong>Newsletter subscriptions</strong> — until you unsubscribe, or 3 years without engagement, whichever is earlier.</li>
+          <li><strong>Newsletter and offer preferences</strong> — until you unsubscribe or withdraw consent.</li>
+          <li><strong>Message records and our own visit record</strong> — 400 days.</li>
         </ul>
       </Section>
 

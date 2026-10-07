@@ -1,6 +1,7 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import HomeClient from './HomeClient';
 import { getOpeningHoursSpec, getOpeningDays, getFeaturedItems, getChefSpecialItem, getDishPhotos } from '@/lib/siteStatus';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 // Re-read the opening hours set in admin every 10 minutes
 export const revalidate = 600;
@@ -39,8 +40,7 @@ const jsonLd = {
         { '@type': 'City', name: 'Milton Keynes' },
       ],
       sameAs: [
-        'https://www.instagram.com/sreesvadistaprasada/',
-        'https://www.facebook.com/sreesvadistaprasada',
+        'https://www.instagram.com/sreesvadistaprasada/',   // no Facebook page exists yet (A-0003, SEO-012)
       ],
       hasMenu: 'https://sreesvadistaprasada.com/menu',
       hasOfferCatalog: {
@@ -103,7 +103,7 @@ export default async function HomePage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify({ ...jsonLd, '@graph': graph }) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd({ ...jsonLd, '@graph': graph }) }}
       />
       <HomeClient intro={{ h1: PAGE_SEO['/'].h1, ...PAGE_SEO['/'].content }} initialFeatured={featured} initialSpecial={special} art={art} hoursByDay={hoursByDay} />
     </>

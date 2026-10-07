@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { RefreshCw, X, Eye, Send, Power, Pencil } from 'lucide-react';
 import api from '@/api';
+import ConfirmAction from '@/components/admin/ConfirmAction';
 
 /* Admin › Automations — messages the site can send by itself. Each is off until switched on,
    and can be previewed (who, and the exact message) without sending anything. */
@@ -166,6 +167,7 @@ export default function AutomationsTab() {
   const [preview, setPreview] = useState(null);
   const [words, setWords] = useState(null);
   const [confirm, setConfirm] = useState(null);
+  const [pauseAsk, setPauseAsk] = useState(null);
   const [busy, setBusy] = useState(false);
   const [codes, setCodes] = useState({});
 
@@ -190,6 +192,13 @@ export default function AutomationsTab() {
     finally { setBusy(false); }
   };
 
+  const pauseAll = async (paused) => {
+    setBusy(true); setNote('');
+    try { await api.put('/admin/automations/pause-all', { paused }); setNote(paused ? 'Every automatic customer message is paused.' : 'Automatic messages are running again (each one still follows its own switch).'); await load(); }
+    catch (e) { setNote(e.response?.data?.detail || 'That did not work. Please try again.'); }
+    finally { setBusy(false); setPauseAsk(null); }
+  };
+
   if (loading && !data) return <p className="text-center text-gray-400 py-16">Loading…</p>;
   if (error) return <p className="text-center py-16" style={{ color: '#B91C1C' }}>{error} <button onClick={load} className="underline ml-2">Retry</button></p>;
 
@@ -198,6 +207,13 @@ export default function AutomationsTab() {
       <div className="flex items-start gap-3">
         <p className="text-sm text-gray-600 flex-1">Messages the site can send by itself. Each one is <b>off</b> until you switch it on. Use <b>Preview</b> to see exactly who would get it and what it says, and <b>Send me a test</b> to read it in your own inbox first.</p>
         <button onClick={load} className="p-2 rounded-lg border" style={{ borderColor: '#e0d9d0' }} aria-label="Refresh"><RefreshCw size={15} className={loading ? 'animate-spin' : ''} /></button>
+      </div>
+      {/* One switch that stops everything the site sends by itself (audit A-0003, MKT-006) */}
+      <div className="rounded-xl px-4 py-3 flex flex-wrap items-center gap-3 text-sm" style={{ backgroundColor: data.all_paused ? '#FEF3C7' : '#F0FDF4', color: data.all_paused ? '#854D0E' : '#166534' }}>
+        <span className="flex-1 font-semibold">{data.all_paused ? 'All automatic customer messages are PAUSED — nothing goes out until you resume.' : 'Automatic messages follow the switches below. Pause everything in one tap if something looks wrong.'}</span>
+        <button onClick={() => setPauseAsk(!data.all_paused)} disabled={busy} className="px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: data.all_paused ? '#2E7D32' : '#B91C1C' }}>
+          {data.all_paused ? 'Resume messages' : 'Pause everything'}
+        </button>
       </div>
       {note && <p className="text-sm px-4 py-2 rounded-lg" style={{ backgroundColor: '#FFF8E1', color: '#5C4B47' }} role="status">{note}</p>}
 
@@ -252,6 +268,13 @@ export default function AutomationsTab() {
 
       {preview && <Preview automation={preview} onClose={() => setPreview(null)} />}
       {words && <Words automation={words} onClose={() => setWords(null)} onSaved={load} />}
+      {pauseAsk !== null && (
+        <ConfirmAction title={pauseAsk ? 'Pause every automatic message?' : 'Resume automatic messages?'} busy={busy} danger={pauseAsk}
+          confirmLabel={pauseAsk ? 'Pause everything' : 'Resume'} onCancel={() => setPauseAsk(null)} onConfirm={() => pauseAll(pauseAsk)}
+          rows={[['Now', pauseAsk ? 'The eleven automations, the review requests and the "kitchen reopened" message stop.' : 'Each automation follows its own switch again.'],
+                 ['Not affected', 'Order confirmations, status updates and your own alerts — those are not marketing.'],
+                 ['Undo', pauseAsk ? 'Tap Resume messages.' : 'Tap Pause everything.']]} />
+      )}
       {confirm && <Confirm automation={confirm} rules={data.rules} busy={busy} onCancel={() => setConfirm(null)}
         onConfirm={() => change(confirm, { enabled: !confirm.enabled }, `"${confirm.name}" is now ${confirm.enabled ? 'off' : 'on'}.`)} />}
     </div>

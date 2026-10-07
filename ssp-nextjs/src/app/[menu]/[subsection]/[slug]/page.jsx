@@ -3,6 +3,7 @@ import { dishContent, SUBPAGE_ALIAS } from '@/lib/seo/dishCopy';
 import { notFound, permanentRedirect } from 'next/navigation';
 import ItemDetailClient from './ItemDetailClient';
 import { buildItemUrl } from '@/lib/itemUrl';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 // 15 min ISR — pages are pre-built at deploy (generateStaticParams below), so
 // visitors always get a static page instantly; regeneration happens in the
@@ -244,7 +245,7 @@ export default async function ItemPage(props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <ItemDetailClient initialItem={item} initialGoesWith={initialGoesWith} seoCopy={dishContent(item)} />
     </>

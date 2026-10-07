@@ -2,6 +2,7 @@ import SeoSection from '@/components/SeoSection';
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import SvadistaClient from './SvadistaClient';
 import FaqSection, { faqSchema } from '@/components/FaqSection';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 export const revalidate = 3600;
 
@@ -20,7 +21,7 @@ async function getItems() {
 const FAQS = [
   { q: 'What are the most popular non-veg dishes?', a: 'Favourites include Chicken Dum Biryani and Chicken Fry Piece Biryani, Gongura Chicken Curry (tangy sorrel leaf curry), Spicy Andhra Chicken Curry and Chicken 65. Every recipe is authentic Andhra home-style cooking.' },
   { q: 'How spicy is Andhra food?', a: 'Andhra cuisine is known for bold, fiery flavours. Our dishes are prepared to traditional spice levels. You can request a milder preparation in the special instructions when ordering.' },
-  { q: 'Do you deliver non-veg Indian food to Edinburgh and Glasgow?', a: 'Not yet — we currently deliver across Milton Keynes only. Edinburgh and Glasgow are coming soon; join the waitlist to be notified when we launch there.' },
+  { q: 'Do you deliver non-veg Indian food to Edinburgh and Glasgow?', a: 'Not yet — we currently deliver across Milton Keynes only. Edinburgh and Glasgow are coming soon; register your interest on our city pages to be notified when we launch there.' },
   { q: 'What makes Svadista different from other Indian takeaways?', a: 'Svadista means delicious in Sanskrit. Unlike generic Indian takeaways, every Svadista dish uses regional Andhra Telugu recipes — slow-cooked gravies, whole spice tadkas, and chicken cooked on the bone.' },
 ];
 
@@ -38,7 +39,7 @@ export default async function SvadistaPage() {
   const initialItems = await getItems();
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(FAQS)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema(FAQS)) }} />
       <SvadistaClient initialItems={initialItems} initialTab="Starters" />
       <SeoSection heading={PAGE_SEO['/svadista'].content.heading} paragraphs={PAGE_SEO['/svadista'].content.paragraphs} />
       <FaqSection title="Svadista non-veg menu — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse Svadista by section" />

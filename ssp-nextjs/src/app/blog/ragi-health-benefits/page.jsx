@@ -1,5 +1,6 @@
 import { PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 const SITE = 'https://sreesvadistaprasada.com';
 
@@ -28,8 +29,8 @@ const jsonLd = [
     description: 'Ragi (finger millet / Eleusine coracana) is a gluten-free ancient grain with exceptional calcium content, low glycaemic index, and high dietary fibre. A nutritional deep-dive into the Andhra staple.',
     author: { '@type': 'Organization', name: 'Sree Svadista Prasada', url: SITE },
     publisher: { '@type': 'Organization', name: 'Sree Svadista Prasada', url: SITE, logo: { '@type': 'ImageObject', url: `${SITE}/logo.png` } },
-    datePublished: '2025-03-01',
-    dateModified: '2026-07-01',
+    datePublished: '2026-07-17',
+    dateModified: '2026-10-07',
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE}/blog/ragi-health-benefits` },
     image: 'https://images.unsplash.com/photo-1743615467363-250466982515?w=1200&q=80',
     articleSection: 'Nutrition & Wellness',
@@ -68,7 +69,7 @@ const NUTRITION = [
 export default function RagiArticle() {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
 
       <main className="min-h-screen bg-amber-50">
         <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] bg-gradient-to-br from-amber-900 via-amber-800 to-orange-900 text-white py-16 px-6">

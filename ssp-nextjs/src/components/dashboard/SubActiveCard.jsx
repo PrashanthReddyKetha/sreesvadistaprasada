@@ -157,7 +157,7 @@ export default function SubActiveCard({ sub }) {
       s + (d.items||[]).reduce((a, it) => a + (typeof it==='object' && it.price ? it.price : 0), 0), 0);
     const mealsWithPrices = days.filter(d => (d.items||[]).some(it => typeof it==='object' && it.price));
     if (!mealsWithPrices.length) return null;
-    const perMealPlan = sub.plan === 'monthly' ? 12.5 : 15;
+    const perMealPlan = sub.plan === 'monthly' ? 13.75 : 15;   // £275 / 20 meals, £75 / 5 meals
     const avgRetail = totalRetail / mealsWithPrices.length;
     const weekSaving = (avgRetail - perMealPlan) * mealsWithPrices.length;
     if (weekSaving < 1) return null;
@@ -320,7 +320,7 @@ export default function SubActiveCard({ sub }) {
               <p className="text-xs text-center" style={{ color: '#7A5C50' }}>
                 Need to make a change?{' '}
                 <a href="https://wa.me/447307119962?text=Hi,%20I%20need%20help%20with%20my%20Dabba%20Wala%20subscription." target="_blank" rel="noopener noreferrer" className="underline font-semibold" style={{ color: '#800020' }}>Contact us on WhatsApp</a>
-                {' '}— we aim to respond within 2 hours.
+                {' '}— we reply as soon as we can during kitchen hours.
               </p>
             </div>
           </div>

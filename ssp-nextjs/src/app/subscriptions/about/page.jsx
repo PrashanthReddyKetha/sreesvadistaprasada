@@ -1,5 +1,6 @@
 import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
 import Link from 'next/link';
+import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 export const metadata = pageMeta('/subscriptions/about');
 
@@ -28,7 +29,7 @@ const faqSchema = {
       name: 'What areas does the Dabba Wala deliver to?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Hot dabbas are delivered Monday to Friday across all Milton Keynes postcodes MK1 to MK19, including Bletchley, Newport Pagnell, Central MK, Stony Stratford, Wolverton and Greenleys. Edinburgh and Glasgow subscriptions are coming soon — join the waitlist to be first in line.',
+        text: 'Hot dabbas are delivered Monday to Friday across all Milton Keynes postcodes MK1 to MK19, including Bletchley, Newport Pagnell, Central MK, Stony Stratford, Wolverton and Greenleys. Edinburgh and Glasgow subscriptions are coming soon — register your interest on our city pages to be first in line.',
       },
     },
     {
@@ -47,7 +48,7 @@ export default function SubscriptionsAboutPage() {
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }}
       />
 
       <div className="max-w-3xl mx-auto px-4 py-16 md:py-20">
@@ -113,7 +114,7 @@ export default function SubscriptionsAboutPage() {
         </h2>
         <div className="space-y-3 mb-10">
           {[
-            ['What areas do you deliver to?', 'Hot dabbas, Monday to Friday, across all MK postcodes MK1–MK19 including Wolverton, Stony Stratford, Greenleys, Newport Pagnell and Bletchley. Edinburgh and Glasgow are coming soon — join the waitlist.'],
+            ['What areas do you deliver to?', 'Hot dabbas, Monday to Friday, across all MK postcodes MK1–MK19 including Wolverton, Stony Stratford, Greenleys, Newport Pagnell and Bletchley. Edinburgh and Glasgow are coming soon — register your interest on our city pages.'],
             ['Can I pause or cancel?', 'Skip individual days from your Dashboard. Need to pause, change or cancel? Get in touch — we\'re flexible and will work it out with you. No auto-renewal.'],
             ['Can I customise my dabba?', 'Yes. Contact us on WhatsApp with any dietary requirements or preferences and we will plan accordingly.'],
             ['How is the dabba delivered?', 'Delivered hot in insulated packaging to your door. You do not need to be home — leave delivery instructions at checkout.'],
