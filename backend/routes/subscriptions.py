@@ -9,6 +9,8 @@ import time
 import stripe
 from pymongo.errors import DuplicateKeyError
 from database import db
+from heartbeat import beat
+from security import esc
 
 from security import client_ip
 
@@ -128,7 +130,7 @@ async def expire_finished_plans(extra: Optional[dict] = None) -> int:
         expired += 1
         if s.get("customer_email") and not s.get("expired_notified_at"):
             subj, html = email_subscription_expired(s.get("customer_name") or "there", s)
-            send_email(s["customer_email"], subj, html, kind="marketing")
+            send_email(s["customer_email"], subj, html, kind="service")   # "your plan has ended" is owed to every subscriber (A-0003, DAB-007)
     return expired
 
 
@@ -137,6 +139,7 @@ async def subscription_maintenance_loop():
     while True:
         try:
             await expire_finished_plans()
+            await beat("plan expiry")
         except asyncio.CancelledError:
             raise
         except Exception as e:
@@ -310,7 +313,7 @@ async def create_subscription(
             notify_admin(
                 f"Coupon over-redeemed · {pricing['coupon_code']} · Dabba Wala",
                 f"<p>Two customers used <b>{pricing['coupon_code']}</b> at the same moment; the cap was "
-                f"exceeded by one. {payload.customer_name}'s plan was honoured at the discounted price.</p>",
+                f"exceeded by one. {esc(payload.customer_name)}'s plan was honoured at the discounted price.</p>",
             )
     subj, html = email_subscription_confirmation(subscription.model_dump(), payload.customer_name)
     send_email(payload.customer_email, subj, html)
@@ -326,7 +329,7 @@ async def create_subscription(
     )
     notify_admin(
         f"New subscription · {plan} · {payload.customer_name}",
-        f"<p>{payload.customer_name} ({payload.customer_email}) started a <b>{plan}</b> "
+        f"<p>{esc(payload.customer_name)} ({esc(payload.customer_email)}) started a <b>{plan}</b> "
         f"{payload.box_type} plan from {payload.start_date}.</p>"
         f"<p>Plan £{pricing['plan_price']:.2f} + delivery £{pricing['delivery_fee_total']:.2f} "
         f"({pricing['charged_delivery_meals']} × £{pricing['delivery_fee_per_meal']:.2f}, "
@@ -469,7 +472,7 @@ async def skip_delivery(sub_id: str, date: str, current_user: dict = Depends(get
     if short_notice:
         notify_admin(
             f"Short-notice skip · {name} · {date}",
-            f"<p><b>{name}</b> ({sub.get('customer_email','—')}) skipped <b>{date}</b> "
+            f"<p><b>{esc(name)}</b> ({esc(sub.get('customer_email','—'))}) skipped <b>{esc(date)}</b> "
             f"with less than 12 hours notice. Kitchen may have already started prep.</p>",
         )
     return {"ok": True, "short_notice": short_notice}
@@ -520,7 +523,7 @@ async def update_subscription_status(
             send_email(doc["customer_email"], subj, html)
         notify_admin(
             f"Subscription cancelled · {name}",
-            f"<p><b>{name}</b> ({doc.get('customer_email','—')}) cancelled their "
+            f"<p><b>{esc(name)}</b> ({esc(doc.get('customer_email','—'))}) cancelled their "
             f"<b>{doc.get('plan','')}</b> plan.</p>",
         )
     return doc

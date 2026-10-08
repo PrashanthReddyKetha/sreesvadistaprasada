@@ -100,7 +100,10 @@ def test_password_reset_is_single_use_and_signs_out_other_sessions(client, db, s
     links = run(db.password_resets.find({}).to_list(10))
     assert len(links) == 2 and len(state.outbox.email) == 2                                   # two reset emails, none for the unknown address
 
-    first, second = links[0]["token"], links[1]["token"]
+    import re
+    tokens = [re.search(r"token=([A-Za-z0-9_\-]+)", html).group(1) for _, _, html in state.outbox.email]
+    first, second = tokens                                                                    # only the email carries the link; the database keeps a hash
+    assert first not in {l["token"] for l in links}
     assert client.post(f"{AUTH}/reset-password", json={"token": first, "new_password": "short"}).status_code == 422
     assert client.post(f"{AUTH}/reset-password", json={"token": first, "new_password": "brand new password"}).status_code == 200
     assert client.post(f"{AUTH}/reset-password", json={"token": first, "new_password": "another password"}).status_code == 400
@@ -127,6 +130,7 @@ def test_unverified_email_does_not_unlock_someone_elses_enquiry(client, db):
     assert mine["contact"] == []
     assert client.get(f"/api/enquiries/contact/{enquiry['id']}/messages", headers=attacker).status_code == 403
     assert client.post(f"/api/enquiries/contact/{enquiry['id']}/reply", json={"text": "hi"}, headers=attacker).status_code == 403
+    run(db.users.delete_one({"id": "attacker"}))                                # one account per email in the real database (unique index)
     make_user(db, uid="owner", email="victim@example.com", google_id="g-123")  # Google has verified this address
     assert len(client.get("/api/enquiries/my", headers=token("owner")).json()["contact"]) == 1
 

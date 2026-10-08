@@ -77,7 +77,7 @@ def fresh_state(monkeypatch):
 
     box = Outbox()
     fakes = {
-        "send_email": lambda to, subject, html, *a, **k: box.email.append((to, subject)),
+        "send_email": lambda to, subject, html, *a, **k: box.email.append((to, subject, html)),
         "send_sms": lambda to, body, *a, **k: box.sms.append((to, body)),
         "notify_admin": lambda subject, html, *a, **k: box.admin.append(subject),
         "notify_customer": lambda event, phone, *a, **k: box.whatsapp.append((event, phone)),
@@ -96,6 +96,13 @@ def fresh_state(monkeypatch):
 
     async def _no_ai(_figures):
         return {"ok": False, "why": "AI is switched off in tests"}
+    # Real unique indexes, so the DuplicateKeyError branches (payment reuse, opt-outs, automation once-per-reason) are
+    # exercised rather than assumed (audit A-0003, TEST-001)
+    from seed import create_indexes
+    run(create_indexes())
+    run(db.automation_sends.create_index([("automation", 1), ("email", 1), ("reason", 1)], unique=True))
+    run(db.payments.create_index("pi_id", unique=True))
+    run(db.email_optouts.create_index("email", unique=True))
     monkeypatch.setattr(pickup_slots, "open_now", lambda settings, now=None: True)   # tests run at any hour; the hours rule has its own test
 
     async def _deliveries_on():

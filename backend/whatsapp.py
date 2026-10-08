@@ -276,6 +276,8 @@ async def renewal_reminder_loop():
     while True:
         try:
             now = datetime.now(london)
+            from heartbeat import beat
+            await beat("renewal reminders")
             if 10 <= now.hour < 18:
                 today = now.strftime("%Y-%m-%d")
                 horizon = (now + timedelta(days=2)).strftime("%Y-%m-%d")

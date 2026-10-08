@@ -157,7 +157,7 @@ def test_admin_status_changes_follow_the_state_machine(client, pay, user_headers
     assert "cancelled_at" not in run(db.subscriptions.find_one({"id": sub["id"]}))
     assert client.put(url, json={"status": "paused"}, headers=admin_headers).status_code == 422    # not a real state
     force = f"/api/admin/subscriptions/{sub['id']}/status"
-    assert client.patch(force, json={"status": "paused"}, headers=admin_headers).status_code == 400
+    assert client.patch(force, json={"status": "paused"}, headers=admin_headers).status_code == 422    # refused by the typed payload (A-0003, BE-006)
     assert client.patch(force, json={"status": "cancelled", "reason": "moved away"}, headers=admin_headers).status_code == 200
     assert client.patch(force, json={"status": "cancelled"}, headers=user_headers).status_code == 403
 
@@ -210,7 +210,7 @@ def test_finished_plans_expire_once_without_anyone_opening_the_dashboard(client,
     assert run(expire_finished_plans()) == 0
     statuses = {s["id"]: s["status"] for s in run(db.subscriptions.find({}).to_list(10))}
     assert statuses == {"done": "expired", "running": "active", "gone": "cancelled"}
-    assert [to for to, _ in state.outbox.email] == ["a@example.com"]
+    assert [to for to, *_ in state.outbox.email] == ["a@example.com"]
 
 
 def test_cancelled_plan_days_are_not_shown_as_delivered(client, db, user_headers):

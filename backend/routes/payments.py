@@ -9,6 +9,7 @@ from typing import Literal
 import time
 from pydantic import BaseModel
 from database import db
+from heartbeat import beat
 from security import client_ip
 from datetime import datetime, timedelta
 
@@ -81,9 +82,10 @@ async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
 
+    if not WEBHOOK_SECRET:
+        logger.error("Stripe webhook received but STRIPE_WEBHOOK_SECRET is not set — payments cannot be matched to orders")
+        raise HTTPException(status_code=500, detail="Webhook secret not configured")
     try:
-        if not WEBHOOK_SECRET:
-            raise HTTPException(status_code=500, detail="Webhook secret not configured")
         event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid webhook")
@@ -161,6 +163,7 @@ async def orphan_payment_loop():
     while True:
         try:
             await check_orphan_payments()
+            await beat("orphan payments")
         except Exception as e:
             logger.warning("Orphan payment check failed: %s", e)
         await asyncio.sleep(300)

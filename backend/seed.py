@@ -858,6 +858,7 @@ async def create_indexes():
     # One succeeded PaymentIntent must never mint more than one subscription
     await db.subscriptions.create_index("payment_intent_id", unique=True, sparse=True)
     await db.password_resets.create_index("token")
+    await db.password_resets.create_index("purge_at", expireAfterSeconds=0)
     await db.daily_specials.create_index("id", unique=True)
 
 

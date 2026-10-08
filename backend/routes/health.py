@@ -7,12 +7,17 @@ import os
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from audit_log import record_admin_action
 from auth import require_admin
 from database import db
 
 router = APIRouter(prefix="/admin/health", tags=["Admin Health"])
+
+
+class TickIn(BaseModel):
+    done: bool = True
 STUCK_PENDING_MINUTES = 45      # an order unconfirmed for this long needs a look
 
 
@@ -114,6 +119,16 @@ async def health(_: dict = Depends(require_admin)):
                          f"last visit recorded {_ago(last_event['at'].isoformat()) if last_event else 'never'}",
                          "" if last_event and last_event["at"] > now - timedelta(hours=36) else "Open the site in a private window and check Admin › Analytics after a minute"))
 
+    # the six background jobs (A-0003, REL-003)
+    from heartbeat import quiet_loops
+    quiet = await quiet_loops(now)
+    if quiet:
+        names = ", ".join(q["name"] for q in quiet)
+        checks.append(_check("Background jobs", "watch", f"not running: {names}",
+                             "The server was probably asleep (free tier) — it wakes on the first visit. If this stays after a few minutes of use, restart the service on Render"))
+    else:
+        checks.append(_check("Background jobs", "ok", "all seven running"))
+
     # errors on the server
     errors_day = await db.error_log.count_documents({"at": {"$gte": day_ago}})
     errors_hour = await db.error_log.count_documents({"at": {"$gte": now - timedelta(hours=1)}})
@@ -157,11 +172,11 @@ async def waiting_list() -> list:
 
 
 @router.put("/waiting/{item_id}")
-async def tick(item_id: str, payload: dict, admin: dict = Depends(require_admin)):
+async def tick(item_id: str, payload: TickIn, admin: dict = Depends(require_admin)):
     """The owner marks a manual item done (or not). Items seen from here cannot be ticked by hand."""
     if item_id not in {i for i, *_ in MANUAL}:
         raise HTTPException(status_code=404, detail="No such item.")
-    done = bool(payload.get("done"))
+    done = payload.done
     await db.settings.update_one({"_id": "launch_checklist"}, {"$set": {f"done.{item_id}": done}}, upsert=True)
     await record_admin_action(admin, "ticked a launch item" if done else "unticked a launch item", dict((i, label) for i, label, _ in MANUAL)[item_id])
     return {"id": item_id, "done": done}

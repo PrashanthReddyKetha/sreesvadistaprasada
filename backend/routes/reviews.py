@@ -14,6 +14,7 @@ from typing import Optional, List
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 from database import db
+from security import esc
 from auth import get_current_user, require_admin
 from notifications import send_email, send_sms, notify_admin, email_review_prompt, SITE_URL
 import uuid
@@ -285,8 +286,8 @@ async def submit_review(
         user = await db.users.find_one({"id": current_user["sub"]}, {"name": 1, "email": 1})
         notify_admin(
             f"⚠️ {payload.rating}-star review · {(user or {}).get('name', 'Customer')}",
-            f"<p><b>{(user or {}).get('name', 'Customer')}</b> ({(user or {}).get('email', '—')}) "
-            f"left a {payload.rating}-star review.</p><p>{payload.text or '(no comment)'}</p>",
+            f"<p><b>{esc((user or {}).get('name', 'Customer'))}</b> ({esc((user or {}).get('email', '—'))}) "
+            f"left a {payload.rating}-star review.</p><p>{esc(payload.text or '(no comment)')}</p>",
         )
 
     return {"ok": True}

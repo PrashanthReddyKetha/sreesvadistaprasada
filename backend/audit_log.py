@@ -88,13 +88,37 @@ def _admin_from(scope) -> dict:
     return {}
 
 
+SECRET_KEYS = ("password", "token", "secret", "card", "cvc", "api_key", "authorization")
+PERSONAL_KEYS = ("phone", "customer_phone", "email", "customer_email", "line1", "line2", "postcode", "address", "delivery_address")
+
+
+def _redact(value):
+    """What the log keeps of a request body: never a secret, personal details masked (A-0003, SEC-021/AUD-002)."""
+    if isinstance(value, dict):
+        out = {}
+        for k, v in value.items():
+            kl = str(k).lower()
+            if any(w in kl for w in SECRET_KEYS):
+                out[k] = "[hidden]"
+            elif kl in PERSONAL_KEYS:
+                from security import mask
+                out[k] = mask(v) if isinstance(v, str) else "[hidden]"
+            else:
+                out[k] = _redact(v)
+        return out
+    if isinstance(value, list):
+        return [_redact(v) for v in value[:20]]
+    return value
+
+
 def _summary(body: bytes):
     if not body:
         return None
     try:
         data = json.loads(body[:MAX_BODY * 4])
     except Exception:
-        return body[:200].decode(errors="replace")
+        return "[body not kept]"
+    data = _redact(data)
     text = json.dumps(data)
     return data if len(text) <= MAX_BODY else {"note": f"{len(text)} characters sent"}
 

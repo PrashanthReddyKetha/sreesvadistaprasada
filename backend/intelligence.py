@@ -20,6 +20,7 @@ from typing import Optional
 from zoneinfo import ZoneInfo
 
 from database import db
+from heartbeat import beat
 from notifications import notify_admin
 
 logger = logging.getLogger(__name__)
@@ -687,6 +688,7 @@ async def intelligence_loop():
             cfg = await get_settings()
             if now.hour >= 3 and cfg.get("last_run_day") != now.strftime("%Y-%m-%d"):
                 await run_review(now)
+            await beat("nightly review")
         except asyncio.CancelledError:
             raise
         except Exception as e:

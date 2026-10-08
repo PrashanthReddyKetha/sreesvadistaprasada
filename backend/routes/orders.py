@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 from database import db
+from security import esc
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 from models import Order, OrderCreate, OrderStatusUpdate, OrderStatus
@@ -551,12 +552,12 @@ async def create_order(
         if slot_in_grid(slot_settings, payload.scheduled_slot, now_ldn) and await try_reserve_slot(slot_settings, payload.scheduled_slot):
             scheduled_final = payload.scheduled_slot
         else:
-            for cand in generate_slots(slot_settings, now_ldn.date(), now_ldn):
+            for cand in next_slots(slot_settings, now_ldn, limit=40):          # today first, then tomorrow (A-0003, COM-008)
                 if cand["iso"] > payload.scheduled_slot and await try_reserve_slot(slot_settings, cand["iso"]):
                     scheduled_final = cand["iso"]
                     slot_was_bumped = True
                     break
-            # No same-day slot left → ASAP (scheduled_final stays None)
+            # Nothing bookable at all → ASAP (scheduled_final stays None)
 
     # Redemption orders don't count toward loyalty
     is_qualifying = not payload.is_loyalty_redemption
@@ -620,7 +621,6 @@ async def create_order(
             )
 
     if kitchen_note:
-        from security import esc
         notify_admin(
             f"Order #{order.order_number} needs a look · {kitchen_note}",
             f"<p>Order <b>#{order.order_number}</b> for {esc(payload.customer_name)} (£{order.total:.2f}) was <b>{esc(kitchen_note)}</b>. "
@@ -650,8 +650,8 @@ async def create_order(
     )
     notify_admin(
         f"New order · £{order.total:.2f} · {payload.customer_name}",
-        f"<p>New order <b>#{short_id}</b> from {payload.customer_name} "
-        f"({payload.customer_email} · {payload.customer_phone}).</p>"
+        f"<p>New order <b>#{short_id}</b> from {esc(payload.customer_name)} "
+        f"({esc(payload.customer_email)} · {esc(payload.customer_phone)}).</p>"
         f"<p>Total <b>£{order.total:.2f}</b> — open the admin dashboard to confirm.</p>",
     )
     return order
@@ -662,15 +662,18 @@ async def create_order(
 @router.get("", response_model=List[Order])
 async def get_orders(
     status: Optional[OrderStatus] = Query(None),
+    limit: int = Query(200, ge=1, le=1000),
+    skip: int = Query(0, ge=0),
     current_user: dict = Depends(get_current_user),
 ):
+    """Newest first. `limit`/`skip` page through the list; the admin screens ask for a page, not the whole history (A-0003, BE-007)."""
     query = {}
     if current_user.get("role") != "admin":
         query["user_id"] = current_user["sub"]
     if status:
         query["status"] = status.value
 
-    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).to_list(limit)
     return orders
 
 
@@ -719,18 +722,16 @@ async def update_order_status(
             send_email(doc["customer_email"], subj, html)
         disp = display_order_number(doc)
         is_takeaway = doc.get("delivery_type") == "takeaway"
-        delivered_sms = (
-            f"Order #{disp} collected — enjoy! Rate it on your dashboard."
-            if is_takeaway else
-            f"Order #{disp} delivered — enjoy! Rate it on your dashboard."
-        )
+        # The status text is a service message and does not ask for a rating; the review request (one per channel,
+        # marketing, with opt-out) does that on its own (A-0003, MKT-003)
+        delivered_sms = f"Order #{disp} {'collected' if is_takeaway else 'delivered'} — enjoy!"
         sms_copy = {
             "confirmed": f"Order #{disp} confirmed. We'll start prepping shortly.",
             "preparing": f"Order #{disp} is being prepared now.",
             "ready": f"Order #{disp} is READY for collection. See you soon!",
             "out_for_delivery": f"Order #{disp} is on the way. Please keep your phone handy.",
             "delivered": delivered_sms,
-            "cancelled": f"Order #{disp} was cancelled. Reply to your confirmation email if this is wrong.",
+            "cancelled": f"Order #{disp} was cancelled." + (" Your payment will be refunded to the same card within a few days." if doc.get("payment_intent_id") else "") + " Reply to your confirmation email if this is wrong.",
         }.get(payload.status.value)
         # WhatsApp only for the moments that matter: ready / on the way / delivered / cancelled.
         # "confirmed" and "preparing" are visible on the tracking link from the first
@@ -755,6 +756,8 @@ async def update_order_status(
         if payload.status.value == "cancelled" and doc.get("scheduled_slot_final"):
             from routes.pickup_slots import release_slot
             await release_slot(doc["scheduled_slot_final"])
+        if payload.status.value == "cancelled" and doc.get("payment_intent_id") and doc.get("payment_status") != "refunded":
+            await db.orders.update_one({"id": order_id}, {"$set": {"payment_status": "refund_due"}})
         if payload.status.value == "delivered":
             from routes.reviews import ensure_order_review_stub
             await ensure_order_review_stub(doc)
@@ -827,6 +830,24 @@ async def update_order_status(
 
 # ── Cancel order ──────────────────────────────────────────────────────────────
 
+@router.put("/{order_id}/refunded")
+async def mark_refunded(order_id: str, admin: dict = Depends(require_admin)):
+    """The owner has refunded the payment in Stripe; the order stops showing "refund due" (A-0003, COM-011)."""
+    doc = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if doc.get("status") != "cancelled":
+        raise HTTPException(status_code=400, detail="Only a cancelled order can be marked refunded.")
+    await db.orders.update_one({"id": order_id}, {"$set": {"payment_status": "refunded", "refunded_at": datetime.utcnow()}})
+    await record_admin_action(admin, "marked an order refunded", f"order {display_order_number(doc)} for {doc.get('customer_name') or 'a customer'}",
+                              {"payment_status": doc.get("payment_status")}, {"payment_status": "refunded", "total": doc.get("total")})
+    if doc.get("customer_email"):
+        send_email(doc["customer_email"], f"Refund sent · order #{display_order_number(doc)}",
+                   f"<p>Hi {esc(doc.get('customer_name') or 'there')},</p><p>We have refunded £{float(doc.get('total') or 0):.2f} for order "
+                   f"<b>#{display_order_number(doc)}</b> to the card you paid with. Banks usually show it within 5–10 working days.</p>")
+    return {"ok": True, "payment_status": "refunded"}
+
+
 @router.delete("/{order_id}")
 async def cancel_order(order_id: str, current_user: dict = Depends(get_current_user)):
     doc = await db.orders.find_one({"id": order_id}, {"_id": 0})
@@ -854,11 +875,19 @@ async def cancel_order(order_id: str, current_user: dict = Depends(get_current_u
     cust_phone = doc.get("customer_phone")
     cust_name  = doc.get("customer_name") or "Customer"
     short_id   = display_order_number(doc)
+    paid = doc.get("payment_status") == "paid" or bool(doc.get("payment_intent_id"))
+    if paid:
+        await db.orders.update_one({"id": order_id}, {"$set": {"payment_status": "refund_due"}})
+        notify_admin(f"Refund due · order #{short_id} · £{float(doc.get('total') or 0):.2f}",
+                     f"<p>{esc(cust_name)} cancelled order <b>#{short_id}</b> after paying £{float(doc.get('total') or 0):.2f}. "
+                     f"Refund it in Stripe (payment {esc(doc.get('payment_intent_id') or '—')}); the order shows \"refund due\" until you mark it refunded.</p>")
+    money = (f"<p>You paid £{float(doc.get('total') or 0):.2f}. We will refund it to the same card within a few days and email you when it is done; "
+             "it can take your bank 5–10 working days to show.</p>") if paid else ""
     if cust_email:
         send_email(
             cust_email,
             f"Order #{short_id} Cancelled",
-            f"<p>Hi {cust_name},</p><p>Your order <b>#{short_id}</b> has been cancelled as requested.</p>"
+            f"<p>Hi {esc(cust_name)},</p><p>Your order <b>#{short_id}</b> has been cancelled as requested.</p>" + money +
             "<p>If you did not request this, please contact us immediately.</p>",
         )
     notify_customer(

@@ -18,6 +18,22 @@ from coupons import (
 router = APIRouter(tags=["coupons"])
 
 
+def _utc_iso(value):
+    """Admin dates arrive as 'YYYY-MM-DD', 'YYYY-MM-DDTHH:MM' (London) or full ISO; stored as UTC ISO so string comparison is right."""
+    if not value:
+        return None
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
+    text = str(value).strip().replace("Z", "+00:00")
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        raise HTTPException(400, f"Could not read the date {value!r}")
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=ZoneInfo("Europe/London"))
+    return dt.astimezone(timezone.utc).isoformat()
+
+
 # ── Public ────────────────────────────────────────────────────────────────────
 
 @router.get("/coupons/available")
@@ -120,6 +136,7 @@ def _check_rules(p: CouponIn):
     elif p.discount_type == "fixed":
         if not p.discount_value or p.discount_value <= 0:
             raise HTTPException(400, "Fixed discount must be more than £0")
+    p.starts_at, p.expires_at = _utc_iso(p.starts_at), _utc_iso(p.expires_at)     # compared as UTC ISO strings later (A-0003, COM-016)
     if p.starts_at and p.expires_at and p.expires_at <= p.starts_at:
         raise HTTPException(400, "Expiry must be after the start")
     if p.kind == "single":

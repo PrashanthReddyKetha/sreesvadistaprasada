@@ -76,6 +76,10 @@ async def send_test(automation_id: str, admin: dict = Depends(require_admin)):
 
 # ── The words of a message: read, try out, save, put back ─────────────────────
 
+class PauseAllIn(BaseModel):
+    paused: bool
+
+
 class MessageText(BaseModel):
     subject: str = Field(max_length=engine.LIMITS["subject"])
     heading: str = Field(max_length=engine.LIMITS["heading"])
@@ -138,9 +142,9 @@ class AutomationUpdate(BaseModel):
 
 
 @router.put("/pause-all")
-async def pause_all(payload: dict, admin: dict = Depends(require_admin)):
+async def pause_all(payload: PauseAllIn, admin: dict = Depends(require_admin)):
     """Stop (or resume) every automation, the review prompts and the reopen message in one go."""
-    paused = bool(payload.get("paused"))
+    paused = payload.paused
     before = await engine.all_paused()
     await db.settings.update_one({"_id": "automations"}, {"$set": {"paused": paused, "changed_at": datetime.utcnow().isoformat(), "by": admin["sub"]}}, upsert=True)
     await record_admin_action(admin, "paused all customer messages" if paused else "resumed customer messages", "every automation",

@@ -118,3 +118,17 @@ def test_menu_changes_are_recorded_and_customer_paths_are_not(client, db):
         assert NOT_ADMIN_CHANGES.search(path), path
     for path in ("/api/orders/abc/status", "/api/subscriptions/x/status"):
         assert not NOT_ADMIN_CHANGES.search(path) and SELF_LOGGED.search(path), path
+
+
+def test_stripe_webhook_refuses_an_unsigned_or_forged_event(client, monkeypatch):
+    """A-0003 TEST-002: the webhook is signature-checked and fails closed."""
+    from routes import payments
+    monkeypatch.setattr(payments, "WEBHOOK_SECRET", "whsec_test")
+    r = client.post("/api/payments/webhook", content=b'{"type":"payment_intent.succeeded"}', headers={"Content-Type": "application/json"})
+    assert r.status_code == 400
+    r = client.post("/api/payments/webhook", content=b'{"type":"payment_intent.succeeded"}',
+                    headers={"Content-Type": "application/json", "Stripe-Signature": "t=1,v1=forged"})
+    assert r.status_code == 400
+    monkeypatch.setattr(payments, "WEBHOOK_SECRET", "")
+    r = client.post("/api/payments/webhook", content=b'{}', headers={"Stripe-Signature": "t=1,v1=x"})
+    assert r.status_code == 500 and "not configured" in r.json()["detail"]

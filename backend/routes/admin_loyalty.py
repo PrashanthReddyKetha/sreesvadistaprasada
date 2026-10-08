@@ -1,8 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime
 from database import db
+from pydantic import BaseModel, Field
+from typing import Literal
 from auth import require_admin, get_current_user
 from notifications import create_notification
+
+
+class LoyaltyAdjustIn(BaseModel):
+    user_id: str = Field(min_length=1, max_length=64)
+    action: Literal["add_order", "grant_reward", "remove_reward"]
+    reason: str = Field("", max_length=300)
+
 
 router = APIRouter(prefix="/admin/loyalty", tags=["admin-loyalty"])
 
@@ -85,10 +94,10 @@ async def loyalty_user_history(user_id: str, _: dict = Depends(require_admin)):
 
 
 @router.post("/adjust")
-async def loyalty_adjust(body: dict, admin: dict = Depends(require_admin)):
-    user_id = body.get("user_id")
-    action = body.get("action")
-    reason = body.get("reason", "").strip()
+async def loyalty_adjust(body: LoyaltyAdjustIn, admin: dict = Depends(require_admin)):
+    user_id = body.user_id
+    action = body.action
+    reason = body.reason.strip()
 
     if not user_id or not action:
         raise HTTPException(400, "user_id and action are required")

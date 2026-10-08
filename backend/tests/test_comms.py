@@ -296,3 +296,32 @@ def test_marketing_texts_respect_stop_and_say_how_to_opt_out(db, state, monkeypa
     assert any("Reply STOP to opt out" in b for b in bodies) and any("ready" in b for b in bodies)
     logged = run(db.message_log.find({"channel": "sms"}, {"_id": 0, "status": 1}).to_list(None))
     assert any(l["status"] == "skipped: opted out" for l in logged)
+
+
+def test_a_retry_stranded_by_a_restart_is_sent_once_and_then_forgotten(db, state, monkeypatch):
+    """A-0003 MKT-004: the note written before a wait survives the process; the drain sends it once."""
+    import asyncio
+    import notifications
+    from datetime import datetime, timedelta
+    monkeypatch.setattr(notifications, "RESEND_API_KEY", "re_test")
+    sent = []
+
+    class FakeResp:
+        status_code = 200
+        text = ""
+        def json(self): return {"id": "em_1"}
+
+    class FakeClient:
+        def __init__(self, *a, **k): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def post(self, url, **kw): sent.append(kw["json"]); return FakeResp()
+
+    monkeypatch.setattr(notifications.httpx, "AsyncClient", FakeClient)
+    run(db.message_retries.insert_one({"_id": "k1", "channel": "email", "attempt": 2, "noted_at": datetime.utcnow() - timedelta(hours=1),
+                                       "due_at": datetime.utcnow() - timedelta(minutes=50),
+                                       "payload": {"to": "a@example.com", "subject": "Your order", "html": "<p>hi</p>", "kind": "service"}}))
+    assert run(notifications.drain_retries()) == 1
+    assert len(sent) == 1 and sent[0]["to"] == ["a@example.com"]
+    assert run(db.message_retries.count_documents({})) == 0
+    assert run(notifications.drain_retries()) == 0                 # nothing left; never sent twice

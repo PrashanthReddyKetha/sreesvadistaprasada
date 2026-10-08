@@ -21,6 +21,11 @@ from security import client_ip
 import re
 
 
+def _token_key(token: str) -> str:
+    import hashlib
+    return hashlib.sha256((token or "").encode()).hexdigest()
+
+
 def norm_email(email: str) -> str:
     return (email or "").strip().lower()
 
@@ -195,9 +200,10 @@ async def forgot_password(request: Request, payload: PasswordResetRequest, _: No
     if doc and doc.get("password_hash"):
         token = secrets.token_urlsafe(32)
         await db.password_resets.insert_one({
-            "token": token,
+            "token": _token_key(token),                       # a hash: a copy of the database cannot reset passwords
             "user_id": doc["id"],
             "expires_at": (datetime.utcnow() + timedelta(hours=RESET_TOKEN_TTL_HOURS)).isoformat(),
+            "purge_at": datetime.utcnow() + timedelta(days=7),   # TTL index removes the row
             "used": False,
             "created_at": datetime.utcnow().isoformat(),
         })
@@ -209,14 +215,14 @@ async def forgot_password(request: Request, payload: PasswordResetRequest, _: No
 
 @router.post("/reset-password")
 async def reset_password(request: Request, payload: PasswordResetConfirm, _: None = Depends(_check_rate_limit)):
-    record = await db.password_resets.find_one({"token": payload.token}, {"_id": 0})
+    record = await db.password_resets.find_one({"token": _token_key(payload.token)}, {"_id": 0})
     if not record or record.get("used"):
         raise HTTPException(status_code=400, detail="This reset link is invalid or has already been used.")
     if record.get("expires_at", "") < datetime.utcnow().isoformat():
         raise HTTPException(status_code=400, detail="This reset link has expired. Please request a new one.")
     # Claim the link first so it can only ever be used once
     claimed = await db.password_resets.update_one(
-        {"token": payload.token, "used": False}, {"$set": {"used": True, "used_at": datetime.utcnow().isoformat()}}
+        {"token": _token_key(payload.token), "used": False}, {"$set": {"used": True, "used_at": datetime.utcnow().isoformat()}}
     )
     if not claimed.modified_count:
         raise HTTPException(status_code=400, detail="This reset link is invalid or has already been used.")
@@ -289,6 +295,8 @@ async def _verify_google_token(credential: str) -> dict:
                 if allowed_ids and info.get("aud") not in allowed_ids and info.get("azp") not in allowed_ids:
                     raise HTTPException(status_code=401, detail="Invalid Google credentials.")
                 if not allowed_ids:
+                    if os.environ.get("ENVIRONMENT") == "production":   # never accept a token meant for another app (A-0003, SEC-004)
+                        raise HTTPException(status_code=503, detail="Google sign-in is not configured.")
                     logger.warning("GOOGLE_CLIENT_ID not set — Google token audience not checked")
                 r = await client.get(
                     "https://www.googleapis.com/oauth2/v3/userinfo",
@@ -297,8 +305,9 @@ async def _verify_google_token(credential: str) -> dict:
                 )
                 if r.status_code == 200:
                     profile = r.json()
-                    if profile.get("email_verified") is False:
+                    if profile.get("email_verified") is False or not profile.get("email"):
                         raise HTTPException(status_code=401, detail="Google email is not verified.")
+                    profile["email"] = norm_email(profile["email"])
                     return profile
     except HTTPException:
         raise
@@ -311,10 +320,14 @@ async def _verify_google_token(credential: str) -> dict:
     try:
         from google.oauth2 import id_token
         from google.auth.transport import requests as google_requests
-        return id_token.verify_oauth2_token(credential, google_requests.Request(), client_id)
+        info = id_token.verify_oauth2_token(credential, google_requests.Request(), client_id)
     except Exception as e:
         logger.error(f"Google token error: {e}")
         raise HTTPException(status_code=401, detail="Invalid Google credentials.")
+    if info.get("email_verified") is False or not info.get("email"):      # an unverified Google email must not unlock an account (SEC-004)
+        raise HTTPException(status_code=401, detail="Google email is not verified.")
+    info["email"] = norm_email(info["email"])
+    return info
 
 
 @router.post("/google", response_model=TokenResponse)

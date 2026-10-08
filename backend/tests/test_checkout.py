@@ -409,3 +409,18 @@ def test_a_paid_order_arriving_while_paused_is_taken_and_the_owner_told(client, 
     r = client.post("/api/orders", json=order_body(menu, [("curry", 1), ("biryani", 1)], pi), headers=user_headers)
     assert r.status_code == 200, r.text
     assert any("paid while ordering was paused" in s for s in state.outbox.admin)
+
+
+def test_cancelling_a_paid_order_says_what_happens_to_the_money_and_the_owner_can_mark_it_refunded(client, menu, pay, state, db, user_headers, admin_headers):
+    """A-0003 COM-011."""
+    pi = pay(18.88)
+    order = client.post("/api/orders", json=order_body(menu, [("curry", 1), ("biryani", 1)], pi), headers=user_headers).json()
+    assert client.delete(f"/api/orders/{order['id']}", headers=user_headers).status_code == 200
+    doc = run(db.orders.find_one({"id": order["id"]}, {"_id": 0}))
+    assert doc["payment_status"] == "refund_due"
+    assert any("refund it to the same card" in html for _, subj, html in state.outbox.email if "Cancelled" in subj)
+    assert any(s.startswith("Refund due") for s in state.outbox.admin)
+    assert client.put(f"/api/orders/{order['id']}/refunded", headers=user_headers).status_code == 403
+    r = client.put(f"/api/orders/{order['id']}/refunded", headers=admin_headers)
+    assert r.status_code == 200 and run(db.orders.find_one({"id": order["id"]}))["payment_status"] == "refunded"
+    assert any("Refund sent" in subj for _, subj, _ in state.outbox.email)

@@ -22,6 +22,7 @@ from zoneinfo import ZoneInfo
 from pymongo.errors import DuplicateKeyError
 
 from database import db
+from heartbeat import beat
 from notifications import SITE_URL, _wrap, email_opted_out, send_email
 
 logger = logging.getLogger(__name__)
@@ -389,6 +390,7 @@ async def automation_loop():
             if 10 <= datetime.now(LONDON).hour < 18:
                 for a in CATALOGUE:
                     await run(a["id"])
+            await beat("automations")
         except asyncio.CancelledError:
             raise
         except Exception as e:

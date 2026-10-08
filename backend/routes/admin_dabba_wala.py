@@ -3,11 +3,12 @@ Admin endpoints for Dabba Wala subscription management.
 All routes require admin role.
 """
 from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import Optional, List
+from typing import Optional, List, Literal
+from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 from database import db
 from models import (
-    WeeklyMenuDay, WeeklyMenuDayCreate, WeeklyMenuPublish,
+    Address, WeeklyMenuDay, WeeklyMenuDayCreate, WeeklyMenuPublish,
     WeeklyMenuNotes, WeeklyMenuTemplate,
 )
 from auth import require_admin
@@ -19,6 +20,63 @@ from whatsapp import notify_customer, tracking_link, first_name, send_renewal_re
 import uuid
 
 from routes.subscriptions import STATUS_TRANSITIONS, status_change
+
+
+# ── Typed payloads for the admin edits (audit A-0003, BE-006): no field is accepted that the route does not use ──
+class PreferencesIn(BaseModel):
+    preferences: List[str] = Field(default_factory=list, max_length=20)
+
+
+class CustomRequestIn(BaseModel):
+    custom_request: str = Field("", max_length=500)
+
+
+class AddressIn(BaseModel):
+    delivery_address: Address
+
+
+class DeliveryInstructionIn(BaseModel):
+    delivery_instruction: Literal["call", "door", "neighbour", "safeplace"] = "door"
+    neighbour_name: Optional[str] = Field(None, max_length=80)
+    neighbour_door: Optional[str] = Field(None, max_length=40)
+    safe_place_description: Optional[str] = Field(None, max_length=200)
+
+
+class BoxTypeIn(BaseModel):
+    box_type: Literal["prasada", "svadista"]
+
+
+class PlanIn(BaseModel):
+    plan: Optional[Literal["weekly", "monthly"]] = None
+    price: Optional[float] = Field(None, ge=0, le=1000)
+    reason: Optional[str] = Field(None, max_length=300)
+
+
+class EndDateIn(BaseModel):
+    end_date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    reason: Optional[str] = Field(None, max_length=300)
+
+
+class ForceStatusIn(BaseModel):
+    status: Literal["active", "cancelled", "expired"]
+    reason: Optional[str] = Field(None, max_length=300)
+
+
+class NoteIn(BaseModel):
+    text: str = Field(min_length=1, max_length=1000)
+
+
+class DeliveryStatusIn(BaseModel):
+    status: Literal["pending", "out_for_delivery", "delivered", "skipped", "missed"] = "delivered"
+
+
+class IssueIn(BaseModel):
+    description: str = Field("", max_length=500)
+
+
+class RouteOrderIn(BaseModel):
+    order: List[str] = Field(default_factory=list, max_length=200)
+
 
 router = APIRouter(prefix="/admin", tags=["admin-dabba-wala"])
 
@@ -139,10 +197,10 @@ async def _get_sub_or_404(sub_id: str):
 
 
 @router.patch("/subscriptions/{sub_id}/preferences")
-async def update_preferences(sub_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def update_preferences(sub_id: str, payload: PreferencesIn, current_user: dict = Depends(require_admin)):
     doc = await _get_sub_or_404(sub_id)
     old = doc.get("preferences", [])
-    new = payload.get("preferences", [])
+    new = payload.preferences
     entry = audit_entry(current_user, "preferences", old, new)
     await db.subscriptions.update_one(
         {"id": sub_id},
@@ -152,10 +210,10 @@ async def update_preferences(sub_id: str, payload: dict, current_user: dict = De
 
 
 @router.patch("/subscriptions/{sub_id}/custom-request")
-async def update_custom_request(sub_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def update_custom_request(sub_id: str, payload: CustomRequestIn, current_user: dict = Depends(require_admin)):
     doc = await _get_sub_or_404(sub_id)
     old = doc.get("custom_request")
-    new = payload.get("custom_request", "")
+    new = payload.custom_request
     entry = audit_entry(current_user, "custom_request", old, new)
     await db.subscriptions.update_one(
         {"id": sub_id},
@@ -165,10 +223,10 @@ async def update_custom_request(sub_id: str, payload: dict, current_user: dict =
 
 
 @router.patch("/subscriptions/{sub_id}/address")
-async def update_address(sub_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def update_address(sub_id: str, payload: AddressIn, current_user: dict = Depends(require_admin)):
     doc = await _get_sub_or_404(sub_id)
     old = doc.get("delivery_address")
-    new = payload.get("delivery_address", {})
+    new = payload.delivery_address.model_dump()
     entry = audit_entry(current_user, "delivery_address", old, new)
     await db.subscriptions.update_one(
         {"id": sub_id},
@@ -178,10 +236,10 @@ async def update_address(sub_id: str, payload: dict, current_user: dict = Depend
 
 
 @router.patch("/subscriptions/{sub_id}/delivery-instruction")
-async def update_delivery_instruction(sub_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def update_delivery_instruction(sub_id: str, payload: DeliveryInstructionIn, current_user: dict = Depends(require_admin)):
     doc = await _get_sub_or_404(sub_id)
     old = doc.get("delivery_instruction")
-    new = payload.get("delivery_instruction", "door")
+    new = payload.delivery_instruction
     entry = audit_entry(current_user, "delivery_instruction", old, new)
     await db.subscriptions.update_one(
         {"id": sub_id},
@@ -191,10 +249,10 @@ async def update_delivery_instruction(sub_id: str, payload: dict, current_user: 
 
 
 @router.patch("/subscriptions/{sub_id}/box-type")
-async def update_box_type(sub_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def update_box_type(sub_id: str, payload: BoxTypeIn, current_user: dict = Depends(require_admin)):
     doc = await _get_sub_or_404(sub_id)
     old = doc.get("box_type")
-    new = payload.get("box_type", old)
+    new = payload.box_type
     entry = audit_entry(current_user, "box_type", old, new)
     await db.subscriptions.update_one(
         {"id": sub_id},
@@ -204,12 +262,12 @@ async def update_box_type(sub_id: str, payload: dict, current_user: dict = Depen
 
 
 @router.patch("/subscriptions/{sub_id}/plan")
-async def update_plan(sub_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def update_plan(sub_id: str, payload: PlanIn, current_user: dict = Depends(require_admin)):
     doc = await _get_sub_or_404(sub_id)
     old_plan = doc.get("plan")
-    new_plan = payload.get("plan", old_plan)
-    new_price = payload.get("price", doc.get("price", 0))
-    entry = audit_entry(current_user, "plan", old_plan, new_plan, payload.get("reason"))
+    new_plan = payload.plan or old_plan
+    new_price = payload.price if payload.price is not None else doc.get("price", 0)
+    entry = audit_entry(current_user, "plan", old_plan, new_plan, payload.reason)
     await db.subscriptions.update_one(
         {"id": sub_id},
         {"$set": {"plan": new_plan, "price": new_price}, "$push": {"audit_trail": entry}}
@@ -218,11 +276,11 @@ async def update_plan(sub_id: str, payload: dict, current_user: dict = Depends(r
 
 
 @router.patch("/subscriptions/{sub_id}/end-date")
-async def update_end_date(sub_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def update_end_date(sub_id: str, payload: EndDateIn, current_user: dict = Depends(require_admin)):
     doc = await _get_sub_or_404(sub_id)
     old = doc.get("end_date")
-    new = payload.get("end_date")
-    entry = audit_entry(current_user, "end_date", old, new, payload.get("reason"))
+    new = payload.end_date
+    entry = audit_entry(current_user, "end_date", old, new, payload.reason)
     await db.subscriptions.update_one(
         {"id": sub_id},
         {"$set": {"end_date": new}, "$push": {"audit_trail": entry}}
@@ -231,13 +289,13 @@ async def update_end_date(sub_id: str, payload: dict, current_user: dict = Depen
 
 
 @router.patch("/subscriptions/{sub_id}/status")
-async def force_update_status(sub_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def force_update_status(sub_id: str, payload: ForceStatusIn, current_user: dict = Depends(require_admin)):
     doc = await _get_sub_or_404(sub_id)
     old = doc.get("status")
-    new = payload.get("status")
+    new = payload.status
     if new not in ("active", "cancelled", "expired"):
         raise HTTPException(status_code=400, detail="Status must be active, cancelled or expired.")
-    reason = (payload.get("reason") or "").strip() or None
+    reason = (payload.reason or "").strip() or None
     # This route can make changes the normal rules refuse (e.g. expired -> cancelled).
     # That is allowed, but never without saying why.
     if new != old and new not in STATUS_TRANSITIONS.get(old, set()) and not reason:
@@ -245,7 +303,7 @@ async def force_update_status(sub_id: str, payload: dict, current_user: dict = D
     if new == old:
         return {"ok": True}
     entry = audit_entry(current_user, "status", old, new, reason)
-    entry["forced_by_admin"] = payload.get("forced_by_admin", False)
+    entry["forced_by_admin"] = True
     update = {"status": new}
     if new == "cancelled":
         update["cancelled_at"] = datetime.utcnow().isoformat()
@@ -265,11 +323,11 @@ async def force_update_status(sub_id: str, payload: dict, current_user: dict = D
 
 
 @router.post("/subscriptions/{sub_id}/notes")
-async def add_internal_note(sub_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def add_internal_note(sub_id: str, payload: NoteIn, current_user: dict = Depends(require_admin)):
     await _get_sub_or_404(sub_id)
     note = {
         "id": str(uuid.uuid4()),
-        "text": payload.get("text", ""),
+        "text": payload.text,
         "admin_name": current_user.get("name", "Admin"),
         "created_at": datetime.utcnow().isoformat(),
     }
@@ -495,9 +553,9 @@ async def get_todays_deliveries(current_user: dict = Depends(require_admin)):
 
 
 @router.patch("/dabba-wala/deliveries/{delivery_id}/status")
-async def update_delivery_status(delivery_id: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def update_delivery_status(delivery_id: str, payload: DeliveryStatusIn, current_user: dict = Depends(require_admin)):
     # delivery_id format: {sub_id}_{date}
-    new_status = payload.get("status", "delivered")
+    new_status = payload.status
     await db.delivery_tracking.update_one(
         {"delivery_id": delivery_id},
         {"$set": {"status": new_status, "updated_at": datetime.utcnow().isoformat()}},
@@ -547,8 +605,8 @@ async def update_delivery_status(delivery_id: str, payload: dict, current_user: 
 
 
 @router.post("/dabba-wala/deliveries/{delivery_id}/issue")
-async def flag_delivery_issue(delivery_id: str, payload: dict, current_user: dict = Depends(require_admin)):
-    description = payload.get("description", "")
+async def flag_delivery_issue(delivery_id: str, payload: IssueIn, current_user: dict = Depends(require_admin)):
+    description = payload.description
     await db.delivery_tracking.update_one(
         {"delivery_id": delivery_id},
         {"$set": {
@@ -584,10 +642,10 @@ async def flag_delivery_issue(delivery_id: str, payload: dict, current_user: dic
 
 
 @router.post("/dabba-wala/deliveries/{date}/route-order")
-async def save_route_order(date: str, payload: dict, current_user: dict = Depends(require_admin)):
+async def save_route_order(date: str, payload: RouteOrderIn, current_user: dict = Depends(require_admin)):
     await db.delivery_routes.update_one(
         {"date": date},
-        {"$set": {"order": payload.get("order", []), "updated_at": datetime.utcnow().isoformat()}},
+        {"$set": {"order": payload.order, "updated_at": datetime.utcnow().isoformat()}},
         upsert=True,
     )
     return {"ok": True}

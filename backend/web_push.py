@@ -24,6 +24,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from pywebpush import webpush, WebPushException
 
 from database import db
+from heartbeat import beat
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +142,7 @@ async def scheduler_loop():
             )
             async for c in due:
                 await dispatch_campaign(c["id"])
+            await beat("push scheduler")
         except asyncio.CancelledError:
             raise
         except Exception as e:
