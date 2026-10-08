@@ -28,6 +28,34 @@ logger = logging.getLogger(__name__)
 
 
 INDEX_VERSION = 2   # bump when an index is added below or in seed.create_indexes()
+INDEX_FAILURES: list = []
+
+
+async def ensure_index(collection, keys, **opts):
+    """Create an index without ever stopping the server from starting. If an index on the same key already exists
+    with different options (e.g. adding a TTL to an existing index — real MongoDB refuses that, the test database
+    does not), the old one is dropped and recreated. Anything else is logged and retried on the next start."""
+    from pymongo.errors import OperationFailure
+    try:
+        return await collection.create_index(keys, **opts)
+    except OperationFailure as e:
+        if getattr(e, "code", None) in (85, 86):          # IndexOptionsConflict / IndexKeySpecsConflict
+            try:
+                spec = [(keys, 1)] if isinstance(keys, str) else list(keys)
+                for name, info in (await collection.index_information()).items():
+                    if name != "_id_" and list(info.get("key", [])) == spec:
+                        await collection.drop_index(name)
+                return await collection.create_index(keys, **opts)
+            except Exception as e2:  # noqa: BLE001
+                INDEX_FAILURES.append(f"{collection.name} {keys}: {e2}")
+                logger.warning("Index %s on %s not recreated: %s", keys, collection.name, e2)
+                return None
+        INDEX_FAILURES.append(f"{collection.name} {keys}: {e}")
+        logger.warning("Index %s on %s not created: %s", keys, collection.name, e)
+    except Exception as e:  # noqa: BLE001
+        INDEX_FAILURES.append(f"{collection.name} {keys}: {e}")
+        logger.warning("Index %s on %s not created: %s", keys, collection.name, e)
+    return None
 
 
 @asynccontextmanager
@@ -52,34 +80,38 @@ async def lifespan(app: FastAPI):
     # Indexes are created once per INDEX_VERSION, not on every boot (several a day on the free tier) — A-0003, BE-005
     marker = await db.settings.find_one({"_id": "indexes"}, {"_id": 0, "version": 1})
     if not marker or marker.get("version") != INDEX_VERSION:
-        await create_indexes()
-        await db.push_subs.create_index("endpoint", unique=True)
-        await db.push_campaigns.create_index("id", unique=True)
-        await db.wa_messages.create_index("dedupe_key", unique=True)
-        await db.wa_messages.create_index("sid", sparse=True)
-        await db.wa_optouts.create_index("phone", unique=True)
-        await db.subscriptions.create_index("email_key", sparse=True)
-        await db.payments.create_index("pi_id", unique=True)
-        # Our own visit record: fast date queries, and automatic deletion after the retention period
-        await db.events.create_index("at", expireAfterSeconds=event_routes.RETENTION_DAYS * 86400)
-        await db.events.create_index("visit_id")
-        await db.events.create_index([("day_code", 1), ("at", -1)], sparse=True)
-        await db.events.create_index([("visitor_id", 1), ("at", -1)], sparse=True)
-        await db.events.create_index([("day", 1)])
-        # The send log: who was sent what. Deleted automatically after the retention period.
-        await db.message_log.create_index("at", expireAfterSeconds=MESSAGE_LOG_DAYS * 86400)
-        await db.message_log.create_index([("channel", 1), ("at", -1)])
-        await db.wa_messages.create_index("at", expireAfterSeconds=MESSAGE_LOG_DAYS * 86400, sparse=True)
-        await db.email_optouts.create_index("email", unique=True)
-        # An automation message goes to a customer once per reason; the unique key is what guarantees it
-        await db.automation_sends.create_index([("automation", 1), ("email", 1), ("reason", 1)], unique=True)
-        await db.automation_sends.create_index("at")
-        await db.admin_audit.create_index("at", expireAfterSeconds=400 * 24 * 3600)   # kept 400 days, like the message log
-        await db.error_log.create_index("at", expireAfterSeconds=ERROR_LOG_DAYS * 86400)
-        await db.decision_log.create_index("at")
-        await db.message_retries.create_index("noted_at")
         try:
-            await db.daily_metrics.create_index("day", unique=True)
+            await create_indexes()
+        except Exception as e:  # noqa: BLE001 — an index must never stop the shop opening
+            INDEX_FAILURES.append(f"seed.create_indexes: {e}")
+            logger.warning("seed indexes incomplete: %s", e)
+        await ensure_index(db.push_subs, "endpoint", unique=True)
+        await ensure_index(db.push_campaigns, "id", unique=True)
+        await ensure_index(db.wa_messages, "dedupe_key", unique=True)
+        await ensure_index(db.wa_messages, "sid", sparse=True)
+        await ensure_index(db.wa_optouts, "phone", unique=True)
+        await ensure_index(db.subscriptions, "email_key", sparse=True)
+        await ensure_index(db.payments, "pi_id", unique=True)
+        # Our own visit record: fast date queries, and automatic deletion after the retention period
+        await ensure_index(db.events, "at", expireAfterSeconds=event_routes.RETENTION_DAYS * 86400)
+        await ensure_index(db.events, "visit_id")
+        await ensure_index(db.events, [("day_code", 1), ("at", -1)], sparse=True)
+        await ensure_index(db.events, [("visitor_id", 1), ("at", -1)], sparse=True)
+        await ensure_index(db.events, [("day", 1)])
+        # The send log: who was sent what. Deleted automatically after the retention period.
+        await ensure_index(db.message_log, "at", expireAfterSeconds=MESSAGE_LOG_DAYS * 86400)
+        await ensure_index(db.message_log, [("channel", 1), ("at", -1)])
+        await ensure_index(db.wa_messages, "at", expireAfterSeconds=MESSAGE_LOG_DAYS * 86400, sparse=True)
+        await ensure_index(db.email_optouts, "email", unique=True)
+        # An automation message goes to a customer once per reason; the unique key is what guarantees it
+        await ensure_index(db.automation_sends, [("automation", 1), ("email", 1), ("reason", 1)], unique=True)
+        await ensure_index(db.automation_sends, "at")
+        await ensure_index(db.admin_audit, "at", expireAfterSeconds=400 * 24 * 3600)   # kept 400 days, like the message log
+        await ensure_index(db.error_log, "at", expireAfterSeconds=ERROR_LOG_DAYS * 86400)
+        await ensure_index(db.decision_log, "at")
+        await ensure_index(db.message_retries, "noted_at")
+        try:
+            await ensure_index(db.daily_metrics, "day", unique=True)
         except Exception as e:
             logger.warning("daily_metrics day index not created (duplicate days?): %s", e)
         # Lookups that run on every dashboard, kitchen and item page
@@ -97,14 +129,17 @@ async def lifespan(app: FastAPI):
             ("users", "phone"), ("users", "google_id"),
         ):
             try:
-                await getattr(db, coll).create_index(keys)
+                await ensure_index(getattr(db, coll), keys)
             except Exception as e:
                 logger.warning("Index on %s %s not created: %s", coll, keys, e)
-        await db.coupons.create_index("code", unique=True)
-        await db.coupons.create_index("id", unique=True)
-        await db.coupon_redemptions.create_index([("coupon_id", 1), ("user_id", 1)])
-        await db.coupon_redemptions.create_index([("coupon_id", 1), ("email_key", 1)])
-        await db.settings.update_one({"_id": "indexes"}, {"$set": {"version": INDEX_VERSION, "applied_at": datetime.utcnow().isoformat()}}, upsert=True)
+        await ensure_index(db.coupons, "code", unique=True)
+        await ensure_index(db.coupons, "id", unique=True)
+        await ensure_index(db.coupon_redemptions, [("coupon_id", 1), ("user_id", 1)])
+        await ensure_index(db.coupon_redemptions, [("coupon_id", 1), ("email_key", 1)])
+        if not INDEX_FAILURES:      # only a clean run is marked done; otherwise the next boot tries again
+            await db.settings.update_one({"_id": "indexes"}, {"$set": {"version": INDEX_VERSION, "applied_at": datetime.utcnow().isoformat()}}, upsert=True)
+        else:
+            logger.error("Indexes not all created (%d failed) — will retry on next start: %s", len(INDEX_FAILURES), INDEX_FAILURES[:5])
     # WhatsApp records keep the same period. Older records only carry a text date: clear those by hand once.
     from datetime import timedelta
     await db.wa_messages.delete_many({"at": {"$exists": False},
