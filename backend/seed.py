@@ -859,6 +859,7 @@ async def create_indexes():
     await db.subscriptions.create_index("payment_intent_id", unique=True, sparse=True)
     await db.password_resets.create_index("token")
     await db.password_resets.create_index("purge_at", expireAfterSeconds=0)
+    await db.password_resets.delete_many({"purge_at": {"$exists": False}})   # links stored before hashing never expire otherwise
     await db.daily_specials.create_index("id", unique=True)
 
 

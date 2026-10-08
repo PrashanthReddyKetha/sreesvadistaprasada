@@ -129,6 +129,12 @@ async def health(_: dict = Depends(require_admin)):
     else:
         checks.append(_check("Background jobs", "ok", "all seven running"))
 
+    # database indexes that could not be built (retention and uniqueness depend on them) — A-0004 SEC-005
+    import server as _server
+    if _server.INDEX_FAILURES:
+        checks.append(_check("Database indexes", "watch", f"{len(_server.INDEX_FAILURES)} could not be built — retention or duplicate checks may not apply",
+                             "Restart the service on Render; if it stays, the log names the index"))
+
     # errors on the server
     errors_day = await db.error_log.count_documents({"at": {"$gte": day_ago}})
     errors_hour = await db.error_log.count_documents({"at": {"$gte": now - timedelta(hours=1)}})

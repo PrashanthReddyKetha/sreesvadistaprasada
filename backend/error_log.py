@@ -43,7 +43,7 @@ async def record_error(request: Request, exc: BaseException) -> None:
             if not last or datetime.fromisoformat(last) < now - timedelta(hours=ALERT_QUIET_HOURS):
                 await db.settings.update_one({"_id": "error_alerts"}, {"$set": {"last_at": now.isoformat()}}, upsert=True)
                 from notifications import notify_admin
-                notify_admin(f"The website is throwing errors · {recent} in the last hour",
+                notify_admin(critical=True, subject=f"The website is throwing errors · {recent} in the last hour", html=
                              f"<p><b>{recent}</b> requests failed on the server in the last hour. The latest: "
                              f"<code>{request.method} {request.url.path}</code> — {type(exc).__name__}.</p>"
                              "<p>Customers see a short apology, not the error. Open Admin › System log › Site errors to see them, "

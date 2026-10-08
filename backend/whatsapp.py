@@ -184,7 +184,8 @@ async def _notify_customer_now(
 
     async def fall_back(reason: str):
         if sms_fallback:
-            send_sms(to, sms_fallback)
+            # a marketing event stays marketing on the text fallback: STOP honoured, "Reply STOP" added (A-0004 MKT-001)
+            send_sms(to, sms_fallback, kind="marketing" if event in MARKETING_EVENTS else "service")
             await finish(f"sms:{reason}", sms_sent=True)
         else:
             await finish(f"skipped:{reason}")
@@ -244,13 +245,17 @@ async def handle_status_callback(sid: str, status: str) -> None:
         {"sid": sid, "sms_sent": False}, {"$set": {**update, "sms_sent": True}}
     )
     if doc and doc.get("sms_fallback"):
-        send_sms(doc["to"], doc["sms_fallback"])
+        send_sms(doc["to"], doc["sms_fallback"], kind="marketing" if doc.get("event") in MARKETING_EVENTS else "service")
 
 
 # ── Renewal reminders ─────────────────────────────────────────────────────────
 
 async def send_renewal_reminder(sub: dict) -> None:
-    """One reminder per subscription, ever — the dedupe key covers manual + automatic sends."""
+    """One reminder per subscription, ever — the dedupe key covers manual + automatic sends. It asks for a new purchase,
+    so it is marketing: only to people who asked for offers, never while messages are paused (privacy policy 5b)."""
+    from automations import all_paused, marketing_consented
+    if await all_paused() or not await marketing_consented(sub.get("customer_email") or ""):
+        return
     notify_customer(
         "sub_renewal", sub.get("customer_phone"),
         [first_name(sub.get("customer_name")), sub.get("end_date", "soon"), f"{SITE_URL}/subscriptions"],
@@ -298,7 +303,9 @@ async def renewal_reminder_loop():
                         continue
                     if sub.get("customer_email"):
                         subj, html = email_renewal_reminder(sub.get("customer_name") or "there", sub)
-                        send_email(sub["customer_email"], subj, html, kind="marketing")
+                        from automations import all_paused, marketing_consented
+                        if not await all_paused() and await marketing_consented(sub["customer_email"]):
+                            send_email(sub["customer_email"], subj, html, kind="marketing")
                     await send_renewal_reminder(sub)
         except asyncio.CancelledError:
             raise

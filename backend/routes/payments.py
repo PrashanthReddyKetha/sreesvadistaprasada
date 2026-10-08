@@ -155,8 +155,7 @@ async def check_orphan_payments():
             f"{row.get('purpose') or 'order'} was created for it.</p>"
             f"<p><b>Stripe reference:</b> {pi_id}</p>"
             "<p>Open this payment in the Stripe dashboard to see the customer's details, then contact "
-            "them to either place the order by hand or refund the payment.</p>",
-        )
+            "them to either place the order by hand or refund the payment.</p>", critical=True)
 
 
 async def orphan_payment_loop():

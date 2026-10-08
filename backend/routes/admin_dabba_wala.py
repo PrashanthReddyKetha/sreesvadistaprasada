@@ -7,6 +7,7 @@ from typing import Optional, List, Literal
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 from database import db
+from security import esc
 from models import (
     Address, WeeklyMenuDay, WeeklyMenuDayCreate, WeeklyMenuPublish,
     WeeklyMenuNotes, WeeklyMenuTemplate,
@@ -67,7 +68,8 @@ class NoteIn(BaseModel):
 
 
 class DeliveryStatusIn(BaseModel):
-    status: Literal["pending", "out_for_delivery", "delivered", "skipped", "missed"] = "delivered"
+    # Every value the Dabba screens send: confirmed (planned / un-ticked), out_for_delivery, delivered, failed (A-0004 COM-001)
+    status: Literal["confirmed", "pending", "out_for_delivery", "delivered", "failed", "skipped", "missed"] = "delivered"
 
 
 class IssueIn(BaseModel):
@@ -634,9 +636,9 @@ async def flag_delivery_issue(delivery_id: str, payload: IssueIn, current_user: 
                 dedupe_key=f"sub_issue:{delivery_id}",
             )
             notify_admin(
-                f"Delivery issue flagged · {name} · {date}",
-                f"<p><b>{name}</b> ({sub.get('customer_email','—')}) — delivery {delivery_id}:</p>"
-                f"<p>{description or '(no description)'}</p>",
+                f"Delivery issue flagged · {esc(name)} · {esc(date)}",
+                f"<p><b>{esc(name)}</b> ({esc(sub.get('customer_email','—'))}) — delivery {delivery_id}:</p>"
+                f"<p>{esc(description or '(no description)')}</p>",
             )
     return {"ok": True}
 

@@ -353,7 +353,7 @@ export default function OrderClient({ initialItems = [] }) {
           {!searchMode && (
             deliveryType === 'takeaway' ? (
               <p className="text-[11px] mt-1.5" style={{ color: C.veg }}>
-                🎉 10% off every collection order — no delivery fee. Collect from our Greenleys kitchen, MK12 6LF.
+                🎉 10% off every collection order — no delivery fee. Collect from our Greenleys kitchen, MK12.
                 {controlsCollapsed && (
                   <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     className="ml-1.5 font-black underline" style={{ color: C.burgundy }}>

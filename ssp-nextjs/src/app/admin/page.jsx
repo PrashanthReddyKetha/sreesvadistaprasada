@@ -96,7 +96,8 @@ const OrderActions = ({ order, onUpdate }) => {
   const [askRefund, setAskRefund] = useState(false);
   const markRefunded = async () => {
     setBusy('refunded');
-    try { await api.put(`/orders/${order.id}/refunded`); order.payment_status = 'refunded'; } catch {}
+    try { await api.put(`/orders/${order.id}/refunded`); order.payment_status = 'refunded'; }
+    catch (e) { alert(e.response?.data?.detail || 'Could not mark it refunded — please try again.'); }
     setBusy(null); setAskRefund(false);
     await onUpdate?.('orders', order.id, null);
   };

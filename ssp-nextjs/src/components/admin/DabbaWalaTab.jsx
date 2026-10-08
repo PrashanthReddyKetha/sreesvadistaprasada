@@ -89,8 +89,10 @@ function DabbaOperations() {
   }, []);
 
   const updateDeliveryStatus = async (deliveryId, status) => {
-    await api.patch(`/admin/dabba-wala/deliveries/${deliveryId}/status`, { status });
-    setDeliveries(prev => prev.map(d => d.delivery_id === deliveryId ? { ...d, status } : d));
+    try {
+      await api.patch(`/admin/dabba-wala/deliveries/${deliveryId}/status`, { status });
+      setDeliveries(prev => prev.map(d => d.delivery_id === deliveryId ? { ...d, status } : d));
+    } catch (e) { alert(e.response?.data?.detail?.[0]?.msg || e.response?.data?.detail || 'That was not saved — please try again.'); }
   };
 
   const dayLabel = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -783,7 +785,7 @@ function DabbaDeliverySheet() {
     try {
       await api.patch(`/admin/dabba-wala/deliveries/${deliveryId}/status`, { status: newStatus });
       setDeliveries(prev => prev.map(d => d.delivery_id === deliveryId ? { ...d, status: newStatus } : d));
-    } catch {}
+    } catch (e) { alert(e.response?.data?.detail?.[0]?.msg || e.response?.data?.detail || 'That was not saved — please try again.'); }
   };
 
   const copyForWhatsApp = () => {

@@ -75,7 +75,7 @@ def test_a_server_error_is_recorded_shown_and_alerts_the_owner_once_per_burst(cl
     from starlette.testclient import TestClient
     from tests.conftest import app
     alerts = []
-    monkeypatch.setattr("notifications.notify_admin", lambda subject, html: alerts.append(subject))
+    monkeypatch.setattr("notifications.notify_admin", lambda subject, html, critical=False: alerts.append(subject))
     quiet = TestClient(app, raise_server_exceptions=False)
     for _ in range(4):
         r = quiet.get("/api/__boom", headers={"Origin": "https://sreesvadistaprasada.com"})

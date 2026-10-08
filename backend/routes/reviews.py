@@ -158,9 +158,9 @@ async def _schedule_sms_reminder(user_id: str, review_type: str, ref_id: str):
         "meal_day": "today's meal",
         "week_summary": "this week's meals",
     }.get(review_type, "your delivery")
-    from automations import all_paused
-    if await all_paused():
-        return
+    from automations import all_paused, marketing_consented
+    if await all_paused() or not await marketing_consented(user.get("email") or ""):
+        return          # a review request is marketing: only to people who asked for offers (privacy policy 5b)
     # Owner decision D-041: the text stays, as marketing — skipped for anyone who replied STOP, and it says how to
     if user.get("phone"):
         send_sms(

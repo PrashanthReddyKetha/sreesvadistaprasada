@@ -57,8 +57,7 @@ async def public_key():
 
 
 _subscribe_limit = RateLimit(10, 600, "Too many attempts. Please try again later.")
-PUSH_HOSTS = ("push.services.mozilla.com", "fcm.googleapis.com", "android.googleapis.com", "updates.push.services.mozilla.com",
-              "web.push.apple.com", "notify.windows.com", "wns2-", "push.apple.com")
+PUSH_DOMAINS = ("push.services.mozilla.com", "fcm.googleapis.com", "android.googleapis.com", "push.apple.com", "notify.windows.com")
 
 
 def _push_endpoint_ok(url: str) -> bool:
@@ -69,7 +68,7 @@ def _push_endpoint_ok(url: str) -> bool:
     except ValueError:
         return False
     host = (u.hostname or "").lower()
-    return u.scheme == "https" and bool(host) and (any(host.endswith(h) or host.startswith(h) for h in PUSH_HOSTS) or host.endswith(".notify.windows.com"))
+    return u.scheme == "https" and bool(host) and u.port in (None, 443) and any(host == d or host.endswith("." + d) for d in PUSH_DOMAINS)
 
 
 @router.post("/push/subscribe")

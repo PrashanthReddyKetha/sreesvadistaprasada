@@ -548,6 +548,11 @@ async def create_order(
                 slot_was_bumped = True
                 break
         kitchen_note = (kitchen_note + "; " if kitchen_note else "") + "paid outside opening hours"
+    if payload.delivery_type != "takeaway":
+        if not open_now(slot_settings, now_ldn):
+            kitchen_note = (kitchen_note + "; " if kitchen_note else "") + "delivery paid outside opening hours"
+        if not slot_settings.get("delivery_enabled"):
+            kitchen_note = (kitchen_note + "; " if kitchen_note else "") + "delivery paid while delivery is switched off"
     if payload.delivery_type == "takeaway" and payload.scheduled_slot:
         if slot_in_grid(slot_settings, payload.scheduled_slot, now_ldn) and await try_reserve_slot(slot_settings, payload.scheduled_slot):
             scheduled_final = payload.scheduled_slot
@@ -785,7 +790,7 @@ async def update_order_status(
                 "preparing": f"Your order #{disp} is being prepared right now.",
                 "ready": f"Order #{disp} is ready — come and collect it while it's hot!",
                 "out_for_delivery": "Your order is heading to you. Should arrive in 10–15 mins.",
-                "delivered": "Enjoy your meal! Please rate your experience in the dashboard.",
+                "delivered": "Enjoy your meal!",
                 "cancelled": f"Order #{disp} has been cancelled.",
             }
             if payload.status.value in notif_titles:

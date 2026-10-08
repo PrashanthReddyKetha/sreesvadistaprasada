@@ -136,7 +136,8 @@ class Preference(BaseModel):
 @router.get("/me/preferences")
 async def my_preferences(user: dict = Depends(get_current_user)):
     email = (user.get("email") or "").strip().lower()
-    return {"marketing_email": not await db.email_optouts.find_one({"email": email}, {"_id": 1}) if email else False}
+    from automations import marketing_consented
+    return {"marketing_email": await marketing_consented(email) if email else False}
 
 
 @router.put("/me/preferences")
@@ -145,6 +146,8 @@ async def set_my_preferences(payload: Preference, user: dict = Depends(get_curre
     email = (user.get("email") or "").strip().lower()
     if not email:
         raise HTTPException(status_code=400, detail="Your account has no email address.")
+    await db.users.update_one({"id": user["sub"]}, {"$set": {"marketing_consent": payload.marketing_email,
+                                                            "marketing_consent_at": datetime.utcnow(), "marketing_consent_source": "my account"}})
     if payload.marketing_email:
         await db.email_optouts.delete_one({"email": email})
     else:

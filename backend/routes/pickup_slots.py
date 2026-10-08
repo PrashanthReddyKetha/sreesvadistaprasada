@@ -276,7 +276,7 @@ async def list_pickup_slots(date_str: Optional[str] = Query(None, alias="date"))
         "paused": False,
         "date": day.isoformat(),
         "slot_minutes": settings["slot_minutes"],
-        "asap_available": day == now.date() and is_open_now,
+        "asap_available": day == now.date() and open_now(settings, now),   # same rule as pricing (A-0004 COM-002)
         "closed": closed_today and not slots,
         "slots": slots,
     }

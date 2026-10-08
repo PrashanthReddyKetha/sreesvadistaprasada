@@ -13,6 +13,7 @@ Safeguards, all enforced here:
 - sent only in UK daytime
 """
 import asyncio
+import re
 import logging
 from datetime import datetime, timedelta
 from html import escape
@@ -285,17 +286,35 @@ async def settings_for(automation_id: str) -> dict:
 
 
 async def marketing_consented(email: str) -> bool:
-    """True when the person ticked "send me offers" at sign-up or checkout, or signed up to the newsletter."""
+    """The person's most recent choice about offers wins — a later unticked box or "off" in My Account withdraws an
+    earlier yes. Joining the newsletter counts as yes. Unsubscribing always wins (A-0004 SEC-003 / MKT-008)."""
+    from notifications import email_opted_out
     key = (email or "").strip().lower()
-    if not key:
+    if not key or await email_opted_out(key):
         return False
-    if await db.users.find_one({"email": key, "marketing_consent": True}, {"_id": 1}):
-        return True
-    if await db.orders.find_one({"customer_email": key, "marketing_consent": True}, {"_id": 1}):
-        return True
-    if await db.subscriptions.find_one({"customer_email": key, "marketing_consent": True}, {"_id": 1}):
-        return True
-    return bool(await db.newsletter.find_one({"email": key, "active": {"$ne": False}}, {"_id": 1}))
+    choices = []
+    user = await db.users.find_one({"email": key}, {"_id": 0, "marketing_consent": 1, "marketing_consent_at": 1})
+    if user and user.get("marketing_consent") is not None:
+        choices.append((user.get("marketing_consent_at") or datetime.min, bool(user["marketing_consent"])))
+    for coll in (db.orders, db.subscriptions):
+        doc = await coll.find_one({"customer_email": key, "marketing_consent": {"$exists": True}},
+                                  {"_id": 0, "marketing_consent": 1, "marketing_consent_at": 1}, sort=[("marketing_consent_at", -1)])
+        if doc:
+            choices.append((doc.get("marketing_consent_at") or datetime.min, bool(doc["marketing_consent"])))
+    if choices:
+        latest = max(choices, key=lambda c: c[0] if isinstance(c[0], datetime) else datetime.min)
+        if latest[1]:
+            return True
+        news = await db.newsletter.find_one({"email": {"$regex": f"^{re.escape(key)}$", "$options": "i"}, "active": {"$ne": False}}, {"_id": 0, "created_at": 1})
+        joined = news.get("created_at") if news else None
+        if isinstance(joined, str):
+            try:
+                joined = datetime.fromisoformat(joined.replace("Z", ""))
+            except ValueError:
+                joined = None
+        # newsletter sign-up counts unless a dated "no" came after it
+        return news is not None and (joined is None or latest[0] == datetime.min or (isinstance(joined, datetime) and joined > latest[0]))
+    return bool(await db.newsletter.find_one({"email": {"$regex": f"^{re.escape(key)}$", "$options": "i"}, "active": {"$ne": False}}, {"_id": 1}))
 
 
 async def audience(automation_id: str, now: Optional[datetime] = None) -> list:

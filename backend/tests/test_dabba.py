@@ -328,3 +328,11 @@ def test_an_ended_plan_cannot_be_set_back_to_active(client, db, admin_headers):
                                      "plan": "weekly", "start_date": "2026-01-05", "end_date": "2026-01-09", "status_history": []}))
     r = client.put("/api/subscriptions/s-old/status", json={"status": "active"}, headers=admin_headers)
     assert r.status_code == 400 and "ended on 2026-01-09" in r.json()["detail"]
+
+
+def test_every_delivery_status_the_screens_send_is_accepted(client, db, admin_headers):
+    """A-0004 COM-001: the typed payload refused "failed" and "confirmed", silently breaking two daily buttons."""
+    for status in ("out_for_delivery", "delivered", "confirmed", "failed"):
+        r = client.patch("/api/admin/dabba-wala/deliveries/sub1_2026-10-12/status", json={"status": status}, headers=admin_headers)
+        assert r.status_code == 200, (status, r.text)
+    assert client.patch("/api/admin/dabba-wala/deliveries/sub1_2026-10-12/status", json={"status": "teleported"}, headers=admin_headers).status_code == 422

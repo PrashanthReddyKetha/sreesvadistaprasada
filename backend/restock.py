@@ -66,7 +66,10 @@ def restock_sms(item: dict) -> str:
 
 
 async def notify_restock(item: dict):
-    """Email + SMS every subscriber for this item, then clear the subs."""
+    """Email + SMS every subscriber for this item, then clear the subs. Held (requests kept) while all messages are paused."""
+    from automations import all_paused
+    if await all_paused():
+        return
     for _ in range(500):
         # Taking each request out of the list as it is claimed means a second sweep
         # running at the same moment cannot send the same alert again.

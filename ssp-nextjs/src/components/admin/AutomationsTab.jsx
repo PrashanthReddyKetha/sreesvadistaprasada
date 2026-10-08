@@ -210,7 +210,7 @@ export default function AutomationsTab() {
       </div>
       {/* One switch that stops everything the site sends by itself (audit A-0003, MKT-006) */}
       <div className="rounded-xl px-4 py-3 flex flex-wrap items-center gap-3 text-sm" style={{ backgroundColor: data.all_paused ? '#FEF3C7' : '#F0FDF4', color: data.all_paused ? '#854D0E' : '#166534' }}>
-        <span className="flex-1 font-semibold">{data.all_paused ? 'All automatic customer messages are PAUSED — nothing goes out until you resume.' : 'Automatic messages follow the switches below. Pause everything in one tap if something looks wrong.'}</span>
+        <span className="flex-1 font-semibold">{data.all_paused ? 'All automatic marketing messages are PAUSED — offers, reminders, review requests and alerts wait until you resume. Order and plan updates still go out.' : 'Automatic messages follow the switches below. Pause everything in one tap if something looks wrong.'}</span>
         <button onClick={() => setPauseAsk(!data.all_paused)} disabled={busy} className="px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: data.all_paused ? '#2E7D32' : '#B91C1C' }}>
           {data.all_paused ? 'Resume messages' : 'Pause everything'}
         </button>
@@ -271,7 +271,7 @@ export default function AutomationsTab() {
       {pauseAsk !== null && (
         <ConfirmAction title={pauseAsk ? 'Pause every automatic message?' : 'Resume automatic messages?'} busy={busy} danger={pauseAsk}
           confirmLabel={pauseAsk ? 'Pause everything' : 'Resume'} onCancel={() => setPauseAsk(null)} onConfirm={() => pauseAll(pauseAsk)}
-          rows={[['Now', pauseAsk ? 'The eleven automations, the review requests and the "kitchen reopened" message stop.' : 'Each automation follows its own switch again.'],
+          rows={[['Now', pauseAsk ? 'The eleven automations, review requests, Dabba renewal reminders, "back in stock" alerts and the "kitchen reopened" message stop. Back-in-stock requests are kept and sent after you resume.' : 'Each automation follows its own switch again.'],
                  ['Not affected', 'Order confirmations, status updates and your own alerts — those are not marketing.'],
                  ['Undo', pauseAsk ? 'Tap Resume messages.' : 'Tap Pause everything.']]} />
       )}

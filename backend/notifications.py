@@ -213,9 +213,18 @@ async def _forget_retry(key: Optional[str]) -> None:
             pass
 
 
+RETRY_MAX_AGE_HOURS = 3   # an "order ready" text five hours late helps nobody; older strays are logged and dropped
+
+
 async def drain_retries() -> int:
     """Send stranded retries (due, older than the longest in-process wait) once each. Returns how many were handled."""
     cutoff = datetime.utcnow() - timedelta(seconds=max(RETRY_DELAYS) + 60)
+    too_old = datetime.utcnow() - timedelta(hours=RETRY_MAX_AGE_HOURS)
+    async for row in _get_db().message_retries.find({"noted_at": {"$lt": too_old}}, {"_id": 1, "channel": 1, "payload": 1}).limit(200):
+        if (await _get_db().message_retries.delete_one({"_id": row["_id"]})).deleted_count:
+            p = row.get("payload") or {}
+            await log_message(row.get("channel", "email"), p.get("to", ""), p.get("kind", "service"),
+                              f"dropped: still unsent after {RETRY_MAX_AGE_HOURS} h (server was asleep)", (p.get("subject") or p.get("body") or "")[:60])
     handled = 0
     async for row in _get_db().message_retries.find({"noted_at": {"$lt": cutoff}}, {"_id": 1, "channel": 1, "payload": 1}).limit(50):
         claimed = await _get_db().message_retries.delete_one({"_id": row["_id"]})
@@ -224,7 +233,7 @@ async def drain_retries() -> int:
         p = row.get("payload") or {}
         try:
             if row["channel"] == "email":
-                await _send_email_now(p["to"], p["subject"], p["html"], p.get("kind", "service"), _final=True)
+                await _send_email_now(p["to"], p["subject"], p["html"], p.get("kind", "service"), _final=True, _key=p.get("key"), _wrapped=True)
             elif row["channel"] == "sms":
                 await _send_sms_now(p["to"], p["body"], p.get("kind", "service"), _final=True)
             handled += 1
@@ -246,7 +255,8 @@ async def retry_loop():
         await asyncio.sleep(300)
 
 
-async def _send_email_now(to: str, subject: str, html: str, kind: str = "service", _final: bool = False) -> None:
+async def _send_email_now(to: str, subject: str, html: str, kind: str = "service", _final: bool = False,
+                          _key: Optional[str] = None, _wrapped: bool = False) -> None:
     if not to:
         return
     extra_headers = {}
@@ -254,7 +264,8 @@ async def _send_email_now(to: str, subject: str, html: str, kind: str = "service
         if await email_opted_out(to):
             await log_message("email", to, kind, "skipped: unsubscribed", subject)
             return
-        html = _with_unsubscribe(html, to)
+        if not _wrapped:                     # a drained retry already carries its unsubscribe footer
+            html = _with_unsubscribe(html, to)
         extra_headers = {"List-Unsubscribe": f"<{unsubscribe_url(to)}>", "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"}
     if not RESEND_API_KEY:
         logger.warning("RESEND_API_KEY not set — skipping email to %s (%s)", mask(to), subject)
@@ -262,11 +273,12 @@ async def _send_email_now(to: str, subject: str, html: str, kind: str = "service
         return
     # One key for all tries of this message: Resend treats a repeat with the same key as the same email, so a retry
     # after a timeout that actually went through cannot send it twice (A-0003, MKT-004).
-    idempotency_key = hashlib.sha256(f"{to}|{subject}|{html[:2000]}|{datetime.utcnow():%Y-%m-%d %H:%M}".encode()).hexdigest()[:48]
+    import uuid
+    idempotency_key = _key or uuid.uuid4().hex     # one key per message, kept for every try including a drained one
     note = None
     for attempt, delay in enumerate((0,) + (() if _final else RETRY_DELAYS), start=1):
         if delay:
-            note = await _remember_retry("email", {"to": to, "subject": subject, "html": html, "kind": kind}, attempt, delay)
+            note = await _remember_retry("email", {"to": to, "subject": subject, "html": html, "kind": kind, "key": idempotency_key}, attempt, delay)
             await asyncio.sleep(delay)
         try:
             async with httpx.AsyncClient(timeout=15) as client:
@@ -390,18 +402,22 @@ _ALERT_WINDOW: list = []          # send times of recent owner alerts (in memory
 ALERT_CAP, ALERT_CAP_SECONDS = 10, 600
 
 
-def notify_admin(subject: str, html: str) -> None:
+def notify_admin(subject: str, html: str, critical: bool = False) -> None:
     """To the owner; never carries an unsubscribe link, never alerts about itself. More than ALERT_CAP alerts in
     ALERT_CAP_SECONDS collapse into one "quietened" email so a flood cannot bury the inbox (A-0003, MKT-009)."""
     import time
+    if critical:                              # money and outages always get through
+        send_email(ADMIN_ALERT_EMAIL, subject, html, kind="alert")
+        return
     now = time.monotonic()
     _ALERT_WINDOW[:] = [t for t in _ALERT_WINDOW if now - t < ALERT_CAP_SECONDS]
     if len(_ALERT_WINDOW) >= ALERT_CAP:
         if len(_ALERT_WINDOW) == ALERT_CAP:      # exactly once per burst
             _ALERT_WINDOW.append(now)
             send_email(ADMIN_ALERT_EMAIL, "Many alerts at once — the rest are in Admin › System log",
-                       f"<p>More than {ALERT_CAP} alerts in {ALERT_CAP_SECONDS // 60} minutes. Further ones are not emailed for a while; "
-                       "everything is still recorded in Admin › System log and the health panel.</p>", kind="alert")
+                       f"<p>More than {ALERT_CAP} alerts in {ALERT_CAP_SECONDS // 60} minutes. The next ones (new orders, enquiries, "
+                       "replies, reviews) are not emailed for a few minutes — open Admin to see them. Payment and server-error alerts are "
+                       "never held back.</p>", kind="alert")
         return
     _ALERT_WINDOW.append(now)
     send_email(ADMIN_ALERT_EMAIL, subject, html, kind="alert")
@@ -520,7 +536,8 @@ def email_order_status(order: dict, name: str, status: str) -> tuple[str, str]:
         "delivered": "<p>We hope you enjoyed it! If you have a moment, a Google review helps other South Indian food lovers in Milton Keynes find us.</p>",
         "cancelled": "<p>If this was unexpected, please reply to this email and we'll look into it.</p>",
     }.get(status, "")
-    cta_text, cta_url = ("Leave a Google Review", GOOGLE_REVIEW_URL) if status == "delivered" else ("Open Dashboard", f"{SITE_URL}/dashboard")
+    # A status email is a service message and does not ask for a review; the review request does that once (A-0004 MKT-003)
+    cta_text, cta_url = ("See your order", f"{SITE_URL}/dashboard?tab=orders") if status == "delivered" else ("Open Dashboard", f"{SITE_URL}/dashboard")
     disp = _order_disp(order)
     status_word = "ready for collection" if status == "ready" else status.replace("_", " ")
     html = _wrap(

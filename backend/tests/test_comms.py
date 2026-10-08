@@ -325,3 +325,58 @@ def test_a_retry_stranded_by_a_restart_is_sent_once_and_then_forgotten(db, state
     assert len(sent) == 1 and sent[0]["to"] == ["a@example.com"]
     assert run(db.message_retries.count_documents({})) == 0
     assert run(notifications.drain_retries()) == 0                 # nothing left; never sent twice
+
+
+def test_push_endpoints_must_be_a_real_push_service(client):
+    """A-0004 SEC-001: prefix tricks no longer pass the allow-list."""
+    from routes.push import _push_endpoint_ok
+    assert _push_endpoint_ok("https://fcm.googleapis.com/fcm/send/abc")
+    assert _push_endpoint_ok("https://updates.push.services.mozilla.com/wpush/v2/x")
+    assert _push_endpoint_ok("https://web.push.apple.com/QH0")
+    for bad in ("https://fcm.googleapis.com.evil.com/x", "https://wns2-attacker.example/x", "http://fcm.googleapis.com/x",
+                "https://fcm.googleapis.com:8443/x", "https://evilfcm.googleapis.com.attacker/x"):
+        assert not _push_endpoint_ok(bad), bad
+
+
+def test_a_later_no_withdraws_consent_and_my_account_records_the_choice(client, db, user_headers):
+    """A-0004 SEC-003 / MKT-008: the most recent choice wins; My Account shows and sets real consent."""
+    from datetime import datetime, timedelta
+    import automations
+    now = datetime.utcnow()
+    run(db.orders.insert_one({"id": "a", "customer_email": "u1@example.com", "marketing_consent": True, "marketing_consent_at": now - timedelta(days=5)}))
+    assert run(automations.marketing_consented("u1@example.com")) is True
+    run(db.orders.insert_one({"id": "b", "customer_email": "u1@example.com", "marketing_consent": False, "marketing_consent_at": now - timedelta(days=1)}))
+    assert run(automations.marketing_consented("u1@example.com")) is False
+    assert client.get("/api/me/preferences", headers=user_headers).json() == {"marketing_email": False}
+    client.put("/api/me/preferences", json={"marketing_email": True}, headers=user_headers)
+    assert run(db.users.find_one({"id": "u1"}))["marketing_consent_source"] == "my account"
+    assert run(automations.marketing_consented("u1@example.com")) is True
+
+
+def test_money_and_outage_alerts_are_never_held_back_by_the_alert_cap(monkeypatch):
+    """A-0004 MKT-004."""
+    import importlib.util, pathlib
+    import notifications as live
+    spec = importlib.util.spec_from_file_location("notifications_fresh", pathlib.Path(live.__file__))
+    notifications = importlib.util.module_from_spec(spec); spec.loader.exec_module(notifications)   # the real notify_admin, not the test fake
+    sent = []
+    monkeypatch.setattr(notifications, "send_email", lambda to, subject, html, kind="service": sent.append(subject))
+    notifications._ALERT_WINDOW.clear()
+    for i in range(15):
+        notifications.notify_admin(f"order {i}", "<p>x</p>")
+    notifications.notify_admin("ACTION NEEDED · payment taken with no order", "<p>x</p>", critical=True)
+    assert len([s for s in sent if s.startswith("order ")]) == notifications.ALERT_CAP
+    assert sum("Many alerts" in s for s in sent) == 1
+    assert sent[-1].startswith("ACTION NEEDED")
+    notifications._ALERT_WINDOW.clear()
+
+
+def test_a_stranded_retry_older_than_the_limit_is_dropped_and_logged(db, monkeypatch):
+    """A-0004 MKT-002: an "order ready" text hours late helps nobody."""
+    from datetime import datetime, timedelta
+    import notifications
+    run(db.message_retries.insert_one({"_id": "old", "channel": "sms", "noted_at": datetime.utcnow() - timedelta(hours=5),
+                                       "payload": {"to": "+447000000001", "body": "Order ready", "kind": "service"}}))
+    assert run(notifications.drain_retries()) == 0
+    assert run(db.message_retries.count_documents({})) == 0
+    assert run(db.message_log.find_one({"status": {"$regex": "^dropped"}})) is not None

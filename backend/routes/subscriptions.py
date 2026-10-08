@@ -1,3 +1,4 @@
+import re
 from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from typing import Optional, List
 from datetime import datetime, timedelta, time as dtime
@@ -89,8 +90,9 @@ async def refuse_if_deliveries_paused():
 
 async def next_start_after_active_plan(user_id: Optional[str], email: str, start: datetime):
     """A customer may buy the next plan while one runs, but it starts after the current one ends (A-0003 DAB-001)."""
-    query = {"status": "active", "$or": [{"user_id": user_id}] if user_id else []}
-    query["$or"].append({"customer_email": (email or "").strip().lower()})
+    key = (email or "").strip().lower()
+    query = {"status": "active", "$or": ([{"user_id": user_id}] if user_id else []) + [
+        {"email_key": key}, {"customer_email": {"$regex": f"^{re.escape(key)}$", "$options": "i"}}]}
     active = await db.subscriptions.find_one(query, {"_id": 0, "end_date": 1})
     if active and active.get("end_date") and start.strftime("%Y-%m-%d") <= active["end_date"]:
         raise ValueError(f"Your current plan runs until {active['end_date']} — please start the next one the following Monday.")
