@@ -110,7 +110,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#B8860B' }}>
+        <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8D6E00' }}>
           Collection time
         </span>
         <div className="flex gap-1">
@@ -142,7 +142,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
             <button
               onClick={() => { record('slot_selected', { label: 'ASAP', method: day }); setPickupSlot(null); }}
               style={chipStyle(!pickupSlot, false)}>
-              ASAP<span className="block text-[9px] font-normal" style={{ color: '#5C4B47' }}>~40 min</span>
+              ASAP<span className="block text-[10px] font-normal" style={{ color: '#5C4B47' }}>~40 min</span>
             </button>
           )}
           {slots.map(s => {
@@ -153,7 +153,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
                 onClick={() => { record('slot_selected', { label: s.label, method: day }); setPickupSlot({ iso: s.iso, label: s.label, date: data.date }); }}
                 style={chipStyle(selected, disabled)}>
                 {s.label}
-                {disabled && <span className="block text-[9px] font-normal">Full</span>}
+                {disabled && <span className="block text-[10px] font-normal">Full</span>}
               </button>
             );
           })}

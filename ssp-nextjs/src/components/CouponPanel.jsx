@@ -104,8 +104,8 @@ export default function CouponPanel({ scope, email, ctx, applied, error, onApply
                       style={{ border: `1px solid ${o.exclusive ? '#F4C430' : '#e8e2da'}`, backgroundColor: locked ? '#FAFAF8' : 'white', opacity: locked ? 0.7 : 1 }}>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold truncate" style={{ color: '#2D2422' }}>
-                          {o.exclusive && <Sparkles size={12} className="inline mr-1" style={{ color: '#B8860B' }} />}
-                          {o.name}{o.exclusive && <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#FBF3DC', color: '#B8860B' }}>Just for you</span>}
+                          {o.exclusive && <Sparkles size={12} className="inline mr-1" style={{ color: '#8D6E00' }} />}
+                          {o.name}{o.exclusive && <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#FBF3DC', color: '#8D6E00' }}>Just for you</span>}
                         </p>
                         <p className="text-xs" style={{ color: C.muted }}>
                           {describe(o)}{o.min_subtotal ? ` · Min. ${fmt(o.min_subtotal)}` : ''}{o.first_order_only ? ' · First order' : ''}{expiryLabel(o.expires_at) ? ` · ${expiryLabel(o.expires_at)}` : ''}

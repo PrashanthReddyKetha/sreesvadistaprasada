@@ -41,7 +41,7 @@ const CartToast = () => {
   const { Icon } = cfg;
 
   return (
-    <div className="fixed top-24 right-4 z-[9999] animate-slide-in-right" data-testid="cart-toast">
+    <div className="fixed top-24 right-4 z-[9999] animate-slide-in-right" data-testid="cart-toast" role="status" aria-live="polite">
       <div
         className="flex items-center gap-4 px-5 py-4 rounded-xl shadow-2xl border"
         style={{

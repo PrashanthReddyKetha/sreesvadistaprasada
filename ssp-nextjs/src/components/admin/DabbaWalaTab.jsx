@@ -188,8 +188,8 @@ function DabbaOperations() {
                                 </button>
                               </div>
                             ) : (
-                              <span className="text-xs font-semibold capitalize" style={{ color: d.status==='delivered'?'#4A7C59':'#C62828' }}>
-                                {d.status}
+                              <span className="text-xs font-semibold" style={{ color: d.status==='delivered'?'#4A7C59':'#C62828' }}>
+                                {words(d.status)}
                               </span>
                             )}
                             {d.status !== 'failed' && (
@@ -602,7 +602,7 @@ function DabbaMenuPlanner() {
       });
       setCells(newCells);
     }).catch(() => {});
-  }, [selectedWeek, weekMondayDate]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedWeek, weekMondayDate]);  
 
   const updateItem = (date, box, itemIdx, value) => {
     setCells(prev => {
@@ -764,7 +764,7 @@ function DabbaMenuPlanner() {
 
 /* ── Delivery Sheet ────────────────────────────────────── */
 function DabbaDeliverySheet() {
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })   /* London day, not UTC (A-0003, DAB-005) */);
   const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
@@ -881,9 +881,9 @@ function DabbaAnalytics() {
 
   const cards = summary ? [
     { label:'Active subscribers', value:summary.active_subscribers, color:'#4A7C59' },
-    { label:'Monthly revenue', value:`£${summary.monthly_revenue}`, color:'#800020' },
-    { label:'Meals this month', value:summary.meals_this_month, color:'#8B6914' },
-    { label:'Churn rate', value:`${summary.churn_rate}%`, color:'#DC2626' },
+    { label:'Value of running plans (all plans, incl. delivery)', value:`£${summary.monthly_revenue}`, color:'#800020' },
+    { label:'Meal days planned this month (before skips)', value:summary.meals_this_month, color:'#8B6914' },
+    { label:'Plans ever cancelled (share of all plans)', value:`${summary.churn_rate}%`, color:'#DC2626' },
   ] : [];
 
   return (

@@ -92,7 +92,7 @@ function Ticket({ order, now, onAdvance, onCancel, onEightySix, busy }) {
             <button
               onClick={() => onEightySix(it)}
               title={`Mark "${it.name}" sold out on the menu`}
-              className="text-[9px] font-black px-1.5 py-0.5 rounded"
+              className="text-[10px] font-black px-1.5 py-0.5 rounded"
               style={{ border: `1px solid ${C.line}`, color: C.muted }}>
               86
             </button>

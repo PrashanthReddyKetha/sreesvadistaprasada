@@ -362,7 +362,18 @@ async def customer_timeline(email: str, _: dict = Depends(require_admin)):
 
     out = sorted((e for e in out if e), key=lambda e: e["at"], reverse=True)
     person = next((c for c in await build_customers() if c["email"] == key), None)
-    return {"customer": person, "timeline": out}
+    # Consent and messages, so the owner can see what may be sent and what was (A-0003, CRM-001)
+    from automations import marketing_consented
+    from notifications import email_opted_out
+    consent = {
+        "marketing_email": "unsubscribed" if await email_opted_out(key) else ("yes" if await marketing_consented(key) else "not asked for"),
+        "whatsapp_sms": "stopped" if (user and user.get("phone") and await db.wa_optouts.find_one({"phone": user["phone"]}, {"_id": 1})) else "allowed for service messages",
+    }
+    recent = await db.message_log.find({"to": {"$in": [key] + ([user["phone"]] if user and user.get("phone") else [])}}, {"_id": 0, "at": 1, "channel": 1, "kind": 1, "status": 1, "subject": 1})         .sort("at", -1).to_list(10)
+    for m in recent:
+        if isinstance(m.get("at"), datetime):
+            m["at"] = m["at"].isoformat()
+    return {"customer": person, "timeline": out, "consent": consent, "messages": recent}
 
 
 # ── How customers behave, as a whole ─────────────────────────────────────────

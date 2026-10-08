@@ -35,7 +35,7 @@ export default function FaqSection({ title = 'Frequently asked questions', faqs 
         )}
         {links.length > 0 && (
           <nav aria-label={linksTitle} className={faqs.length ? 'mt-8' : ''}>
-            <h2 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#B8860B' }}>{linksTitle}</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#8D6E00' }}>{linksTitle}</h2>
             <div className="flex flex-wrap gap-2">
               {links.map(({ href, label }) => (
                 <Link key={href} href={href}

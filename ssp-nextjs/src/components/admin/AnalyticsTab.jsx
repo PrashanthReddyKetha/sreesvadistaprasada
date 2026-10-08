@@ -123,7 +123,7 @@ function Dishes({ dishes }) {
         <label className="text-sm text-gray-600 flex items-center gap-2"><input type="checkbox" checked={touched} onChange={e => setTouched(e.target.checked)} /> Only dishes someone has looked at</label>
         <span className="text-sm text-gray-500 ml-auto">{dishes.length} dishes on the menu · {active} looked at, added or ordered in this period</span>
       </div>
-      <Table key={`${q}|${section}|${touched}`} title="How each dish is doing" empty="No dish matches." head={['Dish', 'Section', 'Price', 'Opened', 'Added to basket', 'Ordered', 'Reading']}
+      <Table key={`${q}|${section}|${touched}`} title="How each dish is doing" empty="No dish matches." head={['Dish', 'Section', 'Price', 'Opened', 'Added to basket', 'Ordered (seen in visits)', 'Reading']}
         rows={rows.map(d => [d.name, d.section || '—', d.price != null ? fmt(d.price) : '—', d.opened, d.added, d.ordered, d.verdict])} />
     </div>
   );
@@ -147,7 +147,7 @@ function sections(data, days) {
     [`Totals, last ${days} days`, ['Visits', 'Pages viewed', 'Orders', 'Order income', 'Plans sold', 'Orders traced to a visit'],
       [[t.visits, t.page_views, book.orders, book.income, book.plans_sold, book.orders_seen_in_a_visit]]],
     ['From visit to order', ['Step', 'Visits'], data.funnel.map(x => [STEP[x.step] || x.step, x.visits])],
-    ['Where visitors came from', ['Source', 'Visits', 'Added to basket', 'Orders', 'Income'], data.sources.map(x => [x.source, x.visits, x.added_to_basket, x.orders, x.income])],
+    ['Where visitors came from', ['Source', 'Visits', 'Added to basket', 'Orders seen in visits', 'Income seen in visits (estimate)'], data.sources.map(x => [x.source, x.visits, x.added_to_basket, x.orders, x.income])],
     ['By landing page', fh('Landed on'), f(data.landing_funnels)],
     ['By device', fh('Device'), f(data.device_funnels)],
     ['By visitor type', fh('Visitor'), f(data.visitor_funnels)],
@@ -159,7 +159,7 @@ function sections(data, days) {
     ['Last action before leaving with a basket', ['Action', 'Visits'], (data.last_action_before_leaving_with_a_basket || []).map(x => [x.name, x.count])],
     ['Dabba Wala step by step', ['Step', 'Visits'], (data.subscription_funnel || []).map(x => [x.step, x.visits])],
     ['Minutes between steps', ['Between', 'Typical minutes', 'Visits measured'], (data.step_times || []).map(x => [x.between, x.median_minutes ?? '', x.visits])],
-    ['Dishes', ['Dish', 'Section', 'Price', 'Opened', 'Added to basket', 'Ordered', 'Reading'], (data.dish_ranking || []).map(x => [x.name, x.section, x.price ?? '', x.opened, x.added, x.ordered, x.verdict])],
+    ['Dishes', ['Dish', 'Section', 'Price', 'Opened', 'Added to basket', 'Ordered (seen in visits)', 'Reading'], (data.dish_ranking || []).map(x => [x.name, x.section, x.price ?? '', x.opened, x.added, x.ordered, x.verdict])],
     ['Dishes taken back out of the basket', ['Dish', 'Removed', 'Added'], (data.removals || []).map(x => [x.name, x.removed, x.added])],
     ['Add rate by price', ['Price', 'Opened', 'Added'], (data.price_bands || []).map(x => [x.band, x.opened, x.added])],
     ['Pages viewed most', ['Page', 'Views'], data.top_pages.map(x => [x.name, x.count])],
@@ -170,7 +170,7 @@ function sections(data, days) {
     ['Searches', ['Search', 'Times'], (data.searches || []).map(x => [x.name, x.count])],
     ['Problems visitors hit', ['Problem', 'Detail', 'Page', 'Times'], (data.problems || []).map(x => [actionName(x.name), x.detail, x.page, x.count])],
     ['Field people were on when they gave up', ['Page', 'Form', 'Field', 'Visits'], (data.field_drop_off || []).map(x => [x.page, x.form, x.last_field, x.visits])],
-    ['Day by day', ['Day', 'Visits', 'Page views', 'Orders', 'Income'], data.by_day.map(x => [x.day, x.visits, x.page_views, x.orders, x.income])],
+    ['Day by day', ['Day', 'Visits', 'Page views', 'Orders seen in visits', 'Income seen in visits (estimate)'], data.by_day.map(x => [x.day, x.visits, x.page_views, x.orders, x.income])],
     ['Busiest hours (UK)', ['Hour', 'Page views'], (data.by_hour || []).map(x => [`${x.hour}:00`, x.page_views])],
   ].filter(([, , rows]) => rows.length);
 }
@@ -433,7 +433,7 @@ export default function AnalyticsTab() {
               .sort((a, b) => a.uk - b.uk).map(h => (
                 <div key={h.uk} className="flex-1 flex flex-col items-center justify-end h-full" title={`${String(h.uk).padStart(2, '0')}:00 — ${h.page_views} page views`}>
                   <div className="w-full rounded-t" style={{ height: `${(h.page_views / h.max) * 100}%`, minHeight: h.page_views ? 3 : 0, backgroundColor: P }} />
-                  <span className="text-[9px] text-gray-400 mt-1">{h.uk % 3 === 0 ? h.uk : ''}</span>
+                  <span className="text-[10px] text-gray-400 mt-1">{h.uk % 3 === 0 ? h.uk : ''}</span>
                 </div>
               ))}
           </div>
@@ -447,7 +447,7 @@ export default function AnalyticsTab() {
 
       <p className="text-xs text-gray-400">
         This is the site's own count, kept on our server. It will not match Google Analytics exactly. A visit is one sitting: everything the same browser does with no pause longer than 30 minutes.
-        Your own visits while signed in as admin, automated browsers and search-engine crawlers are not counted. Orders and income are taken from the order book; the funnel counts the orders seen being placed.
+        Your own visits while signed in as admin, automated browsers and search-engine crawlers are not counted. The cards take orders and income from the order book, which is the truth. Columns marked "seen in visits" count only what the visit record saw being placed — a lost connection or a later cancellation makes them differ, so treat them as estimates.
         Time on a page counts only while the page is on screen. All times are UK time. Phones: {data.devices.phone || 0} · computers: {data.devices.desktop || 0}. No names or contact details are recorded here.
       </p>
       <div className="flex flex-wrap items-center gap-3">

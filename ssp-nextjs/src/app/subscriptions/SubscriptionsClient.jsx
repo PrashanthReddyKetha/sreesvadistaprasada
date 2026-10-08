@@ -510,7 +510,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   // useMemo prevents getWeekConfig() from returning a new object reference every render,
   // which would break useCallback(fetchMenu) and cause an infinite fetch loop.
   const [renewAfter, setRenewAfter] = useState(null);   // end date of the running plan when renewing from the active screen
-  const weekCfg = useMemo(() => getWeekConfig(renewAfter), [renewAfter]); // eslint-disable-line react-hooks/exhaustive-deps
+  const weekCfg = useMemo(() => getWeekConfig(renewAfter), [renewAfter]);  
 
   // wizard state
   const [step, setStep] = useState(1);
@@ -579,7 +579,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
 
     api.get('/subscriptions').then(res => {
       const subs = res.data;
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })   /* London day, not UTC (A-0003, DAB-005) */;
       const active = subs.find(s => s.status === 'active' && (!s.end_date || s.end_date >= today));
       const lapsed = subs.find(s => s.status === 'expired' || s.status === 'cancelled');
       if (active) { setActiveSub(active); setPageState('active'); }
@@ -604,7 +604,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   useEffect(() => {
     const w = selectedPlan === 'monthly' ? weekCfg.weeks[0] : weekCfg.weeks[menuTab];
     if (w) setSelectedStartWeek(isoDate(w.monday));
-  }, [menuTab, weekCfg.weeks, selectedPlan]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [menuTab, weekCfg.weeks, selectedPlan]);  
 
   /* fetch menu for a tab — with auto-retry for Render cold start */
   const fetchMenu = useCallback(async (tabIdx, attempt = 1) => {
@@ -633,7 +633,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
     if (step === 3 && selectedBox) {
       for (let i = 0; i < previewCount; i++) fetchMenu(i);
     }
-  }, [step, selectedBox, previewCount, fetchMenu]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, selectedBox, previewCount, fetchMenu]);  
 
   /* postcode validation */
   const checkPostcode = useCallback(async (pc) => {
@@ -749,7 +749,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
     };
     window.addEventListener('popstate', handler);
     return () => window.removeEventListener('popstate', handler);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   /* submit */
   const handleConfirm = async () => {

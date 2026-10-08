@@ -312,7 +312,7 @@ function PairsRow({ cartItems, addToCart }) {
 
   return (
     <div className="rounded-2xl p-4" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(128,0,32,0.12)' }}>
-      <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: '#B8860B' }}>
+      <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: '#8D6E00' }}>
         Goes well with
       </p>
       <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
@@ -771,7 +771,7 @@ const CheckoutInner = () => {
     if (zoneInfo?.postcode) {
       setForm(f => ({ ...f, postcode: f.postcode || zoneInfo.postcode }));
     }
-  }, [zoneInfo?.postcode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [zoneInfo?.postcode]);  
 
   const set = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
@@ -841,7 +841,7 @@ const CheckoutInner = () => {
       await fallbackPostcodeIo(pc);
     }
     finally { setPcLookingUp(false); }
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);   
 
   const selectAddress = (addr) => {
     setForm(f => ({ ...f, line1: addr.line1, line2: addr.line2, city: addr.city }));

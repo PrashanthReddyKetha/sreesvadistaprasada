@@ -23,10 +23,15 @@ const HeroSlider = ({ images = [] }) => {
   const nextSlide = useCallback(() => goToSlide(currentSlide + 1), [currentSlide, goToSlide]);
   const prevSlide = useCallback(() => goToSlide(currentSlide - 1), [currentSlide, goToSlide]);
 
+  // The slideshow does not move on its own for people who asked for less motion, and pauses while hovered or
+  // focused so nothing changes under a reader's eyes (A-0003, A11Y-004 / PERF-002)
+  const [paused, setPaused] = useState(false);
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
+    const still = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (still || paused) return;
     timerRef.current = setInterval(nextSlide, 6000);
-  }, [nextSlide]);
+  }, [nextSlide, paused]);
 
   useEffect(() => {
     resetTimer();
@@ -47,6 +52,13 @@ const HeroSlider = ({ images = [] }) => {
       data-testid="hero-slider"
       className="relative w-full overflow-hidden select-none"
       style={{ height: 'min(80vh, 700px)' }}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Highlights"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false); }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

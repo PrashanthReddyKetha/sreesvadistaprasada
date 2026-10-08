@@ -158,7 +158,7 @@ const Header = () => {
                 >
                   Sree Svadista Prasada
                 </p>
-                <span className="text-[9px] md:text-xs italic leading-none whitespace-nowrap" style={{ fontFamily: "'Playfair Display', serif", color: '#8B6914' }}>
+                <span className="text-[10px] md:text-xs italic leading-none whitespace-nowrap" style={{ fontFamily: "'Playfair Display', serif", color: '#8B6914' }}>
                   Taste for your heart · memories on a plate
                 </span>
               </div>
@@ -252,8 +252,7 @@ const Header = () => {
                   <ShoppingCart size={20} />
                   {cartCount > 0 && (
                     <span
-                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-                      style={{ backgroundColor: '#F4C430' }}
+                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[#2D2422] text-[10px] font-bold flex items-center justify-center" style={{ backgroundColor: '#F4C430' }}
                     >
                       {cartCount}
                     </span>
@@ -305,8 +304,7 @@ const Header = () => {
                 <ShoppingCart size={20} />
                 {cartCount > 0 && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-                    style={{ backgroundColor: '#F4C430' }}
+                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[#2D2422] text-[10px] font-bold flex items-center justify-center" style={{ backgroundColor: '#F4C430' }}
                   >
                     {cartCount}
                   </span>

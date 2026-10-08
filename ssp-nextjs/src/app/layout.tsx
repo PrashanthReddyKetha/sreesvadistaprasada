@@ -42,7 +42,8 @@ export const metadata: Metadata = {
     default: 'Indian Takeaway Milton Keynes | Authentic South Indian Food Delivery | Sree Svadista Prasada',
     template: '%s | Sree Svadista Prasada',
   },
-  description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
+  description: 'Indian takeaway Milton Keynes — authentic Andhra curries, dosas, biryanis & Dabba Wala tiffin subscriptions. Home-style South Indian food delivery. Order online.',
+
   metadataBase: new URL('https://sreesvadistaprasada.com'),
   manifest: '/manifest.json',
   appleWebApp: {
@@ -89,10 +90,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <ScrollToTop />
               <BackendWarmup />
               <TakeawayNudge />
+              <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[10000] focus:px-4 focus:py-2 focus:rounded focus:bg-white focus:text-[#800020] focus:font-semibold focus:shadow">Skip to main content</a>
               <Header />
               <CartDrawer />
               <AuthModalLoader />
-              <main className="flex-1">
+              <main id="main" className="flex-1">
                 {children}
               </main>
               <Footer />

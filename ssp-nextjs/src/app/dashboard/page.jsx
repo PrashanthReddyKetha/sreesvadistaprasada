@@ -563,7 +563,7 @@ function PrevSubDetails({ sub }) {
 }
 
 function SubsTab({ subs, reload }) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })   /* London day, not UTC (A-0003, DAB-005) */;
   const in7   = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
   if (!subs || subs.length === 0) {

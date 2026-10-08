@@ -80,6 +80,17 @@ function CustomerPage({ email, onClose }) {
                 {c.has_account ? ' · has an account' : ' · guest'}{c.newsletter ? ' · newsletter' : ''}
               </p>
             )}
+            {data.consent && (
+              <div className="rounded-lg p-3 text-sm" style={{ backgroundColor: '#FDFBF7' }}>
+                <p><b>Offers by email:</b> {data.consent.marketing_email}{data.consent.marketing_email === 'not asked for' && <span className="text-gray-500"> — no marketing goes to them</span>}</p>
+                <p><b>WhatsApp / text:</b> {data.consent.whatsapp_sms}</p>
+                {data.messages?.length > 0 && (
+                  <details className="mt-2"><summary className="cursor-pointer text-xs text-gray-500">Last {data.messages.length} messages sent</summary>
+                    <ul className="mt-1 text-xs text-gray-600 space-y-0.5">{data.messages.map((m, i) => <li key={i}>{(m.at || '').slice(0, 16).replace('T', ' ')} · {m.channel} · {m.subject || ''} · {m.status}</li>)}</ul>
+                  </details>
+                )}
+              </div>
+            )}
             <div>
               <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">History, newest first</h4>
               {data.timeline.length === 0 ? <p className="text-sm text-gray-400">Nothing on record yet.</p> : (

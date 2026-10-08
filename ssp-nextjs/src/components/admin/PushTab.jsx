@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Bell, Send, Clock, Trash2, RefreshCw } from 'lucide-react';
 import api from '@/api';
+import { words } from '@/lib/adminLabels';
 import ConfirmAction from '@/components/admin/ConfirmAction';
 
 /**
@@ -176,8 +177,8 @@ export default function PushTab() {
                     <div className="text-xs truncate max-w-[260px]" style={{ color: C.muted }}>{c.body}</div>
                   </td>
                   <td className="px-3 py-2.5">
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full capitalize"
-                      style={{ backgroundColor: st.bg, color: st.text }}>{c.status}</span>
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: st.bg, color: st.text }}>{words(c.status, { scheduled: 'Scheduled', sending: 'Sending', sent: 'Sent', failed: 'Failed', draft: 'Draft', cancelled: 'Cancelled' })}</span>
                   </td>
                   <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: C.muted }}>
                     {fmtWhen(c.sent_at || c.send_at_utc || c.created_at)}

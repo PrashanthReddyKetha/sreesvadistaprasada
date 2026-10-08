@@ -232,7 +232,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
                 <div className="absolute bottom-0 left-0 right-0 p-3 md:p-10">
                   <div className="flex items-center gap-2 mb-3">
                     <Flame size={18} className="text-red-300" />
-                    <span className="text-[9px] md:text-xs uppercase tracking-[0.12em] md:tracking-[0.2em] text-red-200 font-medium">Non-Vegetarian</span>
+                    <span className="text-[10px] md:text-xs uppercase tracking-[0.12em] md:tracking-[0.2em] text-red-200 font-medium">Non-Vegetarian</span>
                   </div>
                   <h3 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
                     Sree Svadista
@@ -261,7 +261,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
                 <div className="absolute bottom-0 left-0 right-0 p-3 md:p-10">
                   <div className="flex items-center gap-2 mb-3">
                     <Leaf size={18} className="text-green-300" />
-                    <span className="text-[9px] md:text-xs uppercase tracking-[0.12em] md:tracking-[0.2em] text-green-200 font-medium">Pure Vegetarian</span>
+                    <span className="text-[10px] md:text-xs uppercase tracking-[0.12em] md:tracking-[0.2em] text-green-200 font-medium">Pure Vegetarian</span>
                   </div>
                   <h3 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
                     Sree Prasada
@@ -698,7 +698,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
                   <div className="w-12 h-12 md:w-20 md:h-20 rounded-full flex items-center justify-center border-2" style={{ borderColor: '#F4C430' }}>
                     <step.icon className="w-5 h-5 md:w-7 md:h-7" style={{ color: '#F4C430' }} />
                   </div>
-                  <span className="absolute -top-1 -right-1 md:-top-2 md:-right-2 text-[9px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
+                  <span className="absolute -top-1 -right-1 md:-top-2 md:-right-2 text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
                     {step.num}
                   </span>
                 </div>

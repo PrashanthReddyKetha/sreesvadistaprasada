@@ -92,7 +92,7 @@ export default function SubActiveCard({ sub }) {
   const [skipTarget, setSkipTarget]   = useState(null); // { date, shortNotice }
   const [skipping, setSkipping]       = useState(false);
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })   /* London day, not UTC (A-0003, DAB-005) */;
   const boxMeta = BOX_META[sub.box_type] || BOX_META.prasada;
   const addr = sub.delivery_address;
   const daysLeft = daysUntil(sub.end_date);
@@ -126,7 +126,7 @@ export default function SubActiveCard({ sub }) {
     if (!sub.id) return;
     api.get(`/subscriptions/${sub.id}/deliveries`).then(r => setDeliveries(r.data)).catch(() => {});
   };
-  useEffect(loadDeliveries, [sub.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(loadDeliveries, [sub.id]);  
 
   const deliveryByDate = useMemo(() => {
     const m = {};
@@ -235,11 +235,11 @@ export default function SubActiveCard({ sub }) {
                     <p className="text-[10px]" style={{ color: '#7A5C50' }}>
                       {new Date(date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
                     </p>
-                    {isToday && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor:'#DCFCE7',color:'#166534'}}>Today</span>}
-                    {isTomorrow && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor:'#FEF3C7',color:'#92400E'}}>Upcoming delivery</span>}
-                    {isPast && !isToday && !status && <span className="text-[9px]" style={{ color:'#7A5C50'}}>Passed</span>}
+                    {isToday && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor:'#DCFCE7',color:'#166534'}}>Today</span>}
+                    {isTomorrow && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor:'#FEF3C7',color:'#92400E'}}>Upcoming delivery</span>}
+                    {isPast && !isToday && !status && <span className="text-[10px]" style={{ color:'#7A5C50'}}>Passed</span>}
                     {statusMeta && (
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                         style={{ backgroundColor: statusMeta.bg, color: statusMeta.fg }}>
                         {statusMeta.label}
                       </span>

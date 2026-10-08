@@ -93,6 +93,13 @@ const OrderActions = ({ order, onUpdate }) => {
     setBusy(null);
     setAskCancel(false);
   };
+  const [askRefund, setAskRefund] = useState(false);
+  const markRefunded = async () => {
+    setBusy('refunded');
+    try { await api.put(`/orders/${order.id}/refunded`); order.payment_status = 'refunded'; } catch {}
+    setBusy(null); setAskRefund(false);
+    await onUpdate?.('orders', order.id, null);
+  };
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
@@ -104,9 +111,25 @@ const OrderActions = ({ order, onUpdate }) => {
             ['Now', `${statusWords(order.status)} · ${order.items?.length || 0} item${order.items?.length === 1 ? '' : 's'} · £${Number(order.total || 0).toFixed(2)}${order.payment_intent_id ? ' · paid' : ''}`],
             ['After', 'cancelled; it leaves the kitchen list'],
             ['The customer', 'gets an email and a text saying the order was cancelled'],
-            ['Money', 'nothing is refunded by itself — refund by hand in Stripe if you owe one'],
+            ['Money', order.payment_intent_id ? `the customer is told a refund is coming; refund by hand in Stripe (payment ${order.payment_intent_id}), then tap "Mark refunded" here` : 'nothing was paid online'],
             ['Undo', 'cannot be undone'],
           ]} />
+      )}
+      {order.status === 'cancelled' && order.payment_intent_id && order.payment_status !== 'refunded' && (
+        <>
+          <span className="px-2 py-1 rounded-lg text-xs font-bold" style={{ backgroundColor: '#FEF3C7', color: '#854D0E' }}>Refund due · Stripe {order.payment_intent_id.slice(-8).toUpperCase()}</span>
+          <button onClick={() => setAskRefund(true)} disabled={!!busy} className="px-2 py-1.5 rounded-lg text-xs font-semibold" style={{ border: '1px solid #2E7D32', color: '#2E7D32' }}>Mark refunded</button>
+        </>
+      )}
+      {order.status === 'cancelled' && order.payment_status === 'refunded' && (
+        <span className="px-2 py-1 rounded-lg text-xs font-semibold" style={{ backgroundColor: '#F0FDF4', color: '#166534' }}>Refunded</span>
+      )}
+      {askRefund && (
+        <ConfirmAction title={`Mark order ${order.order_number || order.id.slice(-6).toUpperCase()} as refunded?`} confirmLabel="Yes, it is refunded" busy={busy === 'refunded'}
+          onCancel={() => setAskRefund(false)} onConfirm={markRefunded}
+          rows={[['Before you tap', `Refund £${Number(order.total || 0).toFixed(2)} in Stripe — payment ${order.payment_intent_id}`],
+                 ['Then', 'the order shows "Refunded" and the customer gets an email saying the money is on its way'],
+                 ['Undo', 'cannot be undone here']]} />
       )}
       {flow && (
         <button onClick={() => handle(flow.next)} disabled={!!busy}
@@ -257,7 +280,7 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-semibold text-sm text-gray-900">#{o.order_number || o.id?.slice(-6).toUpperCase()}</span>
                       {o.scheduled_slot_final && (
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ backgroundColor:'#FBF3DC', color:'#B8860B' }}>
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ backgroundColor:'#FBF3DC', color:'#8D6E00' }}>
                           COLLECT {(() => { const h = parseInt(o.scheduled_slot_final.slice(11,13),10); return `${h%12||12}:${o.scheduled_slot_final.slice(14,16)} ${h<12?'am':'pm'}`; })()}
                         </span>
                       )}
@@ -986,7 +1009,7 @@ const Admin = () => {
     setRefreshing(true);
     try {
       const [orders, subscriptions, users, contacts, catering, newsletter] = await Promise.all([
-        api.get('/orders'),
+        api.get('/orders?limit=300'),
         api.get('/subscriptions'),
         api.get('/auth/users'),
         api.get('/enquiries/contact'),
@@ -1009,7 +1032,7 @@ const Admin = () => {
 
   const handleStatusUpdate = async (type, id, status) => {
     try {
-      if (type==='orders')        await api.put(`/orders/${id}/status`, { status });
+      if (type==='orders' && status) await api.put(`/orders/${id}/status`, { status });   // status null = just refresh
       if (type==='subscriptions') await api.put(`/subscriptions/${id}/status`, { status });
       if (type==='contact')       await api.put(`/enquiries/contact/${id}/status?status=${status}`);
       if (type==='catering')      await api.put(`/enquiries/catering/${id}/status?status=${status}`);
