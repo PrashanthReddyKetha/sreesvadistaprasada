@@ -79,6 +79,11 @@ SITE_URL = os.environ.get("SITE_URL", "https://sreesvadistaprasada.com").rstrip(
 # "https://search.google.com/local/writereview?placeid=..." link from the GBP
 # dashboard — that's the format Google actually recognises for review requests.
 # The maps search fallback below still gets a happy customer to the listing.
+# The kitchen's street address is given only to people who have ordered (owner decision D-043): in this email, on the
+# success screen and in their account — never on public pages.
+COLLECTION_ADDRESS = "24 Oxman Lane, Greenleys, Milton Keynes MK12 6LF"
+COLLECTION_MAP_URL = "https://maps.google.com/?q=24+Oxman+Ln,+Greenleys,+Milton+Keynes+MK12+6LF"
+
 GOOGLE_REVIEW_URL = os.environ.get(
     "GOOGLE_REVIEW_URL",
     "https://www.google.com/maps/search/?api=1&query=Sree+Svadista+Prasada+Milton+Keynes",
@@ -497,7 +502,8 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
             f'{hh % 12 or 12}:{mm} {"am" if hh < 12 else "pm"}</p>'
         )
     dest_line = (
-        slot_line + '<p style="color:#5C4B47;font-size:13px"><b>Collection from:</b> Greenleys kitchen, Milton Keynes</p>'
+        slot_line + '<p style="color:#5C4B47;font-size:13px"><b>Collection from:</b> ' + COLLECTION_ADDRESS +
+        ' — <a href="' + COLLECTION_MAP_URL + '" style="color:#800020">open in Maps</a></p>'
         if is_takeaway else
         f'<p style="color:#5C4B47;font-size:13px"><b>Deliver to:</b> {addr_line}</p>'
     )

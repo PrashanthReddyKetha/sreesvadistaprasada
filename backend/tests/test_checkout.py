@@ -424,3 +424,11 @@ def test_cancelling_a_paid_order_says_what_happens_to_the_money_and_the_owner_ca
     r = client.put(f"/api/orders/{order['id']}/refunded", headers=admin_headers)
     assert r.status_code == 200 and run(db.orders.find_one({"id": order["id"]}))["payment_status"] == "refunded"
     assert any("Refund sent" in subj for _, subj, _ in state.outbox.email)
+
+
+def test_the_collection_address_is_in_the_confirmation_email(client, menu, pay, state, user_headers, monkeypatch):
+    """D-043: public pages show the area only; the customer gets the full address once they have ordered."""
+    import notifications
+    subj, html = notifications.email_order_confirmation({"order_number": "SP1", "delivery_type": "takeaway", "items": [], "total": 10,
+                                                         "scheduled_slot_final": "2026-10-09T12:00"}, "Asha")
+    assert "24 Oxman Lane" in html and "MK12 6LF" in html and "maps.google.com" in html
