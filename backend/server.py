@@ -189,6 +189,7 @@ ALLOWED_ORIGINS = [
     "https://sreesvadistaprasada.com",
     "https://www.sreesvadistaprasada.com",
     "https://expenses.sreesvadistaprasada.com",   # the owner's expense app (D-049)
+    "https://ssp-expenses.vercel.app",            # the same app at its Vercel address
     "https://ssp-nextjs.vercel.app",
     "https://ssp-nextjs-git-main-prashanthketha-9745s-projects.vercel.app",
     "http://localhost:3000",
