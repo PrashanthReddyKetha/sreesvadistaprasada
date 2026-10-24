@@ -15,9 +15,12 @@ Programme records, decisions, risks and audits live in `docs/ops/` (its own git 
 | Layer    | Platform | URL | Deploys |
 |----------|----------|-----|---------|
 | Frontend | Vercel   | https://sreesvadistaprasada.com | from `ssp-nextjs/` on push to `main` |
+| Expenses app | Vercel (own project, root `expenses-app/`, static, no build) | https://expenses.sreesvadistaprasada.com | on push to `main` |
 | Backend  | Render (free tier, sleeps when idle) | https://svadista-backend.onrender.com | from `backend/` on push to `main` |
 | CI       | GitHub Actions `.github/workflows/ci.yml` | backend tests · lint/type-check/build · browser journeys | does **not** gate deploys |
 | Uptime   | `.github/workflows/keep-alive.yml` | cron `*/14` but GitHub runs it every 2–9 h in practice | emails the GitHub account on failure |
+
+`expenses-app/` is the owner's offline expense app (D-049): plain ES modules, IndexedDB, syncs to `/api/expenses` with the admin login; receipt reading is on-device (pdf.js, Tesseract in `vendor/`), tests `cd expenses-app && npm test`. Bump `VERSION` in `sw.js` when a shell file changes.
 
 `frontend/` (CRA) and `mobile/` (Expo) are legacy; `frontend/` is not deployed. **Work in `ssp-nextjs/`.**
 

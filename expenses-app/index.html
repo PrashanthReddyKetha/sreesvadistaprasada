@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Svadista Prasada Expenses</title>
+<meta name="description" content="Sree Svadista Prasada's own expense book: receipts, item prices by supplier and the shopping list.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2c6a4c" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111613" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SSP Expenses">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Sree Svadista Prasada · Milton Keynes</div>
+      <h1>Expenses</h1>
+    </div>
+    <button class="pill" id="syncPill" type="button" aria-live="polite">Saved on this phone</button>
+  </header>
+
+  <section class="totals" aria-label="Totals">
+    <div class="tile hero"><span class="eyebrow" id="tPeriodLbl">This month</span><span class="big num" id="tPeriod">£0.00</span><span class="note" id="tPeriodNote">Nothing recorded</span></div>
+    <div class="tile"><span class="eyebrow" id="tTaxLbl">Tax year</span><span class="big num" id="tTax">£0.00</span><span class="note" id="tTaxNote">6 Apr – 5 Apr</span></div>
+    <div class="tile"><span class="eyebrow">Top category</span><span class="big small" id="tTop">—</span><span class="note num" id="tTopNote"></span></div>
+  </section>
+
+  <div class="chips" id="periods" role="group" aria-label="Period"></div>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-overview" data-tab="overview" type="button">Overview</button>
+    <button class="tab" role="tab" id="tab-ledger" data-tab="ledger" type="button">Ledger</button>
+    <button class="tab" role="tab" id="tab-prices" data-tab="prices" type="button">Prices</button>
+    <button class="tab" role="tab" id="tab-shopping" data-tab="shopping" type="button">Shopping</button>
+    <button class="tab" role="tab" id="tab-more" data-tab="more" type="button">More</button>
+  </nav>
+
+  <section class="tabpanel" id="p-overview" role="tabpanel" aria-labelledby="tab-overview">
+    <div class="panel">
+      <div class="panel-head"><h2>Spending over time</h2>
+        <div class="seg" id="grain" role="group" aria-label="Group by">
+          <button type="button" data-g="day">Daily</button><button type="button" data-g="week">Weekly</button><button type="button" data-g="month">Monthly</button>
+        </div>
+      </div>
+      <div class="trend" id="trend"></div>
+      <div class="trend-labels" id="trendLabels"></div>
+      <div class="trend-note" id="trendNote"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>By category</h2><span class="status" id="catNote"></span></div>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>By supplier</h2><span class="status" id="supNote"></span></div>
+      <div class="bars" id="supBars"></div>
+    </div>
+  </section>
+
+  <section class="tabpanel" id="p-ledger" role="tabpanel" aria-labelledby="tab-ledger" hidden>
+    <div class="panel">
+      <div class="panel-head"><h2>Ledger</h2><span class="status" id="status"></span></div>
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search supplier, note or item" aria-label="Search">
+        <select id="catFilter" aria-label="Category"></select>
+      </div>
+      <div id="list"></div>
+    </div>
+  </section>
+
+  <section class="tabpanel" id="p-prices" role="tabpanel" aria-labelledby="tab-prices" hidden>
+    <div class="panel">
+      <div class="panel-head"><h2>Item prices by supplier</h2><span class="status">From every itemised receipt</span></div>
+      <p class="muted">Prices are compared per kg, per litre or per piece, so a 5 kg bag and a 10 kg bag line up. The cheapest supplier's latest price is shown first.</p>
+      <div class="toolbar">
+        <input id="priceSearch" type="search" placeholder="Search items" aria-label="Search items">
+        <button class="btn small" id="itemsCsvBtn" type="button">Export items CSV</button>
+      </div>
+      <div class="items" id="prices"></div>
+    </div>
+  </section>
+
+  <section class="tabpanel" id="p-shopping" role="tabpanel" aria-labelledby="tab-shopping" hidden>
+    <div class="panel">
+      <div class="panel-head"><h2>Next shop</h2><span class="status" id="shopStatus"></span></div>
+      <form class="addline" id="addLine" novalidate>
+        <input id="sItem" list="catalogue" placeholder="Item, e.g. Toor dal" aria-label="Item" autocomplete="off">
+        <input id="sQty" inputmode="decimal" placeholder="Qty" aria-label="Quantity" autocomplete="off">
+        <select id="sUnit" aria-label="Unit"></select>
+        <button class="btn primary" type="submit">Add</button>
+      </form>
+      <div id="shopList"></div>
+    </div>
+    <div class="panel" id="planPanel" hidden>
+      <div class="panel-head"><h2>Where to buy</h2><span class="status">Using each supplier's latest price</span></div>
+      <div class="plan" id="plan"></div>
+    </div>
+  </section>
+
+  <section class="tabpanel" id="p-more" role="tabpanel" aria-labelledby="tab-more" hidden>
+    <div class="panel">
+      <h2>Account and sync</h2>
+      <div id="account" class="card"></div>
+    </div>
+    <div class="panel">
+      <h2>Reading receipts with no signal</h2>
+      <div id="offline" class="card"></div>
+    </div>
+    <div class="panel">
+      <h2>Your suppliers</h2>
+      <p class="muted">Receipts that mention one of these names are filed under it.</p>
+      <form class="toolbar" id="supForm" novalidate>
+        <input id="supNew" placeholder="Add a supplier, e.g. Sujas" aria-label="New supplier" autocomplete="off">
+        <button class="btn" type="submit">Add</button>
+      </form>
+      <div class="chips" id="supList"></div>
+    </div>
+    <div class="panel">
+      <h2>Names you have taught it</h2>
+      <p class="muted">When you change the "Compare as" name of an item, the app remembers it for that product next time.</p>
+      <div id="namesList"></div>
+    </div>
+    <div class="panel">
+      <h2>Backup</h2>
+      <p class="muted">A file with every expense and, if you choose, the receipt files. Keep one somewhere safe now and then.</p>
+      <div class="toolbar">
+        <button class="btn" id="exportCsv" type="button">Export CSV for this period</button>
+        <button class="btn" id="exportJson" type="button">Download backup</button>
+        <label class="check"><input type="checkbox" id="withFiles" checked> include receipts</label>
+        <button class="btn" id="importBtn" type="button">Restore from a backup</button>
+        <input id="importFile" type="file" accept="application/json,.json" hidden>
+      </div>
+      <p class="status" id="backupMsg"></p>
+    </div>
+    <p class="status" id="version"></p>
+  </section>
+</div>
+<datalist id="catalogue"></datalist>
+<datalist id="suppliers"></datalist>
+
+<button class="btn primary fab" id="addBtn" type="button">+ Add expense</button>
+
+<dialog id="sheet" aria-labelledby="sheetTitle">
+  <form class="sheet" id="form" novalidate>
+    <div class="sheet-head"><h2 id="sheetTitle">Add expense</h2><button class="x" type="button" id="closeBtn" aria-label="Close">×</button></div>
+    <div class="f">
+      Receipt
+      <div class="receipt" id="receiptBox"></div>
+      <div class="progress" id="readProgress" hidden><div id="readBar"></div></div>
+      <input id="fCamera" type="file" accept="image/*" capture="environment" hidden>
+      <input id="fFile" type="file" accept="image/*,application/pdf" hidden>
+    </div>
+    <div class="grid2">
+      <label class="f">Amount paid (£)<input class="amount-in" id="fAmount" inputmode="decimal" autocomplete="off" placeholder="0.00"></label>
+      <label class="f">Date<input id="fDate" type="date"></label>
+    </div>
+    <label class="f">Category<select id="fCat"></select></label>
+    <div class="grid2">
+      <label class="f">Supplier / shop<input id="fSupplier" placeholder="e.g. Sujas" autocomplete="off" list="suppliers"></label>
+      <label class="f">Paid by<select id="fMethod"></select></label>
+    </div>
+    <div class="f">
+      <span>Items <span class="light">(for groceries, to compare prices)</span></span>
+      <div class="irows" id="irows"></div>
+      <div class="itotal"><span id="itotal" class="num"></span>
+        <span class="row-btns">
+          <button class="btn small" type="button" id="useTotalBtn" hidden>Use items total</button>
+          <button class="btn small" type="button" id="addItemBtn">+ Add item</button>
+        </span>
+      </div>
+    </div>
+    <label class="f">Note<textarea id="fNote" placeholder="What it was for"></textarea></label>
+    <div id="confirmBox" hidden></div>
+    <p class="status" id="formMsg" hidden></p>
+    <div class="actions">
+      <button class="btn danger" type="button" id="delBtn" hidden>Delete</button>
+      <div class="right">
+        <button class="btn" type="button" id="cancelBtn">Cancel</button>
+        <button class="btn primary" type="submit" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="signin" aria-labelledby="signinTitle">
+  <form class="sheet" id="signinForm" novalidate>
+    <div class="sheet-head"><h2 id="signinTitle">Sign in to keep a copy on the server</h2><button class="x" type="button" id="signinClose" aria-label="Close">×</button></div>
+    <p class="muted">Use the same email and password as the website's Admin. Your expenses stay on this phone either way; signing in also keeps a copy safe on the server and shares it with your other devices.</p>
+    <label class="f">Email<input id="siEmail" type="email" autocomplete="username" required></label>
+    <label class="f">Password<input id="siPassword" type="password" autocomplete="current-password" required></label>
+    <p class="status" id="siMsg" hidden></p>
+    <div class="actions"><div class="right"><button class="btn" type="button" id="signinCancel">Not now</button><button class="btn primary" type="submit" id="siBtn">Sign in</button></div></div>
+  </form>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

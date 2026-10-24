@@ -29,6 +29,20 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: python -m pytest tests -q
 
+  expenses:
+    name: Expense app receipt rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: expenses-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm test
+
   frontend:
     name: Frontend lint, type-check and build
     runs-on: ubuntu-latest

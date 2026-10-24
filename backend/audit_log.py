@@ -57,8 +57,9 @@ WORDING = [
     (r"^PUT /api/admin/settings", "changed settings"),
 ]
 # Written by the route itself, with before and after — not again here. And customer actions that an admin
-# might make while signed in (ordering, paying, a review) are not admin changes.
-SELF_LOGGED = re.compile(r"^/api/(admin/(automations|system-log|newsletter/send|analytics/reset|settings/pickup-slots)|events"
+# might make while signed in (ordering, paying, a review) are not admin changes. The expense app syncs often and keeps
+# its own history (updatedAt on every record), so its writes are left out too.
+SELF_LOGGED = re.compile(r"^/api/(admin/(automations|system-log|newsletter/send|analytics/reset|settings/pickup-slots)|events|expenses(?:/|$)"
                          r"|orders/[^/]+/status$|subscriptions/[^/]+/status$)")
 # Every alternative ends at a path boundary: "me" must not swallow "menu" (audit A-0003, SEC-006).
 NOT_ADMIN_CHANGES = re.compile(r"^/api/(?:(?:auth|payments|push/(?:subscribe|unsubscribe|track)|me|loyalty|reviews|delivery|kitchen-status/notify-me|enquiries/notifications)(?:/|$)"

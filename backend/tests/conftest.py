@@ -30,6 +30,7 @@ import notifications  # noqa: E402
 from routes import (  # noqa: E402
     orders, payments, pickup_slots, reviews, subscriptions, coupons as coupon_routes, loyalty, admin_dabba_wala,
     auth as auth_routes, enquiries, customers, events, comms, automations as automation_routes, intelligence as intelligence_routes, health,
+    expenses as expense_routes,
 )
 
 _loop = asyncio.new_event_loop()
@@ -54,7 +55,7 @@ app.add_exception_handler(Exception, unhandled)
 @app.get("/api/__boom")
 async def _boom():
     raise RuntimeError("test failure for asha@example.com on +44 7700 900123")
-for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries, customers, events, comms, automation_routes, intelligence_routes, health):
+for r in (orders, payments, pickup_slots, reviews, subscriptions, coupon_routes, loyalty, admin_dabba_wala, auth_routes, enquiries, customers, events, comms, automation_routes, intelligence_routes, health, expense_routes):
     app.include_router(r.router, prefix="/api")
 
 

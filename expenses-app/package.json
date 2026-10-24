@@ -1,0 +1,7 @@
+{
+  "name": "ssp-expenses",
+  "private": true,
+  "type": "module",
+  "description": "Svadista Prasada Expenses: the owner's offline expense app. Static files, no build step.",
+  "scripts": { "test": "node --test" }
+}
