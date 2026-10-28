@@ -75,10 +75,8 @@ ADMIN_ALERT_EMAIL = (
     or "info@sreesvadistaprasada.com"
 )
 SITE_URL = os.environ.get("SITE_URL", "https://sreesvadistaprasada.com").rstrip("/")
-# Set GOOGLE_REVIEW_URL once the Google Business Profile exists, to the exact
-# "https://search.google.com/local/writereview?placeid=..." link from the GBP
-# dashboard — that's the format Google actually recognises for review requests.
-# The maps search fallback below still gets a happy customer to the listing.
+# The review link from the Business Profile dashboard ("Get more reviews") —
+# it opens the write-a-review box directly. GOOGLE_REVIEW_URL overrides it.
 # The kitchen's street address is given only to people who have ordered (owner decision D-043): in this email, on the
 # success screen and in their account — never on public pages.
 COLLECTION_ADDRESS = "24 Oxman Lane, Greenleys, Milton Keynes MK12 6LF"
@@ -86,7 +84,7 @@ COLLECTION_MAP_URL = "https://maps.google.com/?q=24+Oxman+Ln,+Greenleys,+Milton+
 
 GOOGLE_REVIEW_URL = os.environ.get(
     "GOOGLE_REVIEW_URL",
-    "https://www.google.com/maps/search/?api=1&query=Sree+Svadista+Prasada+Milton+Keynes",
+    "https://g.page/r/CZ6HVIKdpuYqEAE/review",
 )
 
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID")

@@ -505,7 +505,7 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
             )}
             {o.status === 'delivered' && (
               <a
-                href="https://www.google.com/maps/search/?api=1&query=Sree+Svadista+Prasada+Milton+Keynes"
+                href="https://g.page/r/CZ6HVIKdpuYqEAE/review"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
