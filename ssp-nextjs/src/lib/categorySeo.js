@@ -35,7 +35,7 @@ export const CATEGORY_SEO = {
       h1: 'Egg specials in Milton Keynes — egg dosa, egg bhurji & omelettes',
       description: 'Egg dosa, egg bhurji, bread omelette and cheese omelette in Milton Keynes — home-style egg dishes cooked fresh. Order online for delivery or collection.',
       keywords: ['egg dosa Milton Keynes', 'bread omelette Milton Keynes', 'egg bhurji', 'Indian omelette near me'],
-      body: 'Egg dosa, egg bhurji, bread omelette, cheese bread omelette and cheese omelette — the egg dishes of an Indian home kitchen, cooked fresh to order in Milton Keynes. Our egg dosa is made on the same fermented batter as the breakfast dosas, and the bread omelette is the Indian street-side kind. Order egg dosa or a bread omelette in Milton Keynes for collection or delivery. For Andhra egg curry, see our curries.',
+      body: 'Egg dosa, egg bhurji, bread omelette, cheese bread omelette and cheese omelette — the egg dishes of an Indian home kitchen, cooked fresh to order in Milton Keynes. Our egg dosa is made on the same fermented batter as the breakfast dosas, and the bread omelette is the Indian street-side kind. For something lighter, the protein egg bowl puts boiled eggs on quinoa with chickpeas, avocado and fresh vegetables. Order egg dosa or a bread omelette in Milton Keynes for collection or delivery. For Andhra egg curry, see our curries.',
     },
     'curries': {
       title: 'Andhra Chicken Curry Milton Keynes',

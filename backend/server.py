@@ -19,7 +19,7 @@ from routes import health as health_routes
 from routes import expenses as expense_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings
-from menu_additions import apply_menu_additions
+from menu_additions import apply_menu_additions, apply_protein_egg_bowl
 from web_push import ensure_vapid_keys, scheduler_loop
 import asyncio
 from datetime import datetime
@@ -69,6 +69,7 @@ async def lifespan(app: FastAPI):
     await migrate_slugs()
     await seed_slot_settings()
     await apply_menu_additions()
+    await apply_protein_egg_bowl()
     await normalise_order_dates()
     from allergen_fill import apply_allergen_fill
     await apply_allergen_fill()

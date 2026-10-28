@@ -233,3 +233,51 @@ async def _apply_menu_additions():
         added += 1
     if added:
         print(f"menu_additions: inserted {added} new items")
+
+
+# Later additions run under their own marker, so adding a dish never re-runs the list above
+# (which would bring back dishes the admin has since deleted).
+PROTEIN_EGG_BOWL = {
+    "name": "Protein Egg Bowl",
+    # Built like the Protein Non-Veg Bowl with eggs in place of chicken, and priced the same — the owner can change either in admin
+    "description": (
+        "Fuel your day with our protein-packed egg bowl. Boiled eggs, lightly spiced, on a hearty base of "
+        "protein-rich quinoa, tossed with wholesome chickpeas, creamy fresh avocado, roasted sweet potatoes, "
+        "earthy beetroot, crisp cucumbers and juicy cherry tomatoes. Finished with a light, flavourful dressing."
+    ),
+    "price": 10.99,
+    "category": "nonVeg",
+    "subcategory": "Protein & Healthy Bowls",
+    "extra_categories": [{"category": "nonVeg", "subcategory": "Egg Specials"}],
+    "slug": "protein-egg-bowl",
+    "is_veg": False,
+    "spice_level": 1,
+    "tag": "Healthy",
+    # Placeholder: the veg bowl's photo (no chicken in it) until a photo of this bowl is uploaded in admin
+    "image": "https://firebasestorage.googleapis.com/v0/b/sreesvadistaprasada.firebasestorage.app/o/protien%20veg%20bowl.jpeg?alt=media&token=af052d4d-d031-4838-9c56-0815d415e323",
+    # Left empty like the other bowls: the dish page then says "please ask us" rather than implying eggs is the only allergen
+    "allergens": [],
+    "seo_meta_description": "Protein Egg Bowl in Milton Keynes: boiled eggs on quinoa with chickpeas, avocado, sweet potato and fresh vegetables. A healthy high-protein bowl.",
+}
+
+EGG_BOWL_VERSION = 1
+
+
+async def apply_protein_egg_bowl():
+    """Inserts the Protein Egg Bowl once (settings._id == "menu_additions_egg_bowl"); a restart never re-adds it if deleted."""
+    marker = await db.settings.find_one({"_id": "menu_additions_egg_bowl"}, {"_id": 0, "version": 1})
+    if marker and marker.get("version") == EGG_BOWL_VERSION:
+        return
+    if not await db.menu_items.find_one({"$or": [{"name": PROTEIN_EGG_BOWL["name"]}, {"slug": PROTEIN_EGG_BOWL["slug"]}]}, {"_id": 1}):
+        await db.menu_items.insert_one({
+            **COMMON_DEFAULTS,
+            **PROTEIN_EGG_BOWL,
+            "id": str(uuid.uuid4()),
+            "created_at": datetime.utcnow().isoformat(),
+        })
+        print("menu_additions: inserted Protein Egg Bowl")
+    await db.settings.update_one(
+        {"_id": "menu_additions_egg_bowl"},
+        {"$set": {"version": EGG_BOWL_VERSION, "applied_at": datetime.utcnow().isoformat()}},
+        upsert=True,
+    )
