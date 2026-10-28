@@ -47,7 +47,7 @@ export const CATEGORY_SEO = {
     'biriyani': {
       title: 'Chicken Biryani Milton Keynes',
       h1: 'Chicken biryani in Milton Keynes — Andhra dum & fry piece biryani',
-      description: 'Chicken biryani in Milton Keynes, the Andhra way — dum biryani and fry piece biryani, layered and slow-cooked. Order online from our Greenleys kitchen.',
+      description: 'Chicken biryani in Milton Keynes, the Andhra way: chicken dum biryani or fry piece biryani, £10.99, cooked fresh in Greenleys. Collect with 10% off.',
       keywords: ['chicken biryani Milton Keynes', 'biryani Milton Keynes', 'best biryani Milton Keynes', 'chicken dum biryani', 'fry piece biryani'],
       body: 'We make chicken biryani two ways. Chicken dum biryani is layered with rice and slow-cooked under a sealed lid; chicken fry piece biryani tops spiced rice with crisp-fried chicken, the Andhra favourite. Both are cooked fresh in Milton Keynes — read our guide to biryani the Andhra way for the difference. Order chicken biryani in Milton Keynes to collect from Greenleys or have delivered, and add Chicken 65 or a cooling curd rice alongside.',
     },
@@ -84,7 +84,7 @@ export const CATEGORY_SEO = {
     'thalis-rice-bowls': {
       title: 'Veg Thali Milton Keynes',
       h1: 'Veg thali in Milton Keynes — a full South Indian meal on one plate',
-      description: 'South Indian veg thali in Milton Keynes — rice, pappu, sambar, curries, fries, pickle and more on one plate. Vegetarian. Order for delivery or collection.',
+      description: 'Veg thali in Milton Keynes, £14.99: rice and lemon rice with pappu, sambar, majjiga pulusu, vegetable fries and pickle. Pure vegetarian, separate utensils.',
       keywords: ['veg thali Milton Keynes', 'South Indian thali near me', 'vegetarian thali', 'South Indian veg meals', 'Indian thali takeaway'],
       body: 'Our South Indian veg thali is a complete meal: rice with pappu, sambar and majjiga pulusu, vegetable fries, pickle and more. There is also a simpler plate of pappu, pappadam, roti pachadi, rice and yoghurt. If you are searching for a South Indian thali near you in Milton Keynes, this is the vegetarian one to order — an Indian thali takeaway for collection or delivery.',
     },

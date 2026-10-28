@@ -28,7 +28,7 @@ export const PAGE_SEO = {
   '/': {
     primary: 'indian takeaway milton keynes',
     title: `Indian Takeaway Milton Keynes${B}`,
-    description: 'Indian takeaway in Milton Keynes — authentic South Indian food: Andhra curries, dosas, biryani and Dabba Wala tiffin service. Order for delivery or collection.',
+    description: 'Indian takeaway in Milton Keynes from a South Indian home kitchen: dosas, Andhra curries and biryani made to order. Collect for 10% off, or get delivery.',
     keywords: ['Indian takeaway Milton Keynes', 'South Indian food Milton Keynes', 'South Indian restaurant Milton Keynes', 'Indian food delivery Milton Keynes', 'Andhra food Milton Keynes', 'Telugu restaurant Milton Keynes'],
     h1: 'Indian Takeaway in Milton Keynes — Authentic South Indian Food Delivery',
     content: {
@@ -149,7 +149,7 @@ export const PAGE_SEO = {
   '/subscriptions': {
     primary: 'indian tiffin service milton keynes',
     title: `Indian Tiffin Service Milton Keynes${B}`,
-    description: 'Indian tiffin service in Milton Keynes — home-cooked South Indian meals delivered Monday to Friday. Veg or non-veg tiffin from £75 a week. No auto-renewal.',
+    description: 'Indian tiffin service in Milton Keynes: home-cooked Andhra lunches delivered Monday to Friday. £75 for five meals, veg or non-veg. No auto-renewal.',
     keywords: ['Indian tiffin service Milton Keynes', 'tiffin service near me', 'Indian vegetarian tiffin service', 'home made tiffin service', 'dabba service Milton Keynes', 'tiffin box delivery', 'Indian lunch delivery Milton Keynes'],
   },
 
