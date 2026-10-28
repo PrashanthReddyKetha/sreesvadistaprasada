@@ -28,3 +28,31 @@ def test_an_existing_bowl_is_not_duplicated(db):
     run(menu_additions.apply_protein_egg_bowl())
     assert run(db.menu_items.count_documents({"name": "Protein Egg Bowl"})) == 1
     assert bowl(db)["price"] == 9.5
+
+
+BREAKFAST = {"category": "breakfast", "subcategory": "English Breakfast"}
+
+
+def test_the_three_bowls_join_english_breakfast_and_keep_their_other_tabs(db):
+    run(db.menu_items.insert_many([
+        {"id": "v", "slug": "protein-veg-bowl", "extra_categories": [{"category": "nonVeg", "subcategory": "Protein & Healthy Bowls"}]},
+        {"id": "n", "slug": "protein-non-veg-bowl", "extra_categories": []},
+        {"id": "o", "slug": "avocado-toast", "extra_categories": []},
+    ]))
+    run(menu_additions.apply_protein_egg_bowl())
+    run(menu_additions.apply_bowls_at_breakfast())
+    run(menu_additions.apply_bowls_at_breakfast())
+    for slug in ("protein-veg-bowl", "protein-non-veg-bowl", "protein-egg-bowl"):
+        extras = run(db.menu_items.find_one({"slug": slug}))["extra_categories"]
+        assert extras.count(BREAKFAST) == 1
+    assert {"category": "nonVeg", "subcategory": "Protein & Healthy Bowls"} in run(db.menu_items.find_one({"id": "v"}))["extra_categories"]
+    assert {"category": "nonVeg", "subcategory": "Egg Specials"} in bowl(db)["extra_categories"]
+    assert run(db.menu_items.find_one({"id": "o"}))["extra_categories"] == []
+
+
+def test_removing_a_bowl_from_breakfast_in_admin_sticks(db):
+    run(db.menu_items.insert_one({"id": "n", "slug": "protein-non-veg-bowl", "extra_categories": []}))
+    run(menu_additions.apply_bowls_at_breakfast())
+    run(db.menu_items.update_one({"id": "n"}, {"$set": {"extra_categories": []}}))
+    run(menu_additions.apply_bowls_at_breakfast())
+    assert run(db.menu_items.find_one({"id": "n"}))["extra_categories"] == []

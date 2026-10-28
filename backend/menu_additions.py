@@ -281,3 +281,25 @@ async def apply_protein_egg_bowl():
         {"$set": {"version": EGG_BOWL_VERSION, "applied_at": datetime.utcnow().isoformat()}},
         upsert=True,
     )
+
+
+# The three protein bowls also sit in Breakfast › English Breakfast (owner request, 2026-10-28)
+BOWLS_AT_BREAKFAST = ["protein-veg-bowl", "protein-non-veg-bowl", "protein-egg-bowl"]
+BOWLS_AT_BREAKFAST_VERSION = 1
+
+
+async def apply_bowls_at_breakfast():
+    """Adds the English Breakfast placement once (settings._id == "menu_bowls_breakfast"); removing it in admin sticks."""
+    marker = await db.settings.find_one({"_id": "menu_bowls_breakfast"}, {"_id": 0, "version": 1})
+    if marker and marker.get("version") == BOWLS_AT_BREAKFAST_VERSION:
+        return
+    res = await db.menu_items.update_many(
+        {"slug": {"$in": BOWLS_AT_BREAKFAST}},
+        {"$addToSet": {"extra_categories": {"category": "breakfast", "subcategory": "English Breakfast"}}},
+    )
+    print(f"menu_additions: {res.modified_count} protein bowls added to English Breakfast")
+    await db.settings.update_one(
+        {"_id": "menu_bowls_breakfast"},
+        {"$set": {"version": BOWLS_AT_BREAKFAST_VERSION, "applied_at": datetime.utcnow().isoformat()}},
+        upsert=True,
+    )
