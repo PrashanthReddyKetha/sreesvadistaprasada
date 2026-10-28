@@ -359,6 +359,7 @@ export const faqData = [
     category: 'Food & Dietary',
     items: [
       { q: 'Is the Prasada menu truly 100% vegetarian?', a: 'Yes — every Prasada dish is vegetarian, with no meat, fish or eggs. Vegetarian dishes are cooked with their own separate utensils and cookware, in the same kitchen as our non-vegetarian food. If you follow a strict or Jain diet, or have an allergy, please tell us before ordering.' },
+      { q: 'What is your food hygiene rating?', a: 'Five, "Very good" — the top rating in the Food Standards Agency hygiene scheme. Milton Keynes Council inspected our kitchen on 16 October 2026. You can check it on the FSA website: ratings.food.gov.uk/business/1941265' },
       { q: 'Do you cater for allergies?', a: 'Each dish page lists the allergens we know it contains; a few dishes are marked "ask us" while we confirm the recipe. Vegetarian and non-vegetarian food is cooked in the same kitchen, so if you have a severe allergy please contact us before you order.' },
       { q: 'Are your dishes spicy?', a: 'Spice levels vary. Each dish has a spice meter (1-5 flames). You can request "less spicy" in your subscription preferences or while ordering.' },
       { q: 'Do you use MSG or artificial flavours?', a: 'Never. All our food is cooked with fresh, natural ingredients using traditional methods. No preservatives, no shortcuts.' },

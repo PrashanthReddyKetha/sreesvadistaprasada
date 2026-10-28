@@ -26,6 +26,7 @@ import { recordSearch, record } from '@/lib/track';
 import { isOrderable } from '@/config/softLaunch';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 import CouponPanel from '@/components/CouponPanel';
+import HygieneRating from '@/components/HygieneRating';
 
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 // Created when the checkout page mounts, not when its code is merely prefetched
@@ -1952,6 +1953,7 @@ const CheckoutInner = () => {
                   </div>
                 ))}
               </div>
+              <HygieneRating variant="wide" width={200} caption={false} className="justify-center" />
             </div>
           </div>
 

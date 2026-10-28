@@ -5,6 +5,7 @@ import { Phone, Mail, MapPin, Instagram, ArrowRight } from 'lucide-react';
 import api from '@/api';
 import { trackNewsletterSignup } from '@/lib/analytics';
 import AddToHomeScreen from '@/components/AddToHomeScreen';
+import HygieneRating from '@/components/HygieneRating';
 
 const WhatsAppIcon = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -101,6 +102,8 @@ const Footer = () => {
             <p className="text-sm italic" style={{ color: '#F4C430' }}>
               "Cooked with care. Served with love."
             </p>
+            {/* On every page, for visitors who land on a dish page from search */}
+            <HygieneRating width={150} dark className="mt-5 flex-col !items-start" />
           </div>
 
           {/* Quick Links */}

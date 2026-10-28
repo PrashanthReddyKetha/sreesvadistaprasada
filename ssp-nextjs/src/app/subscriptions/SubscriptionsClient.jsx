@@ -11,6 +11,7 @@ import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import CouponPanel from '@/components/CouponPanel';
 import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase, trackSubscriptionStepView } from '@/lib/analytics';
 import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
+import HygieneRating from '@/components/HygieneRating';
 
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 // Created on demand (see Subscriptions below) so the landing page never downloads Stripe.js
@@ -1020,6 +1021,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
               </div>
             ))}
           </div>
+          <HygieneRating width={150} className="justify-center mt-4 max-w-md mx-auto" />
         </section>
       )}
 

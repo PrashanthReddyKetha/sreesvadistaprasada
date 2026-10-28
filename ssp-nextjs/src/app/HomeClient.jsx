@@ -30,6 +30,7 @@ import { useCart } from '@/context/CartContext';
 import { useNotifyMe } from '@/context/NotifyMeContext';
 import { isOrderable } from '@/config/softLaunch';
 import { buildItemUrl } from '@/lib/itemUrl';
+import HygieneRating from '@/components/HygieneRating';
 
 const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, hoursByDay = null }) => {
   const { deliveryEnabled, open: kitchenOpen, loaded: kitchenLoaded } = useKitchen();
@@ -198,6 +199,8 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
                 </li>
               )}
             </ul>
+            {/* FSA guidance: show the rating before customers choose food */}
+            <HygieneRating width={160} className="justify-center mt-5 max-w-md mx-auto" />
           </div>
         </section>
       )}

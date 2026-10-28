@@ -14,6 +14,7 @@ import { getCached, setCached } from '@/api/menuCache';
 import { recordSearch } from '@/lib/track';
 import RestockBell from '@/components/RestockBell';
 import IntroPricesBanner from '@/components/IntroPricesBanner';
+import HygieneRating from '@/components/HygieneRating';
 
 const categories = [
   { id: 'all', name: 'All Dishes' },
@@ -175,6 +176,7 @@ const Menu = ({ initialItems = [], seoLine }) => {
       {/* Introductory pricing */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-4">
         <IntroPricesBanner />
+        <HygieneRating width={150} className="mt-4" />
       </div>
 
       {/* Anchor for tab scroll */}
