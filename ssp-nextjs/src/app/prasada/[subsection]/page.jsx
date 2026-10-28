@@ -18,6 +18,7 @@ const SLUG_TO_TAB = {
 const LEGACY_REDIRECTS = {
   'curries-daal': 'curries',
   'rice-bowls':   'thalis-rice-bowls',
+  'starters-and-evening-delights': 'bites-starters',
 };
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';

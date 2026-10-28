@@ -46,6 +46,11 @@ const nextConfig = {
       },
       // Google has shown this address for the gongura guide; the article lives at /gongura
       { source: '/what-is-gongura', destination: '/gongura', permanent: true },
+      // Dishes renamed in the menu: Search Console still reports the old addresses as 404
+      { source: '/prasada/starters-and-evening-delights/mirchi-bhajji', destination: '/prasada/starters-and-evening-delights/mirchi-bhajji-3pcs', permanent: true },
+      { source: '/breakfast/idli-vada/ghee-karam-idli', destination: '/breakfast/idli-vada/ghee-karam-idli-3-pcs', permanent: true },
+      { source: '/breakfast/dosas/masala-dosa-2-pcs', destination: '/breakfast/dosas/masala-dosa', permanent: true },
+      { source: '/svadista/curries/andhra-chicken-curry', destination: '/svadista/curries/spicy-andhra-chicken-curry', permanent: true },
     ]
   },
 }

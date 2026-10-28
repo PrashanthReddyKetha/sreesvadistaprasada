@@ -12,6 +12,8 @@ const jsonLd = {
   '@type': 'Product',
   name: 'Dabba Wala — Weekly South Indian Meal Subscription',
   description: 'Weekly home-cooked South Indian meal plan delivered to your door in Milton Keynes. Fresh Andhra and Telugu cooking — rice, dal, curry, pickle and papad, Monday to Friday.',
+  // Merchant listings need an image; same picture as the page hero
+  image: 'https://sreesvadistaprasada.com/stock/tiffin-meals.jpg',
   brand: { '@type': 'Brand', name: 'Sree Svadista Prasada' },
   offers: {
     '@type': 'Offer',
