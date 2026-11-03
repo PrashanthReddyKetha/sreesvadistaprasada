@@ -42,14 +42,14 @@ export const CATEGORY_SEO = {
       h1: 'Andhra chicken curry in Milton Keynes — gongura chicken & home-style curries',
       description: 'Andhra chicken curry in Milton Keynes — gongura chicken, spicy Andhra chicken and home-style bone-in curry, slow-cooked with freshly ground spices.',
       keywords: ['Andhra chicken curry Milton Keynes', 'gongura chicken Milton Keynes', 'chicken curry takeaway Milton Keynes', 'fish pulusu', 'Andhra egg curry'],
-      body: 'These are Andhra curries as they are made at home: chicken cooked on the bone with freshly ground spices, a fiery spicy Andhra chicken curry, gongura chicken soured with sorrel leaves, fish pulusu in tamarind gravy and Andhra egg curry. Order a chicken curry takeaway in Milton Keynes with rice, or pair it with idli or dosa.',
+      body: 'These are Andhra curries as they are made at home: chicken cooked on the bone with freshly ground spices, a fiery spicy Andhra chicken curry, gongura chicken and gongura prawns soured with sorrel leaves, fish pulusu in tamarind gravy and Andhra egg curry. Order a chicken curry takeaway in Milton Keynes with rice, or pair it with idli or dosa.',
     },
     'biriyani': {
       title: 'Chicken Biryani Milton Keynes',
       h1: 'Chicken biryani in Milton Keynes — Andhra dum & fry piece biryani',
       description: 'Chicken biryani in Milton Keynes, the Andhra way: chicken dum biryani or fry piece biryani, £10.99, cooked fresh in Greenleys. Collect with 10% off.',
       keywords: ['chicken biryani Milton Keynes', 'biryani Milton Keynes', 'best biryani Milton Keynes', 'chicken dum biryani', 'fry piece biryani'],
-      body: 'We make chicken biryani two ways. Chicken dum biryani is layered with rice and slow-cooked under a sealed lid; chicken fry piece biryani tops spiced rice with crisp-fried chicken, the Andhra favourite. Both are cooked fresh in Milton Keynes — read our guide to biryani the Andhra way for the difference. Order chicken biryani in Milton Keynes to collect from Greenleys or have delivered, and add Chicken 65 or a cooling curd rice alongside.',
+      body: 'We make chicken biryani several ways. Chicken dum biryani is layered with rice and slow-cooked under a sealed lid; chicken fry piece biryani tops spiced rice with crisp-fried chicken, the Andhra favourite. For a bigger plate, joint chicken biryani puts a whole chicken leg in rich masala on the rice. All are cooked fresh in Milton Keynes — read our guide to biryani the Andhra way for the difference. Order chicken biryani in Milton Keynes to collect from Greenleys or have delivered, and add Chicken 65 or a cooling curd rice alongside.',
     },
     'rice-bowls': {
       title: 'Chicken Rice Bowls Milton Keynes',

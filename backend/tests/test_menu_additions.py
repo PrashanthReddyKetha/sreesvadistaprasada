@@ -56,3 +56,22 @@ def test_removing_a_bowl_from_breakfast_in_admin_sticks(db):
     run(db.menu_items.update_one({"id": "n"}, {"$set": {"extra_categories": []}}))
     run(menu_additions.apply_bowls_at_breakfast())
     assert run(db.menu_items.find_one({"id": "n"}))["extra_categories"] == []
+
+
+def test_gongura_prawns_and_joint_biryani_are_added_to_svadista(db):
+    run(menu_additions.apply_gongura_prawns_and_joint_biryani())
+    prawns = run(db.menu_items.find_one({"slug": "gongura-prawns"}))
+    biryani = run(db.menu_items.find_one({"slug": "joint-chicken-biryani"}))
+    assert (prawns["category"], prawns["subcategory"], prawns["price"]) == ("nonVeg", "Curries", 12.99)
+    assert (biryani["category"], biryani["subcategory"], biryani["price"]) == ("nonVeg", "Biriyani", 12.99)
+    assert prawns["available"] and biryani["available"] and prawns["id"] and biryani["id"]
+
+
+def test_a_deleted_new_dish_stays_deleted_and_an_existing_one_is_kept(db):
+    run(db.menu_items.insert_one({"id": "x", "name": "Gongura Prawns", "slug": "gongura-prawns", "price": 11.5}))
+    run(menu_additions.apply_gongura_prawns_and_joint_biryani())
+    assert run(db.menu_items.count_documents({"slug": "gongura-prawns"})) == 1
+    assert run(db.menu_items.find_one({"slug": "gongura-prawns"}))["price"] == 11.5
+    run(db.menu_items.delete_one({"slug": "joint-chicken-biryani"}))
+    run(menu_additions.apply_gongura_prawns_and_joint_biryani())
+    assert run(db.menu_items.find_one({"slug": "joint-chicken-biryani"})) is None

@@ -303,3 +303,57 @@ async def apply_bowls_at_breakfast():
         {"$set": {"version": BOWLS_AT_BREAKFAST_VERSION, "applied_at": datetime.utcnow().isoformat()}},
         upsert=True,
     )
+
+
+# Gongura Prawns (Svadista › Curries) and Joint Chicken Biryani (Svadista › Biriyani) — owner request and prices, 2026-11-03
+GONGURA_PRAWNS_AND_JOINT_BIRYANI = [
+    {
+        "name": "Gongura Prawns",
+        "description": "Prawns cooked down with tangy gongura (sorrel) leaves and Andhra spices into a rich, sour-hot masala — the coastal cousin of our gongura chicken.",
+        "price": 12.99,
+        "category": "nonVeg",
+        "subcategory": "Curries",
+        "slug": "gongura-prawns",
+        "is_veg": False,
+        "spice_level": 3,
+        "image": "https://firebasestorage.googleapis.com/v0/b/sreesvadistaprasada.firebasestorage.app/o/SreeSvadistaPrasada_Gongora%20Prawns.jpg?alt=media&token=3b12b58d-9357-4dac-af3c-b91b6e4a5999",
+        "seo_meta_description": "Gongura prawns in Milton Keynes: prawns cooked with tangy sorrel leaves and Andhra spices. Order online for collection or delivery.",
+    },
+    {
+        "name": "Joint Chicken Biryani",
+        "description": "A whole chicken leg joint cooked in a rich, spiced masala and served on fragrant biryani rice, finished with cashews and curry leaves.",
+        "price": 12.99,
+        "category": "nonVeg",
+        "subcategory": "Biriyani",
+        "slug": "joint-chicken-biryani",
+        "is_veg": False,
+        "spice_level": 2,
+        "image": "https://firebasestorage.googleapis.com/v0/b/sreesvadistaprasada.firebasestorage.app/o/SreeSvadistaPrasada_ChickenJointBiryani.jpg?alt=media&token=a866e167-37a4-4d81-a445-ce2c55ee702c",
+        "seo_meta_description": "Joint chicken biryani in Milton Keynes: a whole chicken leg in rich masala on fragrant biryani rice. Order online for collection or delivery.",
+    },
+]
+# Allergens are left empty like the other new dishes, so the dish page says "please ask us" until the owner confirms them in admin
+
+GONGURA_PRAWNS_AND_JOINT_BIRYANI_VERSION = 1
+
+
+async def apply_gongura_prawns_and_joint_biryani():
+    """Inserts both dishes once (settings._id == "menu_additions_2026_11"); a restart never re-adds one the admin deleted."""
+    marker = await db.settings.find_one({"_id": "menu_additions_2026_11"}, {"_id": 0, "version": 1})
+    if marker and marker.get("version") == GONGURA_PRAWNS_AND_JOINT_BIRYANI_VERSION:
+        return
+    for item in GONGURA_PRAWNS_AND_JOINT_BIRYANI:
+        if await db.menu_items.find_one({"$or": [{"name": item["name"]}, {"slug": item["slug"]}]}, {"_id": 1}):
+            continue
+        await db.menu_items.insert_one({
+            **COMMON_DEFAULTS,
+            **item,
+            "id": str(uuid.uuid4()),
+            "created_at": datetime.utcnow().isoformat(),
+        })
+        print(f"menu_additions: inserted {item['name']}")
+    await db.settings.update_one(
+        {"_id": "menu_additions_2026_11"},
+        {"$set": {"version": GONGURA_PRAWNS_AND_JOINT_BIRYANI_VERSION, "applied_at": datetime.utcnow().isoformat()}},
+        upsert=True,
+    )
