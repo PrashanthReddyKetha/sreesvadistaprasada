@@ -687,9 +687,10 @@ const CheckoutInner = () => {
   const router = useRouter();
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, addToCart,
           deliveryType, setDeliveryType, zoneInfo, setZoneInfo,
-          pickupSlot, setPickupSlot } = useCart();
+          pickupSlot, setPickupSlot, refreshPrices } = useCart();
   const { user, login, setAuthOpen, openAuth } = useAuth();
   const kitchen = useKitchen();
+  useEffect(() => { refreshPrices(); }, [refreshPrices]);   // show today's menu prices, the ones the server will charge
 
   const [guestMode, setGuestMode] = useState(false);
   const [showBrowse, setShowBrowse] = useState(false);

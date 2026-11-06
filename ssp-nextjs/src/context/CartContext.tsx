@@ -4,6 +4,7 @@ import { trackAddToCart, trackRemoveFromCart } from '@/lib/analytics';
 import { record } from '@/lib/track';
 import { useKitchen } from '@/context/KitchenContext';
 import { isOrderable } from '@/config/softLaunch';
+import api from '@/api';
 
 interface CartItem {
   id: string;
@@ -44,6 +45,7 @@ interface CartContextType {
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
+  refreshPrices: () => Promise<void>;
   toast: Toast | null;
   cartOpen: boolean;
   setCartOpen: (open: boolean) => void;
@@ -156,6 +158,33 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [kitchenLoaded, deliveryEnabled, deliveryType]);
 
+  // A dish's price is whatever the menu says now, not what it was when it went in the basket: re-read it when the
+  // page loads, the basket opens, the tab comes back or checkout opens, so a price changed in admin shows here too
+  // (the server always charges the menu price, so a stale basket would show one figure and charge another).
+  const refreshPrices = useCallback(async () => {
+    if (!cartRef.current.length) return;
+    try {
+      const { data } = await api.get('/menu', { params: { available: true } });
+      const now = new Map<string, number>((data || []).map((m: { id: string; price: number }) => [m.id, Number(m.price)]));
+      setCartItems(prev => {
+        let changed = false;
+        const next = prev.map(i => {
+          const price = now.get(i.id);
+          if (price === undefined || Number.isNaN(price) || price === parseFloat(String(i.price).replace('£', ''))) return i;
+          changed = true;
+          return { ...i, price };
+        });
+        return changed ? next : prev;
+      });
+    } catch { /* keep the basket as it is — checkout prices it on the server anyway */ }
+  }, []);
+  useEffect(() => { if (hydrated) refreshPrices(); }, [hydrated, refreshPrices]);
+  useEffect(() => { if (cartOpen) refreshPrices(); }, [cartOpen, refreshPrices]);
+  useEffect(() => {
+    window.addEventListener('focus', refreshPrices);
+    return () => window.removeEventListener('focus', refreshPrices);
+  }, [refreshPrices]);
+
   const setZoneInfo = useCallback((info: ZoneInfo | null) => {
     setZoneInfoRaw(info);
     try {
@@ -234,7 +263,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <CartContext.Provider value={{
       cartItems, cartCount, cartTotal,
-      addToCart, removeFromCart, updateQuantity, clearCart,
+      addToCart, removeFromCart, updateQuantity, clearCart, refreshPrices,
       toast, cartOpen, setCartOpen,
       deliveryType, setDeliveryType,
       zoneInfo, setZoneInfo,
