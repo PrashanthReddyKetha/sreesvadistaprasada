@@ -930,7 +930,7 @@ const CheckoutInner = () => {
   const couponError = validPricing?.coupon_error || null;
 
   // Derived display values — prefer server pricing, fall back to client estimate
-  const meetsMinimum = effectiveSubtotal >= MINIMUM_ORDER;
+  const meetsMinimum = !kitchen.minimumOrderEnabled || effectiveSubtotal >= MINIMUM_ORDER;
   const takeawayDiscount = validPricing?.takeaway_discount
     ?? (deliveryType === 'takeaway' && meetsMinimum ? Math.round(effectiveSubtotal * 0.10 * 100) / 100 : 0);
   const deliveryFee = validPricing?.delivery_fee

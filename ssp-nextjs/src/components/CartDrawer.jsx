@@ -297,7 +297,7 @@ const CartDrawer = () => {
   const pendingReward     = loyaltyStatus?.pending_reward ?? false;
   const freeItemPrice     = freeItem ? price(freeItem.price) : 0;
   const effectiveSubtotal = cartTotal + freeItemPrice;
-  const meetsMinimum      = effectiveSubtotal >= MINIMUM_ORDER;
+  const meetsMinimum      = !kitchen.minimumOrderEnabled || effectiveSubtotal >= MINIMUM_ORDER;
 
   // Client-side preview pricing
   const takeawayDiscount = deliveryType === 'takeaway' && meetsMinimum

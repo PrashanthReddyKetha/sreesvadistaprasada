@@ -432,3 +432,24 @@ def test_the_collection_address_is_in_the_confirmation_email(client, menu, pay, 
     subj, html = notifications.email_order_confirmation({"order_number": "SP1", "delivery_type": "takeaway", "items": [], "total": 10,
                                                          "scheduled_slot_final": "2026-10-09T12:00"}, "Asha")
     assert "24 Oxman Lane" in html and "MK12 6LF" in html and "maps.google.com" in html
+
+
+# ── Minimum order switch (admin header) ───────────────────────────────────────
+
+def test_minimum_order_can_be_switched_off_and_on(client, menu, db, admin_headers, pay):
+    assert client.get("/api/kitchen-status").json()["minimum_order_enabled"] is True
+    assert client.put("/api/admin/settings/pickup-slots", json={"minimum_order_enabled": False}, headers=admin_headers).status_code == 200
+    assert client.get("/api/kitchen-status").json()["minimum_order_enabled"] is False
+    r = calc(client, [("dosa", 1)]).json()
+    assert r["subtotal"] == 6.99 and r["grand_total"] == 6.29
+    body = order_body(menu, [("dosa", 1)], pay(r["grand_total"]))
+    assert client.post(ORDERS, json=body).status_code in (200, 201)
+    assert client.put("/api/admin/settings/pickup-slots", json={"minimum_order_enabled": True}, headers=admin_headers).status_code == 200
+    assert "Minimum order" in calc(client, [("dosa", 1)]).json()["detail"]
+
+
+def test_minimum_off_still_refuses_totals_below_card_minimum(client, db, admin_headers):
+    run(db.menu_items.insert_one({"id": "test50", "name": "Test", "price": 0.50, "available": True}))
+    client.put("/api/admin/settings/pickup-slots", json={"minimum_order_enabled": False}, headers=admin_headers)
+    r = calc(client, [("test50", 1)])                  # £0.50 less 10% collection = £0.45
+    assert r.status_code == 400 and "smallest card payment" in r.json()["detail"]

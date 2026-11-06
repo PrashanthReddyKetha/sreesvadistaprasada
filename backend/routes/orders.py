@@ -112,6 +112,7 @@ def calculate_order_total(
     order_type: str,       # "delivery" | "takeaway"
     postcode: str = "",
     free_item_price: float = 0.0,
+    minimum_order: float = MINIMUM_ORDER,  # 0 while the owner has paused the minimum (admin header)
 ) -> dict:
     """
     Single source of truth for all order pricing.
@@ -122,9 +123,9 @@ def calculate_order_total(
     subtotal = round(sum(i["price"] * i["quantity"] for i in items), 2)
 
     # 2. Minimum order check on gross subtotal
-    if subtotal < MINIMUM_ORDER:
+    if subtotal < minimum_order:
         raise ValueError(
-            f"Minimum order is £{MINIMUM_ORDER:.2f}. "
+            f"Minimum order is £{minimum_order:.2f}. "
             f"Your basket is £{subtotal:.2f}."
         )
 
@@ -141,7 +142,7 @@ def calculate_order_total(
 
     elif order_type == "delivery":
         # Small order fee — delivery only, on subtotal after free item
-        if MINIMUM_ORDER <= subtotal_after_free <= SMALL_ORDER_THRESHOLD:
+        if minimum_order <= subtotal_after_free <= SMALL_ORDER_THRESHOLD:
             small_order_fee = SMALL_ORDER_FEE
         else:
             small_order_fee = 0.0
@@ -163,6 +164,8 @@ def calculate_order_total(
     grand_total = round(
         subtotal_after_free + small_order_fee + delivery_fee - takeaway_discount, 2
     )
+    if grand_total < MIN_CARD_PAYMENT:   # only reachable while the minimum is switched off
+        raise ValueError(f"The smallest card payment is £{MIN_CARD_PAYMENT:.2f} — please add a little more.")
 
     return {
         "subtotal":          subtotal,
@@ -181,6 +184,12 @@ def calculate_order_total(
     }
 
 
+async def current_minimum_order() -> float:
+    """£15, or none while the owner has the minimum switched off in the admin header."""
+    from routes.pickup_slots import get_slot_settings
+    return MINIMUM_ORDER if (await get_slot_settings()).get("minimum_order_enabled", True) else 0.0
+
+
 async def price_with_coupon(
     items_data: list, order_type: str, postcode: str, free_item_price: float,
     coupon_code: Optional[str], user_id: Optional[str], email: Optional[str],
@@ -191,7 +200,7 @@ async def price_with_coupon(
     is returned for the UI. Percent/fixed codes discount the food (after any
     loyalty free dish); free-delivery codes zero the delivery fee.
     """
-    totals = calculate_order_total(items_data, order_type, postcode, free_item_price)
+    totals = calculate_order_total(items_data, order_type, postcode, free_item_price, await current_minimum_order())
     if not coupon_code:
         return totals, None
     without_coupon = dict(totals)

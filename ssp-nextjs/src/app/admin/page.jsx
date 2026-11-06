@@ -11,7 +11,7 @@ import {
   TrendingUp, Clock, CheckCircle, XCircle, RefreshCw,
   ChevronDown, ChevronRight, LayoutDashboard,
   ArrowLeft, Send, CheckCheck, AlertCircle,
-  Calendar, Utensils, Star, Sparkles, Gift, Power, Tag, Truck
+  Calendar, Utensils, Star, Sparkles, Gift, Power, Tag, Truck, PoundSterling
 } from 'lucide-react';
 import DabbaWalaTab from '@/components/admin/DabbaWalaTab';
 import MenuTab from '@/components/admin/MenuTab';
@@ -964,6 +964,40 @@ const DeliveryToggle = () => {
   );
 };
 
+/* ── £15 minimum order On/Off toggle ────────────────────────────────────── */
+const MinimumToggle = () => {
+  const kitchen = useKitchen();
+  const [busy, setBusy] = useState(false);
+  const on = kitchen.minimumOrderEnabled;
+
+  const toggle = async () => {
+    if (busy) return;
+    const ok = window.confirm(on
+      ? 'Turn the £15 minimum order OFF? Any basket can be ordered (card payments still need at least £0.50). Remember to switch it back on.'
+      : 'Turn the £15 minimum order back ON? Baskets under £15 will not be able to check out.');
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await api.put('/admin/settings/pickup-slots', { minimum_order_enabled: !on });
+      await kitchen.refresh();
+    } catch (e) {
+      alert(e.response?.data?.detail || 'Could not update the minimum order.');
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <button onClick={toggle} disabled={busy || !kitchen.loaded} data-testid="minimum-toggle"
+      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-60"
+      style={on
+        ? { backgroundColor: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.35)' }
+        : { backgroundColor: '#F4C430', color: '#2D2422', boxShadow: '0 0 0 3px rgba(244,196,48,0.35)' }}
+      title={on ? 'Click to switch the £15 minimum order off' : 'Click to switch the £15 minimum order back on'}>
+      <PoundSterling size={14} className={busy ? 'animate-pulse' : ''} />
+      {on ? 'Min £15: ON' : 'Min £15: OFF'}
+    </button>
+  );
+};
+
 const TABS = [
   { id:'kitchen',       label:'Kitchen',       icon:Utensils     },
   { id:'overview',      label:'Overview',      icon:TrendingUp   },
@@ -1062,15 +1096,16 @@ const Admin = () => {
   return (
     <div className="min-h-screen pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]" style={{ backgroundColor:'#F4F1EC' }}>
       {/* Top Bar */}
-      <div className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-20 px-4 md:px-8 py-3 flex items-center justify-between"
+      <div className="sticky top-[calc(32px+4rem)] md:top-[calc(32px+5rem)] z-20 px-4 md:px-8 py-3 flex flex-wrap items-center justify-between gap-y-2"
         style={{ backgroundColor:'#800020' }}>
         <div>
           <h1 className="text-lg font-bold text-white" style={{ fontFamily:"'Playfair Display', serif" }}>Admin Dashboard</h1>
           <p className="text-xs text-white/60">Sree Svadista Prasada</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 md:gap-3">
           <KitchenToggle />
           <DeliveryToggle />
+          <MinimumToggle />
           <Link href="/dashboard"
             className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
             style={{ backgroundColor:'rgba(255,255,255,0.15)', color:'white' }}>

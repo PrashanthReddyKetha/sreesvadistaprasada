@@ -97,11 +97,13 @@ async def health(_: dict = Depends(require_admin)):
     checks.append(_check("App notifications", "ok" if vapid else "watch", f"{devices} device{'s' if devices != 1 else ''} subscribed" if vapid else "keys not ready", ""))
 
     # the kitchen and orders
-    slots = await db.settings.find_one({"_id": "pickup_slots"}, {"_id": 0, "paused": 1, "paused_at": 1, "delivery_enabled": 1}) or {}
+    slots = await db.settings.find_one({"_id": "pickup_slots"}, {"_id": 0, "paused": 1, "paused_at": 1, "delivery_enabled": 1, "minimum_order_enabled": 1}) or {}
     if slots.get("paused"):
         checks.append(_check("Taking orders", "watch", f"paused since {_ago(slots.get('paused_at'))} — customers cannot check out", "Reopen from the Kitchen switch when ready"))
     else:
         checks.append(_check("Taking orders", "ok", "open" + (" · delivery on" if slots.get("delivery_enabled") else " · collection only")))
+    if slots.get("minimum_order_enabled") is False:
+        checks.append(_check("Minimum order", "watch", "switched off — any basket can be ordered", "Switch it back on from the Min £15 button in the admin header"))
     stuck = await db.orders.count_documents({"status": "pending", "created_at": {"$lt": now - timedelta(minutes=STUCK_PENDING_MINUTES)}})
     pending = await db.orders.count_documents({"status": "pending"})
     checks.append(_check("Orders waiting", "watch" if stuck else "ok",
