@@ -13,7 +13,7 @@ import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionP
 import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 import HygieneRating from '@/components/HygieneRating';
 
-const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+import { STRIPE_KEY } from '@/config/stripe';
 // Created on demand (see Subscriptions below) so the landing page never downloads Stripe.js
 let stripePromise = null;
 const getStripe = () => {

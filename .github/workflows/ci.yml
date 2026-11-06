@@ -97,6 +97,7 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_BACKEND_URL: http://127.0.0.1:8765
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ''
       - name: Serve the built site
         run: |
           (npx next start -p 3001 > /tmp/site.log 2>&1 &)
