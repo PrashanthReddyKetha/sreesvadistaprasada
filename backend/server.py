@@ -18,7 +18,7 @@ from routes import intelligence as intelligence_routes
 from routes import health as health_routes
 from routes import expenses as expense_routes
 from routes.menu import migrate_slugs
-from routes.pickup_slots import seed_slot_settings
+from routes.pickup_slots import seed_slot_settings, apply_opening_hours_7_to_11
 from menu_additions import apply_menu_additions, apply_protein_egg_bowl, apply_bowls_at_breakfast, apply_gongura_prawns_and_joint_biryani
 from web_push import ensure_vapid_keys, scheduler_loop
 import asyncio
@@ -68,6 +68,7 @@ async def lifespan(app: FastAPI):
     await create_admin_user()
     await migrate_slugs()
     await seed_slot_settings()
+    await apply_opening_hours_7_to_11()
     await apply_menu_additions()
     await apply_protein_egg_bowl()
     await apply_bowls_at_breakfast()

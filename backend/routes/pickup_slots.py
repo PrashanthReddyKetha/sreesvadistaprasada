@@ -42,21 +42,21 @@ DEFAULT_SETTINGS = {
     "lead_time_minutes": 40,
     "max_orders_per_slot": None,  # None = unlimited
     "days": {
-        "mon": {"closed": False, "open": "08:00", "close": "20:30"},
-        "tue": {"closed": False, "open": "08:00", "close": "20:30"},
-        "wed": {"closed": False, "open": "08:00", "close": "20:30"},
-        "thu": {"closed": False, "open": "08:00", "close": "20:30"},
-        "fri": {"closed": False, "open": "08:00", "close": "21:00"},
-        "sat": {"closed": False, "open": "08:00", "close": "21:00"},
-        "sun": {"closed": False, "open": "08:00", "close": "20:30"},
+        "mon": {"closed": False, "open": "07:00", "close": "23:00"},
+        "tue": {"closed": False, "open": "07:00", "close": "23:00"},
+        "wed": {"closed": False, "open": "07:00", "close": "23:00"},
+        "thu": {"closed": False, "open": "07:00", "close": "23:00"},
+        "fri": {"closed": False, "open": "07:00", "close": "23:00"},
+        "sat": {"closed": False, "open": "07:00", "close": "23:00"},
+        "sun": {"closed": False, "open": "07:00", "close": "23:00"},
     },
 }
 
 
 class DayHours(BaseModel):
     closed: bool = False
-    open: str = "08:00"
-    close: str = "20:30"
+    open: str = "07:00"
+    close: str = "23:00"
 
     @field_validator("open", "close")
     @classmethod
@@ -115,6 +115,15 @@ async def seed_slot_settings():
     existing = await db.settings.find_one({"_id": SETTINGS_ID}, {"_id": 1})
     if not existing:
         await db.settings.insert_one(dict(DEFAULT_SETTINGS))
+
+
+async def apply_opening_hours_7_to_11():
+    """Owner's hours from 7 Nov 2026: every day 7am – 11pm. Runs once (settings._id == "opening_hours_2026_11");
+    later changes in admin › Collection Times are kept."""
+    if await db.settings.find_one({"_id": "opening_hours_2026_11"}, {"_id": 1}):
+        return
+    await db.settings.update_one({"_id": SETTINGS_ID}, {"$set": {"days": DEFAULT_SETTINGS["days"]}})
+    await db.settings.update_one({"_id": "opening_hours_2026_11"}, {"$set": {"applied_at": datetime.utcnow().isoformat()}}, upsert=True)
 
 
 def _parse_hhmm(day: date, hhmm: str) -> datetime:

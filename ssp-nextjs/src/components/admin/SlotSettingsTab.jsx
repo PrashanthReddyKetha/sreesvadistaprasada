@@ -135,7 +135,7 @@ export default function SlotSettingsTab() {
         <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: C.gold }}>Opening hours</p>
         <div className="space-y-2">
           {DAYS.map(([key, label]) => {
-            const d = settings.days?.[key] || { closed: false, open: '08:00', close: '20:30' };
+            const d = settings.days?.[key] || { closed: false, open: '07:00', close: '23:00' };
             return (
               <div key={key} className="flex items-center gap-3 text-sm">
                 <span className="w-24 font-semibold" style={{ color: d.closed ? '#B8AFA5' : '#2D2422' }}>{label}</span>

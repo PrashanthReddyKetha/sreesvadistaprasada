@@ -337,7 +337,7 @@ def test_fifth_delivered_order_earns_a_reward_guests_earn_nothing(client, menu, 
 
 def test_opening_hours_are_public_and_follow_admin_settings(client, admin_headers):
     days = client.get("/api/opening-hours").json()["days"]
-    assert set(days) == {"mon", "tue", "wed", "thu", "fri", "sat", "sun"} and days["fri"]["close"] == "21:00"
+    assert set(days) == {"mon", "tue", "wed", "thu", "fri", "sat", "sun"} and days["fri"]["close"] == "23:00"
     client.put("/api/admin/settings/pickup-slots", headers=admin_headers,
                json={"days": {"sun": {"closed": True, "open": "08:00", "close": "20:30"}}})
     assert client.get("/api/opening-hours").json()["days"]["sun"]["closed"] is True
@@ -453,3 +453,15 @@ def test_minimum_off_still_refuses_totals_below_card_minimum(client, db, admin_h
     client.put("/api/admin/settings/pickup-slots", json={"minimum_order_enabled": False}, headers=admin_headers)
     r = calc(client, [("test50", 1)])                  # £0.50 less 10% collection = £0.45
     assert r.status_code == 400 and "smallest card payment" in r.json()["detail"]
+
+
+def test_opening_hours_move_to_7am_11pm_once(client, admin_headers, db):
+    from routes.pickup_slots import apply_opening_hours_7_to_11
+    run(db.settings.update_one({"_id": "pickup_slots"}, {"$set": {"days.mon": {"closed": False, "open": "08:00", "close": "20:30"}}}))
+    run(apply_opening_hours_7_to_11())
+    days = client.get("/api/opening-hours").json()["days"]
+    assert all((d["open"], d["close"], d["closed"]) == ("07:00", "23:00", False) for d in days.values())
+    client.put("/api/admin/settings/pickup-slots", headers=admin_headers,
+               json={"days": {"sun": {"closed": True, "open": "07:00", "close": "23:00"}}})
+    run(apply_opening_hours_7_to_11())                                   # a restart keeps the admin's later change
+    assert client.get("/api/opening-hours").json()["days"]["sun"]["closed"] is True
