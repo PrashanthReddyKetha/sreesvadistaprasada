@@ -21,6 +21,7 @@ import KitchenTab from '@/components/admin/KitchenTab';
 import SlotSettingsTab from '@/components/admin/SlotSettingsTab';
 import PushTab from '@/components/admin/PushTab';
 import CouponsTab from '@/components/admin/CouponsTab';
+import SalesTab from '@/components/admin/SalesTab';
 import CustomersTab from '@/components/admin/CustomersTab';
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
 import MessagesTab from '@/components/admin/MessagesTab';
@@ -1002,6 +1003,7 @@ const TABS = [
   { id:'kitchen',       label:'Kitchen',       icon:Utensils     },
   { id:'overview',      label:'Overview',      icon:TrendingUp   },
   { id:'orders',        label:'Orders',        icon:ShoppingBag  },
+  { id:'sales',         label:'Sales',         icon:PoundSterling},
   { id:'dabba',         label:'Dabba Wala',    icon:Calendar     },
   { id:'subscriptions', label:'Subscriptions', icon:Package      },
   { id:'menu',          label:'Menu',          icon:Utensils     },
@@ -1020,11 +1022,11 @@ const TABS = [
   { id:'push',          label:'Push',          icon:Bell         },
 ];
 
-/* Nineteen screens in five groups, so the owner's phone shows five buttons instead of a swipe strip
+/* Twenty screens in five groups, so the owner's phone shows five buttons instead of a swipe strip
    (audit A-0003, ADM-001; grouping approved by the owner 2026-10-07). */
 const GROUPS = [
   { id: 'today',     label: 'Today',               icon: Utensils,    tabs: ['kitchen', 'overview', 'specials', 'slots'] },
-  { id: 'orders',    label: 'Orders & Dabba',      icon: ShoppingBag, tabs: ['orders', 'dabba', 'subscriptions'] },
+  { id: 'orders',    label: 'Orders & Dabba',      icon: ShoppingBag, tabs: ['orders', 'sales', 'dabba', 'subscriptions'] },
   { id: 'menu',      label: 'Menu',                icon: Tag,         tabs: ['menu', 'coupons', 'loyalty', 'reviews'] },
   { id: 'customers', label: 'Customers & Messages', icon: Users,      tabs: ['users', 'enquiries', 'messages', 'automations', 'newsletter', 'push'] },
   { id: 'system',    label: 'System',              icon: CheckCircle, tabs: ['analytics', 'systemlog'] },
@@ -1035,6 +1037,11 @@ const TAB_BY_ID = Object.fromEntries(TABS.map(t => [t.id, t]));
 const Admin = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('kitchen');
+  // A bookmarkable screen: /admin?tab=sales opens straight on the sales book
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab');
+    if (t && TAB_BY_ID[t]) setActiveTab(t);
+  }, []);
   const [data, setData] = useState({ orders:[], subscriptions:[], users:[], contacts:[], catering:[], newsletter:[] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -1185,6 +1192,7 @@ const Admin = () => {
               {activeTab==='push'          && <PushTab />}
               {activeTab==='overview'      && <Overview {...data} />}
               {activeTab==='orders'        && <OrdersTab orders={data.orders} onStatusUpdate={handleStatusUpdate} />}
+              {activeTab==='sales'         && <SalesTab />}
               {activeTab==='dabba'         && <DabbaWalaTab />}
               {activeTab==='subscriptions' && <SubscriptionsTab subscriptions={data.subscriptions} onStatusUpdate={handleStatusUpdate} />}
               {activeTab==='menu'          && <MenuTab />}

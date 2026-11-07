@@ -17,6 +17,7 @@ from routes import automations as automation_routes
 from routes import intelligence as intelligence_routes
 from routes import health as health_routes
 from routes import expenses as expense_routes
+from routes import sales as sales_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings, apply_opening_hours_7_to_11
 from menu_additions import apply_menu_additions, apply_protein_egg_bowl, apply_bowls_at_breakfast, apply_gongura_prawns_and_joint_biryani
@@ -28,7 +29,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 
-INDEX_VERSION = 3   # bump when an index is added below or in seed.create_indexes()
+INDEX_VERSION = 4   # bump when an index is added below or in seed.create_indexes()
 INDEX_FAILURES: list = []
 
 
@@ -100,6 +101,9 @@ async def lifespan(app: FastAPI):
         await ensure_index(db.expenses, "id", unique=True)
         await ensure_index(db.expenses, "seq")
         await ensure_index(db.expense_receipts, "id", unique=True)
+        await ensure_index(db.sales, "id", unique=True)
+        await ensure_index(db.sales, "key", unique=True, sparse=True)   # one row per platform order number
+        await ensure_index(db.sales, [("at", -1)])
         # Our own visit record: fast date queries, and automatic deletion after the retention period
         await ensure_index(db.events, "at", expireAfterSeconds=event_routes.RETENTION_DAYS * 86400)
         await ensure_index(db.events, "visit_id")
@@ -238,6 +242,7 @@ app.include_router(automation_routes.router, prefix="/api")
 app.include_router(intelligence_routes.router, prefix="/api")
 app.include_router(health_routes.router, prefix="/api")
 app.include_router(expense_routes.router, prefix="/api")
+app.include_router(sales_routes.router, prefix="/api")
 
 
 @app.get("/api")
