@@ -108,8 +108,8 @@ export default function OrderClient({ initialItems = [] }) {
     cartItems, cartCount, cartTotal, addToCart, updateQuantity,
     deliveryType, setDeliveryType, pickupSlot, setPickupSlot,
   } = useCart();
-  const { deliveryEnabled, open: kitchenOpen } = useKitchen();
-  const belowMinimum = cartTotal < 15;
+  const { deliveryEnabled, open: kitchenOpen, minimumOrderEnabled } = useKitchen();
+  const belowMinimum = minimumOrderEnabled && cartTotal < 15;   // the admin can pause the £15 minimum
   const [dishes, setDishes] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
   const [search, setSearch] = useState('');
