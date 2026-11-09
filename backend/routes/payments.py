@@ -1,4 +1,5 @@
 import os
+import json
 import uuid
 import asyncio
 import logging
@@ -86,9 +87,12 @@ async def stripe_webhook(request: Request):
         logger.error("Stripe webhook received but STRIPE_WEBHOOK_SECRET is not set — payments cannot be matched to orders")
         raise HTTPException(status_code=500, detail="Webhook secret not configured")
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
+        stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid webhook")
+    # The signature is checked; read the body as plain JSON. Stripe's own objects are no longer dicts (stripe-python 12+),
+    # so .get() on them raised AttributeError and every live payment message failed with a 500 (9 Nov 2026).
+    event = json.loads(payload)
 
     if event["type"] == "payment_intent.succeeded":
         obj = event["data"]["object"]

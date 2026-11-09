@@ -132,3 +132,28 @@ def test_stripe_webhook_refuses_an_unsigned_or_forged_event(client, monkeypatch)
     monkeypatch.setattr(payments, "WEBHOOK_SECRET", "")
     r = client.post("/api/payments/webhook", content=b'{}', headers={"Stripe-Signature": "t=1,v1=x"})
     assert r.status_code == 500 and "not configured" in r.json()["detail"]
+
+
+def _signed(secret, body):
+    import hashlib, hmac, time
+    t = str(int(time.time()))
+    sig = hmac.new(secret.encode(), f"{t}.{body}".encode(), hashlib.sha256).hexdigest()
+    return {"Content-Type": "application/json", "Stripe-Signature": f"t={t},v1={sig}"}
+
+
+def test_a_signed_stripe_payment_is_recorded(client, db, monkeypatch):
+    """A real, correctly signed event through the real stripe library — it failed live with AttributeError (9 Nov 2026)."""
+    import json
+    from routes import payments
+    from tests.conftest import run
+    monkeypatch.setattr(payments, "WEBHOOK_SECRET", "whsec_test")
+    run(db.orders.insert_one({"id": "o1", "payment_intent_id": "pi_live1", "payment_status": "pending"}))
+    body = json.dumps({"id": "evt_1", "object": "event", "type": "payment_intent.succeeded", "data": {"object": {
+        "id": "pi_live1", "object": "payment_intent", "amount": 2698, "metadata": {"purpose": "order"}, "receipt_email": "a@b.co"}}})
+    r = client.post("/api/payments/webhook", content=body, headers=_signed("whsec_test", body))
+    assert r.status_code == 200, r.text
+    assert run(db.orders.find_one({"id": "o1"}))["payment_status"] == "paid"
+    row = run(db.payments.find_one({"pi_id": "pi_live1"}))
+    assert row["amount_pence"] == 2698 and row["purpose"] == "order"
+    body = json.dumps({"id": "evt_2", "object": "event", "type": "payment_intent.payment_failed", "data": {"object": {"id": "pi_live1", "object": "payment_intent"}}})
+    assert client.post("/api/payments/webhook", content=body, headers=_signed("whsec_test", body)).status_code == 200
