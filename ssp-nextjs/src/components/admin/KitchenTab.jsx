@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { RefreshCw, Bell, BellOff } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { RefreshCw } from 'lucide-react';
 import api from '@/api';
 
 /**
@@ -144,36 +144,19 @@ export default function KitchenTab() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
   const [mobileLane, setMobileLane] = useState('new');
-  const [soundOn, setSoundOn] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [toast, setToast] = useState('');
-  const seenIds = useRef(null); // null until first fetch — no chime for pre-existing orders
-  const audioRef = useRef(null);
-  const soundOnRef = useRef(false);
-  const lastChimeRef = useRef(0);
 
   const fetchOrders = useCallback(async () => {
     if (typeof document !== 'undefined' && document.hidden) return;
     try {
       const r = await api.get('/orders');
       const active = r.data.filter(o => !['delivered', 'cancelled'].includes(o.status));
-      setOrders(active);
-      const ids = new Set(active.map(o => o.id));
-      if (seenIds.current) {
-        const hasNew = active.some(o => !seenIds.current.has(o.id));
-        // Escalation: any NEW ticket older than 3 minutes keeps chiming each poll
-        const stuck = active.some(o => ['pending'].includes(o.status) && minsSince(o.created_at, Date.now()) >= 3);
-        if ((hasNew || stuck) && soundOnRef.current && audioRef.current && Date.now() - lastChimeRef.current > 8000) {
-          audioRef.current.play().catch(() => {});
-          lastChimeRef.current = Date.now();
-        }
-      }
-      seenIds.current = ids;
+      setOrders(active);   // the new-order alarm rings from OrderAlarm, on every admin screen
     } catch {} finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
-    audioRef.current = new Audio('/sounds/new-order.wav');
     fetchOrders();
     const poll = setInterval(fetchOrders, 12000);
     const tick = setInterval(() => setNow(Date.now()), 30000);
@@ -181,16 +164,6 @@ export default function KitchenTab() {
     document.addEventListener('visibilitychange', onVis);
     return () => { clearInterval(poll); clearInterval(tick); document.removeEventListener('visibilitychange', onVis); };
   }, [fetchOrders]);
-
-  const toggleSound = () => {
-    const next = !soundOn;
-    setSoundOn(next);
-    soundOnRef.current = next;
-    if (next && audioRef.current) {
-      // Unlock autoplay with a user gesture
-      audioRef.current.play().then(() => { audioRef.current.pause(); audioRef.current.currentTime = 0; }).catch(() => {});
-    }
-  };
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
@@ -201,6 +174,7 @@ export default function KitchenTab() {
       .filter(o => !['delivered', 'cancelled'].includes(o.status)));
     try {
       await api.put(`/orders/${order.id}/status`, { status });
+      window.dispatchEvent(new Event('ssp:orders-changed'));   // the alarm stops at once
     } catch (e) {
       setOrders(prev);
       showToast(e.response?.data?.detail || 'Could not update — try again.');
@@ -240,12 +214,6 @@ export default function KitchenTab() {
     <div>
       {/* Controls row */}
       <div className="flex items-center gap-3 mb-3 flex-wrap">
-        <button onClick={toggleSound}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
-          style={{ backgroundColor: soundOn ? '#EDF4EF' : 'white', color: soundOn ? C.green : C.muted, border: `1px solid ${C.line}` }}>
-          {soundOn ? <Bell size={13} /> : <BellOff size={13} />}
-          New-order sound {soundOn ? 'on' : 'off'}
-        </button>
         {slotStrip.length > 0 && (
           <div className="flex items-center gap-2 text-[11px] font-bold overflow-x-auto" style={{ color: C.muted }}>
             <span className="uppercase tracking-widest" style={{ color: C.gold }}>Collections:</span>

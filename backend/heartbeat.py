@@ -16,6 +16,7 @@ LOOPS = {
     "automations": 1800,
     "nightly review": 1800,
     "message retries": 300,
+    "order alerts": 30,
 }
 
 

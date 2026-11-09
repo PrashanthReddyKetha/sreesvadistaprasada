@@ -23,6 +23,8 @@ self.addEventListener('push', (event) => {
     badge: '/icons/icon-192.png',
     data: { url: data.url || '/order', campaign_id: data.campaign_id || null },
   };
+  // New-order alerts for the owner: stay on screen until tapped, buzz, and replace the last alert for the same order
+  if (data.owner) Object.assign(options, { tag: data.tag || 'new-order', renotify: true, requireInteraction: true, vibrate: [400, 150, 400, 150, 400] });
   event.waitUntil(Promise.all([
     self.registration.showNotification(title, options),
     track(data.campaign_id, 'received'),

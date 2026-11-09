@@ -113,6 +113,18 @@ async def seed_customer(request: Request):
     return {"ok": True}
 
 
+@app.post("/__seed_order")
+async def seed_order():
+    """A paid order waiting to be accepted, as checkout would leave it (a real card payment needs Stripe)."""
+    from models import Order
+    n = await db.orders.count_documents({}) + 1
+    order = Order(customer_name="Asha Rao", customer_email="asha.rao@test.example", customer_phone="+447700900123",
+                  items=[{"menu_item_id": "x", "name": "Masala Dosa", "price": 6.99, "quantity": 2}], delivery_type="takeaway",
+                  total=13.98, order_number=f"SP{n:04d}")
+    await db.orders.insert_one(order.model_dump())
+    return {"id": order.id, "order_number": order.order_number}
+
+
 @app.get("/__messages")
 async def messages():
     """What the site tried to send (nothing actually leaves this machine)."""

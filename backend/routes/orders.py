@@ -668,6 +668,8 @@ async def create_order(
         f"({esc(payload.customer_email)} · {esc(payload.customer_phone)}).</p>"
         f"<p>Total <b>£{order.total:.2f}</b> — open the admin dashboard to confirm.</p>",
     )
+    from order_alerts import alert_new_order
+    asyncio.create_task(alert_new_order(order.model_dump()))      # push to the owner's phone; repeats until accepted
     return order
 
 

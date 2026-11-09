@@ -20,6 +20,7 @@ import AdminLoyaltyTab from '@/components/admin/AdminLoyaltyTab';
 import KitchenTab from '@/components/admin/KitchenTab';
 import SlotSettingsTab from '@/components/admin/SlotSettingsTab';
 import StockTab from '@/components/admin/StockTab';
+import OrderAlarm from '@/components/admin/OrderAlarm';
 import PushTab from '@/components/admin/PushTab';
 import CouponsTab from '@/components/admin/CouponsTab';
 import SalesTab from '@/components/admin/SalesTab';
@@ -1077,6 +1078,7 @@ const Admin = () => {
   const handleStatusUpdate = async (type, id, status) => {
     try {
       if (type==='orders' && status) await api.put(`/orders/${id}/status`, { status });   // status null = just refresh
+      if (type==='orders') window.dispatchEvent(new Event('ssp:orders-changed'));
       if (type==='subscriptions') await api.put(`/subscriptions/${id}/status`, { status });
       if (type==='contact')       await api.put(`/enquiries/contact/${id}/status?status=${status}`);
       if (type==='catering')      await api.put(`/enquiries/catering/${id}/status?status=${status}`);
@@ -1189,6 +1191,7 @@ const Admin = () => {
             </div>
           ) : (
             <>
+              <OrderAlarm showSettings={activeTab==='kitchen'} onOpenKitchen={activeTab==='kitchen' ? null : () => setActiveTab('kitchen')} />
               {activeTab==='kitchen'       && <KitchenTab />}
               {activeTab==='slots'         && <SlotSettingsTab />}
               {activeTab==='stock'         && <StockTab />}

@@ -68,14 +68,36 @@ async def ensure_vapid_keys() -> dict:
     return doc
 
 
-def _send_one_sync(sub_info: dict, payload: str, private_key: str):
+def _send_one_sync(sub_info: dict, payload: str, private_key: str, ttl: int = 24 * 3600, headers: dict | None = None):
     webpush(
         subscription_info=sub_info,
         data=payload,
         vapid_private_key=private_key,
         vapid_claims={"sub": VAPID_SUB},
-        ttl=24 * 3600,
+        ttl=ttl,
+        headers=headers,
     )
+
+
+async def send_to_owner(title: str, body: str, url: str = "/admin?tab=kitchen", tag: str = "new-order") -> int:
+    """Order alerts to the owner's own phones and tablets (db.owner_push_subs, kept apart from customers' offer
+    subscriptions). High urgency so a sleeping phone wakes; an alert older than an hour is not worth delivering."""
+    keys = await ensure_vapid_keys()
+    payload = json.dumps({"title": title, "body": body, "url": url, "tag": tag, "owner": True})
+    sent = 0
+    async for sub in db.owner_push_subs.find({}):
+        try:
+            await asyncio.to_thread(_send_one_sync, {"endpoint": sub["endpoint"], "keys": sub["keys"]}, payload,
+                                    keys["private_key"], 3600, {"Urgency": "high"})
+            sent += 1
+        except WebPushException as e:
+            if getattr(getattr(e, "response", None), "status_code", None) in (404, 410):
+                await db.owner_push_subs.delete_one({"endpoint": sub["endpoint"]})
+            else:
+                logger.warning("Owner push failed: %s", e)
+        except Exception as e:
+            logger.warning("Owner push error: %s", e)
+    return sent
 
 
 async def send_to_all(campaign: dict) -> dict:

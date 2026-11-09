@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field
 from database import db
 from security import RateLimit
 from auth import require_admin, get_optional_user
-from web_push import ensure_vapid_keys, dispatch_campaign, new_campaign, LONDON
+from web_push import ensure_vapid_keys, dispatch_campaign, new_campaign, send_to_owner, LONDON
 
 router = APIRouter(prefix="", tags=["push"])
 
@@ -147,3 +147,43 @@ async def push_cancel(campaign_id: str, admin: dict = Depends(require_admin)):
     if res.modified_count == 0:
         raise HTTPException(400, "Only scheduled campaigns can be cancelled.")
     return {"ok": True}
+
+
+# ── The owner's own devices: new-order alerts ────────────────────────────────
+# Kept in db.owner_push_subs, apart from customers' offer subscriptions, so an offer never reaches a customer as an
+# order alert and an order never reaches a customer at all.
+
+class OwnerDevice(PushSubscription):
+    label: str = Field("", max_length=80)        # "Android phone", "Deliveroo tablet"
+
+
+@router.post("/admin/push/owner-device")
+async def owner_device_add(dev: OwnerDevice, admin: dict = Depends(require_admin)):
+    if not _push_endpoint_ok(dev.endpoint) or len(dev.endpoint) > 1024:
+        raise HTTPException(400, "That browser's notification service is not supported.")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.owner_push_subs.update_one(
+        {"endpoint": dev.endpoint},
+        {"$set": {"endpoint": dev.endpoint, "keys": dev.keys.model_dump(), "label": dev.label, "updated_at": now},
+         "$setOnInsert": {"created_at": now}},
+        upsert=True,
+    )
+    return {"ok": True, "devices": await db.owner_push_subs.count_documents({})}
+
+
+@router.post("/admin/push/owner-device/remove")
+async def owner_device_remove(body: UnsubscribeBody, admin: dict = Depends(require_admin)):
+    await db.owner_push_subs.delete_one({"endpoint": body.endpoint})
+    return {"ok": True}
+
+
+@router.get("/admin/push/owner-devices")
+async def owner_devices(admin: dict = Depends(require_admin)):
+    devices = await db.owner_push_subs.find({}, {"_id": 0, "label": 1, "created_at": 1, "endpoint": 1}).to_list(50)
+    return {"devices": devices}
+
+
+@router.post("/admin/push/owner-test")
+async def owner_test(admin: dict = Depends(require_admin)):
+    sent = await send_to_owner("Test alert 🔔", "Order alerts are working on this device.", tag="test")
+    return {"sent": sent}

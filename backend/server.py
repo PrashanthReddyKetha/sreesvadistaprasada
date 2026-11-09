@@ -171,6 +171,8 @@ async def lifespan(app: FastAPI):
     nightly_review = asyncio.create_task(intelligence_loop())
     from notifications import retry_loop
     retry_drain = asyncio.create_task(retry_loop())      # stranded message retries after a restart (A-0003, MKT-004)
+    from order_alerts import order_alert_loop
+    order_alerts = asyncio.create_task(order_alert_loop())   # new orders pushed to the owner's phone until accepted
     yield
     logger.info("Shutting down...")
     push_scheduler.cancel()
@@ -180,6 +182,7 @@ async def lifespan(app: FastAPI):
     automation_runner.cancel()
     nightly_review.cancel()
     retry_drain.cancel()
+    order_alerts.cancel()
     client.close()
 
 
