@@ -19,9 +19,16 @@ def london_today() -> str:
     return datetime.now(LONDON).date().isoformat()
 
 
+def london_now() -> str:
+    return datetime.now(LONDON).strftime("%Y-%m-%dT%H:%M")
+
+
 def is_sold_out_today(item: dict) -> bool:
+    """sold_out_until is a London date (sold out all that day) or "YYYY-MM-DDTHH:MM" (on sale again from that minute)."""
     s = item.get("sold_out_until")
-    return bool(s) and s >= london_today()
+    if not s:
+        return False
+    return s > london_now() if "T" in s else s >= london_today()
 
 
 def restock_email(item: dict, name: str) -> tuple[str, str]:
@@ -88,11 +95,12 @@ async def sweep_expired_sold_outs():
 
     Called opportunistically from GET /menu, so no cron is needed.
     """
-    today = london_today()
-    expired = await db.menu_items.find(
-        {"sold_out_until": {"$ne": None, "$lt": today}}, {"_id": 0}
+    candidates = await db.menu_items.find(
+        {"sold_out_until": {"$ne": None, "$lte": london_now()}}, {"_id": 0}
     ).to_list(length=200)
-    for item in expired:
+    for item in candidates:
+        if is_sold_out_today(item):     # today's date sorts before "now" but still holds until midnight
+            continue
         await db.menu_items.update_one({"id": item["id"]}, {"$set": {"sold_out_until": None}})
         if item.get("available", True):
             await notify_restock(item)

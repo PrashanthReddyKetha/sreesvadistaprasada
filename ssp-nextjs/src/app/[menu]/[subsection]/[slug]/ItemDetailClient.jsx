@@ -16,6 +16,7 @@ import { isOrderable } from '@/config/softLaunch';
 import RestockBell from '@/components/RestockBell';
 import api from '@/api';
 import { buildItemUrl } from '@/lib/itemUrl';
+import { soldOutLabel } from '@/lib/soldOut';
 
 // ── constants ──────────────────────────────────────────────────────────────
 const CAT_LABELS = {
@@ -386,7 +387,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
 
               {isOrderable(item.category) && item.sold_out_today ? (
                 <div className="rounded-xl p-4 text-center" style={{ backgroundColor:'#F3EDE2' }}>
-                  <p className="text-sm font-semibold mb-2" style={{ color:'#5C4B47' }}>Sold out for today</p>
+                  <p className="text-sm font-semibold mb-2" style={{ color:'#5C4B47' }}>{soldOutLabel(item, 'Sold out for today')}</p>
                   <RestockBell item={item} />
                 </div>
               ) : isOrderable(item.category) ? (

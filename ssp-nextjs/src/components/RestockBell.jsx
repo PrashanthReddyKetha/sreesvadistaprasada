@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Bell, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api';
+import { soldOutLabel } from '@/lib/soldOut';
 
 /**
  * "Sold out today" bell. Signed-in: one tap subscribes to an email + SMS the
@@ -57,7 +58,7 @@ export default function RestockBell({ item, compact = false }) {
   return (
     <span className="inline-flex flex-col items-end gap-0.5">
       <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#8B3A3A' }}>
-        Sold out today
+        {soldOutLabel(item)}
       </span>
       <button onClick={subscribe} disabled={state === 'busy'}
         className={`inline-flex items-center gap-1 rounded-full font-black whitespace-nowrap ${compact ? 'px-2.5 py-1 text-[10px]' : 'px-3 py-1.5 text-[11px]'}`}

@@ -7,7 +7,7 @@ import api from '@/api';
 import WhatsAppSend from '@/components/admin/WhatsAppSend';
 import { orderMessage } from '@/lib/whatsappMessages';
 import {
-  ShoppingBag, Users, Package, Mail, MessageSquare, Bell,
+  ShoppingBag, Users, Package, Mail, MessageSquare, Bell, Boxes,
   TrendingUp, Clock, CheckCircle, XCircle, RefreshCw,
   ChevronDown, ChevronRight, LayoutDashboard,
   ArrowLeft, Send, CheckCheck, AlertCircle,
@@ -19,6 +19,7 @@ import DailySpecialsTab from '@/components/admin/DailySpecialsTab';
 import AdminLoyaltyTab from '@/components/admin/AdminLoyaltyTab';
 import KitchenTab from '@/components/admin/KitchenTab';
 import SlotSettingsTab from '@/components/admin/SlotSettingsTab';
+import StockTab from '@/components/admin/StockTab';
 import PushTab from '@/components/admin/PushTab';
 import CouponsTab from '@/components/admin/CouponsTab';
 import SalesTab from '@/components/admin/SalesTab';
@@ -1001,6 +1002,7 @@ const MinimumToggle = () => {
 
 const TABS = [
   { id:'kitchen',       label:'Kitchen',       icon:Utensils     },
+  { id:'stock',         label:'Stock levels',  icon:Boxes        },
   { id:'overview',      label:'Overview',      icon:TrendingUp   },
   { id:'orders',        label:'Orders',        icon:ShoppingBag  },
   { id:'sales',         label:'Sales',         icon:PoundSterling},
@@ -1022,10 +1024,10 @@ const TABS = [
   { id:'push',          label:'Push',          icon:Bell         },
 ];
 
-/* Twenty screens in five groups, so the owner's phone shows five buttons instead of a swipe strip
+/* Twenty-one screens in five groups, so the owner's phone shows five buttons instead of a swipe strip
    (audit A-0003, ADM-001; grouping approved by the owner 2026-10-07). */
 const GROUPS = [
-  { id: 'today',     label: 'Today',               icon: Utensils,    tabs: ['kitchen', 'overview', 'specials', 'slots'] },
+  { id: 'today',     label: 'Today',               icon: Utensils,    tabs: ['kitchen', 'stock', 'overview', 'specials', 'slots'] },
   { id: 'orders',    label: 'Orders & Dabba',      icon: ShoppingBag, tabs: ['orders', 'sales', 'dabba', 'subscriptions'] },
   { id: 'menu',      label: 'Menu',                icon: Tag,         tabs: ['menu', 'coupons', 'loyalty', 'reviews'] },
   { id: 'customers', label: 'Customers & Messages', icon: Users,      tabs: ['users', 'enquiries', 'messages', 'automations', 'newsletter', 'push'] },
@@ -1189,6 +1191,7 @@ const Admin = () => {
             <>
               {activeTab==='kitchen'       && <KitchenTab />}
               {activeTab==='slots'         && <SlotSettingsTab />}
+              {activeTab==='stock'         && <StockTab />}
               {activeTab==='push'          && <PushTab />}
               {activeTab==='overview'      && <Overview {...data} />}
               {activeTab==='orders'        && <OrdersTab orders={data.orders} onStatusUpdate={handleStatusUpdate} />}

@@ -31,6 +31,7 @@ import { useNotifyMe } from '@/context/NotifyMeContext';
 import { isOrderable } from '@/config/softLaunch';
 import { buildItemUrl } from '@/lib/itemUrl';
 import HygieneRating from '@/components/HygieneRating';
+import { soldOutLabel } from '@/lib/soldOut';
 
 const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, hoursByDay = null }) => {
   const { deliveryEnabled, open: kitchenOpen, loaded: kitchenLoaded } = useKitchen();
@@ -519,7 +520,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
                   <div className="flex justify-between items-center">
                     <p className="text-xl font-bold" style={{ color: '#800020' }}>{price}</p>
                     {dish.sold_out_today ? (
-                      <span className="px-3 py-2 text-xs font-semibold rounded-sm" style={{ backgroundColor: '#F3EDE2', color: '#5C4B47' }}>Sold out today</span>
+                      <span className="px-3 py-2 text-xs font-semibold rounded-sm" style={{ backgroundColor: '#F3EDE2', color: '#5C4B47' }}>{soldOutLabel(dish)}</span>
                     ) : isOrderable(dish.category) ? (
                       <button
                         onClick={(e) => { e.stopPropagation(); addToCart(dish); }}

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
@@ -216,8 +216,19 @@ class MenuItemUpdate(BaseModel):
     pairs_with: Optional[List[str]] = None
     seo_meta_description: Optional[str] = None
     preorder_only: Optional[bool] = None
-    sold_out_until: Optional[str] = None
+    sold_out_until: Optional[str] = None    # "YYYY-MM-DD" (sold out that day) or "YYYY-MM-DDTHH:MM" (opens at that time)
     clear_sold_out: bool = False  # explicit "back on sale now"
+
+    @field_validator("sold_out_until")
+    @classmethod
+    def _date_or_time(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        try:
+            datetime.strptime(v, "%Y-%m-%dT%H:%M" if "T" in v else "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("sold_out_until must be YYYY-MM-DD or YYYY-MM-DDTHH:MM")
+        return v
 
 
 class MenuItem(MenuItemCreate):
