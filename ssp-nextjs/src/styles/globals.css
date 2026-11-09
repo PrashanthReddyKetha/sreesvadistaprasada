@@ -60,12 +60,18 @@ h1, h2, h3, h4, h5, h6 {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
 
 .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
 .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
 .animate-slide-in-left { animation: slideInLeft 0.7s ease-out forwards; }
 .animate-slide-in-right { animation: slideInRight 0.4s ease-out forwards; }
 .animate-scale-in { animation: scaleIn 0.5s ease-out forwards; }
+.animate-shake { animation: shake 0.4s ease-in-out; }
 
 .animation-delay-100 { animation-delay: 0.1s; }
 .animation-delay-200 { animation-delay: 0.2s; }

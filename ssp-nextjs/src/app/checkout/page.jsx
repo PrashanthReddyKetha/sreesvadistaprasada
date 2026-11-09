@@ -40,6 +40,10 @@ const MINIMUM_ORDER = 15.00;
 const MIN_DELIVERY_FEE = 2.49; // Zone 1 floor — used before postcode is known
 const price = (val) => parseFloat(String(val).replace('£', '')) || 0;
 const fmt   = (n)   => `£${Number(n).toFixed(2)}`;
+const FIELD_LABELS = { name: 'your name', email: 'your email', phone: 'your mobile number', line1: 'your address', city: 'your town', postcode: 'your postcode' };
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// "a, b and c"
+const joinList = (xs) => xs.length > 1 ? `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}` : xs[0] || '';
 // Normalise a UK mobile for comparison/OTP: "07700 900123" → "+447700900123"
 const normPhone = (raw) => {
   const clean = String(raw || '').replace(/\s/g, '');
@@ -706,6 +710,9 @@ const CheckoutInner = () => {
   const [verifiedPhone, setVerifiedPhone] = useState('');       // guest OTP-verified number
   const [postOrderLoyalty, setPostOrderLoyalty] = useState(null);
   const [cardBrand, setCardBrand] = useState(null);
+  const [cardDone, setCardDone] = useState({ number: false, expiry: false, cvc: false });   // from Stripe's own field checks
+  const [shake, setShake] = useState(false);
+  const [showMissing, setShowMissing] = useState(false);
   const [billingPostcode, setBillingPostcode] = useState('');
   const [paymentRequest, setPaymentRequest] = useState(null); // Apple Pay / Google Pay
 
@@ -1078,23 +1085,33 @@ const CheckoutInner = () => {
   // A payment that succeeded but whose order hasn't been confirmed yet (see handleOrder)
   const paidIntent = useRef(null);
 
+  // Everything the card Pay button still needs, in the order the customer meets it on the page
+  const missingDetails = [];
+  for (const k of deliveryType === 'takeaway' ? ['name', 'email', 'phone'] : ['name', 'email', 'phone', 'line1', 'city', 'postcode']) {
+    if (!form[k].trim()) missingDetails.push(FIELD_LABELS[k]);
+  }
+  if (form.email.trim() && !EMAIL_RE.test(form.email.trim())) missingDetails.push('a valid email address');
+  if (form.phone.trim() && !user && fbAuth && verifiedPhone !== normPhone(form.phone)) missingDetails.push('the code we text to your mobile (tap "Text me a code")');
+  if (deliveryType === 'takeaway' && !pickupSlot && !validPricing) missingDetails.push('a collection time');
+  if (!cardDone.number) missingDetails.push('your card number');
+  if (!cardDone.expiry) missingDetails.push('the card expiry date');
+  if (!cardDone.cvc) missingDetails.push('the CVC');
+  const readyToPay = meetsMinimum && !!validPricing && !missingDetails.length && !(deliveryType === 'delivery' && pcError);
+
+  const notReadyMessage = readyToPay ? ''
+    : !meetsMinimum ? `Minimum order is ${fmt(MINIMUM_ORDER)} — please add more items.`
+    : missingDetails.length ? `Please add ${joinList(missingDetails)}.`
+    : deliveryType === 'delivery' && pcError ? "Sorry, your postcode is outside our delivery area. Please switch to collection or use a Milton Keynes postcode."
+    : calcError || "We couldn't confirm your total — please check your postcode and try again.";
+
+  // Pay tapped too early: shake the button and keep the list of what is missing on screen (it shrinks as fields fill)
+  const nudge = () => { setShowMissing(true); setShake(true); };
+
   const handleOrder = async () => {
     setError('');
     if (!kitchen.open) { setError(kitchen.message); return; }
-    if (!meetsMinimum) { setError(`Minimum order is ${fmt(MINIMUM_ORDER)} — please add more items.`); return; }
-    const required = deliveryType === 'takeaway'
-      ? ['name', 'email', 'phone']
-      : ['name', 'email', 'phone', 'line1', 'city', 'postcode'];
-    const FIELD_LABELS = { name: 'your name', email: 'your email', phone: 'your mobile number', line1: 'your address', city: 'your town', postcode: 'your postcode' };
-    const missing = required.filter(k => !form[k].trim());
-    if (missing.length) { setError(`Please add ${missing.map(k => FIELD_LABELS[k]).join(', ')}.`); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('Please enter a valid email address.'); return; }
-    if (!user && fbAuth && verifiedPhone !== normPhone(form.phone)) {
-      setError('Please verify your mobile number first — we text you when your order is ready.');
-      return;
-    }
-    if (deliveryType === 'delivery' && pcError) { setError("Sorry, your postcode is outside our delivery area. Please switch to collection or use a Milton Keynes postcode."); return; }
-    if (!validPricing) { setError("We couldn't confirm your total — please check your postcode and try again."); return; }
+    // Checked before a payment is started, so a mistyped card no longer leaves an "Incomplete" payment in Stripe
+    if (!readyToPay) { nudge(); return; }
     if (!stripe || !elements) { setError('Payment not ready. Please wait a moment.'); return; }
     const cardNumberElement = elements.getElement(CardNumberElement);
     if (!cardNumberElement) { setError('Card details are missing.'); return; }
@@ -1889,7 +1906,8 @@ const CheckoutInner = () => {
                       <div className="flex-1">
                         <CardNumberElement
                           options={CARD_STYLE}
-                          onChange={e => setCardBrand(e.brand && e.brand !== 'unknown' ? e.brand : null)}
+                          onChange={e => { setCardBrand(e.brand && e.brand !== 'unknown' ? e.brand : null); setCardDone(c => ({ ...c, number: e.complete })); }}
+                          onReady={() => setCardDone(c => ({ ...c, number: false }))}   // a remounted field is empty
                         />
                       </div>
                       {cardBrand && <CardBrandBadge brand={cardBrand} />}
@@ -1897,10 +1915,10 @@ const CheckoutInner = () => {
                     {/* Expiry, CVC, Postcode - single row */}
                     <div className="grid grid-cols-3 gap-2">
                       <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
-                        <CardExpiryElement options={CARD_STYLE} placeholder="MM / YY" />
+                        <CardExpiryElement options={CARD_STYLE} placeholder="MM / YY" onChange={e => setCardDone(c => ({ ...c, expiry: e.complete }))} onReady={() => setCardDone(c => ({ ...c, expiry: false }))} />
                       </div>
                       <div className="p-3 rounded-xl border-2" style={{ borderColor: 'rgba(128,0,32,0.2)', backgroundColor: '#FDFBF7' }}>
-                        <CardCvcElement options={CARD_STYLE} placeholder="CVC" />
+                        <CardCvcElement options={CARD_STYLE} placeholder="CVC" onChange={e => setCardDone(c => ({ ...c, cvc: e.complete }))} onReady={() => setCardDone(c => ({ ...c, cvc: false }))} />
                       </div>
                       <input
                         type="text"
@@ -1929,13 +1947,15 @@ const CheckoutInner = () => {
                   <div className="mt-2"><KitchenClosedNotify /></div>
                 </div>
               )}
-              {error && (
-                <p role="alert" className="text-sm font-medium p-3 rounded-xl" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{error}</p>
+              {(error || (showMissing && notReadyMessage)) && (
+                <p role="alert" className="text-sm font-medium p-3 rounded-xl" style={{ backgroundColor: '#FFF0F0', color: '#800020' }}>{error || notReadyMessage}</p>
               )}
+              {/* Full colour throughout; until every detail is in, a tap shakes it and lists what is missing */}
               {canCheckout && kitchen.open && (
-                <button onClick={handleOrder} disabled={submitting || !meetsMinimum || !validPricing || !STRIPE_KEY}
-                  className="w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-60"
-                  style={{ background: meetsMinimum ? 'linear-gradient(135deg, #800020, #5C0018)' : '#9CA3AF', cursor: meetsMinimum ? 'pointer' : 'not-allowed' }}>
+                <button onClick={handleOrder} disabled={submitting || !STRIPE_KEY} aria-disabled={!readyToPay}
+                  onAnimationEnd={() => setShake(false)}
+                  className={`w-full py-4 text-sm font-bold text-white rounded-2xl flex items-center justify-center gap-2 hover:shadow-xl transition-all disabled:opacity-60 ${shake ? 'animate-shake' : ''}`}
+                  style={{ background: 'linear-gradient(135deg, #800020, #5C0018)', cursor: readyToPay ? 'pointer' : 'not-allowed' }}>
                   {submitting
                     ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Processing…</>
                     : !meetsMinimum
