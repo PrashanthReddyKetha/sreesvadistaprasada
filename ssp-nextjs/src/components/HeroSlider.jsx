@@ -85,7 +85,7 @@ const HeroSlider = ({ images = [] }) => {
                 src={(Array.isArray(images[index]) ? images[index].find(Boolean) : images[index]) || slide.image}
                 alt={slide.title.replace(/\n/g, ' ')}
                 fill
-                className={`object-cover ${slide.trayRight ? 'object-[70%_50%] md:object-center' : 'object-center'}`}
+                className={`object-cover ${slide.trayRight ? 'object-[72%_50%] md:object-center' : 'object-center'}`}
                 priority={index === 0}
                 sizes="100vw"
                 quality={80}

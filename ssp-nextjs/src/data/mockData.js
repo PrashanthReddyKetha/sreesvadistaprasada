@@ -21,8 +21,8 @@ export const heroSlides = [
   },
   {
     id: 3,
-    image: '/hero/dabba-tray.jpg',
-    trayRight: true,   // the photo's tray sits to the right: phones show it rather than the middle
+    image: '/hero/dabba-trays.jpg',
+    trayRight: true,   // the boxes sit to the right: phones show them rather than the middle
     title: "Your Daily Dose\nof Home.",
     subtitle: "Wholesome lunches delivered to your home or workplace.",
     description: "The Dabba Wala service — just like mother used to pack.",
