@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { RefreshCw, Download, Copy } from 'lucide-react';
 import api from '@/api';
-import { useAnalysis, AnalystReading, SectionReading } from '@/components/admin/analytics/reading';
+import { useAnalysis, NotesContext, Note, ReadingStatus } from '@/components/admin/analytics/reading';
 import { DateRange, Change, TrafficChart, PeriodSummary, VisitStories, presetRange, rangeLabel } from '@/components/admin/analytics/parts';
 
 /* Admin › Analytics — the site's own record of visits (not Google's): visits, the path to an
@@ -46,6 +46,19 @@ const detail = (e) => [e.props.label, e.props.term && `"${e.props.term}"`, e.ite
 
 const SHORT = 8;
 
+// Which description goes under which table (keys as in backend/analyst.py NOTES)
+const NOTE_FOR = {
+  'Where visitors came from': 'sources', 'From the page they landed on to an order': 'landing', 'Phone or computer': 'device',
+  'First visit or returning': 'visitor', 'Last thing done before leaving the checkout': 'left_checkout',
+  'Last thing done before leaving with a basket': 'left_basket', 'By day of the week': 'weekday', 'How long each step takes': 'step_times',
+  'Does price put people off?': 'price', 'Page routes that ended in an order': 'routes_ordered', 'Page routes that ended without one': 'routes_left',
+  'The field people were on when they gave up': 'fields', 'Tapped again and again': 'taps', 'Dishes taken back out of the basket': 'removals',
+  'Checkout, step by step': 'checkout', 'Where visits end without an order': 'exits', 'How each dish is doing': 'dishes',
+  'Dishes opened most': 'most_opened', 'Dishes added to basket most': 'most_added', 'Pages viewed most': 'pages',
+  'Every action recorded': 'actions', 'Buttons and links tapped most': 'clicks', 'What people searched for': 'searches',
+  'Problems visitors hit': 'problems', 'Time spent and how far people scroll': 'time_on_page',
+};
+
 function Table({ title, head, rows, empty }) {
   const [all, setAll] = useState(false);
   const shown = all ? rows : rows.slice(0, SHORT);
@@ -67,6 +80,7 @@ function Table({ title, head, rows, empty }) {
           )}
         </>
       )}
+      {NOTE_FOR[title] && <Note k={NOTE_FOR[title]} />}
     </div>
   );
 }
@@ -197,11 +211,13 @@ export default function AnalyticsTab() {
   const shownVisits = outcome ? visits.filter(v => v.story?.outcome === outcome) : visits;
 
   return (
+    <NotesContext.Provider value={analysis}>
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
         <DateRange value={range} onChange={setRange} />
         <button onClick={load} className="p-2 rounded-lg border ml-auto" style={{ borderColor: '#e0d9d0' }} aria-label="Refresh"><RefreshCw size={15} className={loading ? 'animate-spin' : ''} /></button>
       </div>
+      <ReadingStatus analysis={analysis} />
 
       <div className="flex flex-wrap items-center gap-2">
         <button onClick={() => {
@@ -222,8 +238,6 @@ export default function AnalyticsTab() {
 
       <PeriodSummary summary={visitInfo.summary} label={label} />
 
-      <AnalystReading analysis={analysis} label={label} />
-
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(([name, value, note, change]) => (
           <div key={name} className="bg-white rounded-xl p-4" style={card}>
@@ -234,8 +248,9 @@ export default function AnalyticsTab() {
           </div>
         ))}
       </div>
+      <Note k="overall" card />
 
-      <TrafficChart key={`${range.start}|${range.end}`} data={data} />
+      <TrafficChart key={`${range.start}|${range.end}`} data={data} footer={<Note k="traffic" inset />} />
 
       <div className="flex flex-wrap gap-2 border-b pb-3" style={{ borderColor: '#e9e2d8' }} role="tablist" aria-label="Analytics sections">
         {VIEWS.map(([id, label, hint]) => (
@@ -246,7 +261,6 @@ export default function AnalyticsTab() {
       <p className="text-xs text-gray-500 -mt-2">{VIEWS.find(v => v[0] === view)[2]}.</p>
 
       {view === 'summary' && (<>
-      <SectionReading analysis={analysis} section="summary" />
       <div className="bg-white rounded-xl p-4" style={card}>
         <h3 className="font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: P }}>From visit to order</h3>
         {top === 0 ? <p className="text-sm text-gray-400">No visits recorded in this period yet.</p> : data.funnel.map((f, i) => (
@@ -256,6 +270,7 @@ export default function AnalyticsTab() {
             <div className="h-2.5 rounded-full mt-1" style={{ backgroundColor: '#f3ece6' }}><div className="h-2.5 rounded-full" style={{ width: `${Math.max(2, (f.visits / top) * 100)}%`, backgroundColor: P }} /></div>
           </div>
         ))}
+        <Note k="funnel" inset />
       </div>
 
       <Table title="Where visitors came from" empty="Nothing recorded yet."
@@ -264,7 +279,6 @@ export default function AnalyticsTab() {
 
       </>)}
       {view === 'journeys' && (<>
-      <SectionReading analysis={analysis} section="journeys" />
       {(() => {
         const funnelRows = (list) => (list || []).map(f => [f.name, f.visits, f.looked_at_menu, f.add_to_cart, f.begin_checkout, f.payment_started, f.purchase, pct(f.purchase, f.visits)]);
         const head = (first) => [first, 'Visits', 'Looked at the menu', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered', 'Visits that ordered'];
@@ -290,6 +304,7 @@ export default function AnalyticsTab() {
                   <b>{data.abandoned?.visits || 0}</b> visit{(data.abandoned?.visits || 0) === 1 ? '' : 's'} left with food in the basket, worth about <b>{fmt(data.abandoned?.basket_value)}</b>.
                   {data.minutes_to_order?.median != null && <> Those who ordered took a typical <b>{data.minutes_to_order.median} minutes</b> from arriving to ordering.</>}
                 </p>
+                <Note k="stopped" inset />
               </div>
               <div className="bg-white rounded-xl p-4" style={card}>
                 <h3 className="font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Dabba Wala: step by step</h3>
@@ -300,6 +315,7 @@ export default function AnalyticsTab() {
                     <div className="h-2 rounded-full mt-1" style={{ backgroundColor: '#f3ece6' }}><div className="h-2 rounded-full" style={{ width: `${Math.max(2, (x.visits / subTop) * 100)}%`, backgroundColor: '#2E7D32' }} /></div>
                   </div>
                 ))}
+                <Note k="dabba" inset />
               </div>
             </div>
 
@@ -348,6 +364,7 @@ export default function AnalyticsTab() {
                   </>
                 );
               })()}
+              <Note k="slots" inset />
             </div>
 
             <Table title="Dishes taken back out of the basket" empty="Nothing has been removed from a basket in this period." head={['Dish', 'Removed', 'Added', 'Removed for every 10 added']}
@@ -365,7 +382,6 @@ export default function AnalyticsTab() {
       </>)}
 
       {view === 'dishes' && (<>
-      <SectionReading analysis={analysis} section="dishes" />
       <Dishes dishes={data.dish_ranking || []} />
 
       <div className="grid lg:grid-cols-2 gap-5">
@@ -375,7 +391,6 @@ export default function AnalyticsTab() {
       </>)}
 
       {view === 'behaviour' && (<>
-      <SectionReading analysis={analysis} section="behaviour" />
       <div className="grid lg:grid-cols-2 gap-5">
         <Table title="Pages viewed most" empty="Nothing recorded yet." head={['Page', 'Views']} rows={data.top_pages.map(d => [d.name, d.count])} />
         <div className="bg-white rounded-xl overflow-hidden" style={card}>
@@ -391,6 +406,7 @@ export default function AnalyticsTab() {
               ))}
             </div>
           )}
+          <Note k="days" />
         </div>
       </div>
 
@@ -421,13 +437,14 @@ export default function AnalyticsTab() {
                 </div>
               ))}
           </div>
+          <Note k="hours" inset />
         </div>
       </div>
       </>)}
 
       {view === 'visits' && (<>
-      <SectionReading analysis={analysis} section="visits" />
       <PeriodSummary summary={visitInfo.summary} total={visitInfo.total} label={`Visits, ${label}`} onPick={setOutcome} picked={outcome} />
+      <Note k="visits" card />
       <VisitStories visits={shownVisits} total={outcome ? shownVisits.length : visitInfo.total} actionName={actionName} detail={detail} />
       </>)}
 
@@ -466,5 +483,6 @@ export default function AnalyticsTab() {
         </div>
       )}
     </div>
+    </NotesContext.Provider>
   );
 }

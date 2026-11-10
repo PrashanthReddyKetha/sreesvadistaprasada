@@ -1,15 +1,14 @@
 'use client';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Sparkles, RefreshCw, TrendingUp, AlertTriangle, ArrowRight } from 'lucide-react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { Sparkles, RefreshCw } from 'lucide-react';
 import api from '@/api';
 import { P } from './parts';
 
-/* The analyst's reading (Claude Opus) of whatever dates are picked: written once per range in the background,
-   saved, and opened again for free. One reading covers the whole screen, with a part for each tab (owner, 10 Nov 2026). */
+/* A short description under every table and graph, written by Claude Opus for the dates picked (owner, 10 Nov 2026).
+   One call writes them all; it is saved per date range, so changing tabs, pressing Refresh or coming back is free. */
 
 const INK = '#2D2422';
 const MUTED = '#6B5F5A';
-const card = { boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
 const POLL_MS = 6000;
 
 export function useAnalysis(range) {
@@ -80,89 +79,44 @@ function Limit({ ai, onSaved }) {
   );
 }
 
-function Points({ title, icon: Icon, color, items }) {
-  if (!items?.length) return null;
-  return (
-    <div>
-      <p className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color }}><Icon size={13} aria-hidden="true" /> {title}</p>
-      <ol className="space-y-2.5">
-        {items.map((f, i) => (
-          <li key={i} className="text-sm leading-relaxed" style={{ color: INK }}>
-            <b>{f.area}.</b> <span style={{ color: MUTED }}>{f.evidence}</span>
-            <span className="flex gap-1.5 mt-0.5"><ArrowRight size={14} className="shrink-0 mt-0.5" style={{ color }} aria-hidden="true" /><span>{f.action}</span></span>
-          </li>
-        ))}
-      </ol>
+export const NotesContext = createContext(null);
+
+/** The description under one table or graph. */
+export function Note({ k, inset = false, card = false }) {
+  const analysis = useContext(NotesContext);
+  const doc = analysis?.doc;
+  const text = doc?.reading?.notes?.[k];
+  if (!text) {
+    if (doc?.status !== 'working' && doc?.status !== 'none' && doc) return null;
+    const wait = <p className={`px-4 pb-3 pt-2 text-xs italic ${inset ? '-mx-4 -mb-4 mt-2' : ''}`} style={{ color: '#A39A95' }}>Writing a description…</p>;
+    return card ? <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>{wait}</div> : wait;
+  }
+  const body = (
+    <div className={`px-4 pb-3 pt-2.5 flex gap-2 ${card ? 'pt-3' : 'border-t'} ${inset ? '-mx-4 -mb-4 mt-3 rounded-b-xl' : ''}`} style={{ borderColor: '#f3eee8', backgroundColor: '#FDFBF7' }} data-testid={`note-${k}`}>
+      <Sparkles size={13} className="shrink-0 mt-0.5" style={{ color: '#B08A3E' }} aria-hidden="true" />
+      <div className="space-y-1.5">{paras(text).map((t, i) => <p key={i} className="text-sm leading-relaxed" style={{ color: INK }}>{t}</p>)}</div>
     </div>
   );
+  return card ? <div className="rounded-xl overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>{body}</div> : body;
 }
 
-export function AnalystReading({ analysis, label }) {
+/** One line saying where the descriptions come from, what they cost, and the monthly limit. */
+export function ReadingStatus({ analysis }) {
   const { doc, busy, write, setDoc } = analysis;
-  const r = doc?.reading;
   const status = doc?.status;
   return (
-    <div className="bg-white rounded-xl p-5 space-y-4" style={{ ...card, borderTop: `3px solid ${P}` }} data-testid="analyst-reading">
-      <div className="flex flex-wrap items-center gap-2">
-        <Sparkles size={16} style={{ color: P }} aria-hidden="true" />
-        <h3 className="font-bold" style={{ fontFamily: "'Playfair Display', serif", color: P }}>The analyst&apos;s reading · {label}</h3>
-        {r && <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: '#F3EFEA', color: MUTED }}>{doc.reading.confidence} confidence</span>}
-        {(status === 'ready' || status === 'failed' || status === 'skipped') && (
-          <button onClick={() => write(true)} disabled={busy} className="ml-auto text-xs font-semibold inline-flex items-center gap-1 disabled:opacity-50" style={{ color: P }}>
-            <RefreshCw size={12} className={busy ? 'animate-spin' : ''} /> {status === 'ready' ? 'Write it again' : 'Try again'}
-          </button>
-        )}
-      </div>
-
-      {(!doc || status === 'working' || status === 'none') && (
-        <p className="text-sm" style={{ color: MUTED }}>
-          <RefreshCw size={13} className="inline animate-spin mr-1.5" aria-hidden="true" />
-          Reading every figure for these dates and the period before — this takes about a minute. You can keep looking around.
-        </p>
+    <div className="text-xs flex flex-wrap items-center gap-x-3 gap-y-1 px-1" style={{ color: MUTED }} data-testid="reading-status">
+      <Sparkles size={12} style={{ color: '#B08A3E' }} aria-hidden="true" />
+      {(!doc || status === 'working' || status === 'none') && <span>Claude is writing the descriptions for these dates — about a minute.</span>}
+      {status === 'ready' && <span>Descriptions written by Claude {doc.written_at ? written(doc.written_at) : ''}{doc.cost_usd != null ? ` · about $${Number(doc.cost_usd).toFixed(2)}` : ''}. Opening them again is free.</span>}
+      {status === 'ready' && doc.limit_reached && <span style={{ color: '#8E1B1B' }}>Not refreshed: {doc.why}.</span>}
+      {(status === 'failed' || status === 'skipped') && <span style={{ color: '#8E1B1B' }}>No descriptions: {doc.why}.</span>}
+      {(status === 'ready' || status === 'failed' || status === 'skipped') && (
+        <button onClick={() => write(true)} disabled={busy} className="font-semibold inline-flex items-center gap-1 disabled:opacity-50" style={{ color: P }}>
+          <RefreshCw size={11} className={busy ? 'animate-spin' : ''} /> {status === 'ready' ? 'Write again' : 'Try again'}
+        </button>
       )}
-      {status === 'skipped' && <p className="text-sm" style={{ color: '#8E1B1B' }}>Not written: {doc.why}.</p>}
-      {status === 'failed' && <p className="text-sm" style={{ color: '#8E1B1B' }}>The reading could not be written: {doc.why}.</p>}
-      {r && doc.limit_reached && <p className="text-xs" style={{ color: '#8E1B1B' }}>Showing the last reading: {doc.why}.</p>}
-
-      {r && (
-        <>
-          <p className="text-base font-semibold leading-snug" style={{ color: INK }}>{r.headline}</p>
-          <div className="space-y-2.5">
-            {paras(r.overview).map((t, i) => <p key={i} className="text-sm leading-relaxed" style={{ color: INK }}>{t}</p>)}
-          </div>
-          <div className="rounded-lg px-4 py-3" style={{ backgroundColor: '#FBF7F1' }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: '#8B6914' }}>What&apos;s likely next</p>
-            {paras(r.outlook).map((t, i) => <p key={i} className="text-sm leading-relaxed" style={{ color: INK }}>{t}</p>)}
-          </div>
-          <div className="grid md:grid-cols-2 gap-5">
-            <Points title="Where to focus to grow" icon={TrendingUp} color="#1B5E20" items={r.focus} />
-            <Points title="Where we're losing out" icon={AlertTriangle} color="#8E1B1B" items={r.lacking} />
-          </div>
-          {r.caveats && <p className="text-xs italic" style={{ color: MUTED }}>{r.caveats}</p>}
-        </>
-      )}
-
-      <div className="text-xs flex flex-wrap gap-x-4 gap-y-1 pt-1 border-t" style={{ color: MUTED, borderColor: '#f0ebe6' }}>
-        {doc?.written_at && <span className="pt-2">Written {written(doc.written_at)}{doc.cost_usd != null ? ` · cost about $${Number(doc.cost_usd).toFixed(2)}` : ''}</span>}
-        <span className="pt-2"><Limit ai={doc?.ai_this_month} onSaved={ai => setDoc(d => ({ ...(d || {}), ai_this_month: ai }))} /></span>
-      </div>
-    </div>
-  );
-}
-
-export function SectionReading({ analysis, section }) {
-  const s = analysis.doc?.reading?.sections?.[section];
-  if (!s) return null;
-  return (
-    <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: '#FBF7F1', border: '1px solid #EFE6D8' }} data-testid={`section-reading-${section}`}>
-      <p className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#8B6914' }}><Sparkles size={12} aria-hidden="true" /> Reading this tab</p>
-      <p className="text-sm font-semibold" style={{ color: INK }}>{s.headline}</p>
-      {paras(s.reading).map((t, i) => <p key={i} className="text-sm leading-relaxed" style={{ color: INK }}>{t}</p>)}
-      {s.do_next?.length > 0 && (
-        <ul className="space-y-1 pt-1">
-          {s.do_next.map((d, i) => <li key={i} className="text-sm flex gap-1.5" style={{ color: INK }}><ArrowRight size={14} className="shrink-0 mt-0.5" style={{ color: P }} aria-hidden="true" />{d}</li>)}
-        </ul>
-      )}
+      <Limit ai={doc?.ai_this_month} onSaved={ai => setDoc(d => ({ ...(d || {}), ai_this_month: ai }))} />
     </div>
   );
 }

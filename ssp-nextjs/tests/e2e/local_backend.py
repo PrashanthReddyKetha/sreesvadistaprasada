@@ -125,6 +125,18 @@ async def seed_order():
     return {"id": order.id, "order_number": order.order_number}
 
 
+@app.post("/__seed_analysis")
+async def seed_analysis(start: str, end: str):
+    """The descriptions Claude would write for a date range (no AI here), so the screen can be checked."""
+    import analyst
+    from datetime import datetime
+    await db.analyses.update_one({"_id": f"{start}|{end}"}, {"$set": {
+        "status": "ready", "start": start, "end": end, "written_at": datetime.utcnow(), "cost_usd": 0.24, "model": "test",
+        "reading": {"notes": {k: f"Sample description for {k}. It says what moved and why.\n\nAnd what to do next." for k in analyst.NOTES},
+                    "confidence": "low"}}}, upsert=True)
+    return {"ok": True}
+
+
 @app.get("/__messages")
 async def messages():
     """What the site tried to send (nothing actually leaves this machine)."""

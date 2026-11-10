@@ -77,7 +77,9 @@ async def month_to_date(now: Optional[datetime] = None) -> dict:
     now = now or datetime.utcnow()
     start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     rows = await db.ai_usage.find({"at": {"$gte": start}}, {"_id": 0}).to_list(None)
-    return {"calls": len(rows), "cost_usd": round(sum(r.get("cost_usd") or 0 for r in rows), 4), **(await limits())}
+    # a call the service refused before reading anything cost nothing and is not a use (owner, 10 Nov 2026)
+    used = [r for r in rows if not (r.get("input_tokens") == 0 and r.get("output_tokens") == 0)]
+    return {"calls": len(used), "refused": len(rows) - len(used), "cost_usd": round(sum(r.get("cost_usd") or 0 for r in rows), 4), **(await limits())}
 
 
 async def allowed() -> tuple:

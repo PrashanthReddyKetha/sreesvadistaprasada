@@ -8,9 +8,7 @@ from routes.events import LONDON
 from tests.conftest import run, token
 from tests.test_events import send
 
-READING = {"headline": "Quiet week.", "overview": "a\n\nb", "outlook": "more of the same", "focus": [], "lacking": [],
-           "sections": {s: {"headline": s, "reading": "r", "do_next": ["x"]} for s in analyst.SECTIONS},
-           "confidence": "low", "caveats": "few visits"}
+READING = {"notes": {k: f"About {k}." for k in analyst.NOTES}, "confidence": "low"}
 
 
 def admin():
@@ -42,7 +40,7 @@ def test_a_reading_is_written_once_per_range_and_opened_again_free(client, db, m
     assert first["status"] in ("working", "ready")
     run(analyst._write(datetime(2026, 11, 1).date(), datetime(2026, 11, 7).date()))
     got = client.get("/api/admin/analytics/analysis", params=body, headers=admin()).json()
-    assert got["status"] == "ready" and got["reading"]["headline"] == "Quiet week." and got["fresh"] is True
+    assert got["status"] == "ready" and got["reading"]["notes"]["funnel"] == "About funnel." and got["fresh"] is True
     again = client.post("/api/admin/analytics/analysis", json=body, headers=admin()).json()
     assert again["status"] == "ready" and len(calls) <= 2                    # the background task and the direct run; no third
     assert client.get("/api/admin/analytics/analysis", params=body).status_code in (401, 403)
@@ -56,3 +54,21 @@ def test_the_owner_sets_the_monthly_limit_and_it_is_kept(client, db, monkeypatch
     assert out["status"] == "skipped" and out["limit_reached"] and "$0.00" in out["why"]
     assert client.put("/api/admin/ai/limits", json={"cost_cap_usd": 30, "call_cap": 200}, headers=admin()).json()["cost_cap_usd"] == 30
     assert run(ai_ops.allowed())[0] is True
+
+
+def test_a_refused_call_shows_the_services_words_and_is_not_a_use(client, db, monkeypatch):
+    import anthropic
+    import httpx
+
+    class Refusing:
+        def __init__(self, *a, **k):
+            self.beta = self.messages = self
+
+        async def create(self, **kw):
+            raise anthropic.BadRequestError("Your credit balance is too low to access the Anthropic API.",
+                                            response=httpx.Response(400, request=httpx.Request("POST", "https://x")), body=None)
+    monkeypatch.setattr(anthropic, "AsyncAnthropic", Refusing)
+    out = run(analyst._ask({"period": {}}))
+    assert out["ok"] is False and "credit balance is too low" in out["why"]
+    used = run(ai_ops.month_to_date())
+    assert used["calls"] == 0 and used["refused"] == 1

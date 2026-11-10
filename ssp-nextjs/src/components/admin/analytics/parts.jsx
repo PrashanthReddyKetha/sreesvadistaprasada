@@ -78,7 +78,7 @@ function niceMax(v) {
   return Math.ceil(v / step) * step;
 }
 
-export function TrafficChart({ data }) {
+export function TrafficChart({ data, footer = null }) {
   const single = data.days === 1;
   const [measure, setMeasure] = useState('page_views');
   const box = useRef(null);
@@ -164,6 +164,7 @@ export function TrafficChart({ data }) {
           </div>
         )}
       </div>
+      {footer}
     </div>
   );
 }

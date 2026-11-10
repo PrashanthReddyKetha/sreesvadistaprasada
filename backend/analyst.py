@@ -1,9 +1,9 @@
-"""The analyst's reading of Admin › Analytics, written by Claude Opus for whatever dates the owner picks (owner, 10 Nov 2026).
+"""A short description under every table and graph in Admin › Analytics, written by Claude Opus for whatever dates the owner
+picks (owner, 10 Nov 2026): what it shows, how it moved, why, and what to do. No report, no email.
 
-One reading covers the whole screen: the period overall, what is likely to happen next, where to focus, where the
-business is losing out, and a reading for each tab (Summary, Journeys, Dishes, Behaviour, Visits). It is written in
-the background, saved per date range, and opened again for free. A range that includes today is written again after
-a few hours, because today is still filling in.
+All the descriptions for a date range come from one call, written in the background, saved, and opened again for free;
+changing tabs or pressing Refresh never calls the AI. A range that includes today is written again after a few hours,
+because today is still filling in.
 
 What Claude is given: the screen's own figures and the period before, weekly history, the sales book's totals by
 channel, the shop's settings, and the visit stories' outcomes. No names, emails, phones, addresses or order numbers.
@@ -27,36 +27,51 @@ TODAY_FRESH_HOURS = 3          # a range that includes today is rewritten after 
 STALE_WORKING_MINUTES = 10     # a write-up "in progress" longer than this has died with the server
 SECTIONS = ("summary", "journeys", "dishes", "behaviour", "visits")
 
-_section = {
-    "type": "object",
-    "properties": {
-        "headline": {"type": "string", "description": "One sentence: the single most important thing on this tab."},
-        "reading": {"type": "string", "description": "Two short paragraphs, plain English, naming the figures and how they moved."},
-        "do_next": {"type": "array", "items": {"type": "string"}, "description": "Two to four concrete actions, most valuable first."},
-    },
-    "required": ["headline", "reading", "do_next"],
-    "additionalProperties": False,
+NOTES = {
+    "overall": "Under the four cards: the period as a whole. Four to six sentences: what happened and why, what is likely next (a range if possible), the one or two places to focus, and the biggest place the business is losing out.",
+    "traffic": "The page views / visits graph, day by day (hour by hour for a single day).",
+    "funnel": "From visit to order: visited, looked at the menu, added to basket, started checkout, ordered.",
+    "sources": "Where visitors came from, with baskets and orders per source.",
+    "landing": "From the page they landed on to an order.",
+    "device": "Phone or computer, step by step to an order.",
+    "visitor": "First visit or returning, step by step to an order.",
+    "stopped": "Where visits that did not order stopped (the furthest step reached).",
+    "dabba": "Dabba Wala: step by step through the plan pages.",
+    "left_checkout": "Last thing done before leaving the checkout.",
+    "left_basket": "Last thing done before leaving with a basket.",
+    "weekday": "By day of the week, step by step to an order.",
+    "step_times": "How long each step takes (typical minutes).",
+    "price": "Does price put people off? Dishes opened and added, by price band.",
+    "routes_ordered": "Page routes that ended in an order.",
+    "routes_left": "Page routes that ended without one.",
+    "fields": "The form field people were on when they gave up.",
+    "taps": "Things tapped again and again (a sign something did not respond).",
+    "slots": "Collection times: how full the times were and which were chosen.",
+    "removals": "Dishes taken back out of the basket.",
+    "checkout": "Checkout, step by step, and failed payments or orders.",
+    "exits": "Where visits ended without an order (last page seen).",
+    "dishes": "How each dish is doing: opened, added, ordered, and the reading per dish.",
+    "most_opened": "Dishes opened most.",
+    "most_added": "Dishes added to basket most.",
+    "pages": "Pages viewed most.",
+    "days": "Day by day: visits and orders each day.",
+    "actions": "Every action recorded and in how many visits.",
+    "clicks": "Buttons and links tapped most.",
+    "searches": "What people searched for. You are given only how many searches there were, never the words; speak to the count.",
+    "problems": "Problems visitors hit (errors, refusals).",
+    "time_on_page": "Time spent and how far people scroll, per page.",
+    "hours": "Busiest hours of the day (UK time).",
+    "visits": "Every visit, told one by one, and how they ended (the visit stories and their outcomes).",
 }
-_point = {
-    "type": "object",
-    "properties": {"area": {"type": "string"}, "evidence": {"type": "string"}, "action": {"type": "string"}},
-    "required": ["area", "evidence", "action"],
-    "additionalProperties": False,
-}
+
 SCHEMA = {
     "type": "object",
     "properties": {
-        "headline": {"type": "string", "description": "One sentence on the period as a whole."},
-        "overview": {"type": "string", "description": "Three to five short paragraphs separated by blank lines."},
-        "outlook": {"type": "string", "description": "What is likely to happen next, with a range where possible, and why."},
-        "focus": {"type": "array", "items": _point, "description": "Where to push to grow, most valuable first (3 to 5)."},
-        "lacking": {"type": "array", "items": _point, "description": "Where the business is losing out, biggest first (2 to 5)."},
-        "sections": {"type": "object", "properties": {s: _section for s in SECTIONS},
-                     "required": list(SECTIONS), "additionalProperties": False},
+        "notes": {"type": "object", "properties": {k: {"type": "string", "description": d} for k, d in NOTES.items()},
+                  "required": list(NOTES), "additionalProperties": False},
         "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
-        "caveats": {"type": "string", "description": "What the data cannot tell, in one or two sentences."},
     },
-    "required": ["headline", "overview", "outlook", "focus", "lacking", "sections", "confidence", "caveats"],
+    "required": ["notes", "confidence"],
     "additionalProperties": False,
 }
 
@@ -66,8 +81,10 @@ is behind a switch the owner controls), the kitchen also sells through Deliveroo
 subscription is about to launch. The owner is not technical.
 
 You are given the website's own visit record for a period the owner picked, the same figures for the period just \
-before it, weekly history, the sales book, the shop's settings and a summary of how visits ended. Explain the business \
-the way a trusted senior analyst would in a short meeting:
+before it, weekly history, the sales book, the shop's settings and a summary of how visits ended. The owner's Analytics \
+screen shows a table or graph for each of these, and under each one goes a short description you write ("notes"; each \
+key says which table it sits under). Write each the way a trusted senior analyst would explain it in a short meeting, in \
+two to four sentences (the "overall" note four to six):
 
 - Say what is happening and why, naming the actual numbers and how each moved against the period before.
 - Connect the figures: traffic, sources, the path to an order, checkout, dishes, timing, devices, returning visitors. \
@@ -75,6 +92,8 @@ Say where the impact is and why a figure is high or low.
 - Say what is likely to happen next if nothing changes, as a range when you can, and how sure you are.
 - Say where to focus to grow and where the business is losing out, with concrete actions the owner can take this week.
 - Write plainly, in short sentences, without jargon; say "people who came" not "sessions". Use £ and UK dates.
+- When a table has nothing in it for this period, say in one sentence what that means (for example nobody reached that \
+step yet) rather than skipping it.
 
 Be honest about small numbers: with only a handful of visits or orders, say a change could be chance and avoid firm \
 conclusions. Never invent figures that are not in the data. Prices, refunds, plan terms and policy wording are the \
@@ -240,22 +259,28 @@ async def _write(first: date, last: date) -> None:
 
 async def _ask(context: dict) -> dict:
     client = anthropic.AsyncAnthropic(timeout=300.0, max_retries=1)
+    request = dict(
+        model=ai_ops.MODEL,
+        max_tokens=16000,
+        system=SYSTEM,
+        output_config={"effort": "high", "format": {"type": "json_schema", "schema": SCHEMA}},
+        messages=[{"role": "user", "content": "Here is everything for the period. Write a note for every table.\n\n" + json.dumps(context, default=str)}],
+    )
     try:
-        response = await client.beta.messages.create(
-            model=ai_ops.MODEL,
-            max_tokens=16000,
-            system=SYSTEM,
-            output_config={"effort": "high", "format": {"type": "json_schema", "schema": SCHEMA}},
-            betas=["server-side-fallback-2026-07-01"],
-            fallbacks="default",
-            messages=[{"role": "user", "content": "Here is everything for the period. Write the reading.\n\n" + json.dumps(context, default=str)}],
-        )
+        try:
+            response = await client.beta.messages.create(**request, betas=["server-side-fallback-2026-07-01"], fallbacks="default")
+        except anthropic.BadRequestError as e:
+            if not any(w in str(e).lower() for w in ("fallback", "beta")):
+                raise
+            response = await client.messages.create(**request)        # the account lacks the fallback option: plain request
     except anthropic.RateLimitError:
         await ai_ops.record_usage("analysis", ai_ops.MODEL, 0, 0, "rate limited")
         return {"ok": False, "why": "the AI service was busy; try again in a minute"}
     except anthropic.APIStatusError as e:
-        await ai_ops.record_usage("analysis", ai_ops.MODEL, 0, 0, f"error {e.status_code}")
-        return {"ok": False, "why": f"the AI service returned an error ({e.status_code}); check the account's credit"}
+        said = str(getattr(e, "message", "") or e)[:240]
+        await ai_ops.record_usage("analysis", ai_ops.MODEL, 0, 0, f"error {e.status_code}: {said}")
+        logger.error("analysis refused: %s %s", e.status_code, said)
+        return {"ok": False, "why": f"the AI service said ({e.status_code}): {said}"}
     except anthropic.APIConnectionError:
         await ai_ops.record_usage("analysis", ai_ops.MODEL, 0, 0, "could not connect")
         return {"ok": False, "why": "the AI service could not be reached"}
