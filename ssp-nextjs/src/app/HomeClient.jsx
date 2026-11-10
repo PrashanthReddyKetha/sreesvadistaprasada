@@ -224,60 +224,56 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
 
           <div className="grid grid-cols-2 gap-3 md:gap-8">
             {/* Svadista Card */}
-            <Link href="/svadista" className="group" data-testid="svadista-world-card">
-              <div className="relative overflow-hidden rounded-lg h-[190px] md:h-[420px]">
-                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
+            <Link href="/svadista" className="group block rounded-lg overflow-hidden" style={{ boxShadow: '0 6px 20px rgba(45,36,34,0.12)' }} data-testid="svadista-world-card">
+              {/* the kitchen's signature dishes, in full view; the words on the kitchen's colour below */}
+              <div className="relative aspect-[16/10] overflow-hidden">
+                <Image fill loading="lazy" sizes="(max-width: 768px) 50vw, 640px"
                   src={art.svadista || images.svadista}
-                  alt="Sree Svadista Non-Veg Specialties"
+                  alt="Sree Svadista: chicken biryani, chicken lollipop and Andhra egg curry"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0" style={{
-                  background: 'linear-gradient(to top, rgba(139, 58, 58, 0.95) 0%, rgba(139, 58, 58, 0.6) 40%, rgba(139, 58, 58, 0.15) 100%)'
-                }} />
-                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Flame size={18} className="text-red-300" />
-                    <span className="text-[10px] md:text-xs uppercase tracking-[0.12em] md:tracking-[0.2em] text-red-200 font-medium">Non-Vegetarian</span>
-                  </div>
-                  <h3 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    Sree Svadista
-                  </h3>
-                  <p className="hidden md:block text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
-                    Bold, rustic, village-style. The spicy heart of Telugu non-veg cooking.
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
-                    <span className="md:hidden">Explore</span><span className="hidden md:inline">Explore Non-Veg Specialties</span> <ArrowRight size={16} />
-                  </span>
+              </div>
+              <div className="p-3 md:px-8 md:py-6" style={{ backgroundColor: '#8B3A3A' }}>
+                <div className="flex items-center gap-2 mb-2 md:mb-3">
+                  <Flame size={18} className="text-red-300" />
+                  <span className="text-[10px] md:text-xs uppercase tracking-[0.12em] md:tracking-[0.2em] text-red-200 font-medium">Non-Vegetarian</span>
                 </div>
+                <h3 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  Sree Svadista
+                </h3>
+                <p className="hidden md:block text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
+                  Bold, rustic, village-style. The spicy heart of Telugu non-veg cooking.
+                </p>
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
+                  <span className="md:hidden">Explore</span><span className="hidden md:inline">Explore Non-Veg Specialties</span> <ArrowRight size={16} />
+                </span>
               </div>
             </Link>
 
             {/* Prasada Card */}
-            <Link href="/prasada" className="group" data-testid="prasada-world-card">
-              <div className="relative overflow-hidden rounded-lg h-[190px] md:h-[420px]">
-                <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
+            <Link href="/prasada" className="group block rounded-lg overflow-hidden" style={{ boxShadow: '0 6px 20px rgba(45,36,34,0.12)' }} data-testid="prasada-world-card">
+              {/* the kitchen's signature dishes, in full view; the words on the kitchen's colour below */}
+              <div className="relative aspect-[16/10] overflow-hidden">
+                <Image fill loading="lazy" sizes="(max-width: 768px) 50vw, 640px"
                   src={art.prasada || images.prasada}
-                  alt="Sree Prasada Pure Veg Bliss"
+                  alt="Sree Prasada: lemon rice, gongura pappu and bhindi pulusu"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0" style={{
-                  background: 'linear-gradient(to top, rgba(74, 124, 89, 0.95) 0%, rgba(74, 124, 89, 0.6) 40%, rgba(74, 124, 89, 0.15) 100%)'
-                }} />
-                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Leaf size={18} className="text-green-300" />
-                    <span className="text-[10px] md:text-xs uppercase tracking-[0.12em] md:tracking-[0.2em] text-green-200 font-medium">Pure Vegetarian</span>
-                  </div>
-                  <h3 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    Sree Prasada
-                  </h3>
-                  <p className="hidden md:block text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
-                    Divine, sattvic, temple-style. Pure food prepared with complete devotion.
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
-                    <span className="md:hidden">Explore</span><span className="hidden md:inline">Explore Pure Veg Bliss</span> <ArrowRight size={16} />
-                  </span>
+              </div>
+              <div className="p-3 md:px-8 md:py-6" style={{ backgroundColor: '#4A7C59' }}>
+                <div className="flex items-center gap-2 mb-2 md:mb-3">
+                  <Leaf size={18} className="text-green-300" />
+                  <span className="text-[10px] md:text-xs uppercase tracking-[0.12em] md:tracking-[0.2em] text-green-200 font-medium">Pure Vegetarian</span>
                 </div>
+                <h3 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  Sree Prasada
+                </h3>
+                <p className="hidden md:block text-gray-200 text-sm mb-4 leading-relaxed max-w-sm">
+                  Divine, sattvic, temple-style. Pure food prepared with complete devotion.
+                </p>
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:gap-3 transition-all duration-300">
+                  <span className="md:hidden">Explore</span><span className="hidden md:inline">Explore Pure Veg Bliss</span> <ArrowRight size={16} />
+                </span>
               </div>
             </Link>
           </div>

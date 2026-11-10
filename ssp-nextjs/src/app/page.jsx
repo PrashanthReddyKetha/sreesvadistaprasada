@@ -73,8 +73,9 @@ export default async function HomePage() {
     // the kitchen's full spread (owner, 10 Nov 2026); the two kitchens from large landscape dish photos; the two Dabba Wala
     // boxes in front and the dal, sabzi and curries that change daily behind, cut from the menu photos; words on the left
     hero: ['/hero/welcome-spread.jpg', [pic('gongura-rice'), pic('joint-chicken-biryani')], '/hero/dabba-trays.jpg'],
-    svadista: pic('spicy-andhra-chicken-curry'),
-    prasada: pic('prasadam-pulihora'),
+    // each kitchen's signature dishes together, cut from the menu photos (public/home)
+    svadista: '/home/svadista-spread.jpg',
+    prasada: '/home/prasada-spread.jpg',
     moments: { 1: pic('vada-3-pcs'), 2: pic('aloo-kurma'), 3: pic('andhra-egg-curry'), 4: pic('punugulu') },
     // "What are you hungry for?" — straight to the food people come for
     rail: [
