@@ -1,6 +1,5 @@
-"""The analyst's reading of Analytics for any dates, and the monthly AI limits (owner, 10 Nov 2026). No real AI is called."""
-import json
-from datetime import datetime, timedelta
+"""The descriptions under every Analytics table, for any dates — written by rules, never by AI (owner, 10 Nov 2026)."""
+from datetime import datetime
 
 import ai_ops
 import analyst
@@ -8,67 +7,38 @@ from routes.events import LONDON
 from tests.conftest import run, token
 from tests.test_events import send
 
-READING = {"notes": {k: f"About {k}." for k in analyst.NOTES}, "confidence": "low"}
-
 
 def admin():
     return token("boss", "admin")
 
 
-def test_the_figures_sent_hold_every_section_and_no_personal_details(client, db):
-    send(client, "visit-analyse1", ["page_view", "search", "add_to_cart"], add_to_cart={"props": {"value": 9.0}, "items": [{"name": "Masala Dosa"}]},
-         search={"props": {"term": "secretword"}})
-    today = datetime.now(LONDON).date()
-    ctx = run(analyst._context(today - timedelta(days=6), today))
-    text = json.dumps(ctx, default=str)
-    assert ctx["this_period"]["totals"]["visits"] == 1 and ctx["period_before"]["totals"]["visits"] == 0
-    assert ctx["how_visits_ended"]["outcomes"] and ctx["example_visits"][0]["ended"] == "Left with food in the basket"
-    assert "weekly_history" in ctx and "sales_book" in ctx and ctx["shop"]["dabba_wala"].startswith("opening soon")
-    assert "@" not in text and "secretword" not in text and ctx["this_period"]["searches"] == 1
+def test_every_table_gets_a_description_from_the_figures(client, monkeypatch):
+    def no_ai(*a, **k):
+        raise AssertionError("the AI must not be called")
+    monkeypatch.setattr(ai_ops, "investigate", no_ai)
+    send(client, "visit-notes001", ["page_view", "view_item", "add_to_cart"], {"referrer": "www.google.com"},
+         view_item={"items": [{"name": "Masala Dosa"}], "props": {"value": 8.99}},
+         add_to_cart={"props": {"value": 8.99}, "items": [{"name": "Masala Dosa"}]})
+    send(client, "visit-notes002", ["page_view", "add_to_cart", "begin_checkout", "purchase"],
+         purchase={"props": {"value": 20.0, "transaction_id": "SSP9"}})
+    today = datetime.now(LONDON).date().isoformat()
+    r = client.get("/api/admin/analytics/analysis", params={"start": today, "end": today}, headers=admin()).json()
+    notes = r["reading"]["notes"]
+    assert r["status"] == "ready" and r["by"] == "rules" and set(notes) == set(analyst.NOTES)
+    assert all(notes[k] for k in analyst.NOTES)
+    assert notes["overall"].startswith("2 visits") and "hint, not a trend" in notes["overall"]
+    assert "Of 2 visits, 2 looked at the menu, 2 added food, 1 started checkout and 1 ordered" in notes["funnel"]
+    assert "Masala Dosa" in notes["most_opened"]
+    assert client.get("/api/admin/analytics/analysis").status_code in (401, 403)
 
 
-def test_a_reading_is_written_once_per_range_and_opened_again_free(client, db, monkeypatch):
-    calls = []
-
-    async def fake(context):
-        calls.append(context["period"])
-        return {"ok": True, "reading": READING, "model": ai_ops.MODEL, "cost_usd": 0.21}
-    monkeypatch.setattr(analyst, "_ask", fake)
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
-    body = {"start": "2026-11-01", "end": "2026-11-07"}
-    first = client.post("/api/admin/analytics/analysis", json=body, headers=admin()).json()
-    assert first["status"] in ("working", "ready")
-    run(analyst._write(datetime(2026, 11, 1).date(), datetime(2026, 11, 7).date()))
-    got = client.get("/api/admin/analytics/analysis", params=body, headers=admin()).json()
-    assert got["status"] == "ready" and got["reading"]["notes"]["funnel"] == "About funnel." and got["fresh"] is True
-    again = client.post("/api/admin/analytics/analysis", json=body, headers=admin()).json()
-    assert again["status"] == "ready" and len(calls) <= 2                    # the background task and the direct run; no third
-    assert client.get("/api/admin/analytics/analysis", params=body).status_code in (401, 403)
+def test_an_empty_period_still_reads_sensibly(client):
+    r = client.get("/api/admin/analytics/analysis", params={"start": "2026-01-01", "end": "2026-01-07"}, headers=admin()).json()
+    notes = r["reading"]["notes"]
+    assert notes["overall"].startswith("No visits") and notes["checkout"] == "Nobody reached checkout in this period."
 
 
-def test_the_owner_sets_the_monthly_limit_and_it_is_kept(client, db, monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
-    r = client.put("/api/admin/ai/limits", json={"cost_cap_usd": 0, "call_cap": 40}, headers=admin()).json()
-    assert r["cost_cap_usd"] == 0
-    out = client.post("/api/admin/analytics/analysis", json={"start": "2026-10-01", "end": "2026-10-07"}, headers=admin()).json()
-    assert out["status"] == "skipped" and out["limit_reached"] and "$0.00" in out["why"]
-    assert client.put("/api/admin/ai/limits", json={"cost_cap_usd": 30, "call_cap": 200}, headers=admin()).json()["cost_cap_usd"] == 30
-    assert run(ai_ops.allowed())[0] is True
-
-
-def test_a_refused_call_shows_the_services_words_and_is_not_a_use(client, db, monkeypatch):
-    import anthropic
-    import httpx
-
-    class Refusing:
-        def __init__(self, *a, **k):
-            self.beta = self.messages = self
-
-        async def create(self, **kw):
-            raise anthropic.BadRequestError("Your credit balance is too low to access the Anthropic API.",
-                                            response=httpx.Response(400, request=httpx.Request("POST", "https://x")), body=None)
-    monkeypatch.setattr(anthropic, "AsyncAnthropic", Refusing)
-    out = run(analyst._ask({"period": {}}))
-    assert out["ok"] is False and "credit balance is too low" in out["why"]
-    used = run(ai_ops.month_to_date())
-    assert used["calls"] == 0 and used["refused"] == 1
+def test_ai_is_off_whatever_the_key(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "a-real-looking-key")
+    ok, why = run(ai_ops.allowed())
+    assert ok is False and "Claude subscription" in why

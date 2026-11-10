@@ -179,6 +179,8 @@ def test_no_ai_call_when_nothing_moved_or_when_switched_off(client, db, quiet, m
 
 
 def test_ai_caps_and_cost_log(db, monkeypatch):
+    assert run(ai_ops.allowed())[0] is False                             # off by the owner's decision, key or no key
+    monkeypatch.setattr(ai_ops, "AI_OFF", False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     assert run(ai_ops.allowed()) == (False, "AI is not set up on the server (no API key)")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")

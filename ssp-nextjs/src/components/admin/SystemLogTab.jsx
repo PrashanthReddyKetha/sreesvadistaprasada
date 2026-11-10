@@ -17,7 +17,7 @@ const LEVEL = {
 const SWITCHES = [
   ['menu_decisions', 'Menu decisions', 'Featured dishes follow what sells; dishes with no “goes well with” get one from what is bought together.'],
   ['owner_alerts', 'Alerts to you', 'An email when visits, orders, income or failures move sharply against a normal day.'],
-  ['ai_investigation', 'Ask Claude when something is unexplained', 'When a figure falls sharply and no rule explains it, Claude is shown summary figures (never customer details) and writes what it thinks happened. At most once a day, within the monthly limit below.'],
+  ['ai_investigation', 'Ask Claude when something is unexplained', 'Switched off for good: AI is off so nothing is spent beyond your Claude subscription. This switch has no effect.'],
   ['customer_messages', 'Customer messages', 'Lets the nightly review switch on EVERY automation under Automations (all eleven) by itself. Off until you allow it; most owners leave it off and switch messages on one by one.'],
 ];
 const show = (v, metric) => v == null ? '—' : metric === 'income' ? `£${Number(v).toFixed(2)}` : /rate|done/.test(metric) ? `${Math.round(v * 100)}%` : Math.round(v * 10) / 10;
@@ -81,8 +81,8 @@ export default function SystemLogTab() {
       {data.ai && (
         <div className="bg-white rounded-xl p-5" style={card}>
           <h3 className="font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: P }}>AI use this month</h3>
-          <p className="text-sm text-gray-600">{data.ai.calls} of {data.ai.call_cap} calls · about ${Number(data.ai.cost_usd).toFixed(2)} of ${Number(data.ai.cost_cap_usd).toFixed(2)}.
-            {data.ai.calls === 0 ? ' Nothing has needed it yet.' : ''} When a limit is reached, AI calls stop until next month; the nightly checks carry on without it.</p>
+          <p className="text-sm text-gray-600">AI is switched off, so nothing is spent beyond your Claude subscription. Every check and description runs on the site's own rules.
+            {data.ai.calls ? ` Earlier this month: ${data.ai.calls} call${data.ai.calls === 1 ? '' : 's'}, about ${Number(data.ai.cost_usd).toFixed(2)}.` : ''}</p>
           {data.ai.recent.length > 0 && (
             <ul className="text-xs text-gray-500 mt-2 space-y-0.5">{data.ai.recent.slice(0, 6).map((u, i) => <li key={i}>{when(u.at)} — {u.purpose} — {u.outcome} — ${Number(u.cost_usd || 0).toFixed(3)}</li>)}</ul>
           )}

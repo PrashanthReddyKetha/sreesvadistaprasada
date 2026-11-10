@@ -5,6 +5,9 @@ import api from '@/api';
 import { words, CATEGORY } from '@/lib/adminLabels';
 import { clearMenuCache } from '@/api/menuCache';
 
+// AI is switched off: nothing is spent beyond the owner's Claude subscription (owner, 10 Nov 2026; backend ai_ops.AI_OFF)
+const AI_ON = false;
+
 const CATEGORIES = ['nonVeg','veg','breakfast','pickles','podis','drinks','streetFood','ragiSpecials'];
 const CAT_LABELS  = { nonVeg:'Svadista (Non-Veg)', veg:'Prasada (Veg)', breakfast:'Breakfast', pickles:'Snacks — Pickles', podis:'Snacks — Podis', drinks:'Drinks', streetFood:'Street Food', ragiSpecials:'Ragi Specials' };
 const BLANK_ITEM  = { name:'', description:'', price:'', category:'nonVeg', extraCats:[], subcategory:'', spice_level:0, is_veg:false, available:true, featured:false, image:'', tag:'', allergens:[], faqs:[], pairs_with:[] };
@@ -390,11 +393,11 @@ export default function MenuTab() {
               style={{ backgroundColor:'#800020' }}>
               <Plus size={14} /> {addSaving?'Adding…':'Add to Menu'}
             </button>
-            <button type="button" onClick={()=>aiEnhance(addForm, setAddForm)} disabled={aiLoading || !addForm.name}
+            {AI_ON && <button type="button" onClick={()=>aiEnhance(addForm, setAddForm)} disabled={aiLoading || !addForm.name}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60"
               style={{ backgroundColor:'#1565C0', color:'white' }}>
               {aiLoading ? <RefreshCw size={14} className="animate-spin"/> : '✨'} AI Auto-fill
-            </button>
+            </button>}
             <button onClick={()=>{ setAdding(false); setMsg(''); }} className="px-4 py-2 rounded-lg text-sm border font-semibold" style={{ borderColor:'#d1d5db', color:'#5C4B47' }}>Cancel</button>
           </div>
         </div>
@@ -482,11 +485,11 @@ export default function MenuTab() {
                     style={{ backgroundColor:'#800020' }}>
                     <Save size={14} /> {saving?'Saving…':'Save Changes'}
                   </button>
-                  <button type="button" onClick={()=>aiEnhance(editForm, setEditForm)} disabled={aiLoading}
+                  {AI_ON && <button type="button" onClick={()=>aiEnhance(editForm, setEditForm)} disabled={aiLoading}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
                     style={{ backgroundColor:'#1565C0', color:'white' }}>
                     {aiLoading ? <RefreshCw size={14} className="animate-spin"/> : '✨'} AI Auto-fill
-                  </button>
+                  </button>}
                   <button onClick={()=>setEditingId(null)} className="px-4 py-2 rounded-lg text-sm border font-semibold" style={{ borderColor:'#d1d5db', color:'#5C4B47' }}>Cancel</button>
                 </div>
               </div>

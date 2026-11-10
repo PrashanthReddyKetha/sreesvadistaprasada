@@ -23,6 +23,10 @@ logger = logging.getLogger(__name__)
 
 MODEL = "claude-opus-5-5"
 PRICE_PER_MTOK = {"input": 4.00, "output": 20.00}      # USD, list price for MODEL
+# Owner, 10 Nov 2026: no money is to be spent on AI beyond the monthly Claude subscription, which a website server cannot
+# use. Every AI call in the application (menu auto-fill, the nightly investigation) asks allowed() first, so this one line
+# keeps them all off. The descriptions in Analytics are written by rules instead (analyst.py).
+AI_OFF = True
 MONTHLY_CALL_CAP = 40
 MONTHLY_COST_CAP_USD = 5.00
 
@@ -83,6 +87,8 @@ async def month_to_date(now: Optional[datetime] = None) -> dict:
 
 
 async def allowed() -> tuple:
+    if AI_OFF:
+        return False, "AI is switched off: nothing is spent beyond the owner's Claude subscription"
     if not os.environ.get("ANTHROPIC_API_KEY"):
         return False, "AI is not set up on the server (no API key)"
     used = await month_to_date()
