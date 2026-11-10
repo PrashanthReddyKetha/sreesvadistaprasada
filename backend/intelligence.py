@@ -88,7 +88,9 @@ def _uk_day_bounds(day: str):
 
 async def measure_day(day: str) -> dict:
     """The figures for one UK day, stored so later nights need not recount."""
-    events = await db.events.find({"day": day}, {"_id": 0, "name": 1, "visit_id": 1}).to_list(None)
+    from routes.events import drop_bots
+    events, _ = drop_bots(await db.events.find({"day": day}, {"_id": 0, "name": 1, "visit_id": 1, "path": 1, "props": 1, "signed_in": 1})
+                          .to_list(None))
     by_visit: dict = {}
     for e in events:
         by_visit.setdefault(e["visit_id"], set()).add(e["name"])

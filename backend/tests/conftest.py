@@ -43,6 +43,7 @@ def run(coro):
 from audit_log import AdminActionLog  # noqa: E402
 
 from error_log import CatchErrors, unhandled  # noqa: E402
+import visit_story  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 app = FastAPI()
@@ -65,6 +66,7 @@ class Outbox:
 
 
 REAL_DABBA_GATE = subscriptions.refuse_if_dabba_not_open     # put back by test_dabba_opening_soon.py
+REAL_BOT_RULE = visit_story.probably_bot                       # put back by test_probable_bots.py
 
 
 @pytest.fixture(autouse=True)
@@ -114,6 +116,7 @@ def fresh_state(monkeypatch):
     monkeypatch.setattr(subscriptions, "refuse_if_deliveries_paused", _deliveries_on)   # Dabba sells in tests; the pause has its own test
     monkeypatch.setattr(subscriptions, "refuse_if_dabba_not_open", _deliveries_on)     # likewise the "opening soon" switch (test_dabba_opening_soon.py)
     monkeypatch.setattr(events, "JOIN_PAGE_LOADS", False)      # tests name their visits; joining is tested on its own
+    monkeypatch.setattr(visit_story, "probably_bot", lambda evs: False)   # test visits are a page view or two; bots have their own test
     monkeypatch.setattr(intelligence, "site_check", _no_site_check)
     monkeypatch.setattr(intelligence, "WEEKLY_DAY", 99)      # weekly jobs only run in the tests that ask for them
     monkeypatch.setattr(ai_ops, "investigate", _no_ai)

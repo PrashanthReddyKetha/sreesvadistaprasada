@@ -68,6 +68,16 @@ def is_robot(user_agent: str) -> bool:
     return bool(_ROBOT.search(user_agent or ""))
 
 
+def drop_bots(events: list) -> tuple:
+    """(the events of visits made by people, how many visits were probably bots) — see visit_story.probably_bot."""
+    from visit_story import probably_bot
+    by_visit: dict = {}
+    for e in events:
+        by_visit.setdefault(e["visit_id"], []).append(e)
+    bots = {vid for vid, evs in by_visit.items() if probably_bot(evs)}
+    return [e for e in events if e["visit_id"] not in bots], len(bots)
+
+
 def _clean(value, limit=120):
     if isinstance(value, bool):
         return value
@@ -345,7 +355,7 @@ async def analytics(days: int = 30, start: Optional[str] = None, end: Optional[s
 
 async def _figures(first_day: date, last_day: date, since: datetime, until: datetime) -> dict:
     days = (last_day - first_day).days + 1
-    events = await _events(since, until)
+    events, bots = drop_bots(await _events(since, until))
 
     visits, by_day, pages, viewed, added, sources, devices = {}, {}, {}, {}, {}, {}, {}
     clicks, searches, problems, hours, stay, action_visits = {}, {}, {}, {}, {}, {}
@@ -628,6 +638,7 @@ async def _figures(first_day: date, last_day: date, since: datetime, until: date
             "orders": counts.get("purchase", 0),
             "income": round(sum(v["value"] for v in visits.values()), 2),
             "plans_sold": counts.get("subscription_purchase", 0),
+            "probable_bots": bots,
         },
         "order_book": await _order_book(since, until, events),
         "funnel": funnel,
@@ -694,7 +705,7 @@ async def recent_visits(limit: int = 40, days: int = 30, start: Optional[str] = 
                         outcome: Optional[str] = None, _: dict = Depends(require_admin)):
     """The visits of a period, newest first, each with everything the visitor did and a plain-English story of it —
     who they were, what they did and the likeliest reason they left without ordering — and the period summed up."""
-    from visit_story import story, summary
+    from visit_story import BOT, bot_story, probably_bot, story, summary
     limit = max(1, min(limit, 300))
     first, last, since, until = period(days, start, end)
     events = await _events(since, until)
@@ -704,14 +715,19 @@ async def recent_visits(limit: int = 40, days: int = 30, start: Optional[str] = 
         by_visit.setdefault(e["visit_id"], []).append(e)
     minimum = await db.settings.find_one({"_id": "pickup_slots"}, {"_id": 0, "minimum_order_enabled": 1}) or {}
     minimum_order = 15.0 if minimum.get("minimum_order_enabled", True) is not False else 0.0
-    told = []
+    told, bots = [], []
     for vid, evs in by_visit.items():
         back = _came_back(evs, first_seen)
+        if probably_bot(evs):
+            bots.append((vid, evs, back, {**bot_story(), "kind": "Bot"}))
+            continue
         src, device = channel(evs[0]), evs[0].get("device") or ""
         told.append((vid, evs, back, {**story(evs, back, src, device, minimum_order),
                                       "kind": "Unknown" if back is None else "Returning" if back else "New"}))
     told.sort(key=lambda t: t[1][-1]["when"], reverse=True)
-    picked = [t for t in told if not outcome or t[3]["outcome"] == outcome][:limit]
+    bots.sort(key=lambda t: t[1][-1]["when"], reverse=True)
+    # Bots are left out of the list and the summary; picking "Probably a bot" shows them
+    picked = (bots if outcome == BOT else [t for t in told if not outcome or t[3]["outcome"] == outcome])[:limit]
     out = []
     for vid, evs, back, st in picked:
         names = {e["name"] for e in evs}
@@ -726,5 +742,13 @@ async def recent_visits(limit: int = 40, days: int = 30, start: Optional[str] = 
                         "items": [i.get("name") for i in e.get("items") or [] if i.get("name")]} for e in evs[:300]],
         })
     fmt = lambda d: d.strftime("%-d %b %Y")                                    # noqa: E731
-    return {"visits": out, "total": len(told), "start": first.isoformat(), "end": last.isoformat(),
-            "summary": summary([t[3] for t in told], fmt(first), fmt(last))}
+    told_up = summary([t[3] for t in told], fmt(first), fmt(last))
+    if bots:
+        many = len(bots) != 1
+        told_up["text"] += (f" {len(bots)} {'more ' if told else ''}visit{'s' if many else ''} looked like "
+                            f"{'bots' if many else 'a bot'} (no taps, no scrolling, gone within seconds) and "
+                            f"{'are' if many else 'is'} left out of every figure.")
+        told_up["outcomes"] = told_up.get("outcomes", []) + [{"outcome": BOT, "visits": len(bots)}]
+    told_up["bots"] = len(bots)
+    return {"visits": out, "total": len(bots) if outcome == BOT else len(told), "start": first.isoformat(), "end": last.isoformat(),
+            "summary": told_up}

@@ -174,6 +174,7 @@ const OUTCOME_STYLE = {
   'Ordered': { bg: '#E8F5E9', fg: '#1B5E20' }, 'Bought a Dabba Wala plan': { bg: '#E8F5E9', fg: '#1B5E20' },
   'Left with food in the basket': { bg: '#FFF4E0', fg: '#7A4B00' }, 'Left at checkout': { bg: '#FFF4E0', fg: '#7A4B00' },
   'Left while paying': { bg: '#FDECEC', fg: '#8E1B1B' }, 'Hit a problem': { bg: '#FDECEC', fg: '#8E1B1B' }, 'Kitchen was closed': { bg: '#FDECEC', fg: '#8E1B1B' },
+  'Probably a bot': { bg: '#ECEFF1', fg: '#455A64' },
 };
 const outcomeStyle = (o) => OUTCOME_STYLE[o] || { bg: '#F3EFEA', fg: '#4A3F3B' };
 const when = (iso) => new Date(iso + (iso.endsWith('Z') ? '' : 'Z')).toLocaleString('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });

@@ -114,14 +114,23 @@ async function drawer() {
 async function bounce() {
   const v = await visitor({ ip: '10.0.0.8' });
   const p = await v.ctx.newPage();
-  await p.goto(BASE + '/story', { waitUntil: 'load', referer: 'https://www.pinterest.com/' }); await sleep(1500);
+  await p.goto(BASE + '/story', { waitUntil: 'load', referer: 'https://www.pinterest.com/' }); await sleep(4000);
+  await p.goto(LOCAL + '/__dump', { waitUntil: 'commit' }); await sleep(2500);
+  await done(v, p);
+}
+
+/** A page loaded and left within a second, nothing tapped: probably a bot dressed as a browser, kept out of the figures. */
+async function blink() {
+  const v = await visitor({ ip: '10.0.0.9' });
+  const p = await v.ctx.newPage();
+  await p.goto(BASE + '/faq', { waitUntil: 'load', referer: 'https://www.bing.com/' }); await sleep(500);
   await p.goto(LOCAL + '/__dump', { waitUntil: 'commit' }); await sleep(2500);
   await done(v, p);
 }
 
 (async () => {
   await api('/__reset', 'POST');
-  const order = await orderPage(); await consentMidway(); await longPause(); await crawler(); await backgroundTab(); const dish = await drawer(); await bounce();
+  const order = await orderPage(); await consentMidway(); await longPause(); await crawler(); await backgroundTab(); const dish = await drawer(); await bounce(); await blink();
   const dump = await api('/__dump'); const r = await api('/__report?days=2'); const visits = visitsOf(dump);
 
   // order page
@@ -152,8 +161,12 @@ async function bounce() {
 
   // the bounce and the source name
   const pin = visits.find(evs => evs[0].referrer === 'www.pinterest.com');
-  check('a 1.5-second look that leaves for another site is still recorded', !!pin && has(pin, 'page_view', '/story'));
+  check('a 4-second look that leaves for another site is still recorded', !!pin && has(pin, 'page_view', '/story'));
   check('Pinterest is named as the source', (r.sources || []).some(s => s.source === 'Pinterest'), (r.sources || []).map(s => s.source).join(', '));
+
+  const flash = visits.find(evs => evs[0].referrer === 'www.bing.com');
+  check('a half-second look with nothing tapped is recorded but counted as a probable bot, not a visit',
+    !!flash && r.totals?.probable_bots >= 1 && !(r.sources || []).some(s => s.source === 'Bing search'), `${r.totals?.probable_bots} bots; ${(r.sources || []).map(s => s.source).join(', ')}`);
 
   console.log(failures.length ? `\n${failures.length} check(s) failed` : '\nall tracking checks passed');
   process.exit(failures.length ? 1 : 0);

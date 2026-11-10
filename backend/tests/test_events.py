@@ -89,7 +89,7 @@ def test_report_counts_visits_funnel_sources_and_dishes(client):
     send(client, VISIT_B, ["page_view", "page_view", "view_item"], leaflet, device="desktop",
          view_item={"items": [{"id": "m1", "name": "Masala Dosa"}]})
     r = client.get("/api/admin/analytics?days=7", headers=token("boss", "admin")).json()
-    assert r["totals"] == {"visits": 2, "returning_visitors_known": 0, "page_views": 3, "orders": 1, "income": 21.5, "plans_sold": 0}
+    assert r["totals"] == {"visits": 2, "returning_visitors_known": 0, "page_views": 3, "orders": 1, "income": 21.5, "plans_sold": 0, "probable_bots": 0}
     assert [f["visits"] for f in r["funnel"]] == [2, 2, 1, 1, 1]
     sources = {s["source"]: s for s in r["sources"]}
     assert sources["Google search"]["orders"] == 1 and sources["Google search"]["income"] == 21.5

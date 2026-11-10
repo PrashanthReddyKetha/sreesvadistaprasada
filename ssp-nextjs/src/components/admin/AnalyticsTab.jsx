@@ -158,12 +158,15 @@ function sections(data, label) {
 
 const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
+const BOT = 'Probably a bot';   // backend/visit_story.py BOT
+
 export default function AnalyticsTab() {
   const [range, setRange] = useState(() => presetRange(29, 0));
   const [data, setData] = useState(null);
   const [visits, setVisits] = useState([]);
   const [visitInfo, setVisitInfo] = useState({ total: 0, summary: null });
   const [outcome, setOutcome] = useState(null);
+  const [botVisits, setBotVisits] = useState(null);   // fetched only when "Probably a bot" is picked
   const analysis = useAnalysis(range);
   const [view, setView] = useState('summary');
   const [copied, setCopied] = useState('');
@@ -183,7 +186,7 @@ export default function AnalyticsTab() {
     try {
       const params = { start: range.start, end: range.end };
       const [a, v] = await Promise.all([api.get('/admin/analytics', { params }), api.get('/admin/analytics/visits', { params: { ...params, limit: 300 } })]);
-      setData(a.data); setVisits(v.data.visits || []); setVisitInfo({ total: v.data.total || 0, summary: v.data.summary }); setOutcome(null);
+      setData(a.data); setVisits(v.data.visits || []); setVisitInfo({ total: v.data.total || 0, summary: v.data.summary }); setOutcome(null); setBotVisits(null);
     }
     catch { setError('Could not load the figures. Please try again.'); }
     finally { setLoading(false); }
@@ -203,12 +206,20 @@ export default function AnalyticsTab() {
   const top = data.funnel[0]?.visits || 0;
   const maxDay = Math.max(1, ...data.by_day.map(d => d.visits));
   const cards = [
-    ['Visits', t.visits, `${t.page_views} pages viewed`, prev && <Change now={t.visits} before={prev.totals.visits} label={before} />],
+    ['Visits', t.visits, `${t.page_views} pages viewed${t.probable_bots ? ` · ${t.probable_bots} probable bot${t.probable_bots === 1 ? '' : 's'} left out` : ''}`, prev && <Change now={t.visits} before={prev.totals.visits} label={before} />],
     ['Orders', book.orders, `${pct(book.orders, t.visits)} of visits${book.orders_seen_in_a_visit < book.orders ? ` · ${book.orders_seen_in_a_visit} traced to a visit` : ''}`, prevBook && <Change now={book.orders} before={prevBook.orders} label={before} />],
     ['Order income', fmt(book.income), book.orders ? `average ${fmt(book.income / book.orders)}` : 'no orders in this period', prevBook && <Change now={book.income} before={prevBook.income} money label={before} />],
     ['Dabba Wala plans sold', book.plans_sold, `${t.returning_visitors_known} visitors accepted cookies`, prevBook && <Change now={book.plans_sold} before={prevBook.plans_sold} label={before} />],
   ];
-  const shownVisits = outcome ? visits.filter(v => v.story?.outcome === outcome) : visits;
+  // Bots are not in the visit list; they are fetched on their own when picked
+  const pickOutcome = (o) => {
+    setOutcome(o);
+    if (o === BOT && !botVisits) {
+      api.get('/admin/analytics/visits', { params: { start: range.start, end: range.end, limit: 300, outcome: BOT } })
+        .then(r => setBotVisits(r.data.visits || [])).catch(() => setBotVisits([]));
+    }
+  };
+  const shownVisits = outcome === BOT ? (botVisits || []) : outcome ? visits.filter(v => v.story?.outcome === outcome) : visits;
 
   return (
     <NotesContext.Provider value={analysis}>
@@ -443,7 +454,7 @@ export default function AnalyticsTab() {
       </>)}
 
       {view === 'visits' && (<>
-      <PeriodSummary summary={visitInfo.summary} total={visitInfo.total} label={`Visits, ${label}`} onPick={setOutcome} picked={outcome} />
+      <PeriodSummary summary={visitInfo.summary} total={visitInfo.total} label={`Visits, ${label}`} onPick={pickOutcome} picked={outcome} />
       <Note k="visits" card />
       <VisitStories visits={shownVisits} total={outcome ? shownVisits.length : visitInfo.total} actionName={actionName} detail={detail} />
       </>)}

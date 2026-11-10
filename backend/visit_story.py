@@ -25,6 +25,33 @@ ORDERED, PLAN, PROBLEM, CLOSED, PAYING, CHECKOUT, BASKET, DABBA, DISHES, MENU, S
     "Ordered", "Bought a Dabba Wala plan", "Hit a problem", "Kitchen was closed", "Left while paying", "Left at checkout",
     "Left with food in the basket", "Looked at Dabba Wala", "Opened dishes, added none", "Browsed the menu", "Searched, added nothing",
     "Came to read", "Got in touch", "Left straight away", "Looked around")
+BOT = "Probably a bot"
+
+# Events a page sends on its own, without anyone tapping, scrolling or typing
+SENT_BY_ITSELF = {"page_view", "page_leave", "site_error", "kitchen_closed_seen", "subscription_step_view", "begin_subscription",
+                  "menu_category_view", "slots_viewed"}
+BOT_SECONDS = 3
+
+
+def probably_bot(evs: list) -> bool:
+    """No tap, scroll, search or anything else a person does, not signed in, and under 3 seconds on screen in all. Known
+    crawlers are refused when they arrive; this catches programs dressed as an ordinary browser, which load a page and
+    are gone. Someone who glanced and left at once looks the same, so it is "probably" (owner, 10 Nov 2026)."""
+    if any(e["name"] not in SENT_BY_ITSELF or e.get("signed_in") for e in evs):
+        return False
+    shown: dict = {}
+    for e in evs:
+        if e["name"] == "page_leave":
+            p = e.get("props") or {}
+            k = p.get("view") or e.get("path")
+            shown[k] = max(shown.get(k, 0), float(p.get("seconds") or 0))
+    return sum(shown.values()) < BOT_SECONDS
+
+
+def bot_story() -> dict:
+    return {"who": "Probably a program, not a person", "did": "Loaded the site without a single tap or scroll and was gone within seconds.",
+            "outcome": BOT, "why": "No taps, no scrolling and under 3 seconds on screen — most likely a bot dressed as a browser, or "
+            "someone who left at once. Left out of every figure.", "minutes": 0, "basket": 0, "order_value": 0}
 
 
 def page_name(path: str) -> str:

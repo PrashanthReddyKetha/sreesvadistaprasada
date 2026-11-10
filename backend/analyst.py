@@ -113,6 +113,9 @@ def notes(now: dict, before: dict, summary: dict, history: list, shop: dict, sal
         elif visits < 100:
             o.append("Focus first: more people need to find the site — Google Business Profile posts, Instagram, and asking happy "
                      "customers to share.")
+        if t.get("probable_bots"):
+            o.append(f"{_n(t['probable_bots'], 'more visit')} looked like {'bots' if t['probable_bots'] != 1 else 'a bot'} and "
+                     f"{'are' if t['probable_bots'] != 1 else 'is'} left out of these figures.")
         out["overall"] = " ".join(o) + few
 
     # ── Traffic graph ──────────────────────────────────────────────────────────
@@ -373,8 +376,13 @@ async def _history(last: date) -> list:
     """Visits and orders per week for the twelve weeks up to the end of the period — behind the "next week" range."""
     from routes.events import _utc
     start, end = _utc(last - timedelta(days=83)), _utc(last + timedelta(days=1))
-    rows = await db.events.aggregate([{"$match": {"at": {"$gte": start, "$lt": end}}},
-                                      {"$group": {"_id": "$day", "visits": {"$addToSet": "$visit_id"}}}]).to_list(None)
+    from routes.events import drop_bots
+    events, _ = drop_bots(await db.events.find({"at": {"$gte": start, "$lt": end}},
+                                               {"_id": 0, "name": 1, "visit_id": 1, "day": 1, "path": 1, "props": 1, "signed_in": 1}).to_list(None))
+    by_day: dict = {}
+    for e in events:
+        by_day.setdefault(e.get("day"), set()).add(e["visit_id"])
+    rows = [{"_id": d, "visits": v} for d, v in by_day.items()]
     orders = await db.orders.find({"created_at": {"$gte": start, "$lt": end}, "status": {"$ne": "cancelled"}}, {"_id": 0, "created_at": 1}).to_list(None)
     weeks: dict = {}
 
