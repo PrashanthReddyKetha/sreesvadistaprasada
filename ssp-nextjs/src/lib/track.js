@@ -368,6 +368,7 @@ const API_EVENTS = [
   ['post', /^\/orders$/, 'order_placed'],
   ['delete', /^\/orders\//, 'order_cancelled'],
   ['post', /^\/subscriptions\/quote$/, 'plan_priced'],
+  ['post', /^\/subscriptions\/notify-me$/, 'dabba_notify_signup'],
   ['post', /^\/subscriptions$/, 'plan_purchased'],
   ['post', /^\/subscriptions\/.+\/skip$/, 'meal_skipped'],
   ['post', /^\/reviews\/.+\/submit$/, 'review_submitted'],

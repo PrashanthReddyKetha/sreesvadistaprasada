@@ -16,7 +16,7 @@ code cannot be turned back into an address and cannot link one day to the next.
 import hashlib
 import re
 import secrets
-from datetime import datetime, timedelta
+from datetime import date, datetime, time as dtime, timedelta
 from zoneinfo import ZoneInfo
 from typing import List, Optional
 
@@ -286,14 +286,14 @@ def _came_back(evs: list, first_seen: dict) -> Optional[bool]:
     return bool(first and first < min(e["at"] for e in known))
 
 
-async def _order_book(since: datetime, events: list) -> dict:
+async def _order_book(since: datetime, until: datetime, events: list) -> dict:
     """Orders and plans as the order book has them. The visit record only knows the orders it saw being placed."""
     staff ={u["id"] async for u in db.users.find({}, {"_id": 0, "id": 1, "email": 1, "role": 1})
              if u.get("role") == "admin" or is_test_account(u.get("email"))}
 
     def real(doc: dict) -> bool:
         return doc.get("user_id") not in staff and not is_test_account(doc.get("customer_email"))
-    period = {"created_at": {"$gte": since}, "status": {"$ne": "cancelled"}}
+    period = {"created_at": {"$gte": since, "$lt": until}, "status": {"$ne": "cancelled"}}
     orders = [o async for o in db.orders.find(period, {"_id": 0, "id": 1, "order_number": 1, "total": 1, "user_id": 1, "customer_email": 1}) if real(o)]
     plans = [s async for s in db.subscriptions.find(period, {"_id": 0, "price": 1, "user_id": 1, "customer_email": 1}) if real(s)]
     seen = {str(e["props"]["transaction_id"]) for e in events if e["name"] == "purchase" and (e.get("props") or {}).get("transaction_id")}
@@ -304,13 +304,48 @@ async def _order_book(since: datetime, events: list) -> dict:
     }
 
 
+def _utc(day: date) -> datetime:
+    """The start of a London calendar day, on the clock the record uses."""
+    return datetime.combine(day, dtime.min, LONDON).astimezone(UTC).replace(tzinfo=None)
+
+
+def period(days: int = 30, start: Optional[str] = None, end: Optional[str] = None) -> tuple:
+    """(first day, last day, since, until): whole London days, the last one included. Either a number of days up to and
+    including today (A-0003, ANA-005), or any start and end picked on the calendar (owner, 10 Nov 2026)."""
+    today = datetime.now(LONDON).date()
+    try:
+        last = date.fromisoformat(end) if end else today
+        first = date.fromisoformat(start) if start else last - timedelta(days=max(1, min(days, RETENTION_DAYS)) - 1)
+    except ValueError:
+        raise HTTPException(400, "Dates must be written YYYY-MM-DD")
+    if first > last:
+        first, last = last, first
+    last = min(last, today)
+    first = max(min(first, last), today - timedelta(days=RETENTION_DAYS))
+    return first, last, _utc(first), _utc(last + timedelta(days=1))
+
+
+async def _events(since: datetime, until: datetime) -> list:
+    return _in_order(await db.events.find({"at": {"$gte": since, "$lt": until}}, {"_id": 0, "day_code": 0}).sort("at", 1).to_list(None))
+
+
 @router.get("/admin/analytics")
-async def analytics(days: int = 30, _: dict = Depends(require_admin)):
-    days = max(1, min(days, RETENTION_DAYS))
-    # "Last N days" = today and the N-1 London calendar days before it, so every day row is a whole day (A-0003, ANA-005)
-    start_ldn = datetime.now(LONDON).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days - 1)
-    since = start_ldn.astimezone(UTC).replace(tzinfo=None)
-    events = _in_order(await db.events.find({"at": {"$gte": since}}, {"_id": 0, "day_code": 0}).sort("at", 1).to_list(None))
+async def analytics(days: int = 30, start: Optional[str] = None, end: Optional[str] = None, _: dict = Depends(require_admin)):
+    first, last, since, until = period(days, start, end)
+    out = await _figures(first, last, since, until)
+    # The same length of time just before, so every figure can say whether it went up or down
+    length = (last - first).days + 1
+    p_last = first - timedelta(days=1)
+    p_first = p_last - timedelta(days=length - 1)
+    before = await _figures(p_first, p_last, _utc(p_first), _utc(p_last + timedelta(days=1)))
+    out["previous"] = {k: before[k] for k in ("start", "end", "days", "totals", "order_book", "funnel", "sources", "device_funnels",
+                                               "visitor_funnels", "checkout", "abandoned", "subscription_funnel")}
+    return out
+
+
+async def _figures(first_day: date, last_day: date, since: datetime, until: datetime) -> dict:
+    days = (last_day - first_day).days + 1
+    events = await _events(since, until)
 
     visits, by_day, pages, viewed, added, sources, devices = {}, {}, {}, {}, {}, {}, {}
     clicks, searches, problems, hours, stay, action_visits = {}, {}, {}, {}, {}, {}
@@ -583,6 +618,8 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
         counts[e["name"]] = counts.get(e["name"], 0) + 1
     return {
         "days": days,
+        "start": first_day.isoformat(),
+        "end": last_day.isoformat(),
         "since": since.isoformat(),
         "totals": {
             "visits": len(visits),
@@ -592,9 +629,12 @@ async def analytics(days: int = 30, _: dict = Depends(require_admin)):
             "income": round(sum(v["value"] for v in visits.values()), 2),
             "plans_sold": counts.get("subscription_purchase", 0),
         },
-        "order_book": await _order_book(since, events),
+        "order_book": await _order_book(since, until, events),
         "funnel": funnel,
-        "by_day": [{**d, "visits": len(d["visits"]), "income": round(d["income"], 2)} for d in sorted(by_day.values(), key=lambda d: d["day"])],
+        # every day of the period, quiet ones included, so the graph has no gaps
+        "by_day": [{**by_day[k], "visits": len(by_day[k]["visits"]), "income": round(by_day[k]["income"], 2)} if k in by_day
+                   else {"day": k, "visits": 0, "page_views": 0, "orders": 0, "income": 0.0}
+                   for k in ((first_day + timedelta(days=i)).isoformat() for i in range(days))],
         "sources": sorted(({**s, "income": round(s["income"], 2)} for s in sources.values()), key=lambda s: -s["visits"]),
         "devices": devices,
         "top_pages": top(pages),
@@ -650,34 +690,41 @@ async def start_afresh(admin: dict = Depends(require_admin)):
 
 
 @router.get("/admin/analytics/visits")
-async def recent_visits(limit: int = 40, _: dict = Depends(require_admin)):
-    """The latest visits, each with everything the visitor did, in order."""
-    limit = max(1, min(limit, 100))
-    since = datetime.utcnow() - timedelta(days=30)      # bounded: never scans the whole record
-    latest = await db.events.aggregate([
-        {"$match": {"at": {"$gte": since}}},
-        {"$group": {"_id": "$visit_id", "last": {"$max": "$at"}, "first": {"$min": "$at"}, "count": {"$sum": 1}}},
-        {"$sort": {"last": -1}}, {"$limit": limit},
-    ]).to_list(None)
-    ids = [v["_id"] for v in latest]
-    events = _in_order(await db.events.find({"visit_id": {"$in": ids}}, {"_id": 0}).sort("at", 1).to_list(None))
+async def recent_visits(limit: int = 40, days: int = 30, start: Optional[str] = None, end: Optional[str] = None,
+                        outcome: Optional[str] = None, _: dict = Depends(require_admin)):
+    """The visits of a period, newest first, each with everything the visitor did and a plain-English story of it —
+    who they were, what they did and the likeliest reason they left without ordering — and the period summed up."""
+    from visit_story import story, summary
+    limit = max(1, min(limit, 300))
+    first, last, since, until = period(days, start, end)
+    events = await _events(since, until)
     first_seen = await _first_seen(events)
     by_visit: dict = {}
     for e in events:
         by_visit.setdefault(e["visit_id"], []).append(e)
+    minimum = await db.settings.find_one({"_id": "pickup_slots"}, {"_id": 0, "minimum_order_enabled": 1}) or {}
+    minimum_order = 15.0 if minimum.get("minimum_order_enabled", True) is not False else 0.0
+    told = []
+    for vid, evs in by_visit.items():
+        back = _came_back(evs, first_seen)
+        src, device = channel(evs[0]), evs[0].get("device") or ""
+        told.append((vid, evs, back, {**story(evs, back, src, device, minimum_order),
+                                      "kind": "Unknown" if back is None else "Returning" if back else "New"}))
+    told.sort(key=lambda t: t[1][-1]["when"], reverse=True)
+    picked = [t for t in told if not outcome or t[3]["outcome"] == outcome][:limit]
     out = []
-    for v in latest:
-        evs = by_visit.get(v["_id"], [])
-        if not evs:
-            continue
+    for vid, evs, back, st in picked:
         names = {e["name"] for e in evs}
         out.append({
-            "visit_id": v["_id"][:8], "started": evs[0]["when"].isoformat(), "ended": evs[-1]["when"].isoformat(),
+            "visit_id": vid[:8], "started": evs[0]["when"].isoformat(), "ended": evs[-1]["when"].isoformat(),
             "minutes": round((evs[-1]["when"] - evs[0]["when"]).total_seconds() / 60, 1),
             "source": channel(evs[0]), "landing": evs[0].get("landing") or evs[0]["path"], "device": evs[0].get("device") or "",
-            "returning": bool(_came_back(evs, first_seen)), "signed_in": any(e.get("signed_in") for e in evs), "ordered": "purchase" in names or "order_placed" in names,
+            "returning": bool(back), "signed_in": any(e.get("signed_in") for e in evs), "ordered": "purchase" in names or "order_placed" in names,
             "added_to_basket": "add_to_cart" in names,
+            "story": st,
             "events": [{"at": e["when"].isoformat(), "name": e["name"], "path": e["path"], "props": e.get("props") or {},
                         "items": [i.get("name") for i in e.get("items") or [] if i.get("name")]} for e in evs[:300]],
         })
-    return {"visits": out}
+    fmt = lambda d: d.strftime("%-d %b %Y")                                    # noqa: E731
+    return {"visits": out, "total": len(told), "start": first.isoformat(), "end": last.isoformat(),
+            "summary": summary([t[3] for t in told], fmt(first), fmt(last))}

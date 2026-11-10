@@ -1,7 +1,8 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshCw, ChevronDown, ChevronUp, Download, Copy } from 'lucide-react';
+import { RefreshCw, Download, Copy } from 'lucide-react';
 import api from '@/api';
+import { DateRange, Change, TrafficChart, PeriodSummary, VisitStories, presetRange, rangeLabel } from '@/components/admin/analytics/parts';
 
 /* Admin › Analytics — the site's own record of visits (not Google's): visits, the path to an
    order, where visitors came from, and which dishes are looked at and added. */
@@ -34,48 +35,13 @@ const ACTION = {
   newsletter_signup: 'Joined the newsletter', whatsapp_click: 'Tapped WhatsApp', enquiry_submit: 'Sent an enquiry', enquiry_reply: 'Replied to an enquiry',
   site_error: 'Script error on the site', field_focus: 'Moved to a form field', repeated_taps: 'Tapped the same thing repeatedly',
   slots_viewed: 'Saw the collection times', slot_selected: 'Chose a collection time',
+  dabba_notify_signup: 'Asked to hear when Dabba Wala opens', kitchen_closed_seen: 'Saw the kitchen was closed',
 };
 const actionName = (n) => ACTION[n] || n.replace(/_/g, ' ');
 const time = (iso) => new Date(iso + (iso.endsWith('Z') ? '' : 'Z')).toLocaleString('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 const detail = (e) => [e.props.label, e.props.term && `"${e.props.term}"`, e.items.join(', '), e.props.value != null && fmt(e.props.value), e.props.transaction_id,
   e.props.coupon, e.props.plan, e.props.method, e.props.reason, e.props.message, e.props.percent != null && `${e.props.percent}%`, e.props.seconds != null && `${e.props.seconds}s`]
   .filter(Boolean).join(' · ');
-
-function Visits({ visits }) {
-  const [open, setOpen] = useState(null);
-  const [count, setCount] = useState(10);
-  return (
-    <div className="bg-white rounded-xl overflow-hidden" style={card}>
-      <h3 className="px-4 py-3 font-bold border-b" style={{ fontFamily: "'Playfair Display', serif", color: P, borderColor: '#f0ebe6' }}>Latest visits — everything each visitor did</h3>
-      {visits.length === 0 ? <p className="text-center text-gray-400 py-8 text-sm">Nothing recorded yet.</p> : visits.slice(0, count).map(v => (
-        <div key={v.visit_id + v.started} className="border-t" style={{ borderColor: '#f9f6ee' }}>
-          <button onClick={() => setOpen(open === v.visit_id ? null : v.visit_id)} className="w-full px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-left text-sm hover:bg-gray-50">
-            <span className="font-medium w-28 shrink-0">{time(v.started)}</span>
-            <span className="text-gray-600">{v.source}</span>
-            <span className="text-gray-400 text-xs">{v.device || '—'} · {v.events.length} actions · {v.minutes} min{v.returning ? ' · returning' : ''}{v.signed_in ? ' · signed in' : ''}</span>
-            {v.ordered ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: '#E8F5E9', color: '#2E7D32' }}>Ordered</span>
-              : v.added_to_basket ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: '#FFF8E1', color: '#8D6E00' }}>Basket, no order</span> : null}
-            <span className="ml-auto text-gray-400">{open === v.visit_id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</span>
-          </button>
-          {open === v.visit_id && (
-            <ol className="px-4 pb-3 space-y-1">
-              {v.events.map((e, i) => (
-                <li key={i} className="text-xs flex gap-3">
-                  <span className="text-gray-400 w-12 shrink-0">{new Date(e.at + (e.at.endsWith('Z') ? '' : 'Z')).toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' })}</span>
-                  <span className="font-medium w-48 shrink-0">{actionName(e.name)}</span>
-                  <span className="text-gray-500 break-all">{e.path}{detail(e) ? ` — ${detail(e)}` : ''}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
-      ))}
-      {visits.length > count && (
-        <button onClick={() => setCount(count + 10)} className="w-full py-2 text-xs font-semibold border-t" style={{ borderColor: '#f0ebe6', color: P }}>Show 10 more ({visits.length - count} left)</button>
-      )}
-    </div>
-  );
-}
 
 const SHORT = 8;
 
@@ -134,17 +100,17 @@ const VIEWS = [
   ['journeys', 'Journeys', 'Where people land, where they stop, and why'],
   ['dishes', 'Dishes', 'What is looked at, added and ordered'],
   ['behaviour', 'Behaviour', 'Pages, taps, searches, problems, timing'],
-  ['visits', 'Visits', 'The latest visits, one by one'],
+  ['visits', 'Visits', 'Every visit in the period: who came, what they did, and the likeliest reason they left'],
 ];
 
 /** Every figure on this screen as plain sections: used for the download and for "copy summary". */
-function sections(data, days) {
+function sections(data, label) {
   const f = (list) => (list || []).map(x => [x.name, x.visits, x.looked_at_menu, x.add_to_cart, x.begin_checkout, x.payment_started, x.purchase]);
   const fh = (first) => [first, 'Visits', 'Looked at the menu', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered'];
   const t = data.totals;
   const book = data.order_book || { orders: t.orders, income: t.income, orders_seen_in_a_visit: t.orders, plans_sold: t.plans_sold };
   return [
-    [`Totals, last ${days} days`, ['Visits', 'Pages viewed', 'Orders', 'Order income', 'Plans sold', 'Orders traced to a visit'],
+    [`Totals, ${label}`, ['Visits', 'Pages viewed', 'Orders', 'Order income', 'Plans sold', 'Orders traced to a visit'],
       [[t.visits, t.page_views, book.orders, book.income, book.plans_sold, book.orders_seen_in_a_visit]]],
     ['From visit to order', ['Step', 'Visits'], data.funnel.map(x => [STEP[x.step] || x.step, x.visits])],
     ['Where visitors came from', ['Source', 'Visits', 'Added to basket', 'Orders seen in visits', 'Income seen in visits (estimate)'], data.sources.map(x => [x.source, x.visits, x.added_to_basket, x.orders, x.income])],
@@ -178,9 +144,11 @@ function sections(data, days) {
 const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
 export default function AnalyticsTab() {
-  const [days, setDays] = useState(30);
+  const [range, setRange] = useState(() => presetRange(29, 0));
   const [data, setData] = useState(null);
   const [visits, setVisits] = useState([]);
+  const [visitInfo, setVisitInfo] = useState({ total: 0, summary: null });
+  const [outcome, setOutcome] = useState(null);
   const [view, setView] = useState('summary');
   const [copied, setCopied] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
@@ -197,49 +165,52 @@ export default function AnalyticsTab() {
   const load = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const [a, v] = await Promise.all([api.get('/admin/analytics', { params: { days } }), api.get('/admin/analytics/visits', { params: { limit: 40 } })]);
-      setData(a.data); setVisits(v.data.visits || []);
+      const params = { start: range.start, end: range.end };
+      const [a, v] = await Promise.all([api.get('/admin/analytics', { params }), api.get('/admin/analytics/visits', { params: { ...params, limit: 300 } })]);
+      setData(a.data); setVisits(v.data.visits || []); setVisitInfo({ total: v.data.total || 0, summary: v.data.summary }); setOutcome(null);
     }
     catch { setError('Could not load the figures. Please try again.'); }
     finally { setLoading(false); }
-  }, [days]);
+  }, [range]);
   useEffect(() => { load(); }, [load]);
 
   if (loading && !data) return <p className="text-center text-gray-400 py-16">Loading…</p>;
   if (error) return <p className="text-center py-16" style={{ color: '#B91C1C' }}>{error} <button onClick={load} className="underline ml-2">Retry</button></p>;
 
   const t = data.totals;
+  const label = rangeLabel(range);
+  const prev = data.previous;
+  const before = data.days === 1 ? 'the day before' : `the ${data.days} days before`;
+  const prevBook = prev?.order_book;
   // Orders and income come from the order book, which is the truth; the visit record only knows the orders it saw placed
   const book = data.order_book || { orders: t.orders, income: t.income, orders_seen_in_a_visit: t.orders, plans_sold: t.plans_sold };
   const top = data.funnel[0]?.visits || 0;
   const maxDay = Math.max(1, ...data.by_day.map(d => d.visits));
   const cards = [
-    ['Visits', t.visits, `${t.page_views} pages viewed`],
-    ['Orders', book.orders, `${pct(book.orders, t.visits)} of visits${book.orders_seen_in_a_visit < book.orders ? ` · ${book.orders_seen_in_a_visit} traced to a visit` : ''}`],
-    ['Order income', fmt(book.income), book.orders ? `average ${fmt(book.income / book.orders)}` : 'no orders in this period'],
-    ['Dabba Wala plans sold', book.plans_sold, `${t.returning_visitors_known} visitors accepted cookies`],
+    ['Visits', t.visits, `${t.page_views} pages viewed`, prev && <Change now={t.visits} before={prev.totals.visits} label={before} />],
+    ['Orders', book.orders, `${pct(book.orders, t.visits)} of visits${book.orders_seen_in_a_visit < book.orders ? ` · ${book.orders_seen_in_a_visit} traced to a visit` : ''}`, prevBook && <Change now={book.orders} before={prevBook.orders} label={before} />],
+    ['Order income', fmt(book.income), book.orders ? `average ${fmt(book.income / book.orders)}` : 'no orders in this period', prevBook && <Change now={book.income} before={prevBook.income} money label={before} />],
+    ['Dabba Wala plans sold', book.plans_sold, `${t.returning_visitors_known} visitors accepted cookies`, prevBook && <Change now={book.plans_sold} before={prevBook.plans_sold} label={before} />],
   ];
+  const shownVisits = outcome ? visits.filter(v => v.story?.outcome === outcome) : visits;
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
-        {[7, 30, 90].map(d => (
-          <button key={d} onClick={() => setDays(d)} className="px-3 py-1.5 rounded-full text-sm font-semibold border"
-            style={days === d ? { backgroundColor: P, color: '#fff', borderColor: P } : { borderColor: '#e0d9d0', color: '#5C4B47' }}>Last {d} days</button>
-        ))}
+        <DateRange value={range} onChange={setRange} />
         <button onClick={load} className="p-2 rounded-lg border ml-auto" style={{ borderColor: '#e0d9d0' }} aria-label="Refresh"><RefreshCw size={15} className={loading ? 'animate-spin' : ''} /></button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <button onClick={() => {
-          const out = [`Sree Svadista Prasada — site analytics, last ${days} days, downloaded ${new Date().toLocaleString('en-GB')}`, ''];
-          sections(data, days).forEach(([title, head, rows]) => { out.push(csvCell(title)); out.push(head.map(csvCell).join(',')); rows.forEach(r => out.push(r.map(csvCell).join(','))); out.push(''); });
+          const out = [`Sree Svadista Prasada — site analytics, ${label}, downloaded ${new Date().toLocaleString('en-GB')}`, ''];
+          sections(data, label).forEach(([title, head, rows]) => { out.push(csvCell(title)); out.push(head.map(csvCell).join(',')); rows.forEach(r => out.push(r.map(csvCell).join(','))); out.push(''); });
           const blob = new Blob(['\ufeff' + out.join('\n')], { type: 'text/csv;charset=utf-8' });
-          const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `analytics-${days}-days-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+          const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `analytics-${range.start}-to-${range.end}.csv`; a.click(); URL.revokeObjectURL(a.href);
         }} className="px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2" style={{ backgroundColor: P, color: '#fff' }}><Download size={15} /> Download everything (spreadsheet)</button>
         <button onClick={async () => {
-          const text = [`Sree Svadista Prasada — site analytics, last ${days} days`, ''];
-          sections(data, days).forEach(([title, head, rows]) => { text.push(`## ${title}`); text.push(head.join(' | ')); rows.slice(0, 15).forEach(r => text.push(r.join(' | '))); text.push(''); });
+          const text = [`Sree Svadista Prasada — site analytics, ${label}`, ''];
+          sections(data, label).forEach(([title, head, rows]) => { text.push(`## ${title}`); text.push(head.join(' | ')); rows.slice(0, 15).forEach(r => text.push(r.join(' | '))); text.push(''); });
           try { await navigator.clipboard.writeText(text.join('\n')); setCopied('Copied. Paste it into a message or a document.'); } catch { setCopied('Could not copy — use the download instead.'); }
           setTimeout(() => setCopied(''), 5000);
         }} className="px-3 py-2 rounded-lg text-sm font-semibold border flex items-center gap-2" style={{ borderColor: '#e0d9d0', color: '#5C4B47' }}><Copy size={15} /> Copy as text</button>
@@ -247,15 +218,20 @@ export default function AnalyticsTab() {
         {copied && <span className="text-sm text-gray-600" role="status">{copied}</span>}
       </div>
 
+      <PeriodSummary summary={visitInfo.summary} label={label} />
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map(([label, value, note]) => (
-          <div key={label} className="bg-white rounded-xl p-4" style={card}>
-            <p className="text-xs text-gray-500 uppercase tracking-wider">{label}</p>
+        {cards.map(([name, value, note, change]) => (
+          <div key={name} className="bg-white rounded-xl p-4" style={card}>
+            <p className="text-xs text-gray-500 uppercase tracking-wider">{name}</p>
             <p className="text-2xl font-bold mt-1" style={{ color: P }}>{value}</p>
             <p className="text-xs text-gray-400 mt-1">{note}</p>
+            {change && <p className="mt-1">{change}</p>}
           </div>
         ))}
       </div>
+
+      <TrafficChart key={`${range.start}|${range.end}`} data={data} />
 
       <div className="flex flex-wrap gap-2 border-b pb-3" style={{ borderColor: '#e9e2d8' }} role="tablist" aria-label="Analytics sections">
         {VIEWS.map(([id, label, hint]) => (
@@ -442,7 +418,8 @@ export default function AnalyticsTab() {
       </>)}
 
       {view === 'visits' && (<>
-      <Visits visits={visits} />
+      <PeriodSummary summary={visitInfo.summary} total={visitInfo.total} label={`Visits, ${label}`} onPick={setOutcome} picked={outcome} />
+      <VisitStories visits={shownVisits} total={outcome ? shownVisits.length : visitInfo.total} actionName={actionName} detail={detail} />
       </>)}
 
       <p className="text-xs text-gray-400">
@@ -467,7 +444,7 @@ export default function AnalyticsTab() {
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-label="Confirm" data-notrack>
           <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-3">
             <h3 className="font-bold text-lg" style={{ fontFamily: "'Playfair Display', serif", color: P }}>Start counting afresh?</h3>
-            <p className="text-sm"><span className="text-gray-500">Now:</span> {t.visits} visits recorded in the last {days} days, and everything before.</p>
+            <p className="text-sm"><span className="text-gray-500">Now:</span> {t.visits} visits recorded in {label}, and everything before.</p>
             <p className="text-sm"><span className="text-gray-500">After:</span> the visit record is empty and counting starts again from this moment.</p>
             <p className="text-sm"><span className="text-gray-500">Not affected:</span> orders, customers, meal plans, messages, the menu.</p>
             <p className="text-sm" style={{ color: '#B91C1C' }}>This cannot be undone. Download the figures first if you want to keep them.</p>

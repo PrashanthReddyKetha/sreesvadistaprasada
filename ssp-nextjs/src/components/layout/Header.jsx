@@ -23,6 +23,8 @@ const Header = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef(null);
   const pathname = usePathname();
+  // So a visit's story can say the kitchen was closed while they were here
+  useEffect(() => { if (kitchen.loaded && !kitchen.open) record('kitchen_closed_seen'); }, [kitchen.loaded, kitchen.open, pathname]);
   const router = useRouter();
   const dropdownRef = useRef(null);
 
