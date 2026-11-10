@@ -10,6 +10,7 @@ import ConfirmAction from '@/components/admin/ConfirmAction';
 
 const C = { burgundy: '#800020', muted: '#7A5C50', line: '#E8DFCE', green: '#2E7D32', gold: '#8B6914' };
 const WHERE = { home: 'Home', work: 'Work', both: 'Home & work' };
+const PICKED = { weekly: 'Weekly', monthly: 'Monthly', prasada: 'Prasada', svadista: 'Svadista' };
 const fmt = (iso) => (iso ? new Date(/Z|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '');
 
 export default function DabbaLaunch() {
@@ -78,6 +79,7 @@ export default function DabbaLaunch() {
           {people.map(p => (
             <li key={p.email} className="py-1.5 flex gap-3">
               <span className="flex-1 truncate" style={{ color: '#2D2422' }}>{p.name ? `${p.name} · ` : ''}{p.email}</span>
+              <span style={{ color: C.muted }}>{[PICKED[p.plan], PICKED[p.box_type]].filter(Boolean).join(' · ')}</span>
               <span style={{ color: C.muted }}>{WHERE[p.where] || ''}</span>
               <span style={{ color: C.muted }}>{fmt(p.created_at)}</span>
             </li>

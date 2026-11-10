@@ -7,7 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import { trackNotifyMeSignup } from '@/lib/analytics';
 
 /** Dabba Wala "opening soon": takes an email (and home or work) for the launch, and points to today's menu
-    meanwhile. Shown in place of the plan picker while the admin switch is off (owner, 10 Nov 2026). */
+    meanwhile. While the admin switch is off the Dabba page still shows plans, boxes and the weekly menu; this card
+    takes over where the customer would go on to pay, carrying what they picked (owner, 10 Nov 2026). */
 
 const C = { primary: '#800020', gold: '#F4C430', darkGold: '#8B6914', dark: '#2D2422', muted: '#7A5C50', line: '#e0d9d0', surface: '#F9F6EE' };
 const LS_KEY = 'ssp_dabba_notify';
@@ -18,7 +19,7 @@ const WHERE = [
   { id: 'both', label: 'A bit of both' },
 ];
 
-export default function DabbaNotify() {
+export default function DabbaNotify({ id = 'notify', choice = null }) {
   const { user } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,7 +34,8 @@ export default function DabbaNotify() {
     if (!EMAIL_RE.test(addr)) { setErr('Pop in your email so we can tell you.'); return; }
     setBusy(true); setErr('');
     try {
-      await api.post('/subscriptions/notify-me', { email: addr, name: name.trim() || user?.name || undefined, where: where || undefined });
+      await api.post('/subscriptions/notify-me', { email: addr, name: name.trim() || user?.name || undefined, where: where || undefined,
+        plan: choice?.plan || undefined, box_type: choice?.box || undefined });
       trackNotifyMeSignup('Dabba Wala', 'dabba');
       const first = (name.trim() || user?.name || '').split(' ')[0];
       try { localStorage.setItem(LS_KEY, first || 'yes'); } catch {}
@@ -44,11 +46,11 @@ export default function DabbaNotify() {
   };
 
   return (
-    <div id="notify" className="rounded-2xl bg-white p-6 sm:p-8" style={{ border: `0.5px solid ${C.line}`, boxShadow: '0 10px 28px rgba(45,36,34,0.08)', scrollMarginTop: 120 }}
+    <div id={id} className="rounded-2xl bg-white p-6 sm:p-8" style={{ border: `0.5px solid ${C.line}`, boxShadow: '0 10px 28px rgba(45,36,34,0.08)', scrollMarginTop: 120 }}
       data-testid="dabba-coming-soon">
       <p className="text-xs uppercase tracking-[0.25em] mb-2" style={{ color: C.darkGold }}>Opening soon</p>
       <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>
-        Your dabba is almost ready
+        {choice ? 'Lovely choice — we’re nearly ready for you' : 'Your dabba is almost ready'}
       </h2>
 
       {done ? (
@@ -62,7 +64,8 @@ export default function DabbaNotify() {
       ) : (
         <>
           <p className="text-sm leading-relaxed mb-5" style={{ color: C.muted }}>
-            How lovely that you came looking for a Dabba Wala. We&apos;re putting the finishing touches to our round — a hot South Indian
+            {choice && <><b style={{ color: C.dark }}>{choice.label}</b> — that&apos;s a happy lunchbox. </>}
+            {choice ? 'Our Dabba Wala isn’t taking plans just yet.' : 'How lovely that you came looking for a Dabba Wala.'} We&apos;re putting the finishing touches to our round — a hot South Indian
             lunch, cooked that morning and brought to your home or your workplace, Monday to Friday. Leave your email and you&apos;ll be
             the first to know when we open.
           </p>

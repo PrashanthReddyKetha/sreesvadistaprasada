@@ -103,6 +103,8 @@ class DabbaInterest(BaseModel):
     email: EmailStr
     name: Optional[str] = Field(None, max_length=80)
     where: Optional[Literal["home", "work", "both"]] = None
+    plan: Optional[Literal["weekly", "monthly"]] = None          # what they picked on the page before it said "opening soon"
+    box_type: Optional[Literal["prasada", "svadista"]] = None
 
 
 @router.post("/notify-me")
@@ -115,8 +117,9 @@ async def dabba_notify_me(body: DabbaInterest, user: Optional[dict] = Depends(ge
     name = (body.name or (user or {}).get("name") or "").strip()
     if name:
         fields["name"] = name
-    if body.where:
-        fields["where"] = body.where
+    for k in ("where", "plan", "box_type"):
+        if getattr(body, k):
+            fields[k] = getattr(body, k)
     if user:
         fields["user_id"] = user.get("sub")
     await db.dabba_interest.update_one({"email": email}, {"$set": fields, "$setOnInsert": {"created_at": now}}, upsert=True)

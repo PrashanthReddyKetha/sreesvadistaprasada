@@ -114,13 +114,20 @@ async function signIn(page, who) {
   const dash = await p.locator('main').innerText();
   check('the customer sees the owner\'s reply in their account', dash.includes('every Friday from 11am'), dash.slice(0, 160).replace(/\s+/g, ' '));
 
-  // 5 — Dabba Wala opening soon: the page takes an email (home or work); the owner sees it and opens sign-ups
-  await p.goto(BASE + '/subscriptions', { waitUntil: 'load' }); await sleep(2000);
-  const soon = p.locator('[data-testid="dabba-coming-soon"]');
-  check('before launch the Dabba page says opening soon, not plans', (await soon.count()) > 0 && (await p.locator('button').filter({ hasText: /per meal/i }).count()) === 0);
+  // 5 — Dabba Wala opening soon: plans, boxes and the menu are on show; where Next would lead to paying, it takes an email
+  await p.goto(BASE + '/subscriptions', { waitUntil: 'load' }); await sleep(2500);
+  check('before launch the Dabba page says opening soon', (await p.locator('[data-testid="dabba-opening-soon"]').count()) > 0);
   check('the Dabba Wala menu item is tagged Soon', /Soon/.test(await p.locator('[data-testid="nav-dabba-wala"]').innerText().catch(() => '')));
-  check('opening soon points to today\'s menu meanwhile', (await soon.locator('a[href="/order"]').count()) > 0);
   check('the photo row links to the gallery', (await p.locator('[data-testid="dabba-gallery-link"]').count()) > 0);
+  const soonNext = () => p.getByRole('button', { name: /^Next$/ }).last();
+  const soonPlan = p.locator('button').filter({ hasText: /per meal/i }).last();
+  check('prices are still shown before launch', (await soonPlan.count()) > 0);
+  await soonPlan.click(); await sleep(400); await soonNext().click(); await sleep(900);
+  await p.locator('div.cursor-pointer').filter({ hasText: /veg/i }).first().click(); await sleep(400); await soonNext().click(); await sleep(1500);
+  const soon = p.locator('#notify-choice');
+  check('on the weekly menu step the notify card takes the place of Next', (await soon.count()) > 0 && (await p.getByRole('button', { name: /^Next$/ }).count()) === 0);
+  check('it names what they picked', /Monthly saver/.test(await soon.innerText()));
+  check('opening soon points to today\'s menu meanwhile', (await soon.locator('a[href="/order"]').count()) > 0);
   await soon.locator('input[type="email"]').fill('waiting-' + TOKEN + '@example.com');
   await soon.locator('button:has-text("At work")').click();
   await soon.locator('button[type="submit"]').click(); await sleep(1500);
@@ -128,6 +135,8 @@ async function signIn(page, who) {
   await a.goto(BASE + '/admin?tab=dabba', { waitUntil: 'load' }); await sleep(2500);
   const launch = a.locator('[data-testid="dabba-launch"]');
   check('the owner sees who is waiting, and that they want it at work', /1 waiting to hear/.test(await launch.innerText()) && /Work 1/.test(await launch.innerText()));
+  await launch.locator('button:has-text("See who")').click(); await sleep(300);
+  check('and what they picked', /Monthly · Prasada|Monthly · Svadista/.test(await launch.innerText()), (await launch.innerText()).slice(-120));
   await launch.locator('button:has-text("Open Dabba Wala")').click(); await sleep(500);
   await a.locator('button:has-text("Yes, open Dabba Wala")').click(); await sleep(2000);
   check('the owner opens Dabba Wala', /on sale/.test(await launch.innerText()));

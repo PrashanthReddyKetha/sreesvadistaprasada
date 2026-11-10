@@ -32,9 +32,9 @@ def test_a_paid_plan_is_never_refused_by_the_switch(client, pay, monkeypatch):
 
 def test_notify_me_keeps_one_row_per_email(client, db, admin_headers):
     assert client.post("/api/subscriptions/notify-me", json={"email": "Asha@Example.com", "name": "Asha", "where": "work"}).status_code == 200
-    assert client.post("/api/subscriptions/notify-me", json={"email": "asha@example.com", "where": "both"}).status_code == 200
+    assert client.post("/api/subscriptions/notify-me", json={"email": "asha@example.com", "where": "both", "plan": "monthly", "box_type": "svadista"}).status_code == 200
     rows = run(db.dabba_interest.find({}, {"_id": 0}).to_list(10))
-    assert len(rows) == 1 and rows[0]["where"] == "both" and rows[0]["name"] == "Asha" and rows[0]["email"] == "asha@example.com"
+    assert len(rows) == 1 and rows[0]["where"] == "both" and rows[0]["name"] == "Asha" and rows[0]["plan"] == "monthly" and rows[0]["box_type"] == "svadista" and rows[0]["email"] == "asha@example.com"
 
     assert client.post("/api/subscriptions/notify-me", json={"email": "x@example.com", "where": "moon"}).status_code == 422
     assert client.get("/api/admin/dabba-wala/interest").status_code in (401, 403)

@@ -403,6 +403,42 @@ function PhotoScroller({ photos, caption }) {
   );
 }
 
+/* "Opening soon" under the hero: everything else on the page stays as it will be. Arriving on #notify opens the form. */
+function OpeningSoonBanner() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const go = () => {
+      if (window.location.hash !== '#notify') return;
+      setOpen(true);
+      setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    };
+    go();
+    window.addEventListener('hashchange', go);
+    return () => window.removeEventListener('hashchange', go);
+  }, []);
+  return (
+    <section ref={ref} id="notify" className="px-4 md:px-8 py-4" style={{ backgroundColor: C.amberLight, borderBottom: `0.5px solid ${C.darkGold}`, scrollMarginTop: 110 }}
+      data-testid="dabba-opening-soon">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <p className="flex-1 text-sm leading-relaxed" style={{ color: C.amberText }}>
+            <b>🪔 Opening soon.</b> We&apos;re putting the finishing touches to our Dabba Wala. Have a good look around — the plans, the boxes
+            and this week&apos;s menu are all here — and we&apos;ll tell you the moment the first dabbas go out.
+          </p>
+          {!open && (
+            <button onClick={() => setOpen(true)} className="self-start sm:self-auto inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-sm shrink-0"
+              style={{ backgroundColor: C.primary, color: 'white' }}>
+              Tell me when it opens <ArrowRight size={14} />
+            </button>
+          )}
+        </div>
+        {open && <div className="mt-4 max-w-2xl"><DabbaNotify id="notify-form" /></div>}
+      </div>
+    </section>
+  );
+}
+
 /* A quiet but warm way into every photo we have */
 function GalleryLink({ color }) {
   return (
@@ -461,10 +497,10 @@ function StickyMobileCta({ comingSoon }) {
     <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden px-4 py-3" style={{ backgroundColor: C.primary, boxShadow: '0 -4px 16px rgba(0,0,0,0.25)' }}>
       <a href="#plans" className="flex items-center justify-between gap-3">
         <span className="text-xs text-white/90 font-medium">{comingSoon
-          ? 'Dabba Wala is opening soon — hot lunches at home or at work'
+          ? 'Opening soon · from £13.75 a meal — at home or at work'
           : 'From £13.75 a meal on the monthly plan · Fixed term, no auto-renewal'}</span>
         <span className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-sm shrink-0" style={{ backgroundColor: C.gold, color: C.dark }}>
-          {comingSoon ? 'Notify me' : 'See plans'} <ArrowRight size={14} />
+          See plans <ArrowRight size={14} />
         </span>
       </a>
     </div>
@@ -506,17 +542,17 @@ const StepIndicator = ({ step }) => (
   </div>
 );
 
-const NavButtons = ({ step, onBack, onNext, nextDisabled, nextLabel }) => (
+const NavButtons = ({ step, onBack, onNext, nextDisabled, nextLabel, hideNext }) => (
   <div className="flex justify-between mt-10 pt-6" style={{ borderTop: `0.5px solid rgba(128,0,32,0.1)` }}>
     {step > 1
       ? <button onClick={onBack} className="flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-sm border-2 transition-all"
           style={{ borderColor: C.primary, color: C.primary }}><ArrowLeft size={15} /> Back</button>
       : <div />}
-    <button onClick={onNext} disabled={nextDisabled}
+    {!hideNext && <button onClick={onNext} disabled={nextDisabled}
       className="flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white rounded-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       style={{ backgroundColor: C.primary }}>
       {nextLabel || 'Next'} <ArrowRight size={15} />
-    </button>
+    </button>}
   </div>
 );
 
@@ -525,7 +561,8 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   const stripe = useStripe();
   const elements = useElements();
   const { user, setAuthOpen } = useAuth();
-  const comingSoon = !useKitchen().dabbaOpen;      // admin switch: plans on sale, or "opening soon" with a notify form
+  const kitchen = useKitchen();
+  const comingSoon = kitchen.loaded && !kitchen.dabbaOpen;   // admin switch: plans on sale, or on show with "opening soon"
   // useMemo prevents getWeekConfig() from returning a new object reference every render,
   // which would break useCallback(fetchMenu) and cause an infinite fetch loop.
   const [renewAfter, setRenewAfter] = useState(null);   // end date of the running plan when renewing from the active screen
@@ -1009,7 +1046,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
               </ul>
               <div className="flex items-center gap-5 mt-5 flex-wrap">
                 <a href="#plans" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm transition-colors duration-150" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
-                  {comingSoon ? 'Be the first to know' : <>See plans &amp; pricing</>} <ArrowRight size={15} />
+                  See plans &amp; pricing <ArrowRight size={15} />
                 </a>
                 <a href="/subscriptions/about" className="text-sm font-medium text-white/70 hover:text-white underline underline-offset-2 transition-colors duration-150">
                   How the Dabba Wala works →
@@ -1019,6 +1056,9 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
           </div>
         </div>
       </section>
+
+      {/* Opening soon — the page stays as it will be, with a quiet note and a way to hear first */}
+      {comingSoon && pageState === 'wizard' && step === 1 && <OpeningSoonBanner />}
 
       {/* This week's menu peek */}
       {pageState === 'wizard' && step === 1 && <LandingMenuPeek weekCfg={weekCfg} art={art} />}
@@ -1076,11 +1116,6 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       )}
 
       <div id="plans" ref={wizardTopRef} style={{ scrollMarginTop: 80 }} />
-      {comingSoon && pageState === 'wizard' ? (
-        <section className="py-10 md:py-14 px-4 md:px-8">
-          <div className="max-w-2xl mx-auto"><DabbaNotify /></div>
-        </section>
-      ) : (<>
       <StepIndicator step={step} />
 
       <section className="py-10 md:py-14 px-4 md:px-8">
@@ -1424,7 +1459,19 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
                 </div>
               )}
 
-              <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
+              {comingSoon ? (
+                <>
+                  <div className="mt-10">
+                    <DabbaNotify id="notify-choice" choice={{
+                      plan: selectedPlan, box: selectedBox,
+                      label: `The ${PLANS.find(pl => pl.id === selectedPlan)?.name || 'plan'} with the ${BOXES.find(b => b.id === selectedBox)?.name || 'box'}`,
+                    }} />
+                  </div>
+                  <NavButtons step={step} onBack={goBack} hideNext />
+                </>
+              ) : (
+                <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
+              )}
             </div>
           )}
 
@@ -1928,7 +1975,6 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
 
         </div>
       </section>
-      </>)}
 
       {/* How it works */}
       {pageState === 'wizard' && step === 1 && (
