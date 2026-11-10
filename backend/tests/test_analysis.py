@@ -18,14 +18,15 @@ def admin():
 
 
 def test_the_figures_sent_hold_every_section_and_no_personal_details(client, db):
-    send(client, "visit-analyse1", ["page_view", "add_to_cart"], add_to_cart={"props": {"value": 9.0}, "items": [{"name": "Masala Dosa"}]})
+    send(client, "visit-analyse1", ["page_view", "search", "add_to_cart"], add_to_cart={"props": {"value": 9.0}, "items": [{"name": "Masala Dosa"}]},
+         search={"props": {"term": "secretword"}})
     today = datetime.now(LONDON).date()
     ctx = run(analyst._context(today - timedelta(days=6), today))
     text = json.dumps(ctx, default=str)
     assert ctx["this_period"]["totals"]["visits"] == 1 and ctx["period_before"]["totals"]["visits"] == 0
     assert ctx["how_visits_ended"]["outcomes"] and ctx["example_visits"][0]["ended"] == "Left with food in the basket"
     assert "weekly_history" in ctx and "sales_book" in ctx and ctx["shop"]["dabba_wala"].startswith("opening soon")
-    assert "@" not in text
+    assert "@" not in text and "secretword" not in text and ctx["this_period"]["searches"] == 1
 
 
 def test_a_reading_is_written_once_per_range_and_opened_again_free(client, db, monkeypatch):

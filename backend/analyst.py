@@ -12,6 +12,7 @@ Every call goes through ai_ops: the monthly limits the owner sets, and the usage
 import asyncio
 import json
 import logging
+import re
 from datetime import date, datetime, timedelta
 from typing import Optional
 
@@ -86,10 +87,11 @@ def _trim(fig: dict) -> dict:
     keep = dict(fig)
     keep.pop("event_counts", None)
     keep.pop("devices", None)
+    keep["searches"] = len(fig.get("searches") or [])       # how many, never the words: the privacy policy says nothing a visitor types goes to AI
     active = [d for d in fig.get("dish_ranking") or [] if d.get("opened") or d.get("added") or d.get("ordered")]
     keep["dish_ranking"] = active[:40]
     keep["dishes_on_menu_never_looked_at"] = sum(1 for d in fig.get("dish_ranking") or [] if not (d.get("opened") or d.get("added") or d.get("ordered")))
-    for k, n in (("top_clicks", 20), ("actions", 30), ("searches", 20), ("problems", 15), ("time_on_page", 15),
+    for k, n in (("top_clicks", 20), ("actions", 30), ("problems", 15), ("time_on_page", 15),
                  ("landing_funnels", 10), ("top_pages", 15), ("exit_pages", 10), ("most_viewed_dishes", 10), ("most_added_dishes", 10)):
         if isinstance(keep.get(k), list):
             keep[k] = keep[k][:n]
@@ -167,9 +169,16 @@ async def _context(first: date, last: date) -> dict:
         "sales_book": {"this_period": money(_totals(await _rows(since, until, "all"))),
                        "period_before": money(_totals(await _rows(_utc(p_first), _utc(p_last + timedelta(days=1)), "all")))},
         "how_visits_ended": visits["summary"],
-        "example_visits": [{"who": v["story"]["who"], "did": v["story"]["did"], "ended": v["story"]["outcome"], "why": v["story"]["why"]}
-                           for v in visits["visits"]],
+        "example_visits": [{"who": v["story"]["who"], "did": _unsearched(v["story"]["did"]), "ended": v["story"]["outcome"],
+                            "why": _unsearched(v["story"]["why"])} for v in visits["visits"]],
     }
+
+
+_SEARCHED = re.compile(r'(?i)(searched for )"[^"]*"((, | and )"[^"]*")*( and \d+ more)?')
+
+
+def _unsearched(text: str) -> str:
+    return _SEARCHED.sub(r"\1something", text or "")
 
 
 def _key(first: date, last: date) -> str:
