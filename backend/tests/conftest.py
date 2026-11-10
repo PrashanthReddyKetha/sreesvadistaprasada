@@ -64,6 +64,9 @@ class Outbox:
         self.email, self.sms, self.admin, self.whatsapp = [], [], [], []
 
 
+REAL_DABBA_GATE = subscriptions.refuse_if_dabba_not_open     # put back by test_dabba_opening_soon.py
+
+
 @pytest.fixture(autouse=True)
 def fresh_state(monkeypatch):
     """Empty database, empty outbox and a clean Stripe fake for every test."""
@@ -109,6 +112,7 @@ def fresh_state(monkeypatch):
     async def _deliveries_on():
         return None
     monkeypatch.setattr(subscriptions, "refuse_if_deliveries_paused", _deliveries_on)   # Dabba sells in tests; the pause has its own test
+    monkeypatch.setattr(subscriptions, "refuse_if_dabba_not_open", _deliveries_on)     # likewise the "opening soon" switch (test_dabba_opening_soon.py)
     monkeypatch.setattr(events, "JOIN_PAGE_LOADS", False)      # tests name their visits; joining is tested on its own
     monkeypatch.setattr(intelligence, "site_check", _no_site_check)
     monkeypatch.setattr(intelligence, "WEEKLY_DAY", 99)      # weekly jobs only run in the tests that ask for them

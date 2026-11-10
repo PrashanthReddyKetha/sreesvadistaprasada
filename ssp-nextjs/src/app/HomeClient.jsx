@@ -34,7 +34,8 @@ import HygieneRating from '@/components/HygieneRating';
 import { soldOutLabel } from '@/lib/soldOut';
 
 const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, hoursByDay = null }) => {
-  const { deliveryEnabled, open: kitchenOpen, loaded: kitchenLoaded } = useKitchen();
+  const { deliveryEnabled, open: kitchenOpen, loaded: kitchenLoaded, dabbaOpen } = useKitchen();
+  const dabbaSoon = kitchenLoaded && !dabbaOpen;
   // "Open today 8am – 8:30pm", from the hours set in admin. Worked out in the browser so it is right for today.
   const [todayLine, setTodayLine] = useState(null);
   useEffect(() => {
@@ -679,7 +680,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
         <div className="max-w-7xl mx-auto relative">
           <div className="text-center mb-8 md:mb-16">
             <p className="text-[11px] md:text-sm uppercase tracking-[0.25em] mb-2 md:mb-3" style={{ color: '#F4C430' }}>
-              A hot dabba, every day, like clockwork
+              {dabbaSoon ? 'Coming soon to Milton Keynes' : 'A hot dabba, every day, like clockwork'}
             </p>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
               The Dabba Wala
@@ -687,7 +688,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
             <div className="w-12 h-0.5 mx-auto mt-3 md:mt-4" style={{ backgroundColor: '#F4C430' }} />
             <p className="mt-4 text-xs md:text-sm text-white/85 max-w-xl mx-auto">
               <Link href="/subscriptions" className="underline font-semibold" style={{ color: '#F4C430' }}>Our Indian tiffin service in Milton Keynes</Link>
-              {' '}— home-cooked Andhra meals, delivered Monday to Friday.
+              {' '}— hot Andhra lunches, Monday to Friday, at your home or your workplace.
             </p>
           </div>
 
@@ -695,7 +696,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
             {[
               { num: '01', icon: Package, title: 'Pick Your Dabba', desc: 'Prasada (veg) or Svadista (non-veg). Weekly or monthly — whichever fits your week.' },
               { num: '02', icon: Calendar, title: 'Tell Us Your Week', desc: 'Pick your start week and preferences. Skip a day when you need to — and message us for anything else.' },
-              { num: '03', icon: Truck, title: 'Open It Warm', desc: 'Packed fresh, sealed hot, at your door — the way a home meal should arrive.' },
+              { num: '03', icon: Truck, title: 'Open It Warm', desc: 'Packed fresh, sealed hot, at your door or your desk — lunch the way it should arrive.' },
             ].map((step) => (
               <div key={step.num} className="text-center" data-testid={`dabba-step-${step.num}`}>
                 <div className="relative inline-block mb-3 md:mb-6">
@@ -717,15 +718,21 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
           </div>
 
           <div className="text-center">
-            <Link href="/subscriptions">
+            <Link href={dabbaSoon ? '/subscriptions#notify' : '/subscriptions'}>
               <button
                 className="px-6 md:px-8 py-2.5 md:py-3.5 text-xs md:text-sm font-semibold tracking-wide uppercase rounded-sm transition-all duration-300 hover:shadow-lg"
                 style={{ backgroundColor: '#F4C430', color: '#2D2422' }}
                 data-testid="dabba-subscribe-btn"
               >
-                Start My Dabba <ArrowRight size={16} className="inline ml-2" />
+                {dabbaSoon ? 'Be the first to know' : 'Start My Dabba'} <ArrowRight size={16} className="inline ml-2" />
               </button>
             </Link>
+            {dabbaSoon && (
+              <p className="mt-4 text-xs md:text-sm text-white/75">
+                Meanwhile, the same kitchen is cooking today —{' '}
+                <Link href="/order" className="underline underline-offset-2 font-semibold" style={{ color: '#F4C430' }}>try our menu</Link>
+              </p>
+            )}
           </div>
         </div>
       </section>

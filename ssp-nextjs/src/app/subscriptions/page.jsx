@@ -11,7 +11,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Product',
   name: 'Dabba Wala — Weekly South Indian Meal Subscription',
-  description: 'Weekly home-cooked South Indian meal plan delivered to your door in Milton Keynes. Fresh Andhra and Telugu cooking — rice, dal, curry, pickle and papad, Monday to Friday.',
+  description: 'Weekly home-style South Indian meal plan delivered to your home or workplace in Milton Keynes. Fresh Andhra and Telugu cooking — rice, dal, curry, pickle and papad, Monday to Friday.',
   // Merchant listings need an image; same picture as the page hero
   image: 'https://sreesvadistaprasada.com/stock/tiffin-meals.jpg',
   brand: { '@type': 'Brand', name: 'Sree Svadista Prasada' },
@@ -58,7 +58,7 @@ export default async function Page() {
             </h1>
             <p>
               An Indian tiffin service near you in Milton Keynes: fresh Andhra and Telugu dishes
-              delivered to your door, Monday to Friday, across
+              delivered to your home or workplace, Monday to Friday, across
               Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley,
               Westcroft, Emerson Valley and all MK postcodes (MK1–MK19).
               Edinburgh and Glasgow subscriptions are coming soon — register your interest on those city pages.
@@ -93,7 +93,7 @@ export default async function Page() {
             <h2 className="text-lg font-bold mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>How it works</h2>
             <p>
               Our dabba service in Milton Keynes is simple: choose your plan and start week, and we cook
-              fresh and deliver Monday to Friday to your door. No auto-renewal — and if your plans change, just get in touch. We&apos;re flexible.
+              fresh and deliver Monday to Friday to your home or your desk. No auto-renewal — and if your plans change, just get in touch. We&apos;re flexible.
             </p>
           </div>
         </div>

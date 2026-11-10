@@ -2,6 +2,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { useKitchen } from '@/context/KitchenContext';
+
+// Where to go from the photos (owner, 10 Nov 2026)
+const PLACES = [
+  { name: 'Breakfast', href: '/breakfast', line: 'Idli, dosa, vada, poori — mornings done right' },
+  { name: 'Prasada', href: '/prasada', line: 'Pure veg, cooked with devotion' },
+  { name: 'Svadista', href: '/svadista', line: 'Biryanis, curries and Andhra heat' },
+  { name: 'Dabba Wala', href: '/subscriptions', line: 'A hot lunch, Monday to Friday, at home or at work' },
+];
 
 /**
  * Gallery = every LIVE menu item's photo, passed in from the server page —
@@ -11,6 +21,8 @@ import Link from 'next/link';
 const Gallery = ({ dishImages = [] }) => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [lightboxIdx, setLightboxIdx] = useState(null);
+  const kitchen = useKitchen();
+  const dabbaSoon = kitchen.loaded && !kitchen.dabbaOpen;
 
   const allImages = dishImages;
 
@@ -44,7 +56,7 @@ const Gallery = ({ dishImages = [] }) => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
-      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(35vh, 280px)' }}>
+      <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] pb-6 relative overflow-hidden" style={{ minHeight: 'min(35vh, 280px)' }}>
         <div className="absolute inset-0" style={{ backgroundColor: '#800020' }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
           <div className="max-w-xl">
@@ -55,6 +67,13 @@ const Gallery = ({ dishImages = [] }) => {
             <p className="text-base text-gray-200 leading-relaxed">
               South Indian food photos from our Milton Keynes kitchen — every dish on the menu, {allImages.length} photos and counting.
             </p>
+            <nav aria-label="Back to the menu" className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm" data-testid="gallery-back-links">
+              {PLACES.map(pl => (
+                <Link key={pl.href} href={pl.href} className="font-semibold underline underline-offset-4 decoration-1 hover:decoration-2" style={{ color: '#F4C430' }}>
+                  {pl.name}
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
       </section>
@@ -101,6 +120,34 @@ const Gallery = ({ dishImages = [] }) => {
                   </p>
                 </div>
               </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Where next */}
+      <section className="pb-16 px-4 md:px-8" data-testid="gallery-where-next">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-2" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+            Hungry yet?
+          </h2>
+          <p className="text-sm text-center mb-6" style={{ color: '#5C4B47' }}>Every photo here comes from one of these — pick where to start.</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {PLACES.map(pl => (
+              <Link key={pl.href} href={pl.href} className="group rounded-xl bg-white px-4 py-4 transition-shadow hover:shadow-md"
+                style={{ border: '1px solid rgba(128,0,32,0.12)' }}>
+                <span className="flex items-center gap-2 text-base font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                  {pl.name}
+                  {pl.href === '/subscriptions' && dabbaSoon && (
+                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" style={{ backgroundColor: 'rgba(244,196,48,0.25)', color: '#8B6914', fontFamily: 'inherit' }}>Soon</span>
+                  )}
+                </span>
+                <span className="block text-xs mt-1" style={{ color: '#5C4B47' }}>{pl.line}</span>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold mt-2" style={{ color: '#8B6914' }}>
+                  {pl.href === '/subscriptions' && dabbaSoon ? 'Be the first to know' : 'Take a look'}
+                  <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
+                </span>
+              </Link>
             ))}
           </div>
         </div>

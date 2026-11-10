@@ -114,8 +114,26 @@ async function signIn(page, who) {
   const dash = await p.locator('main').innerText();
   check('the customer sees the owner\'s reply in their account', dash.includes('every Friday from 11am'), dash.slice(0, 160).replace(/\s+/g, ' '));
 
-  // 5 — Dabba Wala: choose a plan, a box, a week, give delivery details with a postcode check, reach the confirmation step
+  // 5 — Dabba Wala opening soon: the page takes an email (home or work); the owner sees it and opens sign-ups
   await p.goto(BASE + '/subscriptions', { waitUntil: 'load' }); await sleep(2000);
+  const soon = p.locator('[data-testid="dabba-coming-soon"]');
+  check('before launch the Dabba page says opening soon, not plans', (await soon.count()) > 0 && (await p.locator('button').filter({ hasText: /per meal/i }).count()) === 0);
+  check('the Dabba Wala menu item is tagged Soon', /Soon/.test(await p.locator('[data-testid="nav-dabba-wala"]').innerText().catch(() => '')));
+  check('opening soon points to today\'s menu meanwhile', (await soon.locator('a[href="/order"]').count()) > 0);
+  check('the photo row links to the gallery', (await p.locator('[data-testid="dabba-gallery-link"]').count()) > 0);
+  await soon.locator('input[type="email"]').fill('waiting-' + TOKEN + '@example.com');
+  await soon.locator('button:has-text("At work")').click();
+  await soon.locator('button[type="submit"]').click(); await sleep(1500);
+  check('asking to be told says thank you', /on our list/i.test(await soon.innerText()));
+  await a.goto(BASE + '/admin?tab=dabba', { waitUntil: 'load' }); await sleep(2500);
+  const launch = a.locator('[data-testid="dabba-launch"]');
+  check('the owner sees who is waiting, and that they want it at work', /1 waiting to hear/.test(await launch.innerText()) && /Work 1/.test(await launch.innerText()));
+  await launch.locator('button:has-text("Open Dabba Wala")').click(); await sleep(500);
+  await a.locator('button:has-text("Yes, open Dabba Wala")').click(); await sleep(2000);
+  check('the owner opens Dabba Wala', /on sale/.test(await launch.innerText()));
+
+  // 5b — Dabba Wala: choose a plan, a box, a week, give delivery details with a postcode check, reach the confirmation step
+  await p.goto(BASE + '/subscriptions', { waitUntil: 'load' }); await sleep(2500);
   const planButton = p.locator('button').filter({ hasText: /per meal/i }).first();
   check('the plan page offers plans', (await planButton.count()) > 0);
   const next = () => p.getByRole('button', { name: /^Next$/ }).last();     // not "Next week"
@@ -132,7 +150,7 @@ async function signIn(page, who) {
   await p.locator('input[placeholder="Milton Keynes"]').fill('Milton Keynes');
   await p.locator('input[placeholder="MK9 1AB"]').fill('MK12 6LF'); await sleep(2500);
   const afterPostcode = await stepText();
-  check('the postcode is checked and the delivery choices appear', /If you are not home/i.test(afterPostcode), afterPostcode.slice(-200));
+  check('the postcode is checked and the delivery choices appear', /If you're not there/i.test(afterPostcode), afterPostcode.slice(-200));
   await p.locator('button').filter({ hasText: /Leave at my door/ }).first().click(); await sleep(600);
   check('details complete: Next is enabled', await next().isEnabled());
   await next().click(); await sleep(1500);

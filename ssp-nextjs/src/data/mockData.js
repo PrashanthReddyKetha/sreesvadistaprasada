@@ -23,7 +23,7 @@ export const heroSlides = [
     id: 3,
     image: '/hero/slide-3.jpg',
     title: "Your Daily Dose\nof Home.",
-    subtitle: "Wholesome meal subscriptions delivered to your door.",
+    subtitle: "Wholesome lunches delivered to your home or workplace.",
     description: "The Dabba Wala service — just like mother used to pack.",
     cta: "Start Your Subscription",
     link: "/subscriptions"
@@ -349,7 +349,8 @@ export const faqData = [
   {
     category: 'Subscriptions (Dabba Wala)',
     items: [
-      { q: 'How does the Dabba Wala subscription work?', a: 'Choose your plan (weekly or monthly), select your box (Prasada veg or Svadista non-veg), set any dietary preferences, and pick your start week. Freshly cooked meals are delivered to your door Monday to Friday.' },
+      { q: 'How does the Dabba Wala subscription work?', a: 'Choose your plan (weekly or monthly), select your box (Prasada veg or Svadista non-veg), set any dietary preferences, and pick your start week. Freshly cooked meals are delivered to your home or your workplace, Monday to Friday.' },
+      { q: 'Can I get my dabba delivered to work?', a: 'Yes — a dabba is made for a working lunch. Add your office address and a note for reception or where to find you, and it arrives hot for lunch.' },
       { q: 'Can I pause or cancel my subscription?', a: 'You can skip individual delivery days from your Dashboard. If you need to pause, change or cancel your plan, get in touch on WhatsApp, phone or email — we\'re flexible and will work it out with you. Plans don\'t auto-renew, so there are no recurring charges.' },
       { q: 'What comes in a typical dabba (tiffin)?', a: 'Each meal includes rice/roti, a main curry, dal or sambar, a side dish, pickle/chutney, and papad. Portions are generous for one adult.' },
       { q: 'Can I switch between Prasada and Svadista boxes?', a: 'Each plan is one box type. If you would like to switch, message us and we will sort it out with you.' },
@@ -417,7 +418,7 @@ export const faqData = [
       },
       {
         q: 'What is a Dabba Wala?',
-        a: 'Dabba Wala (also spelled Dabbawala) refers to the legendary Mumbai tiffin delivery network, where carriers collect home-cooked food in metal tiffin boxes (dabbas) and deliver them to offices across the city with near-zero error rates — a system studied by Harvard Business School. Our Dabba Wala subscription honours this tradition: weekly or monthly subscriptions of freshly cooked South Indian home-style meals delivered to your door across Milton Keynes, with Edinburgh and Glasgow coming soon.',
+        a: 'Dabba Wala (also spelled Dabbawala) refers to the legendary Mumbai tiffin delivery network, where carriers collect home-cooked food in metal tiffin boxes (dabbas) and deliver them to offices across the city with near-zero error rates — a system studied by Harvard Business School. Our Dabba Wala subscription honours this tradition: weekly or monthly subscriptions of freshly cooked South Indian home-style meals delivered to your home or workplace across Milton Keynes, with Edinburgh and Glasgow coming soon.',
       },
       {
         q: 'Is South Indian food gluten-free?',

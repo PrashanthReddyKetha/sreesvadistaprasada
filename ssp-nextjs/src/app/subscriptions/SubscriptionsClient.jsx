@@ -12,6 +12,8 @@ import CouponPanel from '@/components/CouponPanel';
 import { trackBeginSubscription, trackSelectSubscriptionPlan, trackSubscriptionPurchase, trackSubscriptionStepView } from '@/lib/analytics';
 import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 import HygieneRating from '@/components/HygieneRating';
+import DabbaNotify from '@/components/DabbaNotify';
+import { useKitchen } from '@/context/KitchenContext';
 
 import { STRIPE_KEY } from '@/config/stripe';
 // Created on demand (see Subscriptions below) so the landing page never downloads Stripe.js
@@ -124,7 +126,7 @@ const PREFS = [
 ];
 
 const DELIVERY_INSTRUCTIONS = [
-  { id: 'call',      label: 'Call me on arrival',        sub: 'I will always be home',                  hasFields: false },
+  { id: 'call',      label: 'Call me on arrival',        sub: "I'll be there — at home or at work",       hasFields: false },
   { id: 'door',      label: 'Leave at my door',          sub: 'I accept responsibility once left',      hasFields: false },
   { id: 'neighbour', label: 'Leave with my neighbour',   sub: 'We will need their details',             hasFields: true  },
   { id: 'safeplace', label: 'Leave in my safe place',    sub: 'Tell us where',                          hasFields: true  },
@@ -346,6 +348,7 @@ function LandingMenuPeek({ weekCfg, art = {} }) {
             </div>
           )}
           <p className="text-xs" style={{ color: C.muted }}>You&apos;ll see the full week&apos;s menu before you pay — nothing is a surprise.</p>
+          <GalleryLink color={C.primary} />
         </div>
       </div>
     </section>
@@ -395,17 +398,29 @@ function PhotoScroller({ photos, caption }) {
         ))}
       </div>
       {caption && <p className="text-xs italic mt-3" style={{ color: 'rgba(255,255,255,0.75)' }}>{caption}</p>}
+      <GalleryLink color={C.gold} />
     </div>
   );
 }
 
+/* A quiet but warm way into every photo we have */
+function GalleryLink({ color }) {
+  return (
+    <Link href="/gallery" className="group inline-flex items-center gap-2 mt-4 text-sm font-semibold" style={{ color }} data-testid="dabba-gallery-link">
+      <span className="underline underline-offset-4 decoration-1 group-hover:decoration-2">Take a wander through our kitchen gallery</span>
+      <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+    </Link>
+  );
+}
+
 const LANDING_FAQS = [
-  { q: "What if I'm not home when the meal arrives?", a: 'You choose at checkout — we can call you on arrival, leave it at your door, with a neighbour, or in your safe place.' },
+  { q: 'Can I have my dabba delivered to work?', a: 'Yes — a dabba is made for a working lunch. Give us your office address and a note for reception or where to find you, and it arrives hot for lunch.' },
+  { q: "What if I'm not there when the meal arrives?", a: 'You choose at checkout — we can call you on arrival, leave it at your door or with reception, with a neighbour, or in your safe place.' },
   { q: 'Can I pause or skip a week?', a: 'You can skip individual days from your Dashboard. Going on holiday or need a longer break? Message us — we\'re flexible and will sort it out with you.' },
   { q: 'How does the food stay hot?', a: 'Every meal is cooked that morning, packed and sealed hot, and delivered between 12–2pm — it arrives ready to eat.' },
   { q: 'Is there a contract or auto-renewal?', a: 'No. Plans never auto-renew and there is nothing to cancel — you are always in control.' },
   { q: 'Can you handle dietary preferences?', a: 'Yes — no onion/garlic, less or extra spice, Jain, gluten-free where possible and more. You set your preferences during sign-up.' },
-  { q: 'Where do you deliver?', a: 'Across all Milton Keynes postcodes (MK1–MK19) — home, office, anywhere that suits you.' },
+  { q: 'Where do you deliver?', a: 'Across all Milton Keynes postcodes (MK1–MK19) — to your home, your workplace, wherever lunch happens.' },
 ];
 
 function LandingFaq() {
@@ -433,7 +448,7 @@ function LandingFaq() {
   );
 }
 
-function StickyMobileCta() {
+function StickyMobileCta({ comingSoon }) {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const onScroll = () => setShow(window.scrollY > 480);
@@ -445,9 +460,11 @@ function StickyMobileCta() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden px-4 py-3" style={{ backgroundColor: C.primary, boxShadow: '0 -4px 16px rgba(0,0,0,0.25)' }}>
       <a href="#plans" className="flex items-center justify-between gap-3">
-        <span className="text-xs text-white/90 font-medium">From £13.75 a meal on the monthly plan · Fixed term, no auto-renewal</span>
+        <span className="text-xs text-white/90 font-medium">{comingSoon
+          ? 'Dabba Wala is opening soon — hot lunches at home or at work'
+          : 'From £13.75 a meal on the monthly plan · Fixed term, no auto-renewal'}</span>
         <span className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-sm shrink-0" style={{ backgroundColor: C.gold, color: C.dark }}>
-          See plans <ArrowRight size={14} />
+          {comingSoon ? 'Notify me' : 'See plans'} <ArrowRight size={14} />
         </span>
       </a>
     </div>
@@ -508,6 +525,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   const stripe = useStripe();
   const elements = useElements();
   const { user, setAuthOpen } = useAuth();
+  const comingSoon = !useKitchen().dabbaOpen;      // admin switch: plans on sale, or "opening soon" with a notify form
   // useMemo prevents getWeekConfig() from returning a new object reference every render,
   // which would break useCallback(fetchMenu) and cause an infinite fetch loop.
   const [renewAfter, setRenewAfter] = useState(null);   // end date of the running plan when renewing from the active screen
@@ -981,9 +999,9 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
         <div className="relative h-full w-full px-4 md:px-8 flex items-center pt-[calc(32px+4rem+1.25rem)] md:pt-[calc(32px+5rem+1.5rem)] pb-8">
           <div className="max-w-7xl mx-auto w-full">
             <div className="max-w-xl" style={{ textShadow: '0 1px 10px rgba(60,0,15,0.75)' }}>
-              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service</p>
+              <p className="text-sm uppercase tracking-[0.25em] mb-2" style={{ color: '#F4C430' }}>The Dabba Wala Service{comingSoon && ' · Opening soon'}</p>
               <h2 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>Your Daily Dose of Home<span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">Dabba Wala — Indian tiffin subscription in Milton Keynes</span></h2>
-              <p className="text-sm text-gray-200">Fresh South Indian meals delivered Mon–Fri. No cooking required.</p>
+              <p className="text-sm text-gray-200">Fresh South Indian lunches, Mon–Fri — at home or at work. No cooking required.</p>
               <ul className="text-sm font-semibold mt-2.5 space-y-1" style={{ color: '#F4C430' }}>
                 <li className="flex gap-2"><Check size={15} className="shrink-0 mt-0.5" />From £13.75 a meal on the monthly plan (£15 on weekly) + delivery</li>
                 <li className="flex gap-2"><Check size={15} className="shrink-0 mt-0.5" />No delivery fee on your first meals</li>
@@ -991,7 +1009,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
               </ul>
               <div className="flex items-center gap-5 mt-5 flex-wrap">
                 <a href="#plans" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm transition-colors duration-150" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
-                  See plans &amp; pricing <ArrowRight size={15} />
+                  {comingSoon ? 'Be the first to know' : <>See plans &amp; pricing</>} <ArrowRight size={15} />
                 </a>
                 <a href="/subscriptions/about" className="text-sm font-medium text-white/70 hover:text-white underline underline-offset-2 transition-colors duration-150">
                   How the Dabba Wala works →
@@ -1026,7 +1044,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       )}
 
       {/* Resume banner */}
-      {savedProgress && pageState === 'wizard' && step === 1 && (
+      {savedProgress && !comingSoon && pageState === 'wizard' && step === 1 && (
         <div className="px-4 md:px-8 py-3" style={{ backgroundColor: C.amberLight, borderBottom: `0.5px solid ${C.darkGold}` }}>
           <div className="max-w-2xl mx-auto flex items-center justify-between gap-4 flex-wrap">
             <p className="text-sm font-medium" style={{ color: C.amberText }}>
@@ -1058,6 +1076,11 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
       )}
 
       <div id="plans" ref={wizardTopRef} style={{ scrollMarginTop: 80 }} />
+      {comingSoon && pageState === 'wizard' ? (
+        <section className="py-10 md:py-14 px-4 md:px-8">
+          <div className="max-w-2xl mx-auto"><DabbaNotify /></div>
+        </section>
+      ) : (<>
       <StepIndicator step={step} />
 
       <section className="py-10 md:py-14 px-4 md:px-8">
@@ -1067,7 +1090,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
           {step === 1 && (
             <div>
               <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>Choose your plan</h2>
-              <p className="text-sm mb-6" style={{ color: C.muted }}>Home-cooked South Indian meals, freshly made every morning, delivered to your door.</p>
+              <p className="text-sm mb-6" style={{ color: C.muted }}>South Indian meals, freshly made every morning, delivered to your home or workplace.</p>
 
               <DeadlineCountdown weekCfg={weekCfg} />
 
@@ -1581,7 +1604,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
               {/* Delivery instruction — shown after postcode verified */}
               {postcodeStatus?.ok && (
                 <div className="mt-8">
-                  <p className="text-sm font-semibold mb-3" style={{ color: C.dark }}>If you are not home when we arrive</p>
+                  <p className="text-sm font-semibold mb-3" style={{ color: C.dark }}>If you're not there when we arrive</p>
                   <div className="flex flex-col gap-2">
                     {DELIVERY_INSTRUCTIONS.map(di => (
                       <div key={di.id}>
@@ -1652,7 +1675,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
                 if (!customer.postcode) missing.push('postcode');
                 else if (postcodeStatus === 'checking') missing.push('postcode check (a moment…)');
                 else if (!postcodeStatus?.ok) missing.push('a deliverable postcode');
-                if (!deliveryInstruction) missing.push('an "if you are not home" option');
+                if (!deliveryInstruction) missing.push('an "if you\'re not there" option');
                 else if (deliveryInstruction === 'neighbour' && !(neighbourName && neighbourDoor)) missing.push('neighbour details');
                 else if (deliveryInstruction === 'safeplace' && !safePlaceDesc) missing.push('safe place description');
                 return missing.length ? (
@@ -1747,7 +1770,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
                       {[
                         { label: 'Name', value: customer.name },
                         { label: 'Delivering to', value: `${customer.line1}${customer.line2 ? ', ' + customer.line2 : ''}, ${customer.city} ${customer.postcode}` },
-                        { label: 'If not home', value: DELIVERY_INSTRUCTIONS.find(d => d.id === deliveryInstruction)?.label || '—' },
+                        { label: "If you're not there", value: DELIVERY_INSTRUCTIONS.find(d => d.id === deliveryInstruction)?.label || '—' },
                         { label: 'Preferences', value: selectedPrefs.length ? selectedPrefs.join(', ') : 'Standard (no modifications)' },
                         ...(customRequest ? [{ label: 'Special request', value: customRequest }] : []),
                       ].map(({ label, value }) => (
@@ -1905,6 +1928,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
 
         </div>
       </section>
+      </>)}
 
       {/* How it works */}
       {pageState === 'wizard' && step === 1 && (
@@ -1915,7 +1939,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
               {[
                 { icon: Package, title: 'Pick your dabba', desc: 'Prasada (veg) or Svadista (non-veg). Weekly trial or monthly saver.' },
                 { icon: Calendar, title: 'Tell us your week', desc: 'Pick a start date, any dietary preferences, and where to deliver.' },
-                { icon: Truck, title: 'Open it warm', desc: 'Cooked that morning and delivered hot, Mon–Fri, straight to you.' },
+                { icon: Truck, title: 'Open it warm', desc: 'Cooked that morning and delivered hot, Mon–Fri, to your home or your desk.' },
               ].map((row, i) => (
                 <div key={i} className="text-center">
                   <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3" style={{ backgroundColor: C.surface, border: `2px solid ${C.primary}` }}>
@@ -1937,12 +1961,15 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
             {art.whyPhotos?.length > 1 ? (
               <PhotoScroller photos={art.whyPhotos} caption="From our kitchen — cooked this morning, not last week." />
             ) : (
-              <div className="relative rounded-xl overflow-hidden order-1 md:order-none" style={{ aspectRatio: '4/3', boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}>
+              <div className="min-w-0 order-1 md:order-none" data-testid="why-photos">
+              <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '4/3', boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}>
                 <Image fill src={art.why || 'https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800'}
                   alt="A home-style dish from our kitchen, cooked the morning it is delivered" className="object-cover" sizes="(max-width: 768px) 100vw, 480px" />
                 <span className="absolute bottom-3 left-3 px-3 py-1 rounded-full text-[11px] font-semibold text-white" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
                   Cooked this morning, not last week
                 </span>
+              </div>
+              <GalleryLink color={C.gold} />
               </div>
             )}
             <div className="min-w-0">
@@ -1960,7 +1987,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
                 {[
                   { icon: Flame, text: 'Freshly cooked every morning — never frozen, never reheated' },
                   { icon: Clock, text: 'Made to order for that day, not batch-prepped for the week' },
-                  { icon: Truck, text: 'Delivered hot, straight to your door, office or anywhere in MK' },
+                  { icon: Truck, text: 'Delivered hot to your home, your office or anywhere in MK' },
                 ].map((row, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border" style={{ borderColor: '#F4C430' }}>
@@ -1977,7 +2004,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
 
       {/* FAQ + sticky CTA — landing extras on step 1 */}
       {pageState === 'wizard' && step === 1 && <LandingFaq />}
-      {pageState === 'wizard' && step === 1 && <StickyMobileCta />}
+      {pageState === 'wizard' && step === 1 && <StickyMobileCta comingSoon={comingSoon} />}
     </div>
   );
 };

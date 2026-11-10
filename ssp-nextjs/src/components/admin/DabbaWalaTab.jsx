@@ -5,6 +5,7 @@ import api from '@/api';
 import ConfirmAction from '@/components/admin/ConfirmAction';
 import { words, BOX_TYPE, PLAN_NAME, PLAN_STATUS } from '@/lib/adminLabels';
 import WhatsAppSend from '@/components/admin/WhatsAppSend';
+import DabbaLaunch from '@/components/admin/DabbaLaunch';
 import { dabbaDeliveryMessage, dabbaWelcomeMessage, dabbaRenewalMessage } from '@/lib/whatsappMessages';
 
 // ── helpers ────────────────────────────────────────────────────────────────────
@@ -53,6 +54,7 @@ export default function DabbaWalaTab() {
 
   return (
     <div>
+      <DabbaLaunch />
       <div className="flex gap-1 mb-6 border-b pb-0" style={{ borderColor:'rgba(128,0,32,0.1)' }}>
         {DABBA_VIEWS.map(v => (
           <button key={v.id} onClick={() => setView(v.id)}

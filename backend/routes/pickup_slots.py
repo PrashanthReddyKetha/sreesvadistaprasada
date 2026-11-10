@@ -37,6 +37,8 @@ DEFAULT_SETTINGS = {
     "delivery_enabled": False,
     # £15 minimum order on/off (admin toggle). Off = any basket can be ordered (e.g. a live test payment).
     "minimum_order_enabled": True,
+    # Dabba Wala plans on sale (admin toggle). Off = "opening soon": the page takes names for the launch instead (owner, 10 Nov 2026).
+    "dabba_open": False,
     "slot_minutes": 15,
     # Minimum prep time: every order needs 40 minutes before collection/delivery
     "lead_time_minutes": 40,
@@ -74,6 +76,7 @@ class PickupSlotSettingsUpdate(BaseModel):
     paused_message: Optional[str] = Field(None, max_length=200)
     delivery_enabled: Optional[bool] = None
     minimum_order_enabled: Optional[bool] = None
+    dabba_open: Optional[bool] = None
     slot_minutes: Optional[int] = None
     lead_time_minutes: Optional[int] = Field(None, ge=0, le=240)
     max_orders_per_slot: Optional[int] = Field(None, ge=1, le=100)
@@ -304,6 +307,7 @@ async def kitchen_status():
         "open": not settings.get("paused"),
         "delivery_enabled": bool(settings.get("delivery_enabled")),
         "minimum_order_enabled": settings.get("minimum_order_enabled", True) is not False,
+        "dabba_open": bool(settings.get("dabba_open")),
         "message": settings.get("paused_message") or "Our kitchen is closed today — we're not taking orders right now. Please check back soon.",
     }
 
@@ -429,7 +433,7 @@ async def update_settings_admin(payload: PickupSlotSettingsUpdate, admin: dict =
     settings = await get_slot_settings()
     settings.pop("_id", None)
     changed = {k: v for k, v in updates.items() if k not in ("updated_at", "updated_by", "paused_at")}
-    words = "paused ordering" if changed.get("paused") is True else "resumed ordering" if changed.get("paused") is False         else "switched delivery on" if changed.get("delivery_enabled") is True else "switched delivery off" if changed.get("delivery_enabled") is False         else "switched the minimum order on" if changed.get("minimum_order_enabled") is True else "switched the minimum order off" if changed.get("minimum_order_enabled") is False         else "changed ordering settings"
+    words = "paused ordering" if changed.get("paused") is True else "resumed ordering" if changed.get("paused") is False         else "switched delivery on" if changed.get("delivery_enabled") is True else "switched delivery off" if changed.get("delivery_enabled") is False         else "switched the minimum order on" if changed.get("minimum_order_enabled") is True else "switched the minimum order off" if changed.get("minimum_order_enabled") is False         else "opened Dabba Wala sign-ups" if changed.get("dabba_open") is True else "set Dabba Wala to opening soon" if changed.get("dabba_open") is False         else "changed ordering settings"
     await record_admin_action(admin, words, "ordering settings", {k: before.get(k) for k in changed}, changed)
     # Closed → open transition: tell everyone who's waiting
     if was_paused and updates.get("paused") is False:

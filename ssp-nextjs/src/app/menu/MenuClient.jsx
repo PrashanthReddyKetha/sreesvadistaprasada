@@ -15,6 +15,7 @@ import { recordSearch } from '@/lib/track';
 import RestockBell from '@/components/RestockBell';
 import IntroPricesBanner from '@/components/IntroPricesBanner';
 import HygieneRating from '@/components/HygieneRating';
+import { useKitchen } from '@/context/KitchenContext';
 
 const categories = [
   { id: 'all', name: 'All Dishes' },
@@ -58,6 +59,8 @@ const Menu = ({ initialItems = [], seoLine }) => {
   };
   const { addToCart } = useCart();
   const { openNotifyMe } = useNotifyMe();
+  const kitchen = useKitchen();
+  const dabbaSoon = kitchen.loaded && !kitchen.dabbaOpen;
 
   useEffect(() => {
     const key = 'all';
@@ -276,10 +279,12 @@ const Menu = ({ initialItems = [], seoLine }) => {
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
             Want This Daily?
           </h2>
-          <p className="text-gray-200 mb-8 leading-relaxed">Subscribe to the Dabba Wala service for wholesome meals delivered to your door.</p>
-          <Link href="/subscriptions">
+          <p className="text-gray-200 mb-8 leading-relaxed">{dabbaSoon
+            ? 'Our Dabba Wala is opening soon — a hot lunch from this menu, Monday to Friday, at your home or your workplace.'
+            : 'Subscribe to the Dabba Wala service for a hot lunch, Monday to Friday, at your home or your workplace.'}</p>
+          <Link href={dabbaSoon ? '/subscriptions#notify' : '/subscriptions'}>
             <button className="px-8 py-3.5 text-sm font-semibold tracking-wide uppercase rounded-sm transition-all duration-300 hover:shadow-lg" style={{ backgroundColor: '#F4C430', color: '#2D2422' }} data-testid="menu-subscribe-cta">
-              Start Your Subscription <ArrowRight size={16} className="inline ml-2" />
+              {dabbaSoon ? 'Be the first to know' : 'Start Your Subscription'} <ArrowRight size={16} className="inline ml-2" />
             </button>
           </Link>
         </div>

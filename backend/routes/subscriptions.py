@@ -1,6 +1,6 @@
 import re
 from fastapi import APIRouter, HTTPException, Depends, Query, Request
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime, timedelta, time as dtime
 from collections import defaultdict
 from zoneinfo import ZoneInfo
@@ -13,11 +13,11 @@ from database import db
 from heartbeat import beat
 from security import esc
 
-from security import client_ip
+from security import client_ip, RateLimit
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from models import Subscription, SubscriptionCreate, SubscriptionStatusUpdate, SubscriptionStatus, Address
 from audit_log import record_admin_action
 from auth import get_current_user, get_optional_user, require_admin
@@ -86,6 +86,41 @@ async def refuse_if_deliveries_paused():
     """Owner decision D-042 (2026-10-07): Dabba Wala is EXEMPT from the single-order delivery pause — the tiffin round is
     its own delivery. Plans sell whatever the switch says. Kept as a hook so the choice is one line to reverse."""
     return None
+
+
+DABBA_OPENING_SOON_MESSAGE = ("Our Dabba Wala round is opening soon — we aren't taking plans just yet. "
+                              "Leave your email on the Dabba Wala page and you'll be the first to know.")
+
+
+async def refuse_if_dabba_not_open():
+    """Plans go on sale with the admin "Dabba Wala open" switch; until then the page takes names instead (owner, 10 Nov 2026)."""
+    from routes.pickup_slots import get_slot_settings
+    if not (await get_slot_settings()).get("dabba_open"):
+        raise HTTPException(status_code=400, detail=DABBA_OPENING_SOON_MESSAGE)
+
+
+class DabbaInterest(BaseModel):
+    email: EmailStr
+    name: Optional[str] = Field(None, max_length=80)
+    where: Optional[Literal["home", "work", "both"]] = None
+
+
+@router.post("/notify-me")
+async def dabba_notify_me(body: DabbaInterest, user: Optional[dict] = Depends(get_optional_user),
+                          _: None = Depends(RateLimit(5, 3600, "Too many requests. Please try again later."))):
+    """Someone wants to hear when Dabba Wala opens. One row per email; asking again updates it."""
+    email = body.email.lower().strip()
+    now = datetime.utcnow().isoformat()
+    fields = {"email": email, "updated_at": now}
+    name = (body.name or (user or {}).get("name") or "").strip()
+    if name:
+        fields["name"] = name
+    if body.where:
+        fields["where"] = body.where
+    if user:
+        fields["user_id"] = user.get("sub")
+    await db.dabba_interest.update_one({"email": email}, {"$set": fields, "$setOnInsert": {"created_at": now}}, upsert=True)
+    return {"ok": True}
 
 
 async def next_start_after_active_plan(user_id: Optional[str], email: str, start: datetime):
@@ -209,6 +244,7 @@ async def quote(
     """
     try:
         await refuse_if_deliveries_paused()
+        await refuse_if_dabba_not_open()
         if payload.start_date is not None:
             start = validate_start_date(payload.start_date)
             await next_start_after_active_plan(current_user["sub"] if current_user else None, payload.customer_email, start)
@@ -231,6 +267,8 @@ async def create_subscription(
 ):
     user_id = current_user["sub"] if current_user else None
     await refuse_if_deliveries_paused()
+    if not payload.payment_intent_id:      # a card already charged is always honoured, even if the switch moved mid-checkout
+        await refuse_if_dabba_not_open()
 
     # Same payment submitted twice — return the plan that already exists
     if payload.payment_intent_id:

@@ -87,7 +87,7 @@ const Header = () => {
       ]
     },
     { name: "Lucky's Pantry", path: '/snacks' },
-    { name: 'Dabba Wala', path: '/subscriptions' },
+    { name: 'Dabba Wala', path: '/subscriptions', soon: kitchen.loaded && !kitchen.dabbaOpen },
     { name: 'Our Story', path: '/story' },
     { name: 'Catering', path: '/catering' },
     {
@@ -218,7 +218,7 @@ const Header = () => {
                     }}
                     data-testid={`nav-${item.name.toLowerCase().replace(/\s/g, '-')}`}
                   >
-                    {item.name}
+                    {item.name}{item.soon && <SoonTag />}
                   </Link>
                 )
               ))}
@@ -400,7 +400,7 @@ const Header = () => {
                     className="block py-3 text-base font-medium border-b"
                     style={{ color: isActive(item.path) ? '#8B6914' : '#800020', borderColor: 'rgba(244,196,48,0.3)' }}
                   >
-                    {item.name}
+                    {item.name}{item.soon && <SoonTag />}
                   </Link>
                 )}
               </div>
@@ -438,3 +438,11 @@ const Header = () => {
 };
 
 export default Header;
+
+/* Dabba Wala before launch: a small gold "Soon" beside its name */
+function SoonTag() {
+  return (
+    <span className="ml-1.5 align-middle px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+      style={{ backgroundColor: 'rgba(244,196,48,0.25)', color: '#8B6914' }}>Soon</span>
+  );
+}

@@ -73,7 +73,7 @@ export default function SubscriptionsAboutPage() {
           The Dabba Wala tradition originates in Mumbai, where for over a century a network of delivery workers carried fresh home-cooked lunches in dabba (tiffin) boxes from homes to offices across the city — with a precision that Harvard Business School studied. The dabba is not fast food. It is home food. Cooked that morning. Delivered hot.
         </p>
         <p className="leading-relaxed mb-4" style={{ color: '#2D2422' }}>
-          Sree Svadista Prasada brings this tradition to Milton Keynes: Dabba Wala is home-cooked Indian meals delivered to your door, Monday to Friday. Fresh Andhra and Telugu home cooking — rice, dal, sabzi, curry, pickle, papad. A complete South Indian meal, made from scratch every morning.
+          Sree Svadista Prasada brings this tradition to Milton Keynes: Dabba Wala is home-style Indian meals delivered to your home or your workplace, Monday to Friday. Fresh Andhra and Telugu home cooking — rice, dal, sabzi, curry, pickle, papad. A complete South Indian meal, made from scratch every morning.
         </p>
 
         <h2 className="text-2xl font-bold mt-10 mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
@@ -117,7 +117,7 @@ export default function SubscriptionsAboutPage() {
             ['What areas do you deliver to?', 'Hot dabbas, Monday to Friday, across all MK postcodes MK1–MK19 including Wolverton, Stony Stratford, Greenleys, Newport Pagnell and Bletchley. Edinburgh and Glasgow are coming soon — register your interest on our city pages.'],
             ['Can I pause or cancel?', 'Skip individual days from your Dashboard. Need to pause, change or cancel? Get in touch — we\'re flexible and will work it out with you. No auto-renewal.'],
             ['Can I customise my dabba?', 'Yes. Contact us on WhatsApp with any dietary requirements or preferences and we will plan accordingly.'],
-            ['How is the dabba delivered?', 'Delivered hot in insulated packaging to your door. You do not need to be home — leave delivery instructions at checkout.'],
+            ['How is the dabba delivered?', 'Delivered hot in insulated packaging to your home or your workplace. You do not need to be there — leave delivery instructions (a safe place, a neighbour or reception) at checkout.'],
           ].map(([q, a]) => (
             <details key={q} className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(244,196,48,0.4)' }}>
               <summary className="px-5 py-4 cursor-pointer font-medium flex justify-between items-center hover:bg-[#F4C430]/10" style={{ color: '#2D2422', listStyle: 'none' }}>

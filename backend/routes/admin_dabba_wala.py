@@ -102,6 +102,14 @@ def audit_entry(admin: dict, field: str, old, new, reason: str = None):
     }
 
 
+# ─── Waiting for launch ───────────────────────────────────────────────────────
+
+@router.get("/dabba-wala/interest")
+async def dabba_interest(_: dict = Depends(require_admin)):
+    """Everyone who asked to hear when Dabba Wala opens, newest first."""
+    return await db.dabba_interest.find({}, {"_id": 0}).sort("created_at", -1).to_list(5000)
+
+
 # ─── Weekly Menu ──────────────────────────────────────────────────────────────
 
 @router.post("/menu")

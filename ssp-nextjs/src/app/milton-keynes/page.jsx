@@ -14,7 +14,7 @@ const FAQS = [
   { q: 'Is there an Indian takeaway near Wolverton or Stony Stratford?', a: 'Yes — our kitchen is in Greenleys (MK12), a few minutes from both Wolverton and Stony Stratford. Order online and collect, or have it delivered.' },
   { q: 'What South Indian restaurants deliver in Milton Keynes?', a: 'Sree Svadista Prasada is a dedicated authentic Andhra South Indian kitchen in Milton Keynes. We deliver across all MK postcodes (MK1–MK19) including Wolverton, Stony Stratford, Bletchley, Newport Pagnell, Central MK, and surrounding areas.' },
   { q: 'How long does South Indian food delivery take in Milton Keynes?', a: 'Delivery across Milton Keynes takes 30–60 minutes from our Greenleys kitchen. Free delivery kicks in from £28–£40 depending on your zone.' },
-  { q: 'What is the Dabba Wala meal subscription in Milton Keynes?', a: 'Dabba Wala is our weekly South Indian tiffin subscription service — fresh home-style meals delivered to your door in Milton Keynes from £13.75 per meal. Choose a Prasada (pure veg) or Svadista (non-veg) box.' },
+  { q: 'What is the Dabba Wala meal subscription in Milton Keynes?', a: 'Dabba Wala is our weekly South Indian tiffin subscription service — fresh home-style meals delivered to your home or workplace in Milton Keynes from £13.75 per meal. Choose a Prasada (pure veg) or Svadista (non-veg) box.' },
   { q: 'Do you deliver South Indian food to Wolverton and Stony Stratford?', a: 'Yes — we deliver to all areas of Milton Keynes including Wolverton, Stony Stratford, Greenleys, Newport Pagnell, Bletchley, Westcroft, Central MK, Emerson Valley, Shenley Brook End, Walnut Tree, Monkston, and more.' },
 ];
 

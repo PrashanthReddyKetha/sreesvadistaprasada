@@ -177,7 +177,7 @@ export default function CityPage({ data, jsonLd }) {
                 Dabba Wala in {city}
               </h3>
               <p className="text-sm leading-relaxed mb-4" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                A fresh, home-style South Indian dabba delivered to your door, Monday to Friday.
+                A fresh, home-style South Indian dabba delivered to your home or workplace, Monday to Friday.
                 Rice, curry, dal, sambar, pickle, papad — the whole meal, every time.
               </p>
               <ul className="space-y-1.5 mb-6">

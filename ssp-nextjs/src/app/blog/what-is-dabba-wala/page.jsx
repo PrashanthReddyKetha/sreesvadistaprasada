@@ -50,7 +50,7 @@ const jsonLd = [
     '@type': 'FAQPage',
     mainEntity: [
       { '@type': 'Question', name: 'What is a Dabba Wala?', acceptedAnswer: { '@type': 'Answer', text: 'A Dabba Wala (also spelled Dabbawala) is a delivery worker who collects home-cooked food in a tiffin box (dabba) and delivers it to offices or homes. The system originated in Mumbai, India, and is famous for its extraordinary accuracy — handling 200,000 lunches daily with only one error per every 6 million deliveries.' } },
-      { '@type': 'Question', name: 'How does the Dabba Wala subscription work at Sree Svadista Prasada?', acceptedAnswer: { '@type': 'Answer', text: 'Choose a Weekly or Monthly plan (Prasada vegetarian or Svadista non-veg), select your start week, and freshly cooked South Indian meals are delivered to your door in Milton Keynes Monday to Friday. Plans start from £13.75 per meal.' } },
+      { '@type': 'Question', name: 'How does the Dabba Wala subscription work at Sree Svadista Prasada?', acceptedAnswer: { '@type': 'Answer', text: 'Choose a Weekly or Monthly plan (Prasada vegetarian or Svadista non-veg), select your start week, and freshly cooked South Indian meals are delivered to your home or workplace in Milton Keynes Monday to Friday. Plans start from £13.75 per meal.' } },
       { '@type': 'Question', name: 'Can I pause or cancel my Dabba Wala subscription?', acceptedAnswer: { '@type': 'Answer', text: 'You can skip individual delivery days from your Dashboard. If you need to pause, change or cancel your plan, get in touch — we are flexible and will work it out with you. Plans do not auto-renew.' } },
     ],
   },
@@ -124,7 +124,7 @@ export default function DabbaWalaArticle() {
 
           <h2>The Sree Svadista Prasada Dabba Wala</h2>
           <p>
-            Our Dabba Wala subscription translates this spirit to Milton Keynes. We cannot pretend our delivery system matches the legendary Mumbai network&apos;s scale — but the principle is identical: fresh, home-style South Indian food delivered regularly to your door, removing the daily question of &ldquo;what&apos;s for lunch.&rdquo;
+            Our Dabba Wala subscription translates this spirit to Milton Keynes. We cannot pretend our delivery system matches the legendary Mumbai network&apos;s scale — but the principle is identical: fresh, home-style South Indian food delivered regularly to your home or your desk, removing the daily question of &ldquo;what&apos;s for lunch.&rdquo;
           </p>
           <p>
             Each dabba includes rice, a main curry, dal or sambar, a side dish, pickle or chutney, and papad — a complete South Indian home meal, cooked on the day of delivery with no reheating, no preservatives, and no shortcuts.
