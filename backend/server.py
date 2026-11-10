@@ -16,6 +16,7 @@ from routes import comms as comms_routes
 from routes import automations as automation_routes
 from routes import intelligence as intelligence_routes
 from routes import health as health_routes
+from routes import analysis as analysis_routes
 from routes import expenses as expense_routes
 from routes import sales as sales_routes
 from routes.menu import migrate_slugs
@@ -244,6 +245,7 @@ app.include_router(comms_routes.router, prefix="/api")
 app.include_router(automation_routes.router, prefix="/api")
 app.include_router(intelligence_routes.router, prefix="/api")
 app.include_router(health_routes.router, prefix="/api")
+app.include_router(analysis_routes.router, prefix="/api")
 app.include_router(expense_routes.router, prefix="/api")
 app.include_router(sales_routes.router, prefix="/api")
 

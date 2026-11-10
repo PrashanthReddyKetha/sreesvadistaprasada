@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { RefreshCw, Download, Copy } from 'lucide-react';
 import api from '@/api';
+import { useAnalysis, AnalystReading, SectionReading } from '@/components/admin/analytics/reading';
 import { DateRange, Change, TrafficChart, PeriodSummary, VisitStories, presetRange, rangeLabel } from '@/components/admin/analytics/parts';
 
 /* Admin › Analytics — the site's own record of visits (not Google's): visits, the path to an
@@ -149,6 +150,7 @@ export default function AnalyticsTab() {
   const [visits, setVisits] = useState([]);
   const [visitInfo, setVisitInfo] = useState({ total: 0, summary: null });
   const [outcome, setOutcome] = useState(null);
+  const analysis = useAnalysis(range);
   const [view, setView] = useState('summary');
   const [copied, setCopied] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
@@ -220,6 +222,8 @@ export default function AnalyticsTab() {
 
       <PeriodSummary summary={visitInfo.summary} label={label} />
 
+      <AnalystReading analysis={analysis} label={label} />
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(([name, value, note, change]) => (
           <div key={name} className="bg-white rounded-xl p-4" style={card}>
@@ -242,6 +246,7 @@ export default function AnalyticsTab() {
       <p className="text-xs text-gray-500 -mt-2">{VIEWS.find(v => v[0] === view)[2]}.</p>
 
       {view === 'summary' && (<>
+      <SectionReading analysis={analysis} section="summary" />
       <div className="bg-white rounded-xl p-4" style={card}>
         <h3 className="font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: P }}>From visit to order</h3>
         {top === 0 ? <p className="text-sm text-gray-400">No visits recorded in this period yet.</p> : data.funnel.map((f, i) => (
@@ -259,6 +264,7 @@ export default function AnalyticsTab() {
 
       </>)}
       {view === 'journeys' && (<>
+      <SectionReading analysis={analysis} section="journeys" />
       {(() => {
         const funnelRows = (list) => (list || []).map(f => [f.name, f.visits, f.looked_at_menu, f.add_to_cart, f.begin_checkout, f.payment_started, f.purchase, pct(f.purchase, f.visits)]);
         const head = (first) => [first, 'Visits', 'Looked at the menu', 'Added to basket', 'Started checkout', 'Started paying', 'Ordered', 'Visits that ordered'];
@@ -359,6 +365,7 @@ export default function AnalyticsTab() {
       </>)}
 
       {view === 'dishes' && (<>
+      <SectionReading analysis={analysis} section="dishes" />
       <Dishes dishes={data.dish_ranking || []} />
 
       <div className="grid lg:grid-cols-2 gap-5">
@@ -368,6 +375,7 @@ export default function AnalyticsTab() {
       </>)}
 
       {view === 'behaviour' && (<>
+      <SectionReading analysis={analysis} section="behaviour" />
       <div className="grid lg:grid-cols-2 gap-5">
         <Table title="Pages viewed most" empty="Nothing recorded yet." head={['Page', 'Views']} rows={data.top_pages.map(d => [d.name, d.count])} />
         <div className="bg-white rounded-xl overflow-hidden" style={card}>
@@ -418,6 +426,7 @@ export default function AnalyticsTab() {
       </>)}
 
       {view === 'visits' && (<>
+      <SectionReading analysis={analysis} section="visits" />
       <PeriodSummary summary={visitInfo.summary} total={visitInfo.total} label={`Visits, ${label}`} onPick={setOutcome} picked={outcome} />
       <VisitStories visits={shownVisits} total={outcome ? shownVisits.length : visitInfo.total} actionName={actionName} detail={detail} />
       </>)}

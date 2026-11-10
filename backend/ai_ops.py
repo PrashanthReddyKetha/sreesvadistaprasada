@@ -66,22 +66,28 @@ async def record_usage(purpose: str, model: str, input_tokens: int, output_token
         logger.error("ai_usage insert failed: %s", e)
 
 
+async def limits() -> dict:
+    """The monthly limits: the owner's, set in Admin › Analytics, or the defaults above (owner, 10 Nov 2026)."""
+    doc = await db.settings.find_one({"_id": "ai_limits"}) or {}
+    return {"call_cap": int(doc["call_cap"]) if doc.get("call_cap") is not None else MONTHLY_CALL_CAP,
+            "cost_cap_usd": float(doc["cost_cap_usd"]) if doc.get("cost_cap_usd") is not None else MONTHLY_COST_CAP_USD}
+
+
 async def month_to_date(now: Optional[datetime] = None) -> dict:
     now = now or datetime.utcnow()
     start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     rows = await db.ai_usage.find({"at": {"$gte": start}}, {"_id": 0}).to_list(None)
-    return {"calls": len(rows), "cost_usd": round(sum(r.get("cost_usd") or 0 for r in rows), 4),
-            "call_cap": MONTHLY_CALL_CAP, "cost_cap_usd": MONTHLY_COST_CAP_USD}
+    return {"calls": len(rows), "cost_usd": round(sum(r.get("cost_usd") or 0 for r in rows), 4), **(await limits())}
 
 
 async def allowed() -> tuple:
     if not os.environ.get("ANTHROPIC_API_KEY"):
         return False, "AI is not set up on the server (no API key)"
     used = await month_to_date()
-    if used["calls"] >= MONTHLY_CALL_CAP:
-        return False, f"this month's limit of {MONTHLY_CALL_CAP} AI calls has been reached"
-    if used["cost_usd"] >= MONTHLY_COST_CAP_USD:
-        return False, f"this month's AI spending limit of ${MONTHLY_COST_CAP_USD:.2f} has been reached"
+    if used["calls"] >= used["call_cap"]:
+        return False, f"this month's limit of {used['call_cap']} AI calls has been reached"
+    if used["cost_usd"] >= used["cost_cap_usd"]:
+        return False, f"this month's AI spending limit of ${used['cost_cap_usd']:.2f} has been reached"
     return True, ""
 
 
