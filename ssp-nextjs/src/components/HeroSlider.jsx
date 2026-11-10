@@ -70,42 +70,31 @@ const HeroSlider = ({ images = [] }) => {
           style={{ transition: 'opacity 700ms ease-in-out, transform 700ms ease-in-out' }}
         >
           {Array.isArray(images[index]) && images[index].filter(Boolean).length === 2 ? (
-            <>
-              {/* Two photos, one per kitchen: stacked on phones, side by side on wider screens */}
-              <div className="absolute inset-0 grid grid-rows-2 md:grid-rows-1 md:grid-cols-2">
-                {images[index].map((src, k) => (
-                  <div key={k} className="relative">
-                    <Image src={src} alt={k === 0 ? 'Prasada — vegetarian' : 'Svadista — non-vegetarian'} fill
-                      className="object-cover object-center" priority={index === 0} sizes="(max-width: 768px) 100vw, 50vw" quality={80} />
-                  </div>
-                ))}
-              </div>
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.86) 0%, rgba(45, 36, 34, 0.66) 40%, rgba(45, 36, 34, 0.42) 75%, rgba(45, 36, 34, 0.3) 100%)' }} />
-            </>
+            /* Two photos, one per kitchen: stacked on phones, side by side on wider screens */
+            <div className="absolute inset-0 grid grid-rows-2 md:grid-rows-1 md:grid-cols-2">
+              {images[index].map((src, k) => (
+                <div key={k} className="relative">
+                  <Image src={src} alt={k === 0 ? 'Prasada — vegetarian' : 'Svadista — non-vegetarian'} fill
+                    className="object-cover object-center" priority={index === 0} sizes="(max-width: 768px) 100vw, 50vw" quality={80} />
+                </div>
+              ))}
+            </div>
           ) : (
-            <>
-              <div className="absolute inset-0">
-                <Image
-                  src={(Array.isArray(images[index]) ? images[index].find(Boolean) : images[index]) || slide.image}
-                  alt={slide.title.replace(/\n/g, ' ')}
-                  fill
-                  className="object-cover object-center"
-                  priority={index === 0}
-                  sizes="100vw"
-                  quality={80}
-                />
-              </div>
-              {slide.lightShade ? (
-                <>
-                  {/* Phones: the dishes stay bright above the words, shaded behind them. Wider: shaded under the words only. */}
-                  <div className="absolute inset-0 md:hidden" style={{ background: 'linear-gradient(to bottom, rgba(45, 36, 34, 0.3) 0%, rgba(45, 36, 34, 0.8) 32%, rgba(45, 36, 34, 0.86) 80%, rgba(45, 36, 34, 0.65) 100%)' }} />
-                  <div className="absolute inset-0 hidden md:block" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.9) 0%, rgba(45, 36, 34, 0.8) 36%, rgba(45, 36, 34, 0.6) 49%, rgba(45, 36, 34, 0.18) 68%, rgba(45, 36, 34, 0.04) 100%)' }} />
-                </>
-              ) : (
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.92) 0%, rgba(45, 36, 34, 0.8) 35%, rgba(45, 36, 34, 0.5) 65%, rgba(45, 36, 34, 0.3) 100%)' }} />
-              )}
-            </>
+            <div className="absolute inset-0">
+              <Image
+                src={(Array.isArray(images[index]) ? images[index].find(Boolean) : images[index]) || slide.image}
+                alt={slide.title.replace(/\n/g, ' ')}
+                fill
+                className={`object-cover ${slide.trayRight ? 'object-[70%_50%] md:object-center' : 'object-center'}`}
+                priority={index === 0}
+                sizes="100vw"
+                quality={80}
+              />
+            </div>
           )}
+          {/* Phones: the dishes stay bright above the words, shaded behind them. Wider: shaded under the words only. */}
+          <div className="absolute inset-0 md:hidden" style={{ background: 'linear-gradient(to bottom, rgba(45, 36, 34, 0.3) 0%, rgba(45, 36, 34, 0.8) 32%, rgba(45, 36, 34, 0.86) 80%, rgba(45, 36, 34, 0.65) 100%)' }} />
+          <div className="absolute inset-0 hidden md:block" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.9) 0%, rgba(45, 36, 34, 0.8) 36%, rgba(45, 36, 34, 0.6) 49%, rgba(45, 36, 34, 0.18) 68%, rgba(45, 36, 34, 0.04) 100%)' }} />
           <div className="absolute inset-0 grain-overlay" />
           <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
             <div

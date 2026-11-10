@@ -4,7 +4,6 @@ export const heroSlides = [
   {
     id: 1,
     image: '/hero/welcome-spread.jpg',
-    lightShade: true,   // a table full of dishes: shade only behind the words on wider screens
     title: "Welcome Home.",
     subtitle: "Authentic South Indian home cooking from Andhra, made fresh in Milton Keynes — the taste you missed, carried forward with love.",
     description: "Order in a few taps — collect in ~40 minutes and save 10%.",
@@ -22,7 +21,8 @@ export const heroSlides = [
   },
   {
     id: 3,
-    image: '/hero/slide-3.jpg',
+    image: '/hero/dabba-tray.jpg',
+    trayRight: true,   // the photo's tray sits to the right: phones show it rather than the middle
     title: "Your Daily Dose\nof Home.",
     subtitle: "Wholesome lunches delivered to your home or workplace.",
     description: "The Dabba Wala service — just like mother used to pack.",

@@ -70,8 +70,9 @@ export default async function HomePage() {
   const pic = (slug) => photos[slug]?.image;
   const art = {
     // Welcome Home · Two Kitchens (Prasada + Svadista) · the Dabba Wala
-    // the first is the kitchen's full spread (owner, 10 Nov 2026), the same on every visit
-    hero: ['/hero/welcome-spread.jpg', [pic('pulihora'), pic('gongura-chicken-curry')], pic('veg-thali')],
+    // the kitchen's full spread (owner, 10 Nov 2026); the two kitchens from large landscape dish photos; a Dabba Wala
+    // tray widened for the banner (the tray on the right, the words over soft-focus table on the left)
+    hero: ['/hero/welcome-spread.jpg', [pic('gongura-rice'), pic('joint-chicken-biryani')], '/hero/dabba-tray.jpg'],
     svadista: pic('spicy-andhra-chicken-curry'),
     prasada: pic('prasadam-pulihora'),
     moments: { 1: pic('vada-3-pcs'), 2: pic('aloo-kurma'), 3: pic('andhra-egg-curry'), 4: pic('punugulu') },
