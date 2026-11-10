@@ -71,7 +71,7 @@ export default async function HomePage() {
   const art = {
     // Welcome Home · Two Kitchens (Prasada + Svadista) · the Dabba Wala
     // the kitchen's full spread (owner, 10 Nov 2026); the two kitchens from large landscape dish photos; the two Dabba Wala
-    // boxes, veg and non-veg, cut from the menu photos and set on the right, the words over soft table on the left
+    // boxes in front and the dal, sabzi and curries that change daily behind, cut from the menu photos; words on the left
     hero: ['/hero/welcome-spread.jpg', [pic('gongura-rice'), pic('joint-chicken-biryani')], '/hero/dabba-trays.jpg'],
     svadista: pic('spicy-andhra-chicken-curry'),
     prasada: pic('prasadam-pulihora'),
