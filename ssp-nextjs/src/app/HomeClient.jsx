@@ -25,6 +25,7 @@ import { useRouter } from 'next/navigation';
 import { Leaf, Flame, Star, ShoppingCart, ArrowRight, ChevronRight, Package, Calendar, Truck, MapPin, Bell, Clock } from 'lucide-react';
 import { featuredDishes, mealMoments, chefSpecial, images, galleryImages } from '@/data/mockData';
 import HeroSlider from '@/components/HeroSlider';
+import StoryVideo from '@/components/StoryVideo';
 import api from '@/api';
 import { useCart } from '@/context/CartContext';
 import { useNotifyMe } from '@/context/NotifyMeContext';
@@ -739,7 +740,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
       <section className="py-16 md:py-24 px-4 md:px-8" data-testid="story-teaser-section">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="order-2 md:order-1">
+            <div>
               <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>
                 Not just food · a feeling we kept chasing
               </p>
@@ -759,14 +760,8 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
                 </button>
               </Link>
             </div>
-            <div className="order-1 md:order-2 relative rounded-lg overflow-hidden h-[220px] md:h-[400px]">
-              <Image fill loading="lazy" sizes="(max-width: 768px) 100vw, 50vw"
-                src={images.storyTeaser}
-                alt="Traditional Indian cooking"
-                className="object-cover"
-              />
-              <div className="absolute inset-0 rounded-lg" style={{ border: '1px solid rgba(244, 196, 48, 0.2)' }} />
-            </div>
+            {/* the words first on phones, so the film that follows has its story */}
+            <StoryVideo />
           </div>
         </div>
       </section>

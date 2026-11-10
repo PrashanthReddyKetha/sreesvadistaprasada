@@ -29,7 +29,7 @@ BOT = "Probably a bot"
 
 # Events a page sends on its own, without anyone tapping, scrolling or typing
 SENT_BY_ITSELF = {"page_view", "page_leave", "site_error", "kitchen_closed_seen", "subscription_step_view", "begin_subscription",
-                  "menu_category_view", "slots_viewed"}
+                  "menu_category_view", "slots_viewed", "story_video_play"}
 BOT_SECONDS = 3
 
 

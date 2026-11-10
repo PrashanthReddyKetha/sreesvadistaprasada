@@ -19,6 +19,7 @@ const card = { boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
 
 // Plain names for every action the site records. Anything not listed is shown as recorded.
 const ACTION = {
+  story_video_play: 'Watched the kitchen video', story_video_sound: 'Turned on the kitchen video sound',
   page_view: 'Viewed a page', page_leave: 'Left a page', scroll_depth: 'Scrolled down a page', click: 'Tapped a button or link',
   form_submit: 'Sent a form', search: 'Searched the menu', menu_category_view: 'Opened a menu section', view_item: 'Opened a dish',
   add_to_cart: 'Added to basket', remove_from_cart: 'Removed from basket', cart_quantity_change: 'Changed a quantity', view_cart: 'Opened the basket',
