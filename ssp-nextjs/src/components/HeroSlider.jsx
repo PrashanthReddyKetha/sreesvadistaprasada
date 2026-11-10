@@ -95,7 +95,15 @@ const HeroSlider = ({ images = [] }) => {
                   quality={80}
                 />
               </div>
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.92) 0%, rgba(45, 36, 34, 0.8) 35%, rgba(45, 36, 34, 0.5) 65%, rgba(45, 36, 34, 0.3) 100%)' }} />
+              {slide.lightShade ? (
+                <>
+                  {/* Phones: the dishes stay bright above the words, shaded behind them. Wider: shaded under the words only. */}
+                  <div className="absolute inset-0 md:hidden" style={{ background: 'linear-gradient(to bottom, rgba(45, 36, 34, 0.3) 0%, rgba(45, 36, 34, 0.8) 32%, rgba(45, 36, 34, 0.86) 80%, rgba(45, 36, 34, 0.65) 100%)' }} />
+                  <div className="absolute inset-0 hidden md:block" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.9) 0%, rgba(45, 36, 34, 0.8) 36%, rgba(45, 36, 34, 0.6) 49%, rgba(45, 36, 34, 0.18) 68%, rgba(45, 36, 34, 0.04) 100%)' }} />
+                </>
+              ) : (
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(45, 36, 34, 0.92) 0%, rgba(45, 36, 34, 0.8) 35%, rgba(45, 36, 34, 0.5) 65%, rgba(45, 36, 34, 0.3) 100%)' }} />
+              )}
             </>
           )}
           <div className="absolute inset-0 grain-overlay" />
