@@ -50,7 +50,7 @@ export default function DabbaNotify({ id = 'notify', choice = null }) {
       data-testid="dabba-coming-soon">
       <p className="text-xs uppercase tracking-[0.25em] mb-2" style={{ color: C.darkGold }}>Opening soon</p>
       <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>
-        {choice ? 'Lovely choice — we’re nearly ready for you' : 'Your dabba is almost ready'}
+        {choice ? <>Lovely choice<span className="hidden sm:inline"> — we’re nearly ready for you</span></> : 'Your dabba is almost ready'}
       </h2>
 
       {done ? (
@@ -63,7 +63,12 @@ export default function DabbaNotify({ id = 'notify', choice = null }) {
         </div>
       ) : (
         <>
-          <p className="text-sm leading-relaxed mb-5" style={{ color: C.muted }}>
+          {/* Phones get the short version */}
+          <p className="sm:hidden text-sm leading-relaxed mb-5" style={{ color: C.muted }}>
+            {choice && <><b style={{ color: C.dark }}>{choice.label}</b>. </>}
+            {choice ? 'We’re not taking plans just yet — leave' : 'Hot South Indian lunches, Mon–Fri, at home or at work. Leave'} your email and you&apos;ll hear first.
+          </p>
+          <p className="hidden sm:block text-sm leading-relaxed mb-5" style={{ color: C.muted }}>
             {choice && <><b style={{ color: C.dark }}>{choice.label}</b> — that&apos;s a happy lunchbox. </>}
             {choice ? 'Our Dabba Wala isn’t taking plans just yet.' : 'How lovely that you came looking for a Dabba Wala.'} We&apos;re putting the finishing touches to our round — a hot South Indian
             lunch, cooked that morning and brought to your home or your workplace, Monday to Friday. Leave your email and you&apos;ll be
@@ -94,14 +99,15 @@ export default function DabbaNotify({ id = 'notify', choice = null }) {
               <Bell size={15} /> {busy ? 'Saving…' : 'Tell me when it opens'}
             </button>
             {err && <p role="alert" className="text-sm font-semibold" style={{ color: C.primary }}>{err}</p>}
-            <p className="text-xs" style={{ color: C.muted }}>Just one email when we open — nothing else, unless you ask.</p>
+            <p className="text-xs" style={{ color: C.muted }}>One email when we open — that’s all.</p>
           </form>
         </>
       )}
 
       <div className="mt-6 pt-5" style={{ borderTop: `0.5px solid ${C.line}` }}>
         <p className="text-sm" style={{ color: C.muted }}>
-          Can&apos;t wait till then? The same kitchen is cooking our full menu today.{' '}
+          <span className="sm:hidden">Can&apos;t wait?</span>
+          <span className="hidden sm:inline">Can&apos;t wait till then? The same kitchen is cooking our full menu today.</span>{' '}
           <Link href="/order" className="inline-flex items-center gap-1 font-semibold underline underline-offset-2" style={{ color: C.primary }}>
             Try our menu <ArrowRight size={13} />
           </Link>

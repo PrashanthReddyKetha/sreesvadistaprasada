@@ -125,8 +125,12 @@ async function signIn(page, who) {
   await soonPlan.click(); await sleep(400); await soonNext().click(); await sleep(900);
   await p.locator('div.cursor-pointer').filter({ hasText: /veg/i }).first().click(); await sleep(400); await soonNext().click(); await sleep(1500);
   const soon = p.locator('#notify-choice');
+  const stepTextSoon = async () => (await p.locator('main').innerText()).replace(/\s+/g, ' ');
   check('on the weekly menu step the notify card takes the place of Next', (await soon.count()) > 0 && (await p.getByRole('button', { name: /^Next$/ }).count()) === 0);
   check('it names what they picked', /Monthly saver/.test(await soon.innerText()));
+  check('the weekly menu is folded under it', !/keeps changing every week/i.test(await stepTextSoon()));
+  await p.locator('[data-testid="soon-menu-toggle"]').click(); await sleep(800);
+  check('and opens when asked', /Hide the weekly menu/.test(await p.locator('[data-testid="soon-menu-toggle"]').innerText()) && /keeps changing every week/i.test(await stepTextSoon()));
   check('opening soon points to today\'s menu meanwhile', (await soon.locator('a[href="/order"]').count()) > 0);
   await soon.locator('input[type="email"]').fill('waiting-' + TOKEN + '@example.com');
   await soon.locator('button:has-text("At work")').click();

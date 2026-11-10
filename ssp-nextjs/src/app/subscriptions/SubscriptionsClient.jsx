@@ -423,8 +423,10 @@ function OpeningSoonBanner() {
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <p className="flex-1 text-sm leading-relaxed" style={{ color: C.amberText }}>
-            <b>🪔 Opening soon.</b> We&apos;re putting the finishing touches to our Dabba Wala. Have a good look around — the plans, the boxes
-            and this week&apos;s menu are all here — and we&apos;ll tell you the moment the first dabbas go out.
+            <b>🪔 Opening soon.</b>{' '}
+            <span className="sm:hidden">Have a look around — we&apos;ll tell you when the first dabbas go out.</span>
+            <span className="hidden sm:inline">We&apos;re putting the finishing touches to our Dabba Wala. Have a good look around — the plans, the boxes
+            and this week&apos;s menu are all here — and we&apos;ll tell you the moment the first dabbas go out.</span>
           </p>
           {!open && (
             <button onClick={() => setOpen(true)} className="self-start sm:self-auto inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-sm shrink-0"
@@ -596,6 +598,7 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
   const [pageState, setPageState] = useState('loading'); // loading | wizard | active | lapsed
   const [activeSub, setActiveSub] = useState(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [showSoonMenu, setShowSoonMenu] = useState(false);   // opening soon: the weekly menu folds away under the notify card
   const [lapsedSub, setLapsedSub] = useState(null);
   const postcodeTimer = useRef(null);
   const wizardTopRef  = useRef(null);
@@ -1233,8 +1236,25 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
             <div>
               <h2 className="text-3xl font-bold mb-1" style={{ fontFamily: "'Playfair Display', serif", color: C.primary }}>What's coming your way</h2>
 
+              {/* Opening soon: the notify card first, the menu folded underneath */}
+              {comingSoon && (
+                <div className="mt-4">
+                  <DabbaNotify id="notify-choice" choice={{
+                    plan: selectedPlan, box: selectedBox,
+                    label: `The ${PLANS.find(pl => pl.id === selectedPlan)?.name || 'plan'} with the ${BOXES.find(b => b.id === selectedBox)?.name || 'box'}`,
+                  }} />
+                  <button onClick={() => setShowSoonMenu(v => !v)} aria-expanded={showSoonMenu} data-testid="soon-menu-toggle"
+                    className="w-full mt-4 flex items-center justify-between px-5 py-3.5 rounded-xl bg-white text-sm font-semibold"
+                    style={{ border: '0.5px solid #e0d9d0', color: C.primary }}>
+                    {showSoonMenu ? 'Hide the weekly menu' : 'Peek at a week of dabbas'}
+                    <ChevronRight size={16} className={`transition-transform ${showSoonMenu ? 'rotate-90' : ''}`} />
+                  </button>
+                </div>
+              )}
+
+              {(!comingSoon || showSoonMenu) && (<div className={comingSoon ? 'mt-4' : ''}>
               {/* Always-visible notice: orders for this week are closed */}
-              {!weekCfg.closedMessage && (
+              {!comingSoon && !weekCfg.closedMessage && (
                 <div className="mb-4">
                   <InfoBox bg="#EFF6FF" border="#93C5FD" color="#1E40AF">
                     📦 Orders are closed for this week — our kitchen is already prepping. You can start your subscription from <strong>{weekRange(weekCfg.weeks[0].monday)}</strong>. See the menu below.
@@ -1458,17 +1478,10 @@ const SubscriptionsInner = ({ onNeedStripe, art = {} }) => {
                   </InfoBox>
                 </div>
               )}
+              </div>)}
 
               {comingSoon ? (
-                <>
-                  <div className="mt-10">
-                    <DabbaNotify id="notify-choice" choice={{
-                      plan: selectedPlan, box: selectedBox,
-                      label: `The ${PLANS.find(pl => pl.id === selectedPlan)?.name || 'plan'} with the ${BOXES.find(b => b.id === selectedBox)?.name || 'box'}`,
-                    }} />
-                  </div>
-                  <NavButtons step={step} onBack={goBack} hideNext />
-                </>
+                <NavButtons step={step} onBack={goBack} hideNext />
               ) : (
                 <NavButtons step={step} onBack={goBack} onNext={goNext} nextDisabled={!canProceed()} />
               )}
