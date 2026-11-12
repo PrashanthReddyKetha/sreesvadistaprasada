@@ -518,3 +518,12 @@ def test_admin_blocks_and_reopens_a_slot(client, admin_headers, user_headers):
     assert slot not in r.json()["blocked_slots"]
     bad = client.put("/api/admin/settings/pickup-slots/blocked", json={"slot": "2020-01-01T09:00", "blocked": True}, headers=admin_headers)
     assert bad.status_code == 400
+
+
+def test_admin_sees_who_is_waiting_for_the_kitchen_to_reopen(client, db, admin_headers, user_headers):
+    run(db.settings.update_one({"_id": "pickup_slots"}, {"$set": {"paused": True}}, upsert=True))
+    client.post("/api/kitchen-status/notify-me", json={"email": "Asha@Example.com", "name": "Asha"})
+    url = "/api/admin/settings/pickup-slots/reopen-waiting"
+    assert client.get(url, headers=user_headers).status_code == 403
+    r = client.get(url, headers=admin_headers).json()
+    assert r["count"] == 1 and r["people"][0]["email"] == "asha@example.com" and r["people"][0]["name"] == "Asha"

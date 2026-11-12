@@ -429,6 +429,13 @@ async def get_settings_admin(_: dict = Depends(require_admin)):
     return settings
 
 
+@router.get("/admin/settings/pickup-slots/reopen-waiting")
+async def reopen_waiting(_: dict = Depends(require_admin)):
+    """Who asked to be told when the kitchen reopens. The list is emailed and cleared on the next reopen broadcast."""
+    people = await db.reopen_subs.find({}, {"_id": 0, "email": 1, "name": 1, "created_at": 1}).sort("created_at", -1).to_list(length=2000)
+    return {"count": len(people), "people": people}
+
+
 @router.put("/admin/settings/pickup-slots")
 async def update_settings_admin(payload: PickupSlotSettingsUpdate, admin: dict = Depends(require_admin)):
     updates = {}

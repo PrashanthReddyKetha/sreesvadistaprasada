@@ -17,12 +17,18 @@ export default function SlotSettingsTab() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
   const [askPause, setAskPause] = useState(false);
+  const [waiting, setWaiting] = useState(null);   // who asked to be told when the kitchen reopens
+
+  const loadWaiting = useCallback(() => {
+    api.get('/admin/settings/pickup-slots/reopen-waiting').then(r => setWaiting(r.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     api.get('/admin/settings/pickup-slots')
       .then(r => setSettings(r.data))
       .catch(() => setMsg('Could not load settings.'));
-  }, []);
+    loadWaiting();
+  }, [loadWaiting]);
 
   const save = async (patch) => {
     setSaving(true);
@@ -50,7 +56,7 @@ export default function SlotSettingsTab() {
       {askPause && (
         <ConfirmAction title={settings.paused ? 'Resume orders?' : 'Pause orders?'} danger={!settings.paused} busy={saving}
           confirmLabel={settings.paused ? 'Yes, resume' : 'Yes, pause'} onCancel={() => setAskPause(false)}
-          onConfirm={async () => { await save({ paused: !settings.paused }); setAskPause(false); }}
+          onConfirm={async () => { await save({ paused: !settings.paused }); setAskPause(false); setTimeout(loadWaiting, 3000); }}
           rows={settings.paused ? [
             ['Now', 'paused — checkout is switched off'],
             ['After', 'live — customers can order again'],
@@ -87,6 +93,26 @@ export default function SlotSettingsTab() {
             defaultValue={settings.paused_message || ''}
             onBlur={e => e.target.value !== (settings.paused_message || '') && save({ paused_message: e.target.value })}
           />
+        )}
+        {waiting && (settings.paused || waiting.count > 0) && (
+          waiting.count === 0 ? (
+            <p className="mt-3 text-xs" style={{ color: C.muted }}>No one has asked to hear when you reopen yet.</p>
+          ) : (
+            <details className="mt-3 text-xs" style={{ color: C.muted }}>
+              <summary className="cursor-pointer font-bold" style={{ color: C.burgundy }}>
+                {waiting.count} {waiting.count === 1 ? 'person is' : 'people are'} waiting to hear you've reopened
+              </summary>
+              <ul className="mt-2 space-y-1">
+                {waiting.people.map(p => (
+                  <li key={p.email} className="flex justify-between gap-3">
+                    <span className="truncate">{p.name ? `${p.name} · ` : ''}{p.email}</span>
+                    <span className="shrink-0">{p.created_at ? new Date(p.created_at + 'Z').toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' }) : ''}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2">They get an email (and a phone alert where turned on) when you resume orders after more than 30 minutes; the list then clears.</p>
+            </details>
+          )
         )}
       </div>
 
