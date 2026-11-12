@@ -6,7 +6,7 @@ export const heroSlides = [
     image: '/hero/welcome-spread.jpg',
     title: "Welcome Home.",
     subtitle: "Authentic South Indian home cooking from Andhra, made fresh in Milton Keynes — the taste you missed, carried forward with love.",
-    description: "Order in a few taps — collect in ~40 minutes and save 10%.",
+    description: "Order in a few taps — collect in under 60 minutes and save 10%.",
     cta: "Order Now",
     link: "/order"
   },
@@ -343,7 +343,7 @@ export const faqData = [
       { q: 'Where do you deliver?', a: 'We deliver full meals and Dabba Wala tiffin plans across Milton Keynes (postcodes MK1–MK19) from our Greenleys kitchen, and you can always collect. The order page shows whether delivery is running today. Andhra pickles and podis are coming soon, and Edinburgh and Glasgow are planned — join the waitlist.' },
       { q: 'What are the delivery charges?', a: 'Delivery is charged by distance from our Greenleys kitchen, from £2.49, and is free once your order passes the threshold for your zone (from £28). Your exact fee shows at checkout. Collection is free and saves 10%.' },
       { q: 'What is the minimum order?', a: '£15, for delivery and for collection.' },
-      { q: 'How long does delivery take?', a: '30–60 minutes across Milton Keynes. Collection orders are ready from about 40 minutes — you pick a slot at checkout.' },
+      { q: 'How long does delivery take?', a: '30–60 minutes across Milton Keynes. Collection orders are ready in under 60 minutes — you pick a slot at checkout.' },
       { q: 'What are your opening hours?', a: 'We are open seven days a week. Opening and closing times are set by the kitchen and shown live on the order page and on our Contact page.' },
     ]
   },

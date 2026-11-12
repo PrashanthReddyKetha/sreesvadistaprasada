@@ -1313,7 +1313,7 @@ const CheckoutInner = () => {
           )}
           <p className="text-sm text-gray-500 mb-6">
             {deliveryType === 'takeaway'
-              ? (success.slotFinal ? 'We\u2019ll text you when it\u2019s ready \u2014 just give your order number at the door.' : 'Ready in about 40 minutes \u2014 we\u2019ll text you when it\u2019s ready to collect.')
+              ? (success.slotFinal ? 'We\u2019ll text you when it\u2019s ready \u2014 just give your order number at the door.' : 'Ready in under 60 minutes \u2014 we\u2019ll text you when it\u2019s ready to collect.')
               : 'Estimated time: 40\u201350 minutes'}
           </p>
           <LoyaltyBanner />

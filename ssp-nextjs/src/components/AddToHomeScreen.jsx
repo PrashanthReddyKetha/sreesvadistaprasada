@@ -70,7 +70,7 @@ export default function AddToHomeScreen({ variant = 'card' }) {
         🪷 Keep Amma&apos;s kitchen one tap away
       </p>
       <p className="text-xs leading-relaxed mb-2.5" style={{ color: '#5C4B47' }}>
-        Add Svadista to your home screen — next time, your dosa is just one tap and ~40 minutes away.
+        Add Svadista to your home screen — next time, your dosa is just one tap and under 60 minutes away.
       </p>
       {isIOS && !canPrompt ? (
         showIOSteps ? (

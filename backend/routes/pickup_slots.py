@@ -40,8 +40,8 @@ DEFAULT_SETTINGS = {
     # Dabba Wala plans on sale (admin toggle). Off = "opening soon": the page takes names for the launch instead (owner, 10 Nov 2026).
     "dabba_open": False,
     "slot_minutes": 15,
-    # Minimum prep time: every order needs 40 minutes before collection/delivery
-    "lead_time_minutes": 40,
+    # Minimum prep time: every order needs 60 minutes before collection/delivery
+    "lead_time_minutes": 60,
     "max_orders_per_slot": None,  # None = unlimited
     "days": {
         "mon": {"closed": False, "open": "07:00", "close": "23:00"},

@@ -80,7 +80,7 @@ const CATEGORY_FAQS = {
    podis:     'How much podi do I need per serving?' — 'Typically 1–2 teaspoons per serving. A 100g jar lasts a household of 4 about 2–3 weeks.' */
 
 const GENERAL_FAQS = [
-  { q:'How do I get my order?', a:'Order online and collect from our kitchen in Greenleys, Milton Keynes (MK12) — usually ready in about 40 minutes, and collection saves 10%. When delivery is switched on you can choose it at checkout.' },
+  { q:'How do I get my order?', a:'Order online and collect from our kitchen in Greenleys, Milton Keynes (MK12) — usually ready in under 60 minutes, and collection saves 10%. When delivery is switched on you can choose it at checkout.' },
   { q:'Is there a minimum order?', a:'Yes — the minimum order is £15.' },
   { q:'Can I customise my order?', a:'Yes — use the Special Instructions field at checkout for any requests.' },
   { q:'Do you cater for large groups?', a:'Yes! Visit our Catering page to request a quote for events and celebrations.' },
