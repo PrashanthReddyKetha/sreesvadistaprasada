@@ -110,6 +110,7 @@ def fresh_state(monkeypatch):
     run(db.payments.create_index("pi_id", unique=True))
     run(db.email_optouts.create_index("email", unique=True))
     monkeypatch.setattr(pickup_slots, "open_now", lambda settings, now=None: True)   # tests run at any hour; the hours rule has its own test
+    monkeypatch.setattr(pickup_slots, "asap_open", lambda settings, now=None: pickup_slots.open_now(settings, now))   # same: the closing cut-off has its own test
 
     async def _deliveries_on():
         return None

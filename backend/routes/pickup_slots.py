@@ -43,6 +43,8 @@ DEFAULT_SETTINGS = {
     # Minimum prep time: every order needs 60 minutes before collection/delivery
     "lead_time_minutes": 60,
     "max_orders_per_slot": None,  # None = unlimited
+    # Single slots the owner has switched off ("YYYY-MM-DDTHH:MM", London time); past ones are dropped on each change
+    "blocked_slots": [],
     "days": {
         "mon": {"closed": False, "open": "07:00", "close": "23:00"},
         "tue": {"closed": False, "open": "07:00", "close": "23:00"},
@@ -134,8 +136,9 @@ def _parse_hhmm(day: date, hhmm: str) -> datetime:
     return datetime.combine(day, t, tzinfo=LONDON)
 
 
-def generate_slots(settings: dict, day: date, now: Optional[datetime] = None) -> list[dict]:
-    """All slots for a London calendar day that are still bookable (past lead time)."""
+def generate_slots(settings: dict, day: date, now: Optional[datetime] = None, include_blocked: bool = False) -> list[dict]:
+    """All slots for a London calendar day that are still bookable (past lead time, not blocked by the owner).
+    include_blocked=True keeps blocked slots, flagged, for the admin grid."""
     now = now or datetime.now(LONDON)
     hours = settings["days"].get(DAY_KEYS[day.weekday()])
     if not hours or hours.get("closed"):
@@ -145,16 +148,21 @@ def generate_slots(settings: dict, day: date, now: Optional[datetime] = None) ->
     close = _parse_hhmm(day, hours["close"])
     # Prep clock starts when the kitchen opens, not when the order was placed
     earliest = max(now, cur) + timedelta(minutes=settings["lead_time_minutes"])
+    blocked = set(settings.get("blocked_slots") or [])
     slots = []
     while cur + step <= close:
-        if cur >= earliest:
+        iso = cur.strftime("%Y-%m-%dT%H:%M")
+        if cur >= earliest and (include_blocked or iso not in blocked):
             h12 = cur.hour % 12 or 12
             ampm = "am" if cur.hour < 12 else "pm"
-            slots.append({
-                "iso": cur.strftime("%Y-%m-%dT%H:%M"),
+            slot = {
+                "iso": iso,
                 "label": f"{h12}:{cur.minute:02d} {ampm}",
                 "end_label": (cur + step).strftime("%H:%M"),
-            })
+            }
+            if include_blocked:
+                slot["blocked"] = iso in blocked
+            slots.append(slot)
         cur += step
     return slots
 
@@ -167,6 +175,16 @@ def open_now(settings: dict, now: Optional[datetime] = None) -> bool:
     if not hours or hours.get("closed"):
         return False
     return _parse_hhmm(now.date(), hours.get("open", "00:00")) <= now <= _parse_hhmm(now.date(), hours.get("close", "00:00"))
+
+
+def asap_open(settings: dict, now: Optional[datetime] = None) -> bool:
+    """ASAP is taken only while it can be ready before closing: open now, and the prep time still fits before close
+    (owner, 12 Nov 2026). Slots already stop that early."""
+    now = now or datetime.now(LONDON)
+    if not open_now(settings, now):
+        return False
+    hours = settings["days"].get(DAY_KEYS[now.weekday()], {})
+    return now + timedelta(minutes=settings["lead_time_minutes"]) <= _parse_hhmm(now.date(), hours.get("close", "00:00"))
 
 
 def next_slots(settings: dict, now: Optional[datetime] = None, limit: int = 3) -> list[dict]:
@@ -183,10 +201,12 @@ def next_slots(settings: dict, now: Optional[datetime] = None, limit: int = 3) -
 
 def closed_message(settings: dict, now: Optional[datetime] = None) -> str:
     coming = next_slots(settings, now)
+    closed = ("We've stopped taking ASAP orders for today — the kitchen closes soon." if open_now(settings, now)
+              else "We're closed right now.")
     if not coming:
-        return "We're closed right now and have no collection times open yet — please check back later."
+        return f"{closed} No collection times are open yet — please check back later."
     when = ", ".join(f"{c['day']} {c['label']}" for c in coming)
-    return f"We're closed right now. Pick a collection time to pre-order — next available: {when}."
+    return f"{closed} Pick a collection time to pre-order — next available: {when}."
 
 
 def slot_in_grid(settings: dict, slot_iso: str, now: Optional[datetime] = None) -> bool:
@@ -291,7 +311,7 @@ async def list_pickup_slots(date_str: Optional[str] = Query(None, alias="date"))
         "paused": False,
         "date": day.isoformat(),
         "slot_minutes": settings["slot_minutes"],
-        "asap_available": day == now.date() and open_now(settings, now),   # same rule as pricing (A-0004 COM-002)
+        "asap_available": day == now.date() and asap_open(settings, now),   # same rule as pricing (A-0004 COM-002)
         "closed": closed_today and not slots,
         "slots": slots,
     }
@@ -444,3 +464,43 @@ async def update_settings_admin(payload: PickupSlotSettingsUpdate, admin: dict =
             pass
         asyncio.create_task(broadcast_kitchen_reopened(closed_at))
     return settings
+
+
+class SlotBlock(BaseModel):
+    slot: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$")
+    blocked: bool
+
+
+@router.get("/admin/settings/pickup-slots/grid")
+async def admin_slot_grid(date_str: Optional[str] = Query(None, alias="date"), _: dict = Depends(require_admin)):
+    """Today's or tomorrow's bookable slots with their blocked flag, for switching single slots off."""
+    settings = await get_slot_settings()
+    now = datetime.now(LONDON)
+    day = now.date()
+    if date_str:
+        try:
+            day = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(400, "date must be YYYY-MM-DD")
+        if day not in (now.date(), now.date() + timedelta(days=1)):
+            raise HTTPException(400, "Only today and tomorrow can be changed")
+    return {"date": day.isoformat(), "slots": generate_slots(settings, day, now, include_blocked=True)}
+
+
+@router.put("/admin/settings/pickup-slots/blocked")
+async def admin_block_slot(payload: SlotBlock, admin: dict = Depends(require_admin)):
+    """Switch one collection slot off (or back on). Orders already booked into it are not affected."""
+    settings = await get_slot_settings()
+    now = datetime.now(LONDON)
+    if payload.blocked and not any(s["iso"] == payload.slot for day in (now.date(), now.date() + timedelta(days=1))
+                                   for s in generate_slots(settings, day, now, include_blocked=True)):
+        raise HTTPException(400, "That collection time is not open for booking")
+    current = set(settings.get("blocked_slots") or [])
+    updated = (current | {payload.slot}) if payload.blocked else (current - {payload.slot})
+    today = now.strftime("%Y-%m-%d")
+    updated = sorted(s for s in updated if s[:10] >= today)
+    await db.settings.update_one({"_id": SETTINGS_ID}, {"$set": {"blocked_slots": updated}}, upsert=True)
+    await record_admin_action(admin, "blocked a collection time" if payload.blocked else "reopened a collection time",
+                              "ordering settings", {"slot": payload.slot, "blocked": not payload.blocked},
+                              {"slot": payload.slot, "blocked": payload.blocked})
+    return {"blocked_slots": updated}

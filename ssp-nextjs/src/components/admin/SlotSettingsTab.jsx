@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, PauseCircle, PlayCircle } from 'lucide-react';
 import api from '@/api';
 import ConfirmAction from '@/components/admin/ConfirmAction';
@@ -130,6 +130,8 @@ export default function SlotSettingsTab() {
         </div>
       </div>
 
+      <BlockedSlots />
+
       {/* Opening hours */}
       <div className="bg-white rounded-xl p-5" style={{ border: `1px solid ${C.line}` }}>
         <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: C.gold }}>Opening hours</p>
@@ -162,6 +164,84 @@ export default function SlotSettingsTab() {
       </div>
 
       {msg && <p className="text-sm font-bold" style={{ color: msg === 'Saved ✓' ? C.green : C.red }}>{String(msg)}</p>}
+    </div>
+  );
+}
+
+const londonDate = (offsetDays) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' })
+  .format(new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000));
+
+/** Switch single collection times off (and back on) for today or tomorrow. */
+function BlockedSlots() {
+  const [day, setDay] = useState('today');
+  const [slots, setSlots] = useState(null);
+  const [busy, setBusy] = useState(null);       // iso being changed
+  const [err, setErr] = useState('');
+
+  const load = useCallback(async (which) => {
+    try {
+      const r = await api.get('/admin/settings/pickup-slots/grid', { params: { date: londonDate(which === 'tomorrow' ? 1 : 0) } });
+      setSlots(r.data.slots);
+      setErr('');
+    } catch {
+      setErr('Could not load collection times.');
+    }
+  }, []);
+
+  useEffect(() => { load(day); }, [day, load]);
+
+  const toggle = async (s) => {
+    setBusy(s.iso);
+    setErr('');
+    try {
+      const r = await api.put('/admin/settings/pickup-slots/blocked', { slot: s.iso, blocked: !s.blocked });
+      const off = new Set(r.data.blocked_slots);
+      setSlots(list => list.map(x => ({ ...x, blocked: off.has(x.iso) })));
+    } catch (e) {
+      setErr(e.response?.data?.detail || 'Could not change that time.');
+      load(day);
+    } finally { setBusy(null); }
+  };
+
+  const offCount = slots ? slots.filter(s => s.blocked).length : 0;
+
+  return (
+    <div className="bg-white rounded-xl p-5" style={{ border: `1px solid ${C.line}` }}>
+      <div className="flex items-center justify-between gap-3 mb-1">
+        <p className="text-xs font-black uppercase tracking-widest" style={{ color: C.gold }}>Unavailable times</p>
+        <div className="flex rounded-lg overflow-hidden text-xs font-bold" style={{ border: `1px solid ${C.line}` }}>
+          {[['today', 'Today'], ['tomorrow', 'Tomorrow']].map(([v, l]) => (
+            <button key={v} onClick={() => { if (v !== day) { setSlots(null); setErr(''); setDay(v); } }} className="px-3 py-1.5"
+              style={day === v ? { backgroundColor: C.burgundy, color: '#fff' } : { color: C.muted }}>{l}</button>
+          ))}
+        </div>
+      </div>
+      <p className="text-xs mb-3" style={{ color: C.muted }}>
+        Tap a time to stop customers choosing it; tap again to reopen it. Orders already booked for that time are kept.
+      </p>
+      {!slots && !err && <RefreshCw size={18} className="animate-spin" style={{ color: C.burgundy }} />}
+      {slots && slots.length === 0 && (
+        <p className="text-sm" style={{ color: C.muted }}>No collection times left to book {day === 'today' ? 'today' : 'tomorrow'}.</p>
+      )}
+      {slots && slots.length > 0 && (
+        <>
+          <div className="flex flex-wrap gap-2">
+            {slots.map(s => (
+              <button key={s.iso} onClick={() => toggle(s)} disabled={busy === s.iso} aria-pressed={s.blocked}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50"
+                style={s.blocked
+                  ? { backgroundColor: '#FDECEA', color: C.red, border: `1px solid ${C.red}`, textDecoration: 'line-through' }
+                  : { backgroundColor: '#fff', color: C.green, border: `1px solid ${C.line}` }}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs mt-3" style={{ color: offCount ? C.red : C.muted }}>
+            {offCount ? `${offCount} time${offCount === 1 ? '' : 's'} switched off` : 'All times open'}
+          </p>
+        </>
+      )}
+      {err && <p className="text-xs font-bold mt-2" style={{ color: C.red }}>{String(err)}</p>}
     </div>
   );
 }

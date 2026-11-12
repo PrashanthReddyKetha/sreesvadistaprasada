@@ -375,7 +375,7 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
     the server-verified total used at order creation.
     Does NOT create an order or charge anything.
     """
-    from routes.pickup_slots import get_slot_settings, slot_in_grid, slot_remaining, open_now, closed_message
+    from routes.pickup_slots import get_slot_settings, slot_in_grid, slot_remaining, asap_open, closed_message
     slot_settings = await get_slot_settings()
     if slot_settings.get("paused"):
         raise HTTPException(status_code=400, detail=(
@@ -412,7 +412,7 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
                 "Pre-order items are prepared the night before — "
                 "please choose a collection slot for tomorrow."))
 
-    if body.order_type == "takeaway" and not body.scheduled_slot and body.items and not open_now(slot_settings):
+    if body.order_type == "takeaway" and not body.scheduled_slot and body.items and not asap_open(slot_settings):
         raise HTTPException(status_code=400, detail=closed_message(slot_settings))
     if body.scheduled_slot and body.order_type == "takeaway":
         if not slot_in_grid(slot_settings, body.scheduled_slot):
@@ -542,7 +542,7 @@ async def create_order(
     # passed slot must NEVER reject the order — bump forward, else fall back to ASAP.
     scheduled_final = None
     slot_was_bumped = False
-    from routes.pickup_slots import get_slot_settings, slot_in_grid, try_reserve_slot, generate_slots, next_slots, open_now, LONDON
+    from routes.pickup_slots import get_slot_settings, slot_in_grid, try_reserve_slot, generate_slots, next_slots, open_now, asap_open, LONDON
     slot_settings = await get_slot_settings()
     now_ldn = datetime.now(LONDON)
     # The customer has paid. If the kitchen closed (by hours or by the pause switch) between pricing and payment, the
@@ -550,13 +550,14 @@ async def create_order(
     kitchen_note = None
     if slot_settings.get("paused"):
         kitchen_note = "paid while ordering was paused"
-    if payload.delivery_type == "takeaway" and not payload.scheduled_slot and not open_now(slot_settings, now_ldn):
+    if payload.delivery_type == "takeaway" and not payload.scheduled_slot and not asap_open(slot_settings, now_ldn):
         for cand in next_slots(slot_settings, now_ldn, limit=12):
             if await try_reserve_slot(slot_settings, cand["iso"]):
                 scheduled_final = cand["iso"]
                 slot_was_bumped = True
                 break
-        kitchen_note = (kitchen_note + "; " if kitchen_note else "") + "paid outside opening hours"
+        kitchen_note = (kitchen_note + "; " if kitchen_note else "") + (
+            "ASAP paid too close to closing" if open_now(slot_settings, now_ldn) else "paid outside opening hours")
     if payload.delivery_type != "takeaway":
         if not open_now(slot_settings, now_ldn):
             kitchen_note = (kitchen_note + "; " if kitchen_note else "") + "delivery paid outside opening hours"

@@ -465,3 +465,56 @@ def test_opening_hours_move_to_7am_11pm_once(client, admin_headers, db):
                json={"days": {"sun": {"closed": True, "open": "07:00", "close": "23:00"}}})
     run(apply_opening_hours_7_to_11())                                   # a restart keeps the admin's later change
     assert client.get("/api/opening-hours").json()["days"]["sun"]["closed"] is True
+
+
+# ── ASAP stops before closing; single slots can be switched off (owner, 12 Nov 2026) ─────────────────────────
+
+def _real_module():
+    import importlib.util, pathlib
+    from routes import pickup_slots
+    spec = importlib.util.spec_from_file_location("ps_fresh2", pathlib.Path(pickup_slots.__file__))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_asap_stops_once_the_prep_time_no_longer_fits_before_closing():
+    from datetime import datetime
+    mod = _real_module()
+    settings = {**mod.DEFAULT_SETTINGS, "lead_time_minutes": 60}            # Wednesday 07:00–23:00
+    at = lambda h, m: datetime(2026, 10, 7, h, m, tzinfo=mod.LONDON)
+    assert mod.asap_open(settings, at(12, 0)) is True
+    assert mod.asap_open(settings, at(22, 0)) is True                       # ready by 23:00
+    assert mod.asap_open(settings, at(22, 1)) is False                      # still open, but too late for ASAP
+    assert mod.open_now(settings, at(22, 30)) is True
+    assert "stopped taking ASAP" in mod.closed_message(settings, at(22, 30))
+
+
+def test_a_blocked_slot_is_not_offered_or_bookable(client, menu, db):
+    from routes import pickup_slots
+    settings = run(pickup_slots.get_slot_settings())
+    tomorrow = (datetime.now(pickup_slots.LONDON) + timedelta(days=1)).date()
+    first, second = [s["iso"] for s in pickup_slots.generate_slots(settings, tomorrow)[:2]]
+    run(db.settings.update_one({"_id": "pickup_slots"}, {"$set": {"blocked_slots": [first]}}, upsert=True))
+    shown = [s["iso"] for s in client.get("/api/pickup-slots", params={"date": tomorrow.isoformat()}).json()["slots"]]
+    assert first not in shown and second in shown
+    r = calc(client, [("curry", 1), ("biryani", 1)], scheduled_slot=first)
+    assert r.status_code == 400 and "pick another" in r.json()["detail"]
+    assert calc(client, [("curry", 1), ("biryani", 1)], scheduled_slot=second).status_code == 200
+
+
+def test_admin_blocks_and_reopens_a_slot(client, admin_headers, user_headers):
+    from routes import pickup_slots
+    tomorrow = (datetime.now(pickup_slots.LONDON) + timedelta(days=1)).date().isoformat()
+    grid = client.get("/api/admin/settings/pickup-slots/grid", params={"date": tomorrow}, headers=admin_headers).json()["slots"]
+    slot = grid[0]["iso"]
+    assert grid[0]["blocked"] is False
+    assert client.put("/api/admin/settings/pickup-slots/blocked", json={"slot": slot, "blocked": True}, headers=user_headers).status_code == 403
+    r = client.put("/api/admin/settings/pickup-slots/blocked", json={"slot": slot, "blocked": True}, headers=admin_headers)
+    assert r.status_code == 200 and slot in r.json()["blocked_slots"]
+    grid = client.get("/api/admin/settings/pickup-slots/grid", params={"date": tomorrow}, headers=admin_headers).json()["slots"]
+    assert grid[0]["iso"] == slot and grid[0]["blocked"] is True
+    r = client.put("/api/admin/settings/pickup-slots/blocked", json={"slot": slot, "blocked": False}, headers=admin_headers)
+    assert slot not in r.json()["blocked_slots"]
+    bad = client.put("/api/admin/settings/pickup-slots/blocked", json={"slot": "2020-01-01T09:00", "blocked": True}, headers=admin_headers)
+    assert bad.status_code == 400
