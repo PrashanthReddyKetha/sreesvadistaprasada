@@ -4,8 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Leaf, Flame, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { images } from '@/data/mockData';
+import StoryVideo from '@/components/StoryVideo';
 
-const OurStory = ({ seoLine }) => {
+const OurStory = ({ seoLine, thali }) => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
@@ -52,9 +53,31 @@ const OurStory = ({ seoLine }) => {
               </p>
             </div>
             <div className="relative rounded-lg overflow-hidden" style={{ height: '400px' }}>
-              <Image fill sizes="(max-width:768px) 100vw, 50vw" src={images.cooking} alt="Ragi sangati with pappu and pachi pulusu on a steel plate" className="object-cover" />
+              <Image fill sizes="(max-width:768px) 100vw, 50vw" src={thali || images.cooking} alt={thali ? "A veg thali served on a banana leaf: rice, pappu, sambar, curries, pickles, pachadi and pappadam" : "Ragi sangati with pappu and pachi pulusu on a steel plate"} className="object-cover" />
               <div className="absolute inset-0 rounded-lg" style={{ border: '1px solid rgba(244, 196, 48, 0.2)' }} />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why We Lit This Stove — the kitchen's own film, as on the home page */}
+      <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#FFFFFF' }} data-testid="story-film-section">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] mb-3" style={{ color: '#8B6914' }}>A minute in our kitchen</p>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>
+                Why We Lit This Stove
+              </h2>
+              <p className="text-base text-gray-600 leading-relaxed mb-4">
+                Somewhere between a UK winter and a long video call home, we missed something no menu was naming — the smell of tadka hitting hot ghee, the hiss of mustard seeds, and a plate placed in front of us without being asked for.
+              </p>
+              <p className="text-base text-gray-600 leading-relaxed">
+                So we lit our own stove. Idli with podi and ghee, a thali on a banana leaf, punugulu hot from the pan — this is what a minute in our kitchen looks like.
+              </p>
+            </div>
+            {/* the words first on phones, so the film that follows has its story */}
+            <StoryVideo />
           </div>
         </div>
       </section>
