@@ -1,18 +1,12 @@
 import SeoSection from '@/components/SeoSection';
 import { categorySeo } from '@/lib/categorySeo';
+import { canonicalOf, slugToTab } from '@/lib/menuSections';
 import { notFound, permanentRedirect } from 'next/navigation';
 import PrasadaClient from '../PrasadaClient';
 
 export const revalidate = 3600;
 
-const SLUG_TO_TAB = {
-  'bites-starters':    'Bites & Starters',
-  'curries':           'Curries',
-  'biriyanis-rice':    'Biriyanis & Rice',
-  'thalis-rice-bowls': 'Thalis & Rice Bowls',
-  'indo-chinese':      'Indo Chinese',
-  'naivedyam':         '🪔 Naivedyam',
-};
+const SLUG_TO_TAB = slugToTab('prasada');   // src/lib/menuSections.js
 
 // Old URLs 308 to their current home instead of serving duplicate pages
 const LEGACY_REDIRECTS = {
@@ -45,7 +39,7 @@ export async function generateMetadata(props) {
     title: seo?.title || `${clean} — Prasada Vegetarian Menu`,
     description: seo?.description || `Order authentic South Indian vegetarian ${clean.toLowerCase()}. Pure veg, freshly cooked in Milton Keynes.`,
     keywords: seo?.keywords,
-    alternates: { canonical: `https://sreesvadistaprasada.com/prasada/${params.subsection}` },
+    alternates: { canonical: canonicalOf('prasada', params.subsection) },
   };
 }
 
@@ -55,11 +49,12 @@ export default async function PrasadaSubsectionPage(props) {
   if (legacy) permanentRedirect(`/prasada/${legacy}`);
   const tab = SLUG_TO_TAB[params.subsection];
   if (!tab) notFound();
+  const clean = tab.replace(/[^\w\s&-]/g, '').trim();
   const initialItems = await getItems();
   const seo = categorySeo('prasada', params.subsection);
   return (
     <>
-      <PrasadaClient initialItems={initialItems} initialTab={tab} seoHeading={seo?.h1} />
+      <PrasadaClient initialItems={initialItems} initialTab={tab} seoHeading={seo?.h1 || clean} />
       {seo?.body && <SeoSection paragraphs={[seo.body]} links={[['Full Prasada vegetarian menu', '/prasada'], ['Order online', '/order']]} />}
     </>
   );

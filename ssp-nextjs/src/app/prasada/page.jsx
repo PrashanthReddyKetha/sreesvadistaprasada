@@ -26,7 +26,7 @@ const FAQS = [
   { q: 'Is there a minimum order for Prasada delivery?', a: 'Yes, a £15 minimum order applies. Collection orders skip the delivery fee and get 10% off — you can schedule a pickup time at checkout.' },
 ];
 
-// Crawlable links to the subsection pages (the tab bar navigates by hash only)
+// Links to the subsection pages at the foot of the page too (the tab bar links to them as well)
 const SECTION_LINKS = [
   { href: '/prasada/bites-starters', label: 'Bites & Starters' },
   { href: '/prasada/curries', label: 'Curries' },
@@ -41,7 +41,7 @@ export default async function PrasadaPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema(FAQS)) }} />
-      <PrasadaClient initialItems={initialItems} initialTab="Bites & Starters" />
+      <PrasadaClient initialItems={initialItems} initialTab="All" />
       <SeoSection heading={PAGE_SEO['/prasada'].content.heading} paragraphs={PAGE_SEO['/prasada'].content.paragraphs} />
       <FaqSection title="Prasada pure-veg menu — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse Prasada by section" />
     </>

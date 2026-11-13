@@ -95,11 +95,12 @@ async function backgroundTab() {
   await done(v, p);
 }
 
-// 6 — basket drawer: add on a menu page, + twice and − once in the drawer
+// 6 — basket drawer: add on a menu section page, + twice and − once in the drawer
+//     (Idli & Vada, not the whole breakfast list: its first dish must differ from the order page's dish A)
 async function drawer() {
   const v = await visitor({ ip: '10.0.0.7', phone: false, ua: DESK_UA });
   const p = await v.ctx.newPage();
-  await p.goto(BASE + '/breakfast', { waitUntil: 'load' }); await sleep(2500);
+  await p.goto(BASE + '/breakfast/idli-vada', { waitUntil: 'load' }); await sleep(2500);
   await p.locator('button:has-text("Essential only")').click(); await sleep(400);
   await p.locator('button:visible:has-text("Add")').first().click(); await sleep(1200);
   await p.locator('[data-testid="cart-button"]:visible').first().click(); await sleep(1500);

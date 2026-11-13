@@ -58,6 +58,20 @@ export const CATEGORY_SEO = {
       keywords: ['chicken rice bowl Milton Keynes', 'South Indian meals Milton Keynes', 'non veg meal Milton Keynes', 'Indian lunch Milton Keynes'],
       body: 'A South Indian non-veg meal in one bowl: steamed rice, chicken curry, pickle and an omelette — what a Telugu home puts on the table for lunch. Made fresh in Milton Keynes. If you want an Indian lunch in Milton Keynes without choosing four dishes, this chicken rice bowl is the non-veg meal to order — one of our South Indian meals in Milton Keynes, ready to collect or have delivered.',
     },
+    'ragi-specials': {
+      title: 'Ragi Sangati with Chicken Curry Milton Keynes',
+      h1: 'Ragi specials in Milton Keynes — ragi sangati with chicken curry, ragi jaava & ragi buttermilk',
+      description: 'Ragi sangati with Andhra chicken curry, ragi jaava (malt) and ragi buttermilk in Milton Keynes — finger-millet dishes made fresh to order. Order online.',
+      keywords: ['ragi sangati Milton Keynes', 'ragi mudde near me', 'ragi jaava', 'finger millet food Milton Keynes'],
+      body: 'Ragi sangati — finger-millet balls, the Rayalaseema staple — with our Andhra chicken curry, plus ragi jaava (malt) and ragi buttermilk. The same ragi dishes are on our Ragi Specials page, with the vegetarian pairing on the Prasada menu.',
+    },
+    'protein-healthy-bowls': {
+      title: 'Protein Bowls Milton Keynes',
+      h1: 'Protein bowls in Milton Keynes — chicken, egg and veg',
+      description: 'Protein bowls in Milton Keynes — the Protein Non-Veg Bowl, Protein Egg Bowl and Protein Veg Bowl, made fresh South Indian style. Order online.',
+      keywords: ['protein bowl Milton Keynes', 'healthy Indian food Milton Keynes', 'high protein meal Milton Keynes', 'chicken protein bowl'],
+      body: 'Three bowls for the days you are counting protein: the Protein Non-Veg Bowl, the Protein Egg Bowl and the Protein Veg Bowl, each made fresh in our Milton Keynes kitchen with South Indian spicing.',
+    },
   },
   prasada: {
     'bites-starters': {
@@ -101,6 +115,20 @@ export const CATEGORY_SEO = {
       description: 'Naivedyam in Milton Keynes — temple-style pulihora, prasadam pulihora and lemon rice, prepared without onion or garlic in the sattvic tradition.',
       keywords: ['naivedyam Milton Keynes', 'pulihora Milton Keynes', 'prasadam pulihora', 'temple food UK', 'no onion no garlic food'],
       body: 'Naivedyam is food first prepared as an offering. Ours is pulihora, prasadam pulihora and lemon rice, made without onion or garlic in the sattvic tradition — for festivals, poojas, or simply because tamarind rice is what home tastes like. Order pulihora in Milton Keynes for a pooja or a festival — temple food with no onion and no garlic — and tell us in advance if you need larger quantities.',
+    },
+    'ragi-specials': {
+      title: 'Ragi Sangati with Pappu Milton Keynes',
+      h1: 'Vegetarian ragi specials in Milton Keynes — ragi sangati with pappu & pachi pulusu',
+      description: 'Ragi sangati with pappu and pachi pulusu, ragi jaava (malt) and ragi buttermilk in Milton Keynes — vegetarian finger-millet dishes made fresh. Order online.',
+      keywords: ['ragi sangati Milton Keynes', 'ragi mudde pappu', 'ragi jaava', 'ragi buttermilk', 'millet food Milton Keynes'],
+      body: 'Ragi sangati the vegetarian way — with pappu and pachi pulusu — alongside ragi jaava (malt) and ragi buttermilk. The full set, including the chicken curry pairing, is on our Ragi Specials page.',
+    },
+    'protein-healthy-bowls': {
+      title: 'Veg Protein Bowl Milton Keynes',
+      h1: 'Vegetarian protein bowl in Milton Keynes',
+      description: 'The Protein Veg Bowl in Milton Keynes — a vegetarian protein bowl made fresh, South Indian style. Order online.',
+      keywords: ['veg protein bowl Milton Keynes', 'vegetarian high protein meal', 'healthy vegetarian food Milton Keynes'],
+      body: 'Our Protein Veg Bowl, made fresh in Milton Keynes for anyone counting protein without meat. The egg and chicken bowls are on the Svadista menu.',
     },
   },
   breakfast: {

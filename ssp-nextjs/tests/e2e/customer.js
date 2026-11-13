@@ -50,6 +50,10 @@ async function signIn(page, who) {
   await p.goto(BASE + '/breakfast', { waitUntil: 'load' }); await sleep(1500);
   const addButtons = await p.locator('button:visible:has-text("Add")').count();
   check('breakfast menu lists dishes with Add buttons', addButtons >= 3, `${addButtons} buttons`);
+  // the section tabs are links: tapping one opens that section's own page, with its own title and heading
+  await p.locator('nav[aria-label="Sections"] a:has-text("Dosas")').click(); await sleep(1500);
+  check('tapping a section tab opens its own page', p.url().endsWith('/breakfast/dosas') && /dosa/i.test(await p.title()), `${p.url()} — ${await p.title()}`);
+  check('…with the section\'s own heading', /dosa/i.test(await p.locator('h1').first().innerText()));
   const hrefs = await p.locator('a[href^="/breakfast/"]').evaluateAll(as => as.map(a => a.getAttribute('href')));
   const href = hrefs.find(h => h.split('/').length === 4) || hrefs[0];      // /breakfast/<section>/<dish>
   await p.goto(BASE + href, { waitUntil: 'load' }); await sleep(1000);

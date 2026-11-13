@@ -1,17 +1,12 @@
 import SeoSection from '@/components/SeoSection';
 import { categorySeo } from '@/lib/categorySeo';
+import { canonicalOf, slugToTab } from '@/lib/menuSections';
 import { notFound } from 'next/navigation';
 import BreakfastClient from '../BreakfastClient';
 
 export const revalidate = 3600;
 
-const SLUG_TO_TAB = {
-  'idli-vada':            'Idli & Vada',
-  'dosas':                'Dosas',
-  'chicken-curry-combos': 'Chicken Curry Combos',
-  'poori-others':         'Poori & Others',
-  'english-breakfast':    'English Breakfast',
-};
+const SLUG_TO_TAB = slugToTab('breakfast');   // src/lib/menuSections.js
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';
 
@@ -36,7 +31,7 @@ export async function generateMetadata(props) {
     title: seo?.title || `${tab} — Breakfast Menu`,
     description: seo?.description || `Authentic ${tab.toLowerCase()} made fresh every morning in Milton Keynes. Order online.`,
     keywords: seo?.keywords,
-    alternates: { canonical: `https://sreesvadistaprasada.com/breakfast/${params.subsection}` },
+    alternates: { canonical: canonicalOf('breakfast', params.subsection) },
   };
 }
 
@@ -48,7 +43,7 @@ export default async function BreakfastSubsectionPage(props) {
   const seo = categorySeo('breakfast', params.subsection);
   return (
     <>
-      <BreakfastClient initialItems={initialItems} initialTab={tab} seoHeading={seo?.h1} />
+      <BreakfastClient initialItems={initialItems} initialTab={tab} seoHeading={seo?.h1 || tab} />
       {seo?.body && <SeoSection paragraphs={[seo.body]} links={[['Full breakfast menu', '/breakfast'], ['Order online', '/order']]} />}
     </>
   );

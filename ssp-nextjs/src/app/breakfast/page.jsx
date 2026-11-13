@@ -26,7 +26,7 @@ const FAQS = [
   { q: 'What is the difference between Masala Dosa and Karam Dosa?', a: 'Masala Dosa is filled with a mild spiced potato filling (aloo masala) and served with sambar and coconut chutney. Our Nellore Ghee Karam Dosa is spread with fiery Andhra karam (chilli-garlic paste) and finished with ghee. It is spicier and more intense.' },
 ];
 
-// Crawlable links to the subsection pages (the tab bar navigates by hash only)
+// Links to the subsection pages at the foot of the page too (the tab bar links to them as well)
 const SECTION_LINKS = [
   { href: '/breakfast/idli-vada', label: 'Idli & Vada' },
   { href: '/breakfast/dosas', label: 'Dosas' },
@@ -40,7 +40,7 @@ export default async function BreakfastPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema(FAQS)) }} />
-      <BreakfastClient initialItems={initialItems} initialTab="Idli & Vada" />
+      <BreakfastClient initialItems={initialItems} initialTab="All" />
       <SeoSection heading={PAGE_SEO['/breakfast'].content.heading} paragraphs={PAGE_SEO['/breakfast'].content.paragraphs} />
       <FaqSection title="South Indian breakfast — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse breakfast by section" />
     </>

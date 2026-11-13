@@ -1,18 +1,17 @@
 'use client';
 import { byMenuOrder } from '@/lib/menuOrder';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { ShoppingCart, Sun, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
+import SectionTabs, { useSectionTab } from '@/components/SectionTabs';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackMenuCategoryView } from '@/lib/analytics';
 import { recordSearch } from '@/lib/track';
-
-const TABS = ['All', 'Idli & Vada', 'Dosas', 'Chicken Curry Combos', 'Poori & Others', 'English Breakfast'];
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
@@ -27,40 +26,11 @@ function SpiceBar({ level }) {
 }
 
 const Breakfast = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
-  const SK = 'ssp_breakfast_tab';
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window === 'undefined') return initialTab;
-    const stored = sessionStorage.getItem(SK);
-    return (stored && TABS.includes(stored)) ? stored : initialTab;
-  });
+  const [activeTab, pickTab] = useSectionTab(initialTab);   // the tab is the page's address: /breakfast/<section>
   const [search, setSearch] = useState('');
-  const tabRowRef = useRef(null);
-  const tabMounted = useRef(false);
   useEffect(() => { trackMenuCategoryView('breakfast'); }, []);
-
-  useEffect(() => {
-    const isBack = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
-    if (!isBack) window.scrollTo({ top: 0, behavior: 'instant' });
-  }, []);
-
-  const selectTab = (tab) => { setActiveTab(tab); sessionStorage.setItem(SK, tab); };
-
-  useEffect(() => {
-    if (!tabMounted.current) { tabMounted.current = true; return; }
-    const anchor = document.getElementById('section-tabs-anchor');
-    if (!anchor) return;
-    const headerH = document.querySelector('header')?.offsetHeight ?? 96;
-    const anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: anchorTop - headerH, behavior: 'instant' });
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (!tabRowRef.current) return;
-    const active = tabRowRef.current.querySelector('[data-active="true"]');
-    if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-  }, [activeTab]);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -87,11 +57,14 @@ const Breakfast = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
         .sort(byMenuOrder)
     : byTab;
 
+  // the hero: the first photographed dish of the open tab, so each subsection page shows its own food
+  const heroDish = (activeTab === 'All' ? [...items].sort(byMenuOrder) : byTab).find(d => d.image && !d.image.includes('unsplash.com'));
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(45vh, 360px)' }}>
-        <Image fill priority sizes="100vw" src="https://images.unsplash.com/photo-1630383249896-424e482df921?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920" alt="Breakfast" className="object-cover" />
+        <Image fill priority key={heroDish?.image || 'default'} sizes="100vw" src={heroDish?.image || "https://images.unsplash.com/photo-1630383249896-424e482df921?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920"} alt={heroDish?.name || "Breakfast"} className="object-cover" quality={70} />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(180,101,11,0.92) 0%, rgba(146,64,14,0.8) 50%, rgba(180,101,11,0.6) 100%)' }} />
         <div className="relative h-full w-full px-4 md:px-8 flex items-center">
           <div className="max-w-7xl mx-auto w-full">
@@ -100,10 +73,17 @@ const Breakfast = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
               <Sun size={18} className="text-yellow-300" />
               <span className="text-xs uppercase tracking-[0.25em] text-yellow-200 font-medium">Morning Specials</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Breakfast
-              <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">{seoHeading || <>South Indian breakfast in Milton Keynes — dosa, idli &amp; vada</>}</span>
-            </h1>
+            {seoHeading ? (
+              <>
+                <p className="text-xl sm:text-2xl font-bold text-white/90 mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>Breakfast</p>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 tracking-tight leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>{seoHeading}</h1>
+              </>
+            ) : (
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Breakfast
+                <span className="block text-sm sm:text-base font-normal tracking-wide mt-2 opacity-90">South Indian breakfast in Milton Keynes — dosa, idli &amp; vada</span>
+              </h1>
+            )}
             <p className="text-lg text-yellow-100 leading-relaxed mb-1">Idlis, dosas, vadas and more.</p>
             <p className="text-sm text-yellow-200 leading-relaxed max-w-md">
               Authentic South Indian tiffins made fresh every morning. Start your day the right way.
@@ -139,19 +119,7 @@ const Breakfast = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
               {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"><X size={13} /></button>}
             </div>
           </div>
-          <div ref={tabRowRef} className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            {TABS.map(tab => (
-              <button key={tab} onClick={() => selectTab(tab)}
-                data-active={activeTab === tab ? 'true' : 'false'}
-                className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
-                style={{
-                  backgroundColor: activeTab === tab ? '#B45309' : 'transparent',
-                  color: activeTab === tab ? 'white' : '#374151',
-                }}>
-                {tab}
-              </button>
-            ))}
-          </div>
+          <SectionTabs section="breakfast" active={activeTab} onPick={pickTab} color="#B45309" />
         </div>
       </div>
 

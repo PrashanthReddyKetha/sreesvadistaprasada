@@ -25,7 +25,7 @@ const FAQS = [
   { q: 'What makes Svadista different from other Indian takeaways?', a: 'Svadista means delicious in Sanskrit. Unlike generic Indian takeaways, every Svadista dish uses regional Andhra Telugu recipes — slow-cooked gravies, whole spice tadkas, and chicken cooked on the bone.' },
 ];
 
-// Crawlable links to the subsection pages (the tab bar navigates by hash only)
+// Links to the subsection pages at the foot of the page too (the tab bar links to them as well)
 const SECTION_LINKS = [
   { href: '/svadista/starters', label: 'Starters' },
   { href: '/svadista/curries', label: 'Curries' },
@@ -40,7 +40,7 @@ export default async function SvadistaPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema(FAQS)) }} />
-      <SvadistaClient initialItems={initialItems} initialTab="Starters" />
+      <SvadistaClient initialItems={initialItems} initialTab="All" />
       <SeoSection heading={PAGE_SEO['/svadista'].content.heading} paragraphs={PAGE_SEO['/svadista'].content.paragraphs} />
       <FaqSection title="Svadista non-veg menu — your questions" faqs={FAQS} links={SECTION_LINKS} linksTitle="Browse Svadista by section" />
     </>
