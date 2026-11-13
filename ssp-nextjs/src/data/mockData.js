@@ -322,11 +322,11 @@ export const chefSpecial = {
 export const images = {
   svadistaCinema: "https://images.unsplash.com/photo-1588594907301-823478af8be5?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1200",
   picklesShelf: "https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800",
-  storyTeaser: "https://images.unsplash.com/photo-1748323123788-87a32949f4b0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800",
+  storyTeaser: "/hero/story-table.jpg",                 // the kitchen's own spread with the meal boxes (owner photo, Nov 2026)
   tiffin: "https://images.unsplash.com/photo-1657205937707-940bf77b2602?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800",
-  svadista: "https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1200",
-  prasada: "https://images.unsplash.com/photo-1742281257687-092746ad6021?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1200",
-  cooking: "https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=800"
+  svadista: "/home/svadista-flatlay.jpg",             // six Svadista dishes from above (owner photo)
+  prasada: "/home/prasada-spread.jpg",                // the Prasada spread used on the home page
+  cooking: "/story/ragi-sangati-plate.jpg"           // ragi sangati with pappu and pachi pulusu on a steel plate
 };
 
 export const deliveryAreas = [

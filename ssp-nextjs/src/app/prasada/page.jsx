@@ -1,12 +1,12 @@
 import SeoSection from '@/components/SeoSection';
-import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
+import { pageMeta, PAGE_SEO, SITE } from '@/lib/seo/pages';
 import PrasadaClient from './PrasadaClient';
 import FaqSection, { faqSchema } from '@/components/FaqSection';
 import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
 export const revalidate = 3600;
 
-export const metadata = pageMeta('/prasada', { image: 'https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?w=1200&q=80' });
+export const metadata = pageMeta('/prasada', { image: `${SITE}/home/prasada-spread.jpg` });
 
 async function getItems() {
   const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://svadista-backend.onrender.com';

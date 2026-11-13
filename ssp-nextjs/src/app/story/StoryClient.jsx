@@ -10,11 +10,7 @@ const OurStory = ({ seoLine }) => {
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(50vh, 420px)' }}>
-        <img loading="lazy" decoding="async"
-          src={images.storyTeaser}
-          alt="Our Story"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <Image fill priority sizes="100vw" src={images.storyTeaser} alt="A Sree Svadista Prasada spread: curries, biryanis, starters and meal boxes" className="object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)' }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
           <div className="max-w-xl">
@@ -56,11 +52,7 @@ const OurStory = ({ seoLine }) => {
               </p>
             </div>
             <div className="relative rounded-lg overflow-hidden" style={{ height: '400px' }}>
-              <img loading="lazy" decoding="async"
-                src={images.cooking}
-                alt="Traditional South Indian cooking"
-                className="w-full h-full object-cover"
-              />
+              <Image fill sizes="(max-width:768px) 100vw, 50vw" src={images.cooking} alt="Ragi sangati with pappu and pachi pulusu on a steel plate" className="object-cover" />
               <div className="absolute inset-0 rounded-lg" style={{ border: '1px solid rgba(244, 196, 48, 0.2)' }} />
             </div>
           </div>
@@ -111,7 +103,7 @@ const OurStory = ({ seoLine }) => {
           <div className="grid md:grid-cols-2 gap-6 md:gap-8">
             {/* Svadista Card */}
             <div className="relative rounded-lg overflow-hidden" style={{ height: '320px' }}>
-              <Image fill src={images.svadista} alt="Sree Svadista" className="absolute inset-0 object-cover" sizes="(max-width:768px) 100vw,50vw" />
+              <Image fill src={images.svadista} alt="Sree Svadista non-veg dishes" className="absolute inset-0 object-cover" sizes="(max-width:768px) 100vw,50vw" />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(139,58,58,0.95) 0%, rgba(139,58,58,0.5) 50%, rgba(139,58,58,0.1) 100%)' }} />
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <div className="flex items-center gap-2 mb-2">
@@ -128,7 +120,7 @@ const OurStory = ({ seoLine }) => {
 
             {/* Prasada Card */}
             <div className="relative rounded-lg overflow-hidden" style={{ height: '320px' }}>
-              <Image fill src={images.prasada} alt="Sree Prasada" className="absolute inset-0 object-cover" sizes="(max-width:768px) 100vw,50vw" />
+              <Image fill src={images.prasada} alt="Sree Prasada vegetarian dishes" className="absolute inset-0 object-cover" sizes="(max-width:768px) 100vw,50vw" />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(74,124,89,0.95) 0%, rgba(74,124,89,0.5) 50%, rgba(74,124,89,0.1) 100%)' }} />
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <div className="flex items-center gap-2 mb-2">

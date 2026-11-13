@@ -1,8 +1,8 @@
-import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
+import { pageMeta, PAGE_SEO, SITE } from '@/lib/seo/pages';
 import StoryClient from './StoryClient';
 import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
-export const metadata = pageMeta('/story', { image: 'https://images.unsplash.com/photo-1752673508949-f4aeeaef75f0?w=1200&q=80' });
+export const metadata = pageMeta('/story', { image: `${SITE}/hero/story-table.jpg` });
 
 const jsonLd = {
   '@context': 'https://schema.org',

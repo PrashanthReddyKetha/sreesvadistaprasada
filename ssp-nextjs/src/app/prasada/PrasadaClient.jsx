@@ -76,12 +76,13 @@ const Prasada = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
 
   // the hero: the first photographed dish of the open tab, so each subsection page shows its own food
   const heroDish = (activeTab === 'All' ? [...items].sort(byMenuOrder) : byTab).find(d => d.image && !d.image.includes('unsplash.com'));
+  const heroSrc = activeTab === 'All' || !heroDish?.image ? '/home/prasada-spread.jpg' : heroDish.image;   // the kitchen's own spread on All and as the fallback
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] relative overflow-hidden" style={{ height: 'min(45vh, 360px)' }}>
-        <Image fill priority key={heroDish?.image || 'default'} sizes="100vw" src={heroDish?.image || "https://images.unsplash.com/photo-1512058564366-18510be2db19?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920"} alt={heroDish?.name || "Prasada Veg"} className="object-cover" quality={70} />
+        <Image fill priority key={heroSrc} sizes="100vw" src={heroSrc} alt={activeTab === 'All' || !heroDish ? 'Sree Prasada dishes' : heroDish.name} className="object-cover" quality={70} />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(22,101,52,0.92) 0%, rgba(15,118,110,0.8) 50%, rgba(22,101,52,0.6) 100%)' }} />
         <div className="relative h-full w-full px-4 md:px-8 flex items-center">
           <div className="max-w-7xl mx-auto w-full">

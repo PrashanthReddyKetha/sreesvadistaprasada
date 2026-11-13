@@ -1,9 +1,9 @@
 import SeoSection from '@/components/SeoSection';
-import { pageMeta, PAGE_SEO } from '@/lib/seo/pages';
+import { pageMeta, PAGE_SEO, SITE } from '@/lib/seo/pages';
 import CateringClient from './CateringClient';
 import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
 
-export const metadata = pageMeta('/catering', { image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80' });
+export const metadata = pageMeta('/catering', { image: `${SITE}/hero/catering-spread.jpg` });
 
 const jsonLd = {
   '@context': 'https://schema.org',

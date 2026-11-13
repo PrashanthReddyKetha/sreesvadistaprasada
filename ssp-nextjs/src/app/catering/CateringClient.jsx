@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Users, Briefcase, Heart, Calendar, ArrowRight, Phone, Star, Sparkles } from 'lucide-react';
 import api from '@/api';
 import { trackEnquirySubmit } from '@/lib/analytics';
@@ -36,11 +37,7 @@ const Catering = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#FDFBF7' }}>
       {/* Hero */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)] pb-6 relative overflow-hidden" style={{ minHeight: 'min(50vh, 420px)' }}>
-        <img loading="lazy" decoding="async"
-          src="https://images.unsplash.com/photo-1652250406978-622a4d19e7e3?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=1920"
-          alt="Catering Services"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <Image fill priority sizes="100vw" src="/hero/catering-spread.jpg" alt="A Sree Svadista Prasada catering spread seen from above" className="object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(128,0,32,0.92) 0%, rgba(128,0,32,0.7) 50%, rgba(128,0,32,0.5) 100%)' }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
           <div className="max-w-xl">
