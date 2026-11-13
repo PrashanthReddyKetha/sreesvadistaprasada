@@ -91,11 +91,11 @@ export const menuItems = {
     },
     {
       id: 3,
-      name: "Natu Kodi Biriyani",
-      description: "Country chicken biriyani with aromatic basmati rice, the village way",
+      name: "Natu Kodi Biryani",
+      description: "Country chicken biryani with aromatic basmati rice, the village way",
       price: "£15.99",
       spiceLevel: 3,
-      subcategory: "Biriyanis",
+      subcategory: "Biryanis",
       image: "https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     },
     {
@@ -129,11 +129,11 @@ export const menuItems = {
     },
     {
       id: 7,
-      name: "Veg Biriyani",
-      description: "Fragrant vegetable biriyani with seasonal vegetables and raita",
+      name: "Veg Biryani",
+      description: "Fragrant vegetable biryani with seasonal vegetables and raita",
       price: "£11.99",
       spiceLevel: 2,
-      subcategory: "Biriyanis",
+      subcategory: "Biryanis",
       image: "https://images.unsplash.com/photo-1727404746799-253aa9a8ace6?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=400"
     }
   ],
@@ -284,7 +284,7 @@ export const subscriptionPlans = [
     features: [
       "One meal per day (weekdays)",
       "Choose Veg, Non-Veg, or Mixed box",
-      "Sunday special biriyani included",
+      "Sunday special biryani included",
       "Flexible pause & resume anytime",
       "Priority delivery slots"
     ],
@@ -485,7 +485,7 @@ export const galleryImages = [
   { id: 1, src: 'https://images.unsplash.com/photo-1587409059079-e1f9f840caa0?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Traditional brass vessels with sweets', category: 'Kitchen' },
   { id: 2, src: 'https://images.unsplash.com/photo-1773209927959-b2959be5e684?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Chicken curry in clay pot', category: 'Svadista' },
   { id: 3, src: 'https://images.unsplash.com/photo-1742281257687-092746ad6021?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Traditional South Indian thali', category: 'Prasada' },
-  { id: 4, src: 'https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Fragrant biriyani', category: 'Svadista' },
+  { id: 4, src: 'https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Fragrant biryani', category: 'Svadista' },
   { id: 5, src: 'https://images.unsplash.com/photo-1743615467363-250466982515?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Masala Dosa on banana leaf', category: 'Breakfast' },
   { id: 6, src: 'https://images.unsplash.com/photo-1588594907301-823478af8be5?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Spices tempering in oil', category: 'Kitchen' },
   { id: 7, src: 'https://images.unsplash.com/photo-1660541880621-2c37ce3a88b4?crop=entropy&cs=srgb&fm=jpg&auto=format&q=60&w=600', alt: 'Pickle jars on wooden shelf', category: 'Snacks' },

@@ -290,7 +290,7 @@ const Footer = () => {
           <ul className="flex flex-wrap gap-x-4 gap-y-2">
             {[
               ['Indian takeaway menu', '/menu'], ['South Indian breakfast', '/breakfast'], ['Dosa', '/breakfast/dosas'],
-              ['Idli & vada', '/breakfast/idli-vada'], ['Chicken biryani', '/svadista/biriyani'], ['Andhra chicken curry', '/svadista/curries'],
+              ['Idli & vada', '/breakfast/idli-vada'], ['Chicken biryani', '/svadista/biryani'], ['Andhra chicken curry', '/svadista/curries'],
               ['Veg thali', '/prasada/thalis-rice-bowls'], ['Vegetarian South Indian food', '/prasada'], ['Indian tiffin service', '/subscriptions'],
               ['Indian catering', '/catering'], ['Indian food delivery', '/delivery'], ['South Indian home kitchen', '/milton-keynes'],
             ].map(([label, href]) => (

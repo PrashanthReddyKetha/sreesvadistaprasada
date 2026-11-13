@@ -7,13 +7,13 @@
 export const SECTIONS = {
   svadista: {
     base: '/svadista',
-    tabs: [['Starters', 'starters'], ['Curries', 'curries'], ['Biriyani', 'biriyani'], ['Rice Bowls', 'rice-bowls'],
+    tabs: [['Starters', 'starters'], ['Curries', 'curries'], ['Biryani', 'biryani'], ['Rice Bowls', 'rice-bowls'],
            ['Egg Specials', 'egg-specials'], ['Indo - Chinese', 'indo-chinese'], ['Ragi Specials', 'ragi-specials'],
            ['Protein & Healthy Bowls', 'protein-healthy-bowls']],
   },
   prasada: {
     base: '/prasada',
-    tabs: [['Bites & Starters', 'bites-starters'], ['Curries', 'curries'], ['Biriyanis & Rice', 'biriyanis-rice'],
+    tabs: [['Bites & Starters', 'bites-starters'], ['Curries', 'curries'], ['Biryanis & Rice', 'biryanis-rice'],
            ['Thalis & Rice Bowls', 'thalis-rice-bowls'], ['Indo Chinese', 'indo-chinese'], ['🪔 Naivedyam', 'naivedyam'],
            ['Ragi Specials', 'ragi-specials'], ['Protein & Healthy Bowls', 'protein-healthy-bowls']],
   },
@@ -23,6 +23,9 @@ export const SECTIONS = {
            ['Poori & Others', 'poori-others'], ['English Breakfast', 'english-breakfast']],
   },
 };
+
+/** Spelling-tolerant match between a dish's subcategory and a tab: "Biriyani" data still lands on the "Biryani" tab. */
+export const sameTab = (subcategory, tab) => (subcategory || '').replace(/Biriyani/gi, 'Biryani') === tab;
 
 export const tabsOf = (section) => ['All', ...SECTIONS[section].tabs.map(([tab]) => tab)];
 

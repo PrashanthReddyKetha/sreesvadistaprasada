@@ -56,6 +56,13 @@ const nextConfig = {
       { source: '/breakfast/idli-vada/ghee-karam-idli', destination: '/breakfast/idli-vada/ghee-karam-idli-3-pcs', permanent: true },
       { source: '/breakfast/dosas/masala-dosa-2-pcs', destination: '/breakfast/dosas/masala-dosa', permanent: true },
       { source: '/svadista/curries/andhra-chicken-curry', destination: '/svadista/curries/spicy-andhra-chicken-curry', permanent: true },
+      // "Biryani", the spelling people search for, replaced "Biriyani" in the tab addresses (owner, 13 Nov 2026)
+      { source: '/svadista/biriyani', destination: '/svadista/biryani', permanent: true },
+      { source: '/svadista/biriyani/mutton-biriyani', destination: '/svadista/biryani/mutton-biryani', permanent: true },
+      { source: '/svadista/biryani/mutton-biriyani', destination: '/svadista/biryani/mutton-biryani', permanent: true },
+      { source: '/svadista/biriyani/:slug', destination: '/svadista/biryani/:slug', permanent: true },
+      { source: '/prasada/biriyanis-rice', destination: '/prasada/biryanis-rice', permanent: true },
+      { source: '/prasada/biriyanis-rice/:slug', destination: '/prasada/biryanis-rice/:slug', permanent: true },
     ]
   },
 }

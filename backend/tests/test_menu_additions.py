@@ -63,7 +63,7 @@ def test_gongura_prawns_and_joint_biryani_are_added_to_svadista(db):
     prawns = run(db.menu_items.find_one({"slug": "gongura-prawns"}))
     biryani = run(db.menu_items.find_one({"slug": "joint-chicken-biryani"}))
     assert (prawns["category"], prawns["subcategory"], prawns["price"]) == ("nonVeg", "Curries", 12.99)
-    assert (biryani["category"], biryani["subcategory"], biryani["price"]) == ("nonVeg", "Biriyani", 12.99)
+    assert (biryani["category"], biryani["subcategory"], biryani["price"]) == ("nonVeg", "Biryani", 12.99)
     assert prawns["available"] and biryani["available"] and prawns["id"] and biryani["id"]
 
 
@@ -75,3 +75,19 @@ def test_a_deleted_new_dish_stays_deleted_and_an_existing_one_is_kept(db):
     run(db.menu_items.delete_one({"slug": "joint-chicken-biryani"}))
     run(menu_additions.apply_gongura_prawns_and_joint_biryani())
     assert run(db.menu_items.find_one({"slug": "joint-chicken-biryani"})) is None
+
+
+def test_biryani_spelling_moves_tabs_names_and_addresses_once(db):
+    run(db.menu_items.insert_many([
+        {"id": "b1", "name": "Mutton Biriyani", "slug": "mutton-biriyani", "category": "nonVeg", "subcategory": "Biriyani", "extra_categories": []},
+        {"id": "b2", "name": "Veg Fried Rice", "slug": "veg-fried-rice", "category": "veg", "subcategory": "Indo Chinese",
+         "extra_categories": [{"category": "veg", "subcategory": "Biriyanis & Rice"}]},
+        {"id": "b3", "name": "Jeera Rice", "slug": "jeera-rice", "category": "veg", "subcategory": "Biriyanis & Rice", "extra_categories": []},
+    ]))
+    run(menu_additions.apply_biryani_spelling())
+    run(menu_additions.apply_biryani_spelling())   # a second boot changes nothing
+    mutton = run(db.menu_items.find_one({"id": "b1"}))
+    assert (mutton["name"], mutton["slug"], mutton["subcategory"]) == ("Mutton Biryani", "mutton-biryani", "Biryani")
+    assert run(db.menu_items.find_one({"id": "b2"}))["extra_categories"] == [{"category": "veg", "subcategory": "Biryanis & Rice"}]
+    assert run(db.menu_items.find_one({"id": "b3"}))["subcategory"] == "Biryanis & Rice"
+    assert run(db.menu_items.count_documents({"$or": [{"subcategory": {"$regex": "Biriyani"}}, {"name": {"$regex": "Biriyani"}}]})) == 0

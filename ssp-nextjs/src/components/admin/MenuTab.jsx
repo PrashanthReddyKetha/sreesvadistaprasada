@@ -455,7 +455,7 @@ export default function MenuTab() {
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Subcategory</label>
                     <input value={editForm.subcategory||''} onChange={e=>setEditForm(p=>({...p,subcategory:e.target.value}))}
-                      placeholder="e.g. Starters, Curries, Biriyanis"
+                      placeholder="e.g. Starters, Curries, Biryanis"
                       className="w-full border rounded-lg px-3 py-2 text-sm" style={{ borderColor:'#d1d5db' }} />
                   </div>
                 </div>

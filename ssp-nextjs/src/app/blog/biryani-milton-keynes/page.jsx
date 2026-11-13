@@ -24,16 +24,16 @@ export const metadata = {
 
 // Live menu items only — names, prices and slugs verified against the API
 const BIRYANIS = [
-  { name: 'Chicken Dum Biryani', price: '£10.99', slug: '/svadista/biriyani/chicken-dum-biryani', note: 'Sealed and slow-finished on dum so the rice steams in the masala — deeper, layered flavour.' },
-  { name: 'Chicken Fry Piece Biryani', price: '£10.99', slug: '/svadista/biriyani/chicken-fry-piece-biryani', note: 'Crisp-fried marinated chicken folded through the rice — the Andhra street favourite.' },
+  { name: 'Chicken Dum Biryani', price: '£10.99', slug: '/svadista/biryani/chicken-dum-biryani', note: 'Sealed and slow-finished on dum so the rice steams in the masala — deeper, layered flavour.' },
+  { name: 'Chicken Fry Piece Biryani', price: '£10.99', slug: '/svadista/biryani/chicken-fry-piece-biryani', note: 'Crisp-fried marinated chicken folded through the rice — the Andhra street favourite.' },
 ];
 
 const VEG_RICE = [
-  { name: 'Gongura Rice', price: '£7.99', slug: '/prasada/biriyanis-rice/gongura-rice' },
-  { name: 'Ghee Pappu Avakaya Rice', price: '£7.99', slug: '/prasada/biriyanis-rice/ghee-pappu-avakaya-rice' },
-  { name: 'Sambar Rice', price: '£6.99', slug: '/prasada/biriyanis-rice/sambar-rice' },
-  { name: 'Tomato Rice', price: '£5.99', slug: '/prasada/biriyanis-rice/tomato-rice' },
-  { name: 'Jeera Rice', price: '£4.99', slug: '/prasada/biriyanis-rice/jeera-rice' },
+  { name: 'Gongura Rice', price: '£7.99', slug: '/prasada/biryanis-rice/gongura-rice' },
+  { name: 'Ghee Pappu Avakaya Rice', price: '£7.99', slug: '/prasada/biryanis-rice/ghee-pappu-avakaya-rice' },
+  { name: 'Sambar Rice', price: '£6.99', slug: '/prasada/biryanis-rice/sambar-rice' },
+  { name: 'Tomato Rice', price: '£5.99', slug: '/prasada/biryanis-rice/tomato-rice' },
+  { name: 'Jeera Rice', price: '£4.99', slug: '/prasada/biryanis-rice/jeera-rice' },
 ];
 
 const FAQS = [
@@ -130,7 +130,7 @@ export default function BiryaniGuide() {
 
           <h2>Ordering in Milton Keynes</h2>
           <p>
-            Order from the <Link href="/svadista/biriyani">biryani menu</Link> for{' '}
+            Order from the <Link href="/svadista/biryani">biryani menu</Link> for{' '}
             <Link href="/delivery">delivery across all MK postcodes</Link> in 30–60 minutes, or collect from Greenleys and save 10%. Spice levels are marked on every dish page — and yes, you can ask for milder in the order notes.
           </p>
 

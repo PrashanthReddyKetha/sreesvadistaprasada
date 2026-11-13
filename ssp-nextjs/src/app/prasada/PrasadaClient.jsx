@@ -8,6 +8,7 @@ import { Leaf, ShoppingCart, Star, Flame, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import SectionTabs, { useSectionTab } from '@/components/SectionTabs';
+import { sameTab } from '@/lib/menuSections';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackMenuCategoryView } from '@/lib/analytics';
@@ -18,7 +19,7 @@ const SECTION_MESSAGES = {
   'Indo Chinese': { icon: '🥢', text: 'Desi-Chinese fusion with a South Indian soul — bold, tangy, utterly addictive.' },
   'Curries': { icon: '🫕', text: 'Slow-cooked gravies and lentils, simmered in generations-old spice blends.' },
   '🪔 Naivedyam': { icon: '🪔', text: 'Sacred rice offerings, prepared with devotion.' },
-  'Biriyanis & Rice': { icon: '🌾', text: 'Fragrant long-grain rice layered with spices, herbs, and wholesome vegetables.' },
+  'Biryanis & Rice': { icon: '🌾', text: 'Fragrant long-grain rice layered with spices, herbs, and wholesome vegetables.' },
   'Thalis & Rice Bowls': { icon: '🍱', text: 'Complete meals — the full Veg Thali, and rice bowls with dal, pickle and more.' },
   'Ragi Specials': { icon: '🌾', text: 'Wholesome finger millet dishes — nutritious, traditional and deeply rooted in Andhra life.' },
   'Protein & Healthy Bowls': { icon: '🥗', text: 'Balanced bowls built for energy — grains, protein and fresh vegetables in every bite.' },
@@ -62,8 +63,8 @@ const Prasada = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
   const byTab = activeTab === 'All'
     ? [...items].sort(byMenuOrder)
     : [...items].filter(i =>
-        i.subcategory === subcategoryKey ||
-        (i.extra_categories || []).some(ec => ec.category === 'veg' && ec.subcategory === subcategoryKey)
+        sameTab(i.subcategory, subcategoryKey) ||
+        (i.extra_categories || []).some(ec => ec.category === 'veg' && sameTab(ec.subcategory, subcategoryKey))
       ).sort(byMenuOrder);
 
   // Searching spans every subsection on this page, not just the active tab

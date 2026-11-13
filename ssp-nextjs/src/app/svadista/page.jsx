@@ -29,7 +29,7 @@ const FAQS = [
 const SECTION_LINKS = [
   { href: '/svadista/starters', label: 'Starters' },
   { href: '/svadista/curries', label: 'Curries' },
-  { href: '/svadista/biriyani', label: 'Biriyani' },
+  { href: '/svadista/biryani', label: 'Biryani' },
   { href: '/svadista/rice-bowls', label: 'Rice Bowls' },
   { href: '/svadista/egg-specials', label: 'Egg Specials' },
   { href: '/svadista/indo-chinese', label: 'Indo-Chinese' },

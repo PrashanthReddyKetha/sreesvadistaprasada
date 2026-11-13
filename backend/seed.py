@@ -130,20 +130,20 @@ MENU_ITEMS = [
      "description": "Tiger prawns cooked in a thick, spiced Andhra masala with onions, tomatoes and curry leaves.",
      "seo_meta_description": "Taste authentic Prawns Iguru (Royyala Iguru) in Milton Keynes. Fresh prawns simmered in a semi-dry, heavily spiced caramelized onion gravy."},
 
-    # ── SVADISTA / BIRIYANI ──────────────────────────────────────────────────
-    {"name": "Chicken Biryani", "price": 8.99, "category": "nonVeg", "subcategory": "Biriyani", "spice_level": 2, "is_veg": False, "featured": True, "tag": "Popular", "allergens": ["dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
+    # ── SVADISTA / BIRYANI ──────────────────────────────────────────────────
+    {"name": "Chicken Biryani", "price": 8.99, "category": "nonVeg", "subcategory": "Biryani", "spice_level": 2, "is_veg": False, "featured": True, "tag": "Popular", "allergens": ["dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
      "description": "Tender chicken layered with fragrant basmati, fried onions and whole spices — sealed and dum-cooked for deep, complex flavour.",
      "seo_meta_description": "Order authentic, slow-cooked Chicken Biryani in Milton Keynes. Prepared village-style and delivered piping hot to your door. Order online now!"},
-    {"name": "Special Chicken Biryani with Egg", "price": 10.99, "category": "nonVeg", "subcategory": "Biriyani", "spice_level": 2, "is_veg": False, "featured": True, "tag": "⭐ Premium", "allergens": ["dairy", "eggs"], "image": IMG["biryani"], "available": True, "extra_categories": [],
+    {"name": "Special Chicken Biryani with Egg", "price": 10.99, "category": "nonVeg", "subcategory": "Biryani", "spice_level": 2, "is_veg": False, "featured": True, "tag": "⭐ Premium", "allergens": ["dairy", "eggs"], "image": IMG["biryani"], "available": True, "extra_categories": [],
      "description": "Our premium biryani — extra chicken, a whole egg, whole spices, saffron milk and a slow dum cook. Truly special in every sense.",
      "seo_meta_description": "Order our signature Special Chicken Biryani with Egg in Milton Keynes. Double the feast with tender chicken dum pieces and a perfectly spiced egg!"},
-    {"name": "Chicken Fry Piece Biryani", "price": 10.99, "category": "nonVeg", "subcategory": "Biriyani", "spice_level": 3, "is_veg": False, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
+    {"name": "Chicken Fry Piece Biryani", "price": 10.99, "category": "nonVeg", "subcategory": "Biryani", "spice_level": 3, "is_veg": False, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
      "description": "Biryani made with crispy fried chicken pieces layered into aromatic basmati. The best of both worlds — fried and dum.",
      "seo_meta_description": "Savor the iconic Andhra Chicken Fry Piece Biryani in Milton Keynes. Crispy, spiced fried chicken pieces served on a bed of fragrant dum biryani rice!"},
-    {"name": "Mutton Biriyani", "price": 12.99, "category": "nonVeg", "subcategory": "Biriyani", "spice_level": 3, "is_veg": False, "featured": True, "tag": "Chef's Pick", "allergens": ["dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
+    {"name": "Mutton Biryani", "price": 12.99, "category": "nonVeg", "subcategory": "Biryani", "spice_level": 3, "is_veg": False, "featured": True, "tag": "Chef's Pick", "allergens": ["dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
      "description": "Tender mutton pieces marinated overnight, layered with fragrant basmati and sealed — slow-cooked dum style until every grain is infused with flavour.",
      "seo_meta_description": "Craving rich and tender Mutton Biryani in Milton Keynes? Enjoy our authentic, slow-cooked Andhra-style biryani delivered hot. Order today!"},
-    {"name": "Egg Biryani", "price": 8.99, "category": "nonVeg", "subcategory": "Biriyani", "spice_level": 2, "is_veg": False, "featured": False, "tag": "", "allergens": ["eggs", "dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
+    {"name": "Egg Biryani", "price": 8.99, "category": "nonVeg", "subcategory": "Biryani", "spice_level": 2, "is_veg": False, "featured": False, "tag": "", "allergens": ["eggs", "dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
      "description": "Boiled eggs marinated in masala, layered with fragrant basmati and dum-cooked. A flavourful, budget-friendly biryani.",
      "seo_meta_description": "Order aromatic Egg Biryani in Milton Keynes. Perfectly spiced boiled eggs layered with fragrant Basmati rice and caramelized onions. Delivered hot!"},
 
@@ -245,9 +245,9 @@ MENU_ITEMS = [
     {"name": "Veg Noodles", "price": 6.99, "category": "veg", "subcategory": "Indo Chinese", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": ["soy", "gluten"], "image": IMG["noodles"], "available": True, "extra_categories": [],
      "description": "Stir-fried noodles tossed with colourful vegetables, soy sauce, chilli and spring onions.",
      "seo_meta_description": "Veg Noodles delivery Milton Keynes — wok-tossed noodles with colourful vegetables and Indo-Chinese sauces. Quick and satisfying. Order now."},
-    # Veg Fried Rice appears in both Indo Chinese tab AND Biriyanis & Rice tab on Prasada page
+    # Veg Fried Rice appears in both Indo Chinese tab AND Biryanis & Rice tab on Prasada page
     {"name": "Veg Fried Rice", "price": 6.99, "category": "veg", "subcategory": "Indo Chinese", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": ["soy", "sesame"], "image": IMG["fried_rice"], "available": True,
-     "extra_categories": [{"category": "veg", "subcategory": "Biriyanis & Rice"}],
+     "extra_categories": [{"category": "veg", "subcategory": "Biryanis & Rice"}],
      "description": "Wok-tossed basmati with mixed vegetables, soy sauce and a hint of sesame. Light, fragrant and full of colour.",
      "seo_meta_description": "Veg Fried Rice delivery Milton Keynes — wok-tossed basmati with fresh vegetables, soy and sesame. Light, fragrant and colourful. Order now."},
 
@@ -320,45 +320,45 @@ MENU_ITEMS = [
     {"name": "Chekara Pongal", "price": 7.99, "category": "veg", "subcategory": "Naivedyam", "spice_level": 0, "is_veg": True, "featured": False, "tag": "Sweet", "allergens": ["dairy", "nuts"], "image": IMG["pongal"], "available": True, "extra_categories": [],
      "description": "Sweet rice and moong dal cooked with jaggery, ghee, cardamom and cashews. Festive, warming and deeply comforting.",
      "seo_meta_description": "Treat yourself to our decadent Chakkara Pongal in Milton Keynes. Sweet rice cooked in rich milk, organic jaggery, pure ghee, and roasted cashews."},
-    {"name": "Coconut Rice", "price": 4.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": ["nuts"], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Coconut Rice", "price": 4.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": ["nuts"], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Fragrant rice cooked with fresh grated coconut, tempered with mustard, cashews and dried chillies.",
      "seo_meta_description": "Coconut Rice delivery Milton Keynes — fragrant rice with fresh grated coconut, mustard and cashews. Traditional South Indian comfort food. Order now."},
-    {"name": "Tomato Rice", "price": 5.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Tomato Rice", "price": 5.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Fragrant rice cooked with ripe tomatoes, onions and South Indian spices. Tangy, comforting and great on its own.",
      "seo_meta_description": "Tomato Rice delivery Milton Keynes — fragrant rice with ripe tomatoes and South Indian spices. Tangy, comforting one-pot meal. Order now."},
-    {"name": "Pudina Rice", "price": 4.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Pudina Rice", "price": 4.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Basmati rice cooked with fresh mint leaves, whole spices and green chillies. Fragrant, cooling and wonderfully aromatic.",
      "seo_meta_description": "Pudina Rice delivery Milton Keynes — basmati with fresh mint leaves, whole spices and green chillies. Fragrant and cooling. Order now."},
-    {"name": "Coriander Rice", "price": 4.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Coriander Rice", "price": 4.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Rice tossed with a freshly ground coriander paste, lemon and spices. Herb-forward, vibrant and uniquely Andhra.",
      "seo_meta_description": "Coriander Rice delivery Milton Keynes — rice with freshly ground coriander paste, lemon and spices. Herb-forward and vibrant. Order now."},
     {"name": "Cut Pongal", "price": 5.99, "category": "veg", "subcategory": "Naivedyam", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy", "nuts"], "image": IMG["pongal"], "available": True, "extra_categories": [],
      "description": "Ven pongal shaped into thick patties and pan-fried until golden. Crispy outside, soft and peppery inside — a breakfast revelation.",
      "seo_meta_description": "Cut Pongal delivery Milton Keynes — ven pongal patties pan-fried golden crispy outside, soft peppery inside. Breakfast revelation. Order now."},
 
-    # ── PRASADA / BIRIYANIS & RICE ───────────────────────────────────────────
-    {"name": "Jeera Rice", "price": 4.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 0, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["rice"], "available": True, "extra_categories": [],
+    # ── PRASADA / BIRYANIS & RICE ───────────────────────────────────────────
+    {"name": "Jeera Rice", "price": 4.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 0, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Long-grain basmati tempered with cumin seeds, ghee and a pinch of salt. The ideal base for any curry.",
      "seo_meta_description": "Jeera Rice delivery Milton Keynes — fragrant basmati tempered with cumin and ghee. Perfect base for any curry. Order online now."},
-    {"name": "Garlic Rice", "price": 4.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Garlic Rice", "price": 4.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Basmati rice stir-fried with crispy golden garlic, curry leaves and mild spices.",
      "seo_meta_description": "Garlic Rice delivery Milton Keynes — basmati stir-fried with crispy golden garlic and curry leaves. Simple and aromatic. Order now."},
-    {"name": "Jeera Garlic Rice", "price": 5.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Jeera Garlic Rice", "price": 5.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Basmati rice tempered with cumin, crispy golden garlic and a touch of ghee. Aromatic, flavourful and pairs with everything.",
      "seo_meta_description": "Jeera Garlic Rice delivery Milton Keynes — basmati with cumin, crispy golden garlic and ghee. Aromatic pairing for any curry. Order now."},
-    {"name": "Veg Pulao", "price": 6.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
+    {"name": "Veg Pulao", "price": 6.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
      "description": "Fragrant basmati cooked with seasonal vegetables, whole spices and mint.",
      "seo_meta_description": "Veg Pulao delivery Milton Keynes — fragrant basmati with seasonal vegetables, whole spices and mint. Light and wholesome. Order now."},
-    {"name": "Veg Biryani", "price": 7.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
+    {"name": "Veg Biryani", "price": 7.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["biryani"], "available": True, "extra_categories": [],
      "description": "Seasonal vegetables layered with long-grain basmati, whole spices, caramelised onions, and saffron milk — dum-cooked and served with cooling raita.",
      "seo_meta_description": "Fragrant Basmati rice layered with garden vegetables and aromatic spices. Order healthy, authentic Veg Biryani in Milton Keynes today."},
-    {"name": "Sambar Rice", "price": 6.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Sambar Rice", "price": 6.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Hot rice mixed with freshly made sambar and a drizzle of ghee. Classic South Indian comfort food.",
      "seo_meta_description": "Sambar Rice delivery Milton Keynes — hot rice with freshly made sambar and ghee. Classic South Indian comfort food. Order now."},
-    {"name": "Rasam Rice", "price": 5.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Rasam Rice", "price": 5.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 2, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Steamed rice mixed with peppery rasam and ghee. Light, digestive and deeply comforting.",
      "seo_meta_description": "Rasam Rice delivery Milton Keynes — steamed rice with peppery tamarind rasam and ghee. Light, digestive and comforting. Order now."},
-    {"name": "Ghee Pappu Avakaya Rice", "price": 7.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 3, "is_veg": True, "featured": False, "tag": "Andhra Classic", "allergens": ["dairy", "sesame"], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Ghee Pappu Avakaya Rice", "price": 7.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 3, "is_veg": True, "featured": False, "tag": "Andhra Classic", "allergens": ["dairy", "sesame"], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Hot rice mixed with creamy dal, fiery mango pickle and a generous pour of ghee — a quintessential Andhra combination.",
      "seo_meta_description": "Ghee Pappu Avakaya Rice Milton Keynes — hot rice with creamy Andhra dal, fiery mango pickle and ghee. Quintessential Andhra meal. Order now."},
 
@@ -568,13 +568,13 @@ MENU_ITEMS = [
     {"name": "Ghee Karam Button Idli", "price": 5.99, "category": "breakfast", "subcategory": "Idli & Vada", "spice_level": 3, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["idli"], "available": True, "extra_categories": [],
      "description": "Mini idlis tossed in warm desi ghee and fiery Andhra karam chilli paste. A bite-sized twist on a breakfast classic.",
      "seo_meta_description": "Ghee Karam Button Idli Milton Keynes — mini idlis in warm ghee and fiery Andhra karam paste. Bite-sized breakfast classic. Order now."},
-    {"name": "Curd Rice", "price": 5.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 0, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Curd Rice", "price": 5.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 0, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy"], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Cooling rice mixed with fresh yoghurt, tempered with mustard, curry leaves and pomegranate. The perfect finish to any meal.",
      "seo_meta_description": "Curd Rice delivery Milton Keynes — cooling rice with fresh yoghurt, mustard and curry leaves. Classic South Indian comfort food. Order now."},
-    {"name": "Kashmiri Curd Rice", "price": 7.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 0, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy", "nuts"], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Kashmiri Curd Rice", "price": 7.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 0, "is_veg": True, "featured": False, "tag": "", "allergens": ["dairy", "nuts"], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Curd rice topped with pomegranate, grapes, nuts and a hint of saffron — a festive, fruity twist on the South Indian classic.",
      "seo_meta_description": "Kashmiri Curd Rice Milton Keynes — curd rice with pomegranate, grapes, nuts and saffron. Festive fruity twist on a classic. Order now."},
-    {"name": "Gongura Rice", "price": 7.99, "category": "veg", "subcategory": "Biriyanis & Rice", "spice_level": 3, "is_veg": True, "featured": False, "tag": "Andhra Special", "allergens": [], "image": IMG["rice"], "available": True, "extra_categories": [],
+    {"name": "Gongura Rice", "price": 7.99, "category": "veg", "subcategory": "Biryanis & Rice", "spice_level": 3, "is_veg": True, "featured": False, "tag": "Andhra Special", "allergens": [], "image": IMG["rice"], "available": True, "extra_categories": [],
      "description": "Steamed rice tossed with tangy gongura (sorrel) leaf paste and tempered with mustard and dried chillies. Bold and distinctly Andhra.",
      "seo_meta_description": "Gongura Rice delivery Milton Keynes — steamed rice with tangy gongura leaf paste, mustard and dried chillies. Bold Andhra flavour. Order now."},
     {"name": "Potato Fry", "price": 6.99, "category": "veg", "subcategory": "Starters and Evening Delights", "spice_level": 1, "is_veg": True, "featured": False, "tag": "", "allergens": [], "image": IMG["veg_starter"], "available": True, "extra_categories": [],
@@ -650,10 +650,10 @@ async def sync_menu_may_2026():
     # Punugulu's extra_categories (streetFood + breakfast/Poori & Others) is defined
     # directly on its MENU_ITEMS entry and kept in sync by cleanup_menu_april_2026().
 
-    # Veg Fried Rice appears in both Indo Chinese and Biriyanis & Rice tabs
+    # Veg Fried Rice appears in both Indo Chinese and Biryanis & Rice tabs
     await db.menu_items.update_one(
         {"name": "Veg Fried Rice"},
-        {"$set": {"extra_categories": [{"category": "veg", "subcategory": "Biriyanis & Rice"}]}}
+        {"$set": {"extra_categories": [{"category": "veg", "subcategory": "Biryanis & Rice"}]}}
     )
 
     print("May 2026 sync applied.")
@@ -665,7 +665,8 @@ async def update_item_categories():
         "Starters & Snacks": "Starters and Evening Delights",
         "Indo-Chinese":       "Indo Chinese",
         "Curries & Dal":      "Curries & Daal",
-        "Biryani & Rice":     "Biriyanis & Rice",
+        "Biryani & Rice":     "Biryanis & Rice",
+        "Biriyanis & Rice":   "Biryanis & Rice",
         "Rice Specials":      "Naivedyam",
     }
     for old, new in veg_map.items():
@@ -675,7 +676,7 @@ async def update_item_categories():
         )
     nonveg_map = {
         "Indo-Chinese": "Indo - Chinese",
-        "Biryani":      "Biriyani",
+        "Biriyani":     "Biryani",
     }
     for old, new in nonveg_map.items():
         await db.menu_items.update_many(
@@ -809,7 +810,7 @@ async def apply_seo_h1_june_2026():
         "Chicken Biryani":                       "Authentic Chicken Biryani in Milton Keynes",
         "Special Chicken Biryani with Egg":      "Special Chicken Biryani with Egg in Milton Keynes",
         "Chicken Fry Piece Biryani":             "Andhra Chicken Fry Piece Biryani in Milton Keynes",
-        "Mutton Biriyani":                       "Slow-Cooked Mutton Biryani in Milton Keynes",
+        "Mutton Biryani":                        "Slow-Cooked Mutton Biryani in Milton Keynes",
         "Egg Biryani":                           "Fragrant Egg Biryani Delivery in Milton Keynes",
         "Onion Bhaji":                           "Golden Crispy Onion Bhaji in Milton Keynes",
         "Gongura Pappu":                         "Authentic Andhra Gongura Pappu in Milton Keynes",

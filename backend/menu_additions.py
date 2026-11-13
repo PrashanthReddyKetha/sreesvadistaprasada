@@ -305,7 +305,7 @@ async def apply_bowls_at_breakfast():
     )
 
 
-# Gongura Prawns (Svadista › Curries) and Joint Chicken Biryani (Svadista › Biriyani) — owner request and prices, 2026-11-03
+# Gongura Prawns (Svadista › Curries) and Joint Chicken Biryani (Svadista › Biryani) — owner request and prices, 2026-11-03
 GONGURA_PRAWNS_AND_JOINT_BIRYANI = [
     {
         "name": "Gongura Prawns",
@@ -324,7 +324,7 @@ GONGURA_PRAWNS_AND_JOINT_BIRYANI = [
         "description": "A whole chicken leg joint cooked in a rich, spiced masala and served on fragrant biryani rice, finished with cashews and curry leaves.",
         "price": 12.99,
         "category": "nonVeg",
-        "subcategory": "Biriyani",
+        "subcategory": "Biryani",
         "slug": "joint-chicken-biryani",
         "is_veg": False,
         "spice_level": 2,
@@ -357,3 +357,24 @@ async def apply_gongura_prawns_and_joint_biryani():
         {"$set": {"version": GONGURA_PRAWNS_AND_JOINT_BIRYANI_VERSION, "applied_at": datetime.utcnow().isoformat()}},
         upsert=True,
     )
+
+
+# ── "Biryani", the spelling people search for, in place of "Biriyani" (owner, 13 Nov 2026) ─────────────────
+# The tab labels and addresses on the site changed with it; a tab lists the dishes whose subcategory is its
+# name, so the data moves too. Runs on every boot and touches only documents still carrying the old spelling.
+BIRYANI_SUBCATEGORIES = {"Biriyani": "Biryani", "Biriyanis & Rice": "Biryanis & Rice"}
+
+
+async def apply_biryani_spelling():
+    for old, new in BIRYANI_SUBCATEGORIES.items():
+        r = await db.menu_items.update_many({"subcategory": old}, {"$set": {"subcategory": new}})
+        if r.modified_count:
+            print(f"menu_additions: {r.modified_count} dish(es) moved from '{old}' to '{new}'")
+    async for doc in db.menu_items.find({"extra_categories.subcategory": {"$in": list(BIRYANI_SUBCATEGORIES)}}, {"_id": 0, "id": 1, "extra_categories": 1}):
+        fixed = [{**ec, "subcategory": BIRYANI_SUBCATEGORIES.get(ec.get("subcategory"), ec.get("subcategory"))} for ec in doc.get("extra_categories") or []]
+        await db.menu_items.update_one({"id": doc["id"]}, {"$set": {"extra_categories": fixed}})
+    # the one dish named with the old spelling; its address follows (next.config.js redirects the old one)
+    if not await db.menu_items.find_one({"slug": "mutton-biryani"}, {"_id": 1}):
+        r = await db.menu_items.update_one({"name": "Mutton Biriyani"}, {"$set": {"name": "Mutton Biryani", "slug": "mutton-biryani"}})
+        if r.modified_count:
+            print("menu_additions: Mutton Biriyani is now Mutton Biryani (/svadista/biryani/mutton-biryani)")

@@ -44,7 +44,7 @@ export const CATEGORY_SEO = {
       keywords: ['Andhra chicken curry Milton Keynes', 'gongura chicken Milton Keynes', 'chicken curry takeaway Milton Keynes', 'fish pulusu', 'Andhra egg curry'],
       body: 'These are Andhra curries as they are made at home: chicken cooked on the bone with freshly ground spices, a fiery spicy Andhra chicken curry, gongura chicken and gongura prawns soured with sorrel leaves, fish pulusu in tamarind gravy and Andhra egg curry. Order a chicken curry takeaway in Milton Keynes with rice, or pair it with idli or dosa.',
     },
-    'biriyani': {
+    'biryani': {
       title: 'Chicken Biryani Milton Keynes',
       h1: 'Chicken biryani in Milton Keynes — Andhra dum & fry piece biryani',
       description: 'Chicken biryani in Milton Keynes, the Andhra way: chicken dum biryani or fry piece biryani, £10.99, cooked fresh in Greenleys. Collect with 10% off.',
@@ -88,7 +88,7 @@ export const CATEGORY_SEO = {
       keywords: ['vegetarian curry Milton Keynes', 'sambar Milton Keynes', 'rasam near me', 'gutti vankaya', 'Andhra pappu'],
       body: 'The vegetarian curries of an Andhra kitchen: tomato pappu and gongura pappu, sambar and rasam, gutti vankaya masala, aloo kurma, perugu pulusu, bhindi pulusu, and drumstick or brinjal cooked with tomato. Order vegetarian curry in Milton Keynes with rice from the same menu. Sambar in Milton Keynes should taste like this: slow-cooked dal, tamarind and vegetables, with rasam beside it.',
     },
-    'biriyanis-rice': {
+    'biryanis-rice': {
       title: 'Veg Pulao & South Indian Rice Milton Keynes',
       h1: 'South Indian veg rice in Milton Keynes — veg pulao, gongura rice, curd rice & more',
       description: 'Veg pulao and South Indian rice dishes in Milton Keynes — gongura rice, jeera rice, sambar rice and curd rice. Our vegetarian answer to biryani. Order online.',

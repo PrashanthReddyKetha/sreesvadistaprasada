@@ -30,7 +30,7 @@ const FAQS = [
 const SECTION_LINKS = [
   { href: '/prasada/bites-starters', label: 'Bites & Starters' },
   { href: '/prasada/curries', label: 'Curries' },
-  { href: '/prasada/biriyanis-rice', label: 'Biriyanis & Rice' },
+  { href: '/prasada/biryanis-rice', label: 'Biryanis & Rice' },
   { href: '/prasada/thalis-rice-bowls', label: 'Thalis & Rice Bowls' },
   { href: '/prasada/indo-chinese', label: 'Indo Chinese' },
   { href: '/prasada/naivedyam', label: 'Naivedyam' },

@@ -41,15 +41,15 @@ PAIRINGS = {
     "Chicken Lollipop":           ["Chicken 65",                "Chicken Biryani",             "Chilli Chicken",             "Chicken Majestic",           "Masala Buttermilk",          "Ragi Butter Milk"],
     "Dragon Chicken":             ["Egg Fried Rice",            "Chilli Chicken",              "Chicken Fried Rice",         "Chicken Noodles",            "Chicken Manchurian",         "Masala Buttermilk"],
     "Chicken Tikka":              ["Butter Chicken",            "Chicken Biryani",             "Garlic Rice",                "Chicken Ghee Roast",         "Tandoori Chicken",           "Mango Lassi"],
-    "Tandoori Chicken":           ["Mutton Biriyani",           "Chicken Biryani",             "Gongura Chicken Curry",      "Chicken Tikka",              "Chicken 65",                 "Masala Buttermilk"],
+    "Tandoori Chicken":           ["Mutton Biryani",           "Chicken Biryani",             "Gongura Chicken Curry",      "Chicken Tikka",              "Chicken 65",                 "Masala Buttermilk"],
     "Whole Grilled Chicken":      ["Chicken Biryani",           "Gongura Chicken Curry",       "Garlic Rice",                "Pepper Chicken",             "Chicken 65",                 "Masala Buttermilk"],
     "Pepper Chicken":             ["Garlic Rice",               "Chicken Biryani",             "Gongura Chicken Curry",      "Chicken Fry",                "Chicken Ghee Roast",         "Masala Buttermilk"],
     "Garlic Pepper Chicken":      ["Garlic Rice",               "Jeera Garlic Rice",           "Pepper Chicken",             "Chicken Biryani",            "Chicken Fry",                "Masala Buttermilk"],
     "Chicken Fry":                ["Chicken Curry",             "Gongura Chicken Curry",       "Garlic Rice",                "Chicken Biryani",            "Pepper Chicken",             "Masala Buttermilk"],
-    "Chicken Ghee Roast":         ["Garlic Rice",               "Jeera Garlic Rice",           "Mutton Biriyani",            "Chicken Biryani",            "Pepper Chicken",             "Masala Buttermilk"],
+    "Chicken Ghee Roast":         ["Garlic Rice",               "Jeera Garlic Rice",           "Mutton Biryani",            "Chicken Biryani",            "Pepper Chicken",             "Masala Buttermilk"],
     "Chicken Majestic":           ["Chicken Biryani",           "Chicken 65",                  "Garlic Rice",                "Chilli Chicken",             "Masala Buttermilk",          "Ragi Butter Milk"],
     "Chicken Pakoda":             ["Chicken 65",                "Chilli Chicken",              "Masala Buttermilk",          "Chicken Biryani",            "Egg Fried Rice",             "Ragi Butter Milk"],
-    "Liver Fry":                  ["Garlic Rice",               "Chicken Curry",               "Mutton Curry",               "Mutton Biriyani",            "Gongura Mutton",             "Masala Buttermilk"],
+    "Liver Fry":                  ["Garlic Rice",               "Chicken Curry",               "Mutton Curry",               "Mutton Biryani",            "Gongura Mutton",             "Masala Buttermilk"],
     "Prawns Ghee Roast":          ["Jeera Garlic Rice",         "Fish Pulusu",                 "Prawns Iguru",               "Garlic Rice",                "Sambar Rice",                "Masala Buttermilk"],
 
     # ── NON-VEG CURRIES ───────────────────────────────────────────────────────
@@ -61,17 +61,17 @@ PAIRINGS = {
     "Andhra Egg Curry":           ["Sambar Rice",               "Ghee Pappu Avakaya Rice",     "Garlic Rice",                "Egg Biryani",                "Egg Masala",                 "Masala Buttermilk"],
     "Egg Kurma":                  ["Veg Biryani",               "Jeera Garlic Rice",           "Sambar Rice",                "Aloo Kurma",                 "Egg Masala",                 "Masala Buttermilk"],
     "Spicy Andhra Chicken":       ["Ghee Pappu Avakaya Rice",   "Garlic Rice",                 "Sambar Rice",                "Chicken Biryani",            "Gongura Chicken Curry",      "Ragi Butter Milk"],
-    "Mutton Curry":               ["Garlic Rice",               "Ghee Pappu Avakaya Rice",     "Sambar Rice",                "Mutton Biriyani",            "Spicy Andhra Mutton",        "Masala Buttermilk"],
-    "Spicy Andhra Mutton":        ["Ghee Pappu Avakaya Rice",   "Garlic Rice",                 "Sambar Rice",                "Mutton Biriyani",            "Gongura Mutton",             "Ragi Butter Milk"],
-    "Gongura Mutton":             ["Ghee Pappu Avakaya Rice",   "Garlic Rice",                 "Sambar Rice",                "Mutton Biriyani",            "Spicy Andhra Mutton",        "Ragi Butter Milk"],
+    "Mutton Curry":               ["Garlic Rice",               "Ghee Pappu Avakaya Rice",     "Sambar Rice",                "Mutton Biryani",            "Spicy Andhra Mutton",        "Masala Buttermilk"],
+    "Spicy Andhra Mutton":        ["Ghee Pappu Avakaya Rice",   "Garlic Rice",                 "Sambar Rice",                "Mutton Biryani",            "Gongura Mutton",             "Ragi Butter Milk"],
+    "Gongura Mutton":             ["Ghee Pappu Avakaya Rice",   "Garlic Rice",                 "Sambar Rice",                "Mutton Biryani",            "Spicy Andhra Mutton",        "Ragi Butter Milk"],
     "Fish Pulusu":                ["Garlic Rice",               "Jeera Garlic Rice",           "Sambar Rice",                "Prawns Iguru",               "Prawns Ghee Roast",          "Masala Buttermilk"],
     "Prawns Iguru":               ["Jeera Garlic Rice",         "Garlic Rice",                 "Sambar Rice",                "Fish Pulusu",                "Prawns Ghee Roast",          "Masala Buttermilk"],
 
     # ── NON-VEG BIRYANIS ──────────────────────────────────────────────────────
-    "Chicken Biryani":                    ["Chicken 65",               "Pepper Chicken",        "Gongura Chicken Curry",  "Mutton Biriyani",        "Masala Buttermilk",      "Ragi Butter Milk"],
+    "Chicken Biryani":                    ["Chicken 65",               "Pepper Chicken",        "Gongura Chicken Curry",  "Mutton Biryani",        "Masala Buttermilk",      "Ragi Butter Milk"],
     "Special Chicken Biryani with Egg":   ["Chicken Ghee Roast",       "Gongura Chicken Curry", "Pepper Chicken",         "Chicken 65",             "Masala Buttermilk",      "Ragi Butter Milk"],
     "Chicken Fry Piece Biryani":          ["Chilli Chicken",           "Gongura Chicken Curry", "Chicken 65",             "Egg Biryani",            "Masala Buttermilk",      "Ragi Butter Milk"],
-    "Mutton Biriyani":                    ["Spicy Andhra Mutton",      "Gongura Mutton",        "Liver Fry",              "Chicken Biryani",        "Masala Buttermilk",      "Ragi Butter Milk"],
+    "Mutton Biryani":                    ["Spicy Andhra Mutton",      "Gongura Mutton",        "Liver Fry",              "Chicken Biryani",        "Masala Buttermilk",      "Ragi Butter Milk"],
     "Egg Biryani":                        ["Andhra Egg Curry",         "Chicken 65",            "Chilli Chicken",         "Egg Masala",             "Masala Buttermilk",      "Ragi Butter Milk"],
 
     # ── EGG & INDO-CHINESE ────────────────────────────────────────────────────
@@ -83,14 +83,14 @@ PAIRINGS = {
     "Egg Bhurji":                 ["Butter Dosa (2 pcs)",       "Masala Buttermilk",           "Upma",                       "Bread Omelette",             "Mango Lassi",                "Masala Dosa (2 pcs)"],
     "Egg Dosa":                   ["Sambar",                    "Masala Dosa (2 pcs)",         "Allam Pachadi",              "Ghee Karam Idli (3 pcs)",    "Vada (3 pcs)",               "Masala Buttermilk"],
     "Chicken Keema Dosa":         ["Chicken Biryani",           "Chilli Chicken",              "Masala Buttermilk",          "Masala Dosa (2 pcs)",        "Pepper Chicken",             "Ragi Butter Milk"],
-    "Mutton Keema Dosa":          ["Mutton Biriyani",           "Pepper Chicken",              "Masala Buttermilk",          "Masala Dosa (2 pcs)",        "Liver Fry",                  "Ragi Butter Milk"],
+    "Mutton Keema Dosa":          ["Mutton Biryani",           "Pepper Chicken",              "Masala Buttermilk",          "Masala Dosa (2 pcs)",        "Liver Fry",                  "Ragi Butter Milk"],
     "Bread Omelette":             ["Butter Dosa (2 pcs)",       "Masala Buttermilk",           "Upma",                       "Masala Dosa (2 pcs)",        "Mango Lassi",                "Egg Bhurji"],
     "Cheese Bread Omelette":      ["Mango Lassi",               "Butter Dosa (2 pcs)",         "Masala Buttermilk",          "Upma",                       "Masala Dosa (2 pcs)",        "Sweet Lassi"],
     "Cheese Omelette":            ["Mango Lassi",               "Butter Dosa (2 pcs)",         "Masala Buttermilk",          "Upma",                       "Masala Dosa (2 pcs)",        "Sweet Lassi"],
     "Egg Veggie Omelette":        ["Masala Buttermilk",         "Upma",                        "Masala Dosa (2 pcs)",        "Sambar",                     "Idli (3 pcs)",               "Mango Lassi"],
     "Pure Veg Omelette":          ["Masala Buttermilk",         "Upma",                        "Idli (3 pcs)",               "Masala Dosa (2 pcs)",        "Sambar",                     "Mango Lassi"],
     "Rice, Chicken Curry, Pickle, Omelette": ["Gongura Chicken Curry", "Chicken Fry",          "Masala Buttermilk",          "Chicken Biryani",            "Ragi Butter Milk",           "Spicy Andhra Chicken"],
-    "Rice, Mutton Curry, Pickle, Omelette":  ["Gongura Mutton",       "Spicy Andhra Mutton",   "Masala Buttermilk",          "Mutton Biriyani",            "Ragi Butter Milk",           "Liver Fry"],
+    "Rice, Mutton Curry, Pickle, Omelette":  ["Gongura Mutton",       "Spicy Andhra Mutton",   "Masala Buttermilk",          "Mutton Biryani",            "Ragi Butter Milk",           "Liver Fry"],
 
     # ── VEG STARTERS ──────────────────────────────────────────────────────────
     "Veg Manchurian":             ["Veg Fried Rice",            "Gobi Manchurian",             "Veg Noodles",                "Egg Noodles",                "Veg Biryani",                "Mango Lassi"],
@@ -203,10 +203,10 @@ PAIRINGS = {
     "Ragi Sangati with Mutton Curry":          ["Spicy Andhra Mutton",   "Gongura Mutton",        "Liver Fry",       "Chicken Curry",   "Ragi Butter Milk",  "Masala Buttermilk"],
     "Ragi Sangati with Pappu and Pachi Pulusu":["Sambar",                "Gongura Pappu",         "Tomato Pappu",    "Kandi Podi",      "Ragi Butter Milk",  "Masala Buttermilk"],
     "Ragi Jaava / Malt":                       ["Ragi Butter Milk",      "Masala Buttermilk",     "Idli (3 pcs)",    "Upma",            "Sambar",            "Mango Lassi"],
-    "Ragi Butter Milk":                        ["Ragi Sangati with Chicken Curry", "Masala Buttermilk", "Spicy Andhra Chicken", "Gongura Chicken Curry", "Mutton Biriyani", "Ragi Jaava / Malt"],
+    "Ragi Butter Milk":                        ["Ragi Sangati with Chicken Curry", "Masala Buttermilk", "Spicy Andhra Chicken", "Gongura Chicken Curry", "Mutton Biryani", "Ragi Jaava / Malt"],
 
     # ── DRINKS ────────────────────────────────────────────────────────────────
-    "Masala Buttermilk":          ["Chicken Biryani",           "Ragi Butter Milk",            "Gongura Chicken Curry",      "Spicy Andhra Chicken",       "Mutton Biriyani",            "Masala Dosa (2 pcs)"],
+    "Masala Buttermilk":          ["Chicken Biryani",           "Ragi Butter Milk",            "Gongura Chicken Curry",      "Spicy Andhra Chicken",       "Mutton Biryani",            "Masala Dosa (2 pcs)"],
     "Mango Lassi":                ["Paneer Butter Masala",      "Sweet Lassi",                 "Veg Biryani",                "Butter Chicken",             "Chicken Tikka",              "Garlic Rice"],
     "Sweet Lassi":                ["Veg Biryani",               "Mango Lassi",                 "Paneer Butter Masala",       "Aloo Kurma",                 "Channa Masala",              "Jeera Garlic Rice"],
     "Lemon Water (Sweet)":        ["Masala Buttermilk",         "Lemon Water (Salt)",          "Mango Lassi",                "Masala Dosa (2 pcs)",        "Upma",                       "Idli (3 pcs)"],

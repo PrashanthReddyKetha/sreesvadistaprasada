@@ -8,6 +8,7 @@ import { ShoppingCart, Flame, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
 import SectionTabs, { useSectionTab } from '@/components/SectionTabs';
+import { sameTab } from '@/lib/menuSections';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackMenuCategoryView } from '@/lib/analytics';
@@ -46,8 +47,8 @@ const Svadista = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
   const byTab = activeTab === 'All'
     ? [...items].sort(byMenuOrder)
     : [...items].filter(i =>
-        i.subcategory === activeTab ||
-        (i.extra_categories || []).some(ec => ec.category === 'nonVeg' && ec.subcategory === activeTab)
+        sameTab(i.subcategory, activeTab) ||
+        (i.extra_categories || []).some(ec => ec.category === 'nonVeg' && sameTab(ec.subcategory, activeTab))
       ).sort(byMenuOrder);
 
   // Searching spans every subsection on this page, not just the active tab

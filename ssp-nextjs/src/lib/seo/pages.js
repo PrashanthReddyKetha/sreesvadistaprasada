@@ -40,7 +40,7 @@ export const PAGE_SEO = {
         'Looking for a South Indian restaurant in Milton Keynes, or a Telugu restaurant that cooks Andhra food the way it is made at home? We are a takeaway kitchen rather than a dine-in restaurant, so you order online: South Indian food in Milton Keynes to collect, Indian food delivery across Milton Keynes, or a weekly tiffin from our Dabba Wala service.',
       ],
       links: [
-        ['South Indian breakfast', '/breakfast'], ['Dosa', '/breakfast/dosas'], ['Chicken biryani', '/svadista/biriyani'],
+        ['South Indian breakfast', '/breakfast'], ['Dosa', '/breakfast/dosas'], ['Chicken biryani', '/svadista/biryani'],
         ['Veg thali', '/prasada/thalis-rice-bowls'], ['Vegetarian South Indian food', '/prasada'], ['Andhra chicken curry', '/svadista/curries'],
         ['Indian tiffin service', '/subscriptions'], ['Indian catering', '/catering'], ['Indian food delivery', '/delivery'],
       ],
@@ -74,7 +74,7 @@ export const PAGE_SEO = {
         'Prasada is our fully vegetarian South Indian menu — no meat, fish or eggs — cooked with its own separate utensils. If you are looking for a vegetarian South Indian restaurant or a veg Indian takeaway in Milton Keynes, this is the menu for you: Andhra pappu and sambar, gutti vankaya, veg pulao and rice dishes such as gongura rice and curd rice, crisp bhajji and punugulu, a full South Indian veg thali, and temple-style naivedyam made without onion or garlic.',
         'Order South Indian veg meals online from a vegetarian Indian takeaway in Milton Keynes — to collect from Greenleys or for delivery across MK. Vegetarian and non-vegetarian food is cooked in the same kitchen, with separate utensils for Prasada dishes, and each dish page lists its allergens.',
       ],
-      links: [['Veg thali', '/prasada/thalis-rice-bowls'], ['Vegetarian curries', '/prasada/curries'], ['Veg pulao & rice', '/prasada/biriyanis-rice'], ['Veg starters & chaat', '/prasada/bites-starters'], ['Naivedyam', '/prasada/naivedyam'], ['About Prasada', '/prasada/about']],
+      links: [['Veg thali', '/prasada/thalis-rice-bowls'], ['Vegetarian curries', '/prasada/curries'], ['Veg pulao & rice', '/prasada/biryanis-rice'], ['Veg starters & chaat', '/prasada/bites-starters'], ['Naivedyam', '/prasada/naivedyam'], ['About Prasada', '/prasada/about']],
     },
   },
 
@@ -89,7 +89,7 @@ export const PAGE_SEO = {
         'Svadista is our non-vegetarian menu: Andhra chicken curries cooked on the bone, gongura chicken, dum biryani and fry piece biryani, Chicken 65 and ghee roast, plus egg dosa and omelettes. It is the bold, village-style side of South Indian cooking, made fresh to order for delivery in Milton Keynes or collection from our Greenleys kitchen.',
         'Looking for Andhra chicken curry or chicken biryani in Milton Keynes? This is Andhra food as a Telugu home cooks it — the menu you would want from a South Indian non-veg restaurant, cooked to order as takeaway.',
       ],
-      links: [['Chicken biryani', '/svadista/biriyani'], ['Andhra chicken curry', '/svadista/curries'], ['Chicken starters', '/svadista/starters'], ['Egg specials', '/svadista/egg-specials'], ['Rice bowls', '/svadista/rice-bowls'], ['About Svadista', '/svadista/about']],
+      links: [['Chicken biryani', '/svadista/biryani'], ['Andhra chicken curry', '/svadista/curries'], ['Chicken starters', '/svadista/starters'], ['Egg specials', '/svadista/egg-specials'], ['Rice bowls', '/svadista/rice-bowls'], ['About Svadista', '/svadista/about']],
     },
   },
 

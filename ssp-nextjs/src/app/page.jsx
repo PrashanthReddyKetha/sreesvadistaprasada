@@ -79,7 +79,7 @@ export default async function HomePage() {
     moments: { 1: pic('vada-3-pcs'), 2: pic('aloo-kurma'), 3: pic('andhra-egg-curry'), 4: pic('punugulu') },
     // "What are you hungry for?" — straight to the food people come for
     rail: [
-      ['Breakfast', '/breakfast', 'idli-3-pcs'], ['Dosa', '/breakfast/dosas', 'masala-dosa'], ['Biryani', '/svadista/biriyani', 'chicken-dum-biryani'],
+      ['Breakfast', '/breakfast', 'idli-3-pcs'], ['Dosa', '/breakfast/dosas', 'masala-dosa'], ['Biryani', '/svadista/biryani', 'chicken-dum-biryani'],
       ['Chicken curry', '/svadista/curries', 'chicken-curry-2'], ['Veg curries', '/prasada/curries', 'gongura-pappu'],
       ['Veg thali', '/prasada/thalis-rice-bowls', 'veg-thali'], ['Street food', '/street-food', 'pani-puri-8-pcs'],
       // Stock photo (Pexels) of a steel tiffin carrier, kept in public/stock
