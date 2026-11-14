@@ -1,15 +1,17 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { Search, X, RefreshCw, Check, Clock, Ban, PackageX, CalendarClock } from 'lucide-react';
+import { Search, X, RefreshCw, Check, Clock, Ban, PackageX, CalendarClock, Sparkles, Layers } from 'lucide-react';
 import api from '@/api';
 import { clearMenuCache } from '@/api/menuCache';
 import { CATEGORY } from '@/lib/adminLabels';
 import useDialog from '@/lib/useDialog';
 
 /** Stock levels — every dish as a tile under its menu section. Tap one to mark it in stock, sold out for today,
-    opening at a set time (back on sale by itself), pre-order only (ordered today, collected tomorrow), or off the menu. */
+    opening at a set time (back on sale by itself), coming soon (shown with a notify-me bell, not for sale yet),
+    pre-order only (ordered today, collected tomorrow), or off the menu. "Set all" on a section or a whole menu
+    applies one choice to every dish shown there (owner, 14 Nov 2026). */
 
-const C = { burgundy: '#800020', gold: '#B8860B', muted: '#5C4B47', line: '#E8DFCE', green: '#2E6B4F', red: '#C62828', amber: '#B45309' };
+const C = { burgundy: '#800020', gold: '#B8860B', muted: '#5C4B47', line: '#E8DFCE', green: '#2E6B4F', red: '#C62828', amber: '#B45309', plum: '#6B21A8' };
 
 // London "YYYY-MM-DDTHH:MM", the same form the server stores
 const londonNow = () => new Intl.DateTimeFormat('sv-SE', {
@@ -26,6 +28,7 @@ const statusOf = (item, now) => {
   const s = item.sold_out_until;
   if (s && s.includes('T') && s > now) return 'opens';
   if (s && !s.includes('T') && s >= now.slice(0, 10)) return 'sold';
+  if (item.coming_soon) return 'soon';
   if (item.preorder_only) return 'pre';
   return 'in';
 };
@@ -34,6 +37,7 @@ const STATUS = {
   in:    { label: 'In stock',           color: C.green },
   sold:  { label: 'Sold out for today', color: C.amber },
   opens: { label: 'Opens later',        color: C.amber },
+  soon:  { label: 'Coming soon',        color: C.plum },
   pre:   { label: 'Pre-order · collect tomorrow', color: C.burgundy },
   off:   { label: 'Off the menu',       color: C.red },
 };
@@ -46,10 +50,8 @@ const statusLabel = (item, now) => {
 };
 
 const CATEGORY_ORDER = Object.keys(CATEGORY);
-const sectionOf = (item) => {
-  const cat = CATEGORY[item.category] || item.category || 'Other';
-  return item.subcategory ? `${cat} · ${item.subcategory}` : cat;
-};
+const categoryOf = (item) => CATEGORY[item.category] || item.category || 'Other';
+const sectionOf = (item) => item.subcategory ? `${categoryOf(item)} · ${item.subcategory}` : categoryOf(item);
 const sectionRank = (item) => {
   const i = CATEGORY_ORDER.indexOf(item.category);
   return `${String(i < 0 ? 99 : i).padStart(2, '0')}${(item.subcategory || '').toLowerCase()}`;
@@ -58,9 +60,19 @@ const sectionRank = (item) => {
 // The next whole hour, as the time picker's starting value
 const nextHour = (now) => `${String((Number(now.slice(11, 13)) + 1) % 24).padStart(2, '0')}:00`;
 
+// Every choice names all three flags, so one dish is never in two states at once
+const PATCH = {
+  in:   { available: true, clear_sold_out: true, coming_soon: false, preorder_only: false },
+  sold: (now) => ({ available: true, sold_out_until: now.slice(0, 10), coming_soon: false, preorder_only: false }),
+  opens: (when) => ({ available: true, sold_out_until: when, coming_soon: false, preorder_only: false }),
+  soon: { available: true, clear_sold_out: true, coming_soon: true, preorder_only: false },
+  pre:  { available: true, clear_sold_out: true, coming_soon: false, preorder_only: true },
+  off:  { available: false, clear_sold_out: true, coming_soon: false, preorder_only: false },
+};
+
 function Option({ id, current, busy, icon: Icon, title, hint, onClick }) {
   return (
-    <button onClick={onClick} disabled={busy}
+    <button onClick={onClick} disabled={busy} data-testid={`stock-option-${id}`}
       className="w-full flex items-start gap-3 text-left px-4 py-3 rounded-xl border-2 disabled:opacity-60"
       style={{ borderColor: current === id ? C.burgundy : C.line, backgroundColor: current === id ? 'rgba(128,0,32,0.04)' : 'white' }}>
       <Icon size={18} className="mt-0.5 shrink-0" style={{ color: STATUS[id].color }} />
@@ -73,21 +85,28 @@ function Option({ id, current, busy, icon: Icon, title, hint, onClick }) {
   );
 }
 
-function StockSheet({ item, now, onClose, onSaved }) {
-  const ref = useDialog(!!item, onClose);
+/** One dish (items.length === 1) or every dish shown in a section or a menu (scope names it). */
+function StockSheet({ items, scope, now, onClose, onSaved }) {
+  const ref = useDialog(!!items, onClose);
   const [time, setTime] = useState(() => nextHour(now));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const current = statusOf(item, now);
+  const one = items.length === 1 ? items[0] : null;
+  const statuses = new Set(items.map(i => statusOf(i, now)));
+  const current = statuses.size === 1 ? [...statuses][0] : null;   // several states at once: nothing is ticked
 
   const save = async (patch) => {
     setBusy(true); setErr('');
-    try {
-      const r = await api.put(`/menu/${item.id}`, patch);
-      clearMenuCache();
-      onSaved(r.data);
-    } catch (e) {
-      setErr(typeof e.response?.data?.detail === 'string' ? e.response.data.detail : 'Could not save — please try again.');
+    const saved = [];
+    let failed = 0;
+    for (let at = 0; at < items.length; at += 5) {        // five at a time: quick on a phone, kind to the server
+      const results = await Promise.allSettled(items.slice(at, at + 5).map(i => api.put(`/menu/${i.id}`, patch)));
+      results.forEach(r => { if (r.status === 'fulfilled') saved.push(r.value.data); else failed++; });
+    }
+    clearMenuCache();
+    if (saved.length) onSaved(saved, failed === 0);
+    if (failed) {
+      setErr(items.length === 1 ? 'Could not save — please try again.' : `${failed} of ${items.length} could not be saved — please try again.`);
       setBusy(false);
     }
   };
@@ -101,26 +120,28 @@ function StockSheet({ item, now, onClose, onSaved }) {
       const d = new Date(`${today}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + 1);
       day = d.toISOString().slice(0, 10);
     }
-    save({ available: true, sold_out_until: `${day}T${time}`, preorder_only: false });
+    save(PATCH.opens(`${day}T${time}`));
   };
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }} onClick={onClose}>
-      <div ref={ref} role="dialog" aria-modal="true" aria-label={`Stock for ${item.name}`} onClick={e => e.stopPropagation()}
-        className="w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-5 space-y-3">
+      <div ref={ref} role="dialog" aria-modal="true" aria-label={one ? `Stock for ${one.name}` : `Stock for every dish in ${scope}`} onClick={e => e.stopPropagation()}
+        className="w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-5 space-y-3 max-h-[92vh] overflow-y-auto">
         <div className="flex items-start gap-3">
           <div className="flex-1">
-            <p className="text-xs font-black uppercase tracking-widest" style={{ color: C.gold }}>{sectionOf(item)}</p>
-            <h3 className="text-lg font-bold" style={{ color: C.burgundy }}>{item.name}</h3>
-            <p className="text-xs" style={{ color: STATUS[current].color }}>Now: {statusLabel(item, now)}</p>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: C.gold }}>{one ? sectionOf(one) : scope}</p>
+            <h3 className="text-lg font-bold" style={{ color: C.burgundy }}>{one ? one.name : `All ${items.length} dishes shown here`}</h3>
+            {one
+              ? <p className="text-xs" style={{ color: STATUS[current].color }}>Now: {statusLabel(one, now)}</p>
+              : <p className="text-xs" style={{ color: C.muted }}>{current ? `All ${STATUS[current].label.toLowerCase()} now.` : 'Mixed at the moment.'} Your choice applies to every one of them.</p>}
           </div>
           <button onClick={onClose} aria-label="Close" className="p-1"><X size={20} style={{ color: C.muted }} /></button>
         </div>
 
         <Option id="in" current={current} busy={busy} icon={Check} title="In stock" hint="On sale now"
-          onClick={() => save({ available: true, clear_sold_out: true, preorder_only: false })} />
+          onClick={() => save(PATCH.in)} />
         <Option id="sold" current={current} busy={busy} icon={PackageX} title="Sold out for today" hint="Back on sale by itself tomorrow"
-          onClick={() => save({ available: true, sold_out_until: now.slice(0, 10), preorder_only: false })} />
+          onClick={() => save(PATCH.sold(now))} />
 
         <div className="px-4 py-3 rounded-xl border-2 space-y-2"
           style={{ borderColor: current === 'opens' ? C.burgundy : C.line, backgroundColor: current === 'opens' ? 'rgba(128,0,32,0.04)' : 'white' }}>
@@ -142,15 +163,26 @@ function StockSheet({ item, now, onClose, onSaved }) {
           </div>
         </div>
 
+        <Option id="soon" current={current} busy={busy} icon={Sparkles} title="Coming soon" hint="Shown on the website with a Notify-me bell; not for sale until you change it. People who tap the bell hear first when you set it In stock"
+          onClick={() => save(PATCH.soon)} />
         <Option id="pre" current={current} busy={busy} icon={CalendarClock} title="Pre-order only" hint="Ordered today, collected tomorrow — the website says so and checkout asks for a next-day collection time"
-          onClick={() => save({ available: true, clear_sold_out: true, preorder_only: true })} />
-
+          onClick={() => save(PATCH.pre)} />
         <Option id="off" current={current} busy={busy} icon={Ban} title="Off the menu" hint="Hidden from the website until you put it back"
-          onClick={() => save({ available: false, clear_sold_out: true, preorder_only: false })} />
+          onClick={() => save(PATCH.off)} />
 
         {err && <p role="alert" className="text-sm font-semibold" style={{ color: C.red }}>{err}</p>}
       </div>
     </div>
+  );
+}
+
+function SetAllButton({ label, onClick, testId }) {
+  return (
+    <button onClick={onClick} data-testid={testId}
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+      style={{ border: `1px solid ${C.line}`, color: C.burgundy, backgroundColor: 'white' }}>
+      <Layers size={12} /> {label}
+    </button>
   );
 }
 
@@ -160,7 +192,7 @@ export default function StockTab() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [now, setNow] = useState(londonNow);
-  const [open, setOpen] = useState(null);
+  const [open, setOpen] = useState(null);     // { items, scope }
 
   const load = useCallback(() => api.get('/menu')
     .then(r => { setItems(r.data); setLoadErr(''); })
@@ -174,19 +206,29 @@ export default function StockTab() {
     <div className="text-sm" style={{ color: loadErr ? C.red : C.muted }}>{loadErr || 'Loading…'}</div>
   );
 
-  const counts = { all: items.length, in: 0, sold: 0, opens: 0, pre: 0, off: 0 };
+  const counts = { all: items.length, in: 0, sold: 0, opens: 0, soon: 0, pre: 0, off: 0 };
   items.forEach(i => { counts[statusOf(i, now)]++; });
 
   const q = search.trim().toLowerCase();
   const shown = items
     .filter(i => (filter === 'all' || statusOf(i, now) === filter) && (!q || i.name.toLowerCase().includes(q)))
     .sort((a, b) => sectionRank(a).localeCompare(sectionRank(b)) || a.name.localeCompare(b.name));
-  const sections = [];
+  // Menus (Breakfast, Prasada, Svadista…), each with its sections, in menu order
+  const menus = [];
   shown.forEach(i => {
-    const title = sectionOf(i);
-    if (sections.at(-1)?.title !== title) sections.push({ title, items: [] });
-    sections.at(-1).items.push(i);
+    const menuTitle = categoryOf(i), title = sectionOf(i);
+    if (menus.at(-1)?.title !== menuTitle) menus.push({ title: menuTitle, items: [], sections: [] });
+    const menu = menus.at(-1);
+    menu.items.push(i);
+    if (menu.sections.at(-1)?.title !== title) menu.sections.push({ title, items: [] });
+    menu.sections.at(-1).items.push(i);
   });
+
+  const saved = (docs, done) => {
+    const byId = Object.fromEntries(docs.map(d => [d.id, d]));
+    setItems(xs => xs.map(x => byId[x.id] ? { ...x, ...byId[x.id] } : x));
+    if (done) setOpen(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -205,6 +247,7 @@ export default function StockTab() {
             <option value="in">In stock ({counts.in})</option>
             <option value="sold">Sold out for today ({counts.sold})</option>
             <option value="opens">Opens at a set time ({counts.opens})</option>
+            <option value="soon">Coming soon ({counts.soon})</option>
             <option value="pre">Pre-order only ({counts.pre})</option>
             <option value="off">Off the menu ({counts.off})</option>
           </select>
@@ -213,29 +256,45 @@ export default function StockTab() {
           </button>
           </div>
         </div>
+        <p className="text-xs" style={{ color: C.muted }}>Tap a dish to change it. &ldquo;Set all&rdquo; on a section or a whole menu changes every dish shown there{(q || filter !== 'all') ? ' (only the ones that match your search and filter)' : ''}.</p>
       </div>
 
-      {!sections.length && <p className="text-sm" style={{ color: C.muted }}>No dishes match.</p>}
+      {!menus.length && <p className="text-sm" style={{ color: C.muted }}>No dishes match.</p>}
 
-      {sections.map(s => (
-        <section key={s.title} className="space-y-2">
-          <h3 className="text-sm font-bold" style={{ color: '#2D2422' }}>{s.title}</h3>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-            {s.items.map(i => (
-              <button key={i.id} onClick={() => setOpen(i)}
-                className="text-left bg-white rounded-lg px-3 py-2.5 hover:shadow-sm transition-shadow"
-                style={{ border: `1px solid ${C.line}` }}>
-                <span className="block text-sm" style={{ color: '#2D2422' }}>{i.name}</span>
-                <span className="block text-xs font-semibold" style={{ color: STATUS[statusOf(i, now)].color }}>{statusLabel(i, now)}</span>
-              </button>
-            ))}
+      {menus.map(menu => (
+        <section key={menu.title} className="space-y-3" data-testid="stock-menu">
+          <div className="flex items-center justify-between gap-2 pt-2" style={{ borderBottom: `1px solid ${C.line}` }}>
+            <h2 className="text-base font-bold pb-1" style={{ color: C.burgundy, fontFamily: "'Playfair Display', serif" }}>{menu.title}</h2>
+            <SetAllButton label={`Set all ${menu.items.length}`} testId="stock-set-menu"
+              onClick={() => setOpen({ items: menu.items, scope: menu.title })} />
           </div>
+          {menu.sections.map(s => (
+            <div key={s.title} className="space-y-2" data-testid="stock-section">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-bold" style={{ color: '#2D2422' }}>{s.title}</h3>
+                {menu.sections.length > 1 && (
+                  <SetAllButton label={`Set all ${s.items.length}`} testId="stock-set-section"
+                    onClick={() => setOpen({ items: s.items, scope: s.title })} />
+                )}
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                {s.items.map(i => (
+                  <button key={i.id} onClick={() => setOpen({ items: [i], scope: s.title })}
+                    className="text-left bg-white rounded-lg px-3 py-2.5 hover:shadow-sm transition-shadow"
+                    style={{ border: `1px solid ${C.line}` }}>
+                    <span className="block text-sm" style={{ color: '#2D2422' }}>{i.name}</span>
+                    <span className="block text-xs font-semibold" style={{ color: STATUS[statusOf(i, now)].color }}>{statusLabel(i, now)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </section>
       ))}
 
       {open && (
-        <StockSheet key={open.id} item={open} now={now} onClose={() => setOpen(null)}
-          onSaved={doc => { setItems(xs => xs.map(x => x.id === doc.id ? { ...x, ...doc } : x)); setOpen(null); }} />
+        <StockSheet key={open.items.map(i => i.id).join(',')} items={open.items} scope={open.scope} now={now}
+          onClose={() => setOpen(null)} onSaved={saved} />
       )}
     </div>
   );

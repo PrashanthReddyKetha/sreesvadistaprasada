@@ -393,10 +393,11 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
     for i in body.items:
         doc = await db.menu_items.find_one(
             {"id": i.menu_item_id},
-            {"price": 1, "name": 1, "available": 1, "sold_out_until": 1, "preorder_only": 1, "_id": 0})
+            {"price": 1, "name": 1, "available": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1, "_id": 0})
         if not doc or not doc.get("available") or is_sold_out_today(doc):
             name = (doc or {}).get("name") or "An item in your basket"
-            raise HTTPException(status_code=404, detail=f"{name} has just sold out — please remove it from your basket to continue.")
+            why = "isn't on sale yet" if (doc or {}).get("coming_soon") else "has just sold out"
+            raise HTTPException(status_code=404, detail=f"{name} {why} — please remove it from your basket to continue.")
         if doc.get("preorder_only"):
             has_preorder = True
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
@@ -489,7 +490,7 @@ async def create_order(
     for i in payload.items:
         doc = await db.menu_items.find_one(
             {"id": i.menu_item_id, "available": True},
-            {"name": 1, "price": 1, "sold_out_until": 1, "preorder_only": 1, "_id": 0})
+            {"name": 1, "price": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1, "_id": 0})
         if not doc or is_sold_out_today(doc):
             raise HTTPException(404, detail=f"Item '{i.menu_item_id}' is not available")
         if doc.get("preorder_only"):

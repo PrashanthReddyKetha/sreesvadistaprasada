@@ -194,6 +194,8 @@ class MenuItemCreate(BaseModel):
     preorder_only: bool = False
     # "Sold out for today" — ISO date (London); item auto-returns the next day
     sold_out_until: Optional[str] = None
+    # "Coming soon" — shown on the website with a notify-me bell, not for sale until the admin clears it (Admin › Stock levels)
+    coming_soon: bool = False
 
 
 class MenuItemUpdate(BaseModel):
@@ -218,6 +220,7 @@ class MenuItemUpdate(BaseModel):
     preorder_only: Optional[bool] = None
     sold_out_until: Optional[str] = None    # "YYYY-MM-DD" (sold out that day) or "YYYY-MM-DDTHH:MM" (opens at that time)
     clear_sold_out: bool = False  # explicit "back on sale now"
+    coming_soon: Optional[bool] = None
 
     @field_validator("sold_out_until")
     @classmethod

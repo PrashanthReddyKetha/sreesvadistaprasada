@@ -153,7 +153,18 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
   const { addToCart } = useCart();
   const { openNotifyMe } = useNotifyMe();
 
-  const [item]                = useState(initialItem);
+  const [item, setItem]       = useState(initialItem);
+  // The page is rendered ahead of time (and kept for a minute), so the stock state comes from Admin › Stock levels
+  // live on arrival: sold out today, back at a time, coming soon, pre-order, off the menu, and the price.
+  useEffect(() => {
+    let gone = false;
+    api.get(`/menu/${initialItem.id}`).then(r => {
+      if (gone) return;
+      const fresh = r.data, keys = ['available', 'sold_out_today', 'sold_out_until', 'coming_soon', 'preorder_only', 'price'];
+      if (keys.some(k => fresh[k] !== initialItem[k])) setItem(cur => ({ ...cur, ...Object.fromEntries(keys.map(k => [k, fresh[k]])) }));
+    }).catch(() => {});
+    return () => { gone = true; };
+  }, [initialItem]);
   const [reviews, setReviews] = useState([]);
   const [social, setSocial]   = useState({ likes:0, order_count:0, user_liked:false, user_reviewed:false });
   const [goesWith, setGoesWith] = useState(initialGoesWith);

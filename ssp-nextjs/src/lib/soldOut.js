@@ -1,6 +1,7 @@
-/** What a customer reads on a dish that is off sale for now: "Sold out today", or "Back at 9:00am" when the kitchen
-    has set the time it goes back on sale (Admin › Stock levels). */
+/** What a customer reads on a dish that is off sale for now: "Coming soon" (not on sale yet), "Sold out today", or
+    "Back at 9:00am" when the kitchen has set the time it goes back on sale (Admin › Stock levels). */
 export function soldOutLabel(item, wholeDay = 'Sold out today') {
+  if (item?.coming_soon) return 'Coming soon';
   const s = item?.sold_out_until;
   if (!s || !s.includes('T')) return wholeDay;
   const [day, hhmm] = s.split('T');

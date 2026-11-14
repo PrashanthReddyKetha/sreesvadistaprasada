@@ -40,3 +40,15 @@ def test_admin_sets_opens_at_and_bad_values_are_refused(client, menu, admin_head
     assert client.put("/api/menu/curry", headers=admin_headers, json={"sold_out_until": "9am"}).status_code == 422
     r = client.put("/api/menu/curry", headers=admin_headers, json={"clear_sold_out": True})
     assert r.json()["sold_out_today"] is False
+
+
+def test_coming_soon_shows_with_the_bell_but_cannot_be_ordered_until_cleared(client, menu, admin_headers, db):
+    run(db.menu_items.update_one({"id": "curry"}, {"$set": {"description": "Andhra style", "category": "nonVeg"}}))
+    r = client.put("/api/menu/curry", headers=admin_headers, json={"available": True, "clear_sold_out": True, "coming_soon": True})
+    assert r.status_code == 200 and r.json()["coming_soon"] is True and r.json()["sold_out_today"] is True
+    assert client.get("/api/menu/curry").json()["sold_out_today"] is True      # on the website, with the notify-me bell
+    r = calc(client, "curry")
+    assert r.status_code == 404 and "isn't on sale yet" in r.json()["detail"]
+    r = client.put("/api/menu/curry", headers=admin_headers, json={"available": True, "clear_sold_out": True, "coming_soon": False})
+    assert r.json()["sold_out_today"] is False
+    assert calc(client, "curry").status_code == 200

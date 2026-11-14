@@ -207,7 +207,7 @@ async def update_menu_item(item_id: str, payload: MenuItemUpdate, _: dict = Depe
     was_out = (not before.get("available", True)) or is_sold_out_today(before)
     now_in = doc.get("available", True) and not is_sold_out_today(doc)
     if was_out and now_in:
-        await notify_restock(doc)
+        await notify_restock(doc, arrived=bool(before.get("coming_soon")) and not doc.get("coming_soon"))
 
     doc["sold_out_today"] = is_sold_out_today(doc)
     return doc
