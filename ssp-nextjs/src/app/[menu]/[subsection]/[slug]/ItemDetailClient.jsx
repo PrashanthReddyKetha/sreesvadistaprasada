@@ -80,7 +80,7 @@ const CATEGORY_FAQS = {
    podis:     'How much podi do I need per serving?' — 'Typically 1–2 teaspoons per serving. A 100g jar lasts a household of 4 about 2–3 weeks.' */
 
 const GENERAL_FAQS = [
-  { q:'How do I get my order?', a:'Order online and collect from our kitchen in Greenleys, Milton Keynes (MK12) — most dishes are ready in about 30 minutes, slow-cooked curries and thalis in about an hour, and collection saves 10%. When delivery is switched on you can choose it at checkout.' },
+  { q:'How do I get my order?', a:'Order online and collect from our kitchen in Greenleys, Milton Keynes (MK12) — usually ready in under 60 minutes, and collection saves 10%. When delivery is switched on you can choose it at checkout.' },
   { q:'Is there a minimum order?', a:'Yes — the minimum order is £15.' },
   { q:'Can I customise my order?', a:'Yes — use the Special Instructions field at checkout for any requests.' },
   { q:'Do you cater for large groups?', a:'Yes! Visit our Catering page to request a quote for events and celebrations.' },
@@ -160,7 +160,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
     let gone = false;
     api.get(`/menu/${initialItem.id}`).then(r => {
       if (gone) return;
-      const fresh = r.data, keys = ['available', 'sold_out_today', 'sold_out_until', 'coming_soon', 'preorder_only', 'price', 'prep_minutes'];
+      const fresh = r.data, keys = ['available', 'sold_out_today', 'sold_out_until', 'coming_soon', 'preorder_only', 'price'];
       if (keys.some(k => fresh[k] !== initialItem[k])) setItem(cur => ({ ...cur, ...Object.fromEntries(keys.map(k => [k, fresh[k]])) }));
     }).catch(() => {});
     return () => { gone = true; };
@@ -460,7 +460,7 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
         {/* ── Quick Info Bar ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
           {[
-            { icon: Clock,   label:'Cooked fresh to order', value: item.prep_minutes ? `about ${item.prep_minutes} min` : 'about 30 min' },
+            { icon: Clock,   label:'Order Prep Time', value:'30–45 min' },
             { icon: Users,   label:'Serves',       value:'1 person' },
             { icon: Award,   label:'Authenticity', value:'Village Recipe' },
             { icon: Package, label:'Packaging',    value:'Eco-friendly' },

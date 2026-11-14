@@ -529,8 +529,7 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
     intro = (
         ("It's made fresh overnight — we'll text you tomorrow as soon as it's ready to collect.</p>" if order.get("is_preorder")
          else "Two collections: today's dishes first, your pre-order tomorrow. We'll text you each time it's ready.</p>" if linked
-         else (f"Every dish is cooked fresh to order — yours will be ready in about {order['prep_minutes']} minutes, and we'll text you the moment it is.</p>"
-               if order.get("prep_minutes") and not slot else "Cooked fresh to order — we'll text you as soon as it's ready for collection.</p>")) if is_takeaway
+         else "We'll text you as soon as it's ready for collection.</p>") if is_takeaway
         else "We'll text you as soon as it's confirmed and on the way.</p>"
     )
     paid = (order.get("total", 0) or 0) + ((linked or {}).get("total", 0) or 0)

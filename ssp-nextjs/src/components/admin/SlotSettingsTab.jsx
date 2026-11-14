@@ -119,7 +119,6 @@ export default function SlotSettingsTab() {
       {/* Slot basics */}
       <div className="bg-white rounded-xl p-5 space-y-4" style={{ border: `1px solid ${C.line}` }}>
         <p className="text-xs font-black uppercase tracking-widest" style={{ color: C.gold }}>Collection slots</p>
-        <p className="text-xs" style={{ color: C.muted }}>The website tells each customer how long their basket takes: the slow dish if there is one (curries, thalis), the big-basket time when there are enough dishes, otherwise the quick time. ASAP and the first slot follow it.</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <label className="text-xs font-semibold" style={{ color: C.muted }}>
             Slot length
@@ -130,27 +129,10 @@ export default function SlotSettingsTab() {
             </select>
           </label>
           <label className="text-xs font-semibold" style={{ color: C.muted }}>
-            Most dishes ready in (min)
-            <input type="number" min="5" max="240" defaultValue={settings.prep_quick_minutes ?? 30} disabled={saving}
-              onBlur={e => Number(e.target.value) !== (settings.prep_quick_minutes ?? 30) && save({ prep_quick_minutes: Number(e.target.value) })}
+            Prep time (mins before first slot)
+            <input type="number" min="0" max="240" defaultValue={settings.lead_time_minutes} disabled={saving}
+              onBlur={e => Number(e.target.value) !== settings.lead_time_minutes && save({ lead_time_minutes: Number(e.target.value) })}
               className="mt-1 w-full rounded-lg px-2 py-2 text-sm" style={{ border: `1px solid ${C.line}` }} />
-          </label>
-          <label className="text-xs font-semibold" style={{ color: C.muted }}>
-            Curries &amp; thalis ready in (min)
-            <input type="number" min="5" max="240" defaultValue={settings.prep_long_minutes ?? 60} disabled={saving}
-              onBlur={e => Number(e.target.value) !== (settings.prep_long_minutes ?? 60) && save({ prep_long_minutes: Number(e.target.value) })}
-              className="mt-1 w-full rounded-lg px-2 py-2 text-sm" style={{ border: `1px solid ${C.line}` }} />
-          </label>
-          <label className="text-xs font-semibold" style={{ color: C.muted }}>
-            Big basket: from how many dishes · ready in (min)
-            <span className="flex gap-2 mt-1">
-              <input type="number" min="2" max="50" defaultValue={settings.prep_big_basket_from ?? 6} disabled={saving} aria-label="Big basket from how many dishes"
-                onBlur={e => Number(e.target.value) !== (settings.prep_big_basket_from ?? 6) && save({ prep_big_basket_from: Number(e.target.value) })}
-                className="w-1/2 rounded-lg px-2 py-2 text-sm" style={{ border: `1px solid ${C.line}` }} />
-              <input type="number" min="5" max="240" defaultValue={settings.prep_big_basket_minutes ?? 40} disabled={saving} aria-label="Big basket ready in minutes"
-                onBlur={e => Number(e.target.value) !== (settings.prep_big_basket_minutes ?? 40) && save({ prep_big_basket_minutes: Number(e.target.value) })}
-                className="w-1/2 rounded-lg px-2 py-2 text-sm" style={{ border: `1px solid ${C.line}` }} />
-            </span>
           </label>
           <div className="text-xs font-semibold" style={{ color: C.muted }}>
             Max orders per slot

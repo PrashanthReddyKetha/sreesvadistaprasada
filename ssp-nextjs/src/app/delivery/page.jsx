@@ -132,7 +132,7 @@ export default async function DeliveryPage() {
             <div className="rounded-lg p-6 bg-white border" style={{ borderColor: 'rgba(128,0,32,0.12)' }}>
               <h3 className="text-base font-bold mb-3" style={{ fontFamily: "'Playfair Display', serif", color: '#2D2422' }}>Good to know</h3>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>✓ Every dish cooked fresh to order — most ready in about 30 minutes, slow-cooked curries and thalis in about an hour</li>
+                <li>✓ Every dish cooked fresh to order — allow up to 60 minutes for the first available slot</li>
                 <li>✓ Free delivery thresholds count after discounts</li>
                 <li>✓ Dabba Wala subscribers get scheduled tiffin deliveries — see <Link href="/subscriptions" className="underline font-semibold" style={{ color: '#800020' }}>plans</Link></li>
                 <li>✓ Feeding a crowd? <Link href="/catering" className="underline font-semibold" style={{ color: '#800020' }}>Catering</Link> covers events and corporate meals</li>

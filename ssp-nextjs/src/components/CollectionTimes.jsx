@@ -1,17 +1,12 @@
 'use client';
 import SlotPicker from '@/components/SlotPicker';
 import { useCart } from '@/context/CartContext';
-import { useKitchen } from '@/context/KitchenContext';
-import { estimatePrep, readyBy, prepReason } from '@/lib/prepTime';
 
 /** The collection time(s) for the basket. Today's dishes take one time (ASAP or a slot); pre-order dishes are made
     overnight and take a time of their own tomorrow. A basket with both is collected twice, so it shows two pickers
     and says so (owner, 14 Nov 2026). The choices live in CartContext as pickupSlot and preorderSlot. */
-export default function CollectionTimes({ compact = false, prepMinutes = null }) {
+export default function CollectionTimes({ compact = false }) {
   const { cartItems, pickupSlot, setPickupSlot, preorderSlot, setPreorderSlot } = useCart();
-  const { prep } = useKitchen();
-  const est = estimatePrep(cartItems, prep);
-  const minutes = prepMinutes || est.minutes;      // the server's figure at checkout, our own before that
   const preNames = cartItems.filter(i => i.preorder).map(i => i.name);
   const hasPre = preNames.length > 0;
   const hasToday = cartItems.some(i => !i.preorder);
@@ -24,14 +19,8 @@ export default function CollectionTimes({ compact = false, prepMinutes = null })
         </p>
       )}
       {hasToday && (
-        <div>
-          <p className="text-[11px] font-semibold rounded-lg px-3 py-2 mb-2" style={{ backgroundColor: '#FBF3DC', color: '#8B6914' }} data-testid="prep-estimate">
-            🔥 Estimated collection if you order now: <b>about {minutes} min</b> (around {readyBy(minutes)}). {prepReason({ ...est, minutes })}
-            <span className="block font-normal mt-0.5">We&apos;ll text you the moment it&apos;s ready — or pick a later time below.</span>
-          </p>
-          <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} compact={compact} leadMinutes={minutes}
-            title={both ? "Today's dishes · collection time" : 'Collection time'} />
-        </div>
+        <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} compact={compact}
+          title={both ? "Today's dishes · collection time" : 'Collection time'} />
       )}
       {hasPre && (
         <div data-testid="preorder-slot">

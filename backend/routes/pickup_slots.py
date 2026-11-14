@@ -40,14 +40,8 @@ DEFAULT_SETTINGS = {
     # Dabba Wala plans on sale (admin toggle). Off = "opening soon": the page takes names for the launch instead (owner, 10 Nov 2026).
     "dabba_open": False,
     "slot_minutes": 15,
-    # Lead before the first slot when no basket is known (older clients); a basket's own prep time is used otherwise
+    # Minimum prep time: every order needs 60 minutes before collection/delivery
     "lead_time_minutes": 60,
-    # How long a fresh-cooked basket takes (owner, 14 Nov 2026): most dishes about 30 minutes; curries (veg and
-    # non-veg) and thalis about 60; a basket of 6 or more dishes about 40. The longest rule in the basket wins.
-    "prep_quick_minutes": 30,
-    "prep_long_minutes": 60,
-    "prep_big_basket_minutes": 40,
-    "prep_big_basket_from": 6,
     "max_orders_per_slot": None,  # None = unlimited
     # Single slots the owner has switched off ("YYYY-MM-DDTHH:MM", London time); past ones are dropped on each change
     "blocked_slots": [],
@@ -87,10 +81,6 @@ class PickupSlotSettingsUpdate(BaseModel):
     dabba_open: Optional[bool] = None
     slot_minutes: Optional[int] = None
     lead_time_minutes: Optional[int] = Field(None, ge=0, le=240)
-    prep_quick_minutes: Optional[int] = Field(None, ge=5, le=240)
-    prep_long_minutes: Optional[int] = Field(None, ge=5, le=240)
-    prep_big_basket_minutes: Optional[int] = Field(None, ge=5, le=240)
-    prep_big_basket_from: Optional[int] = Field(None, ge=2, le=50)
     max_orders_per_slot: Optional[int] = Field(None, ge=1, le=100)
     clear_max_orders: bool = False  # explicit "set back to unlimited"
     days: Optional[Dict[str, DayHours]] = None
@@ -146,43 +136,9 @@ def _parse_hhmm(day: date, hhmm: str) -> datetime:
     return datetime.combine(day, t, tzinfo=LONDON)
 
 
-def _lead(settings: dict, lead: Optional[int]) -> int:
-    """Minutes before the first bookable slot: the basket's own prep time when known, else the settings' lead."""
-    return int(lead) if lead is not None else int(settings["lead_time_minutes"])
-
-
-def prep_rules(settings: dict) -> dict:
-    return {
-        "quick": int(settings.get("prep_quick_minutes") or 30),
-        "long": int(settings.get("prep_long_minutes") or 60),
-        "big": int(settings.get("prep_big_basket_minutes") or 40),
-        "big_from": int(settings.get("prep_big_basket_from") or 6),
-    }
-
-
-def is_long_prep(item: dict) -> bool:
-    """Curries (veg and non-veg) and thalis are slow-cooked: about an hour. Everything else about 30 minutes."""
-    sub = (item.get("subcategory") or "").lower()
-    name = (item.get("name") or "").lower()
-    return sub.startswith("curr") or "thali" in name
-
-
-def prep_for(settings: dict, lines: list) -> tuple[int, dict]:
-    """(minutes, why) for a basket of (dish, quantity) pairs: the slow dish if there is one, else the big-basket
-    time when there are enough dishes, else the quick time. why = {"kind": "long"|"big"|"quick", "dish"?, "count"?}."""
-    rules = prep_rules(settings)
-    slow = next((d for d, _ in lines if is_long_prep(d)), None)
-    if slow:
-        return rules["long"], {"kind": "long", "dish": slow.get("name")}
-    count = sum(int(q) for _, q in lines)
-    if count >= rules["big_from"]:
-        return rules["big"], {"kind": "big", "count": count}
-    return rules["quick"], {"kind": "quick"}
-
-
-def generate_slots(settings: dict, day: date, now: Optional[datetime] = None, include_blocked: bool = False, lead: Optional[int] = None) -> list[dict]:
+def generate_slots(settings: dict, day: date, now: Optional[datetime] = None, include_blocked: bool = False) -> list[dict]:
     """All slots for a London calendar day that are still bookable (past lead time, not blocked by the owner).
-    include_blocked=True keeps blocked slots, flagged, for the admin grid. lead = the basket's prep time in minutes."""
+    include_blocked=True keeps blocked slots, flagged, for the admin grid."""
     now = now or datetime.now(LONDON)
     hours = settings["days"].get(DAY_KEYS[day.weekday()])
     if not hours or hours.get("closed"):
@@ -191,7 +147,7 @@ def generate_slots(settings: dict, day: date, now: Optional[datetime] = None, in
     cur = _parse_hhmm(day, hours["open"])
     close = _parse_hhmm(day, hours["close"])
     # Prep clock starts when the kitchen opens, not when the order was placed
-    earliest = max(now, cur) + timedelta(minutes=_lead(settings, lead))
+    earliest = max(now, cur) + timedelta(minutes=settings["lead_time_minutes"])
     blocked = set(settings.get("blocked_slots") or [])
     slots = []
     while cur + step <= close:
@@ -221,30 +177,30 @@ def open_now(settings: dict, now: Optional[datetime] = None) -> bool:
     return _parse_hhmm(now.date(), hours.get("open", "00:00")) <= now <= _parse_hhmm(now.date(), hours.get("close", "00:00"))
 
 
-def asap_open(settings: dict, now: Optional[datetime] = None, lead: Optional[int] = None) -> bool:
+def asap_open(settings: dict, now: Optional[datetime] = None) -> bool:
     """ASAP is taken only while it can be ready before closing: open now, and the prep time still fits before close
     (owner, 12 Nov 2026). Slots already stop that early."""
     now = now or datetime.now(LONDON)
     if not open_now(settings, now):
         return False
     hours = settings["days"].get(DAY_KEYS[now.weekday()], {})
-    return now + timedelta(minutes=_lead(settings, lead)) <= _parse_hhmm(now.date(), hours.get("close", "00:00"))
+    return now + timedelta(minutes=settings["lead_time_minutes"]) <= _parse_hhmm(now.date(), hours.get("close", "00:00"))
 
 
-def next_slots(settings: dict, now: Optional[datetime] = None, limit: int = 3, lead: Optional[int] = None) -> list[dict]:
+def next_slots(settings: dict, now: Optional[datetime] = None, limit: int = 3) -> list[dict]:
     """The next bookable collection times (today, then tomorrow), for the message that refuses an out-of-hours order."""
     now = now or datetime.now(LONDON)
     out = []
     for offset in (0, 1):
-        for s in generate_slots(settings, now.date() + timedelta(days=offset), now, lead=lead):
+        for s in generate_slots(settings, now.date() + timedelta(days=offset), now):
             out.append({**s, "day": "today" if offset == 0 else "tomorrow"})
             if len(out) >= limit:
                 return out
     return out
 
 
-def closed_message(settings: dict, now: Optional[datetime] = None, lead: Optional[int] = None) -> str:
-    coming = next_slots(settings, now, lead=lead)
+def closed_message(settings: dict, now: Optional[datetime] = None) -> str:
+    coming = next_slots(settings, now)
     closed = ("We've stopped taking ASAP orders for today — the kitchen closes soon." if open_now(settings, now)
               else "We're closed right now.")
     if not coming:
@@ -253,8 +209,8 @@ def closed_message(settings: dict, now: Optional[datetime] = None, lead: Optiona
     return f"{closed} Pick a collection time to pre-order — next available: {when}."
 
 
-def slot_in_grid(settings: dict, slot_iso: str, now: Optional[datetime] = None, lead: Optional[int] = None) -> bool:
-    """True if slot_iso is a currently bookable slot (today or tomorrow, London time) for a basket with this prep time."""
+def slot_in_grid(settings: dict, slot_iso: str, now: Optional[datetime] = None) -> bool:
+    """True if slot_iso is a currently bookable slot (today or tomorrow, London time)."""
     try:
         day = datetime.strptime(slot_iso[:10], "%Y-%m-%d").date()
     except ValueError:
@@ -262,7 +218,7 @@ def slot_in_grid(settings: dict, slot_iso: str, now: Optional[datetime] = None, 
     now = now or datetime.now(LONDON)
     if day not in (now.date(), now.date() + timedelta(days=1)):
         return False
-    return any(s["iso"] == slot_iso for s in generate_slots(settings, day, now, lead=lead))
+    return any(s["iso"] == slot_iso for s in generate_slots(settings, day, now))
 
 
 async def slot_remaining(settings: dict, slot_iso: str) -> Optional[int]:
@@ -307,8 +263,7 @@ async def release_slot(slot_iso: Optional[str]):
 # ── Public API ────────────────────────────────────────────────────────────────
 
 @router.get("/pickup-slots")
-async def list_pickup_slots(date_str: Optional[str] = Query(None, alias="date"),
-                            lead: Optional[int] = Query(None, ge=5, le=240, description="the basket's prep time in minutes")):
+async def list_pickup_slots(date_str: Optional[str] = Query(None, alias="date")):
     settings = await get_slot_settings()
     now = datetime.now(LONDON)
 
@@ -329,7 +284,7 @@ async def list_pickup_slots(date_str: Optional[str] = Query(None, alias="date"),
     else:
         day = now.date()
 
-    slots = generate_slots(settings, day, now, lead=lead)
+    slots = generate_slots(settings, day, now)
     cap = settings.get("max_orders_per_slot")
     if cap and slots:
         docs = await db.slot_bookings.find(
@@ -356,8 +311,7 @@ async def list_pickup_slots(date_str: Optional[str] = Query(None, alias="date"),
         "paused": False,
         "date": day.isoformat(),
         "slot_minutes": settings["slot_minutes"],
-        "asap_available": day == now.date() and asap_open(settings, now, lead),   # same rule as pricing (A-0004 COM-002)
-        "lead_minutes": _lead(settings, lead),
+        "asap_available": day == now.date() and asap_open(settings, now),   # same rule as pricing (A-0004 COM-002)
         "closed": closed_today and not slots,
         "slots": slots,
     }
@@ -374,7 +328,6 @@ async def kitchen_status():
         "delivery_enabled": bool(settings.get("delivery_enabled")),
         "minimum_order_enabled": settings.get("minimum_order_enabled", True) is not False,
         "dabba_open": bool(settings.get("dabba_open")),
-        "prep": prep_rules(settings),      # so the site can say how long a basket takes before pricing
         "message": settings.get("paused_message") or "Our kitchen is closed today — we're not taking orders right now. Please check back soon.",
     }
 
