@@ -396,13 +396,18 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
           <div>
             <p className="text-sm font-semibold" style={{ color: '#3D2B1F' }}>
               Order #{o.order_number || o.id?.slice(-6).toUpperCase()}
+              {o.is_preorder && <span className="ml-2 text-[10px] font-black px-1.5 py-0.5 rounded-full align-middle" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }}>🌙 PRE-ORDER</span>}
             </p>
             <p className="text-xs" style={{ color: '#7A5C50' }}>
               {fmt(o.created_at)} · {o.items?.length} item{o.items?.length !== 1 ? 's' : ''}
               {o.scheduled_slot_final && (() => {
                 const h = parseInt(o.scheduled_slot_final.slice(11, 13), 10);
-                return ` · Collect ${h % 12 || 12}:${o.scheduled_slot_final.slice(14, 16)} ${h < 12 ? 'am' : 'pm'}`;
+                const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
+                const day = o.scheduled_slot_final.slice(0, 10);
+                const dayWord = day === today ? '' : day > today ? ' tomorrow' : ` on ${day.slice(8, 10)}/${day.slice(5, 7)}`;
+                return ` · Collect${dayWord} ${h % 12 || 12}:${o.scheduled_slot_final.slice(14, 16)} ${h < 12 ? 'am' : 'pm'}`;
               })()}
+              {o.linked_order_number && ` · with #${o.linked_order_number}`}
             </p>
           </div>
         </div>

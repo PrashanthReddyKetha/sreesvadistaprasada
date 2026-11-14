@@ -284,10 +284,11 @@ const OrdersTab = ({ orders, onStatusUpdate }) => {
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-semibold text-sm text-gray-900">#{o.order_number || o.id?.slice(-6).toUpperCase()}</span>
                       {o.scheduled_slot_final && (
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ backgroundColor:'#FBF3DC', color:'#8D6E00' }}>
-                          COLLECT {(() => { const h = parseInt(o.scheduled_slot_final.slice(11,13),10); return `${h%12||12}:${o.scheduled_slot_final.slice(14,16)} ${h<12?'am':'pm'}`; })()}
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={o.is_preorder ? { backgroundColor:'rgba(128,0,32,0.08)', color:'#800020' } : { backgroundColor:'#FBF3DC', color:'#8D6E00' }}>
+                          {o.is_preorder ? '🌙 PRE-ORDER · ' : ''}COLLECT{(() => { const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date()); const d = o.scheduled_slot_final.slice(0,10); return d === today ? '' : d > today ? ' TOMORROW' : ` ${d.slice(8,10)}/${d.slice(5,7)}`; })()} {(() => { const h = parseInt(o.scheduled_slot_final.slice(11,13),10); return `${h%12||12}:${o.scheduled_slot_final.slice(14,16)} ${h<12?'am':'pm'}`; })()}
                         </span>
                       )}
+                      {o.linked_order_number && <span className="text-[10px] text-gray-500">with #{o.linked_order_number}</span>}
                       <span className="text-sm text-gray-600">{o.customer_name}</span>
                       <span className="text-xs text-gray-400">{o.customer_email}</span>
                     </div>

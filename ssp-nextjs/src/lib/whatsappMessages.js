@@ -16,7 +16,10 @@ const trackLink = (tab, orderId) =>
 const slotTime = (iso) => {
   if (!iso || iso.length < 16) return null;
   const h = parseInt(iso.slice(11, 13), 10);
-  return `${h % 12 || 12}:${iso.slice(14, 16)} ${h < 12 ? 'am' : 'pm'}`;
+  const time = `${h % 12 || 12}:${iso.slice(14, 16)} ${h < 12 ? 'am' : 'pm'}`;
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
+  const d = iso.slice(0, 10);
+  return d === today ? time : d > today ? `tomorrow at ${time}` : `${time} on ${d.slice(8, 10)}/${d.slice(5, 7)}`;
 };
 
 const longDate = (iso) =>
@@ -59,7 +62,11 @@ export const orderMessage = (o) => {
   const takeaway = o.delivery_type === 'takeaway';
   const slot = slotTime(o.scheduled_slot_final);
   const track = `Track your order: ${trackLink('orders', o.id)}`;
-  const collectAt = slot ? `Your collection time is ${slot} at our Greenleys kitchen.` : '';
+  const collectAt = slot
+    ? (o.is_preorder
+        ? `This is your pre-order — made fresh overnight, collection ${slot} at our Greenleys kitchen.`
+        : `Your collection time is ${slot} at our Greenleys kitchen.`)
+    : '';
 
   const body = {
     pending: [

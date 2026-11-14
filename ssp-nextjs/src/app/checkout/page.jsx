@@ -17,7 +17,7 @@ import { useKitchen } from '@/context/KitchenContext';
 import KitchenClosedNotify from '@/components/KitchenClosedNotify';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
-import SlotPicker from '@/components/SlotPicker';
+import CollectionTimes from '@/components/CollectionTimes';
 import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import AddToHomeScreen from '@/components/AddToHomeScreen';
 import { getCached, setCached } from '@/api/menuCache';
@@ -691,7 +691,7 @@ const CheckoutInner = () => {
   const router = useRouter();
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, addToCart,
           deliveryType, setDeliveryType, zoneInfo, setZoneInfo,
-          pickupSlot, setPickupSlot, refreshPrices } = useCart();
+          pickupSlot, setPickupSlot, preorderSlot, setPreorderSlot, refreshPrices } = useCart();
   const { user, login, setAuthOpen, openAuth } = useAuth();
   const kitchen = useKitchen();
   useEffect(() => { refreshPrices(); }, [refreshPrices]);   // show today's menu prices, the ones the server will charge
@@ -858,6 +858,13 @@ const CheckoutInner = () => {
   };
 
   const hasPreorder = cartItems.some(i => i.preorder);
+  const hasToday = cartItems.some(i => !i.preorder);
+  // Today's dishes are collected at pickupSlot (ASAP when empty); pre-order dishes at preorderSlot, tomorrow.
+  // A basket that is all pre-order sends its one time as both, for older servers.
+  const slotFields = deliveryType !== 'takeaway' ? {} : {
+    scheduled_slot: hasToday ? pickupSlot?.iso : preorderSlot?.iso,
+    preorder_slot: hasPreorder ? preorderSlot?.iso : undefined,
+  };
   const freeItemDiscount = freeItem ? price(freeItem.price) : 0;
   const effectiveSubtotal = cartTotal + freeItemDiscount;
 
@@ -879,7 +886,7 @@ const CheckoutInner = () => {
         order_type: deliveryType,
         postcode: form.postcode,
         free_item_id: freeItem?.id,
-        scheduled_slot: deliveryType === 'takeaway' ? pickupSlot?.iso : undefined,
+        ...slotFields,
         coupon_code: couponCode || undefined,
         customer_email: form.email || undefined,
       });
@@ -928,7 +935,7 @@ const CheckoutInner = () => {
         setZoneInfo(null);
       }
     }
-  }, [cartItems, deliveryType, form.postcode, freeItem, pickupSlot?.iso, couponCode, form.email]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cartItems, deliveryType, form.postcode, freeItem, pickupSlot?.iso, preorderSlot?.iso, couponCode, form.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { recalculate(); }, [recalculate]);
 
@@ -963,7 +970,7 @@ const CheckoutInner = () => {
   // Wallet handler reads live state through a ref so the listener never goes stale
   const walletCtx = useRef({});
   useEffect(() => {
-    walletCtx.current = { kitchen, form, cartItems, freeItem, freeItemDiscount, deliveryType, pickupSlot, validPricing, meetsMinimum, pcError, user, couponCode: validPricing?.coupon_code || undefined };
+    walletCtx.current = { kitchen, form, cartItems, freeItem, freeItemDiscount, deliveryType, pickupSlot, preorderSlot, slotFields, validPricing, meetsMinimum, pcError, user, couponCode: validPricing?.coupon_code || undefined };
   });
 
   useEffect(() => {
@@ -992,18 +999,19 @@ const CheckoutInner = () => {
       let capturedPI = null;
       let walletPaid = false;
       try {
-        // Re-check the slot at the last moment
-        if (ctx.deliveryType === 'takeaway' && ctx.pickupSlot?.iso) {
+        // Re-check the slot(s) at the last moment
+        if (ctx.deliveryType === 'takeaway' && (ctx.pickupSlot?.iso || ctx.preorderSlot?.iso)) {
           try {
             await api.post('/orders/calculate', {
               items: ctx.cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity })),
               order_type: ctx.deliveryType,
               postcode: ctx.form.postcode,
               free_item_id: ctx.freeItem?.id,
-              scheduled_slot: ctx.pickupSlot.iso,
+              ...ctx.slotFields,
             });
           } catch (slotErr) {
-            setPickupSlot(null);
+            const d0 = slotErr.response?.data?.detail;
+            if (typeof d0 === 'string' && /pre-order/i.test(d0)) setPreorderSlot(null); else setPickupSlot(null);
             const d = slotErr.response?.data?.detail;
             return fail(typeof d === 'string' ? d : 'Your collection time is no longer available — please pick another.');
           }
@@ -1041,7 +1049,7 @@ const CheckoutInner = () => {
           } : undefined,
           notes: ctx.form.notes || undefined,
           marketing_consent: !!ctx.form.marketing_consent,
-          scheduled_slot: ctx.deliveryType === 'takeaway' ? ctx.pickupSlot?.iso : undefined,
+          ...ctx.slotFields,
           payment_intent_id,
           coupon_code: ctx.couponCode,
           is_loyalty_redemption: !!ctx.freeItem,
@@ -1061,6 +1069,8 @@ const CheckoutInner = () => {
           isTakeaway: ctx.deliveryType === 'takeaway',
           slotFinal,
           slotBumped: !!(ctx.pickupSlot?.iso && slotFinal && slotFinal !== ctx.pickupSlot.iso),
+          isPreorder: !!res.data?.is_preorder,
+          linked: res.data?.linked_order_number ? { orderId: res.data.linked_order_number, slotFinal: res.data.linked_slot_final || null } : null,
         });
         clearCart();
       } catch (e) {
@@ -1092,7 +1102,8 @@ const CheckoutInner = () => {
   }
   if (form.email.trim() && !EMAIL_RE.test(form.email.trim())) missingDetails.push('a valid email address');
   if (form.phone.trim() && !user && fbAuth && verifiedPhone !== normPhone(form.phone)) missingDetails.push('the code we text to your mobile (tap "Text me a code")');
-  if (deliveryType === 'takeaway' && !pickupSlot && !validPricing) missingDetails.push('a collection time');
+  if (deliveryType === 'takeaway' && hasToday && !pickupSlot && !validPricing) missingDetails.push('a collection time');
+  if (deliveryType === 'takeaway' && hasPreorder && !preorderSlot) missingDetails.push(hasToday ? 'a collection time tomorrow for your pre-order' : 'a collection time for tomorrow');
   if (!cardDone.number) missingDetails.push('your card number');
   if (!cardDone.expiry) missingDetails.push('the card expiry date');
   if (!cardDone.cvc) missingDetails.push('the CVC');
@@ -1121,19 +1132,19 @@ const CheckoutInner = () => {
     try {
       // Final slot check the moment before charging — a slot can fill or pass
       // while the customer types card details
-      if (deliveryType === 'takeaway' && pickupSlot?.iso) {
+      if (deliveryType === 'takeaway' && (pickupSlot?.iso || preorderSlot?.iso)) {
         try {
           await api.post('/orders/calculate', {
             items: cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity })),
             order_type: deliveryType,
             postcode: form.postcode,
             free_item_id: freeItem?.id,
-            scheduled_slot: pickupSlot.iso,
+            ...slotFields,
           });
         } catch (slotErr) {
           const detail = slotErr.response?.data?.detail;
           setError(typeof detail === 'string' ? detail : 'Your collection time is no longer available — please pick another.');
-          setPickupSlot(null);
+          if (typeof detail === 'string' && /pre-order/i.test(detail)) setPreorderSlot(null); else setPickupSlot(null);
           return;
         }
       }
@@ -1192,7 +1203,7 @@ const CheckoutInner = () => {
         } : undefined,
         notes: form.notes || undefined,
         marketing_consent: !!form.marketing_consent,
-        scheduled_slot: deliveryType === 'takeaway' ? pickupSlot?.iso : undefined,
+        ...slotFields,
         payment_intent_id,
         coupon_code: validPricing.coupon_code || undefined,
         is_loyalty_redemption: !!freeItem,
@@ -1221,6 +1232,8 @@ const CheckoutInner = () => {
         isTakeaway: deliveryType === 'takeaway',
         slotFinal,
         slotBumped: !!(pickupSlot?.iso && slotFinal && slotFinal !== pickupSlot.iso),
+        isPreorder: !!res.data?.is_preorder,
+        linked: res.data?.linked_order_number ? { orderId: res.data.linked_order_number, slotFinal: res.data.linked_slot_final || null } : null,
       });
       paidIntent.current = null;
       clearCart();
@@ -1302,8 +1315,10 @@ const CheckoutInner = () => {
           </p>
           {success.isTakeaway && success.slotFinal && (
             <div className="rounded-xl px-4 py-3 mb-4 text-sm font-bold"
-              style={{ backgroundColor: '#FBF3DC', color: '#854D0E' }}>
-              🕰️ Collect at {slotLabel(success.slotFinal)}
+              style={{ backgroundColor: '#FBF3DC', color: '#854D0E' }} data-testid="success-collection">
+              {success.isPreorder
+                ? <>🌙 Pre-order — collect tomorrow at {slotLabel(success.slotFinal)}</>
+                : <>🕰️ Collect {success.linked ? "today's dishes " : ''}at {slotLabel(success.slotFinal)}</>}
               {success.slotBumped && (
                 <p className="text-xs font-medium mt-1">
                   Your requested time had just filled up, so we&apos;ve moved you to the next available slot.
@@ -1311,9 +1326,19 @@ const CheckoutInner = () => {
               )}
             </div>
           )}
+          {success.isTakeaway && success.linked && (
+            <div className="rounded-xl px-4 py-3 mb-4 text-sm font-bold"
+              style={{ backgroundColor: 'rgba(128,0,32,0.06)', color: '#800020' }} data-testid="success-preorder">
+              🌙 Pre-order #{success.linked.orderId} — collect tomorrow{success.linked.slotFinal ? ` at ${slotLabel(success.linked.slotFinal)}` : ''}
+              <p className="text-xs font-medium mt-1" style={{ color: '#5C4B47' }}>
+                Made fresh overnight. It has its own order number, so we can text you separately when each is ready.
+              </p>
+            </div>
+          )}
           <p className="text-sm text-gray-500 mb-6">
             {deliveryType === 'takeaway'
-              ? (success.slotFinal ? 'We\u2019ll text you when it\u2019s ready \u2014 just give your order number at the door.' : 'Ready in under 60 minutes \u2014 we\u2019ll text you when it\u2019s ready to collect.')
+              ? (success.isPreorder ? 'We\u2019ll text you tomorrow when it\u2019s ready \u2014 just give your order number at the door.'
+                : success.slotFinal ? 'We\u2019ll text you when it\u2019s ready \u2014 just give your order number at the door.' : 'Ready in under 60 minutes \u2014 we\u2019ll text you when it\u2019s ready to collect.')
               : 'Estimated time: 40\u201350 minutes'}
           </p>
           <LoyaltyBanner />
@@ -1555,7 +1580,7 @@ const CheckoutInner = () => {
               {/* Collection time picker */}
               {deliveryType === 'takeaway' && (
                 <div className="px-3 py-3 rounded-lg" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(128,0,32,0.08)' }}>
-                  <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} compact requireTomorrow={hasPreorder} />
+                  <CollectionTimes compact />
                 </div>
               )}
 

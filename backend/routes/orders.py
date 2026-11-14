@@ -80,6 +80,53 @@ def display_order_number(order: dict) -> str:
     return order.get("order_number") or order["id"][:8].upper()
 
 
+def preorder_slot_of(body, has_today: bool) -> Optional[str]:
+    """The slot the pre-order dishes are collected at: preorder_slot, or — for a basket that is all pre-order and an
+    older client that only sent scheduled_slot — that one."""
+    return body.preorder_slot or (None if has_today else body.scheduled_slot)
+
+
+def split_totals(totals: dict, today_items: list, pre_items: list, free_item_id: Optional[str]) -> tuple[dict, dict]:
+    """Share one priced basket between today's order and its pre-order, in proportion to each part's dishes, so the
+    two totals add up to the pence the customer paid. The free loyalty dish's discount stays with its own part;
+    the rounding penny lands on today's order."""
+    def part_subtotal(items):
+        return round(sum(float(i.price) * i.quantity for i in items), 2)
+    sub_today, sub_pre = part_subtotal(today_items), part_subtotal(pre_items)
+    whole = sub_today + sub_pre
+    ratio = (sub_pre / whole) if whole else 0.0
+    free_in_pre = any(i.menu_item_id == free_item_id for i in pre_items)
+
+    def share(key):
+        v = float(totals.get(key) or 0.0)
+        if key == "free_item_discount":
+            return (0.0, v) if free_in_pre else (v, 0.0)
+        b = round(v * ratio, 2)
+        return round(v - b, 2), b
+    keys = ["small_order_fee", "delivery_fee", "takeaway_discount", "free_item_discount", "coupon_discount"]
+    today, pre = {"subtotal": sub_today}, {"subtotal": sub_pre}
+    for k in keys:
+        today[k], pre[k] = share(k)
+    def total(p):
+        return round(p["subtotal"] + p["small_order_fee"] + p["delivery_fee"] - p["takeaway_discount"] - p["free_item_discount"] - p["coupon_discount"], 2)
+    pre["grand_total"] = max(0.0, total(pre))
+    today["grand_total"] = round(float(totals["grand_total"]) - pre["grand_total"], 2)
+    return today, pre
+
+
+async def reserve_or_bump(settings: dict, slot_iso: str, now) -> tuple[str, bool]:
+    """Reserve a future-day slot; if it has gone or is full, the next free one that day; failing that keep it as asked
+    (the customer has paid — the owner is told)."""
+    from routes.pickup_slots import slot_in_grid, try_reserve_slot, generate_slots
+    if slot_in_grid(settings, slot_iso, now) and await try_reserve_slot(settings, slot_iso):
+        return slot_iso, False
+    day = datetime.strptime(slot_iso[:10], "%Y-%m-%d").date()
+    for cand in generate_slots(settings, day, now):
+        if cand["iso"] > slot_iso and await try_reserve_slot(settings, cand["iso"]):
+            return cand["iso"], True
+    return slot_iso, False
+
+
 def slot_label(slot_iso: Optional[str]) -> Optional[str]:
     """'2026-09-07T18:15' → '6:15 pm'."""
     if not slot_iso or len(slot_iso) < 16:
@@ -363,6 +410,7 @@ class OrderCalculateRequest(BaseModel):
     postcode: str = ""
     free_item_id: Optional[str] = None
     scheduled_slot: Optional[str] = None  # takeaway collection slot, validated below
+    preorder_slot: Optional[str] = None   # the pre-order dishes' own slot (tomorrow), validated below
     coupon_code: Optional[str] = None
     customer_email: Optional[str] = None  # lets per-customer coupon rules work for guests
 
@@ -389,7 +437,7 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
 
     from restock import is_sold_out_today, london_today
     items_data = []
-    has_preorder = False
+    has_preorder = has_today = False
     for i in body.items:
         doc = await db.menu_items.find_one(
             {"id": i.menu_item_id},
@@ -400,22 +448,31 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
             raise HTTPException(status_code=404, detail=f"{name} {why} — please remove it from your basket to continue.")
         if doc.get("preorder_only"):
             has_preorder = True
+        else:
+            has_today = True
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
 
-    # Pre-order items are made overnight: collection only, tomorrow's slots only
+    # Pre-order dishes are made overnight: collection only, at a time of their own tomorrow. Today's dishes keep
+    # their own time (ASAP or a slot), so a basket with both is collected twice (owner, 14 Nov 2026).
+    pre_slot = preorder_slot_of(body, has_today)
     if has_preorder:
         if body.order_type != "takeaway":
             raise HTTPException(status_code=400, detail=(
-                "Your basket includes a pre-order item (made fresh overnight) — "
-                "please switch to collection and pick a slot for tomorrow."))
-        if not body.scheduled_slot or body.scheduled_slot[:10] <= london_today():
+                "Your basket includes a pre-order dish (made fresh overnight) — "
+                "please switch to collection and pick a collection time for it tomorrow."))
+        if not pre_slot or pre_slot[:10] <= london_today():
             raise HTTPException(status_code=400, detail=(
-                "Pre-order items are prepared the night before — "
-                "please choose a collection slot for tomorrow."))
+                "Pre-order dishes are prepared the night before — "
+                "please choose a collection time for them tomorrow."))
+        if not slot_in_grid(slot_settings, pre_slot):
+            raise HTTPException(status_code=400, detail="That collection time for your pre-order has just passed — please pick another.")
+        remaining = await slot_remaining(slot_settings, pre_slot)
+        if remaining is not None and remaining <= 0:
+            raise HTTPException(status_code=400, detail="That collection time for your pre-order has just filled up — please pick another.")
 
-    if body.order_type == "takeaway" and not body.scheduled_slot and body.items and not asap_open(slot_settings):
+    if has_today and body.order_type == "takeaway" and not body.scheduled_slot and not asap_open(slot_settings):
         raise HTTPException(status_code=400, detail=closed_message(slot_settings))
-    if body.scheduled_slot and body.order_type == "takeaway":
+    if has_today and body.scheduled_slot and body.order_type == "takeaway":
         if not slot_in_grid(slot_settings, body.scheduled_slot):
             raise HTTPException(status_code=400, detail="That collection time has just passed — please pick another.")
         remaining = await slot_remaining(slot_settings, body.scheduled_slot)
@@ -486,24 +543,28 @@ async def create_order(
     # Server-side pricing — look up each item price from the DB, never trust the client
     from restock import is_sold_out_today, london_today
     items_data = []
-    has_preorder = False
+    has_preorder = has_today = False
     for i in payload.items:
         doc = await db.menu_items.find_one(
             {"id": i.menu_item_id, "available": True},
             {"name": 1, "price": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1, "_id": 0})
         if not doc or is_sold_out_today(doc):
             raise HTTPException(404, detail=f"Item '{i.menu_item_id}' is not available")
-        if doc.get("preorder_only"):
+        i.preorder = bool(doc.get("preorder_only"))     # from the dish, never the client
+        if i.preorder:
             has_preorder = True
+        else:
+            has_today = True
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
         # The stored order line is what the kitchen cooks from — take it from the DB too
         i.name = doc.get("name") or i.name
         i.price = float(doc["price"])
 
+    pre_slot = preorder_slot_of(payload, has_today)
     if has_preorder and (
         payload.delivery_type != "takeaway"
-        or not payload.scheduled_slot
-        or payload.scheduled_slot[:10] <= london_today()
+        or not pre_slot
+        or pre_slot[:10] <= london_today()
     ):
         raise HTTPException(400, "Pre-order items need a collection slot for tomorrow.")
     try:
@@ -551,7 +612,7 @@ async def create_order(
     kitchen_note = None
     if slot_settings.get("paused"):
         kitchen_note = "paid while ordering was paused"
-    if payload.delivery_type == "takeaway" and not payload.scheduled_slot and not asap_open(slot_settings, now_ldn):
+    if has_today and payload.delivery_type == "takeaway" and not payload.scheduled_slot and not asap_open(slot_settings, now_ldn):
         for cand in next_slots(slot_settings, now_ldn, limit=12):
             if await try_reserve_slot(slot_settings, cand["iso"]):
                 scheduled_final = cand["iso"]
@@ -564,7 +625,7 @@ async def create_order(
             kitchen_note = (kitchen_note + "; " if kitchen_note else "") + "delivery paid outside opening hours"
         if not slot_settings.get("delivery_enabled"):
             kitchen_note = (kitchen_note + "; " if kitchen_note else "") + "delivery paid while delivery is switched off"
-    if payload.delivery_type == "takeaway" and payload.scheduled_slot:
+    if has_today and payload.delivery_type == "takeaway" and payload.scheduled_slot:
         if slot_in_grid(slot_settings, payload.scheduled_slot, now_ldn) and await try_reserve_slot(slot_settings, payload.scheduled_slot):
             scheduled_final = payload.scheduled_slot
         else:
@@ -575,26 +636,50 @@ async def create_order(
                     break
             # Nothing bookable at all → ASAP (scheduled_final stays None)
 
+    # The pre-order dishes' own slot, tomorrow (paid already: a full slot moves to the next free one that day)
+    pre_final, pre_bumped = None, False
+    if has_preorder:
+        pre_final, pre_bumped = await reserve_or_bump(slot_settings, pre_slot, now_ldn)
+        if pre_bumped:
+            kitchen_note = (kitchen_note + "; " if kitchen_note else "") + f"pre-order slot {slot_label(pre_slot)} was full"
+
     # Redemption orders don't count toward loyalty
     is_qualifying = not payload.is_loyalty_redemption
 
-    order = Order(
-        **payload.model_dump(exclude={"user_id"}),
-        subtotal=totals["subtotal"],
-        small_order_fee=totals["small_order_fee"],
-        delivery_fee=totals["delivery_fee"],
-        takeaway_discount=totals["takeaway_discount"],
-        free_item_discount=totals["free_item_discount"],
-        coupon_discount=totals["coupon_discount"],
-        total=totals["grand_total"],
-        user_id=user_id,
-        is_loyalty_qualifying=is_qualifying,
-        payment_status="paid",  # verified as succeeded with Stripe above
-    )
-    order.coupon_code = totals["coupon_code"]
+    def make_order(items, part, **extra) -> Order:
+        fields = {**payload.model_dump(exclude={"user_id", "items"}), "items": [i.model_dump() for i in items],
+                  "subtotal": part["subtotal"], "small_order_fee": part["small_order_fee"], "delivery_fee": part["delivery_fee"],
+                  "takeaway_discount": part["takeaway_discount"], "free_item_discount": part["free_item_discount"],
+                  "coupon_discount": part["coupon_discount"], "total": part["grand_total"],
+                  "user_id": user_id, "is_loyalty_qualifying": is_qualifying,
+                  "payment_status": "paid"}   # verified as succeeded with Stripe above
+        fields.update(extra)
+        o = Order(**fields)
+        o.coupon_code = totals["coupon_code"]
+        return o
+
+    today_items = [i for i in payload.items if not i.preorder]
+    pre_items = [i for i in payload.items if i.preorder]
+    preorder = None      # the second, linked order when the basket is collected twice
+    if today_items and pre_items:
+        part_today, part_pre = split_totals(totals, today_items, pre_items, payload.loyalty_free_item_id)
+        order = make_order(today_items, part_today)
+        preorder = make_order(pre_items, part_pre, is_preorder=True, scheduled_slot=pre_slot, scheduled_slot_final=pre_final,
+                              payment_intent_id=None, paid_with_order_id=order.id, is_loyalty_qualifying=False,
+                              linked_order_id=order.id)
+        order.linked_order_id = preorder.id
+    elif pre_items:
+        order = make_order(pre_items, totals, is_preorder=True, scheduled_slot=pre_slot)
+        scheduled_final, slot_was_bumped = pre_final, pre_bumped
+    else:
+        order = make_order(today_items, totals)
     # Server-authoritative: assigned here, never accepted from the client
     order.order_number = await next_order_number()
     order.scheduled_slot_final = scheduled_final
+    if preorder:
+        preorder.order_number = await next_order_number()
+        preorder.linked_order_number, preorder.linked_slot_final = order.order_number, scheduled_final
+        order.linked_order_number, order.linked_slot_final = preorder.order_number, pre_final
     try:
         order_doc = order.model_dump()
         if payload.marketing_consent is not None:                      # tick-box at checkout (A-0003, MKT-001)
@@ -609,6 +694,8 @@ async def create_order(
         if existing and existing.get("user_id") == user_id:
             return Order(**existing)
         raise HTTPException(400, "This payment has already been used")
+    if preorder:
+        await db.orders.insert_one(preorder.model_dump())
 
     if totals["coupon"]:
         ok = await redeem_coupon(
@@ -644,34 +731,50 @@ async def create_order(
             "If you cannot make it, cancel it in Admin › Orders and refund in Stripe.</p>",
         )
 
-    subj, html = email_order_confirmation(order.model_dump(), payload.customer_name)
+    paid_total = order.total + (preorder.total if preorder else 0.0)
+    confirm_doc = order.model_dump()
+    if preorder:
+        confirm_doc["linked"] = preorder.model_dump()
+    subj, html = email_order_confirmation(confirm_doc, payload.customer_name)
     send_email(payload.customer_email, subj, html)
     short_id = order.order_number
     if payload.delivery_type == "takeaway":
-        when = f"Collect at {slot_label(scheduled_final)}." if scheduled_final else "We'll text you when it's ready to collect."
-        if slot_was_bumped and payload.scheduled_slot:
-            when = f"Your requested time was full — new collection time {slot_label(scheduled_final)}."
-        elif slot_was_bumped:
-            when = f"We were closed when you ordered — your collection time is {slot_label(scheduled_final)}."
-        sms_body = f"Sree Svadista Prasada: order #{short_id} received — £{order.total:.2f}. {when}"
+        if order.is_preorder:
+            when = f"It's made fresh overnight — collect tomorrow at {slot_label(scheduled_final)}."
+            if slot_was_bumped:
+                when = f"Your requested time was full — collect tomorrow at {slot_label(scheduled_final)} instead."
+        else:
+            when = f"Collect at {slot_label(scheduled_final)}." if scheduled_final else "We'll text you when it's ready to collect."
+            if slot_was_bumped and payload.scheduled_slot:
+                when = f"Your requested time was full — new collection time {slot_label(scheduled_final)}."
+            elif slot_was_bumped:
+                when = f"We were closed when you ordered — your collection time is {slot_label(scheduled_final)}."
+        if preorder:
+            when += (f" Your pre-order #{preorder.order_number} is made overnight — collect it tomorrow at "
+                     f"{slot_label(pre_final)}{' (your first choice was full)' if pre_bumped else ''}.")
+        sms_body = f"Sree Svadista Prasada: order #{short_id} received — £{paid_total:.2f}. {when}"
     else:
         when = "We'll message you when it's on the way."
-        sms_body = f"Sree Svadista Prasada: order #{short_id} received — £{order.total:.2f}. We'll text you when it's on the way."
+        sms_body = f"Sree Svadista Prasada: order #{short_id} received — £{paid_total:.2f}. We'll text you when it's on the way."
     notify_customer(
         "order_received", payload.customer_phone,
-        [first_name(payload.customer_name), short_id, f"{order.total:.2f}", when,
+        [first_name(payload.customer_name), short_id, f"{paid_total:.2f}", when,
          tracking_link("orders", order.id)],
         dedupe_key=f"order_received:{order.id}",
         sms_fallback=sms_body,
     )
+    second = (f"<p>Its pre-order half <b>#{preorder.order_number}</b> (£{preorder.total:.2f}) is a ticket of its own, "
+              f"collected tomorrow at {esc(slot_label(pre_final))}.</p>" if preorder else "")
     notify_admin(
-        f"New order · £{order.total:.2f} · {payload.customer_name}",
+        f"New order · £{paid_total:.2f} · {payload.customer_name}",
         f"<p>New order <b>#{short_id}</b> from {esc(payload.customer_name)} "
         f"({esc(payload.customer_email)} · {esc(payload.customer_phone)}).</p>"
-        f"<p>Total <b>£{order.total:.2f}</b> — open the admin dashboard to confirm.</p>",
+        f"<p>Total <b>£{paid_total:.2f}</b> — open the admin dashboard to confirm.</p>" + second,
     )
     from order_alerts import alert_new_order
     asyncio.create_task(alert_new_order(order.model_dump()))      # push to the owner's phone; repeats until accepted
+    if preorder:
+        asyncio.create_task(alert_new_order(preorder.model_dump()))
     return order
 
 
@@ -774,7 +877,7 @@ async def update_order_status(
         if payload.status.value == "cancelled" and doc.get("scheduled_slot_final"):
             from routes.pickup_slots import release_slot
             await release_slot(doc["scheduled_slot_final"])
-        if payload.status.value == "cancelled" and doc.get("payment_intent_id") and doc.get("payment_status") != "refunded":
+        if payload.status.value == "cancelled" and (doc.get("payment_intent_id") or doc.get("paid_with_order_id")) and doc.get("payment_status") != "refunded":
             await db.orders.update_one({"id": order_id}, {"$set": {"payment_status": "refund_due"}})
         if payload.status.value == "delivered":
             from routes.reviews import ensure_order_review_stub

@@ -57,6 +57,8 @@ interface CartContextType {
   // Collection slot (takeaway only) — null = ASAP
   pickupSlot: PickupSlot | null;
   setPickupSlot: (slot: PickupSlot | null) => void;
+  preorderSlot: PickupSlot | null;          // when the pre-order dishes are collected (tomorrow)
+  setPreorderSlot: (slot: PickupSlot | null) => void;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -87,6 +89,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [deliveryType, setDeliveryTypeRaw] = useState<string>('takeaway');
   const [zoneInfo, setZoneInfoRaw]         = useState<ZoneInfo | null>(null);
   const [pickupSlot, setPickupSlotRaw]     = useState<PickupSlot | null>(null);
+  const [preorderSlot, setPreorderSlotRaw] = useState<PickupSlot | null>(null);
   const [hydrated, setHydrated]            = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // The basket as last rendered, so the analytics calls below can read it without going through a state updater
@@ -109,6 +112,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const ps = sessionStorage.getItem(SLOT_KEY);
       if (ps) setPickupSlotRaw(JSON.parse(ps));
+      const pre = sessionStorage.getItem(SLOT_KEY + '_preorder');
+      if (pre) setPreorderSlotRaw(JSON.parse(pre));
     } catch {}
     setHydrated(true);
   }, []);
@@ -139,6 +144,14 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     } catch {}
   }, []);
 
+  const setPreorderSlot = useCallback((slot: PickupSlot | null) => {
+    setPreorderSlotRaw(slot);
+    try {
+      if (slot) sessionStorage.setItem(SLOT_KEY + '_preorder', JSON.stringify(slot));
+      else sessionStorage.removeItem(SLOT_KEY + '_preorder');
+    } catch {}
+  }, []);
+
   const setDeliveryType = useCallback((type: string) => {
     // While the admin has delivery switched off this is the one place that
     // can never be routed around, no matter which screen calls it.
@@ -146,8 +159,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     record('delivery_type_selected', { method: next });
     setDeliveryTypeRaw(next);
     try { sessionStorage.setItem(DT_KEY, next); } catch {}
-    if (next !== 'takeaway') setPickupSlot(null);
-  }, [setPickupSlot, deliveryEnabled]);
+    if (next !== 'takeaway') { setPickupSlot(null); setPreorderSlot(null); }
+  }, [setPickupSlot, setPreorderSlot, deliveryEnabled]);
 
   // Delivery switched off (or a stale 'delivery' choice restored from an old
   // session) — fall back to collection as soon as the server has told us.
@@ -257,8 +270,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const clearCart = useCallback(() => {
     setCartItems([]);
     setPickupSlot(null);
+    setPreorderSlot(null);
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
-  }, [setPickupSlot]);
+  }, [setPickupSlot, setPreorderSlot]);
 
   return (
     <CartContext.Provider value={{
@@ -268,6 +282,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       deliveryType, setDeliveryType,
       zoneInfo, setZoneInfo,
       pickupSlot, setPickupSlot,
+      preorderSlot, setPreorderSlot,
     }}>
       {children}
     </CartContext.Provider>

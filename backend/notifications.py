@@ -491,13 +491,34 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
     ]))
     disp = _order_disp(order)
     is_takeaway = order.get("delivery_type") == "takeaway"
+    linked = order.get("linked")           # the pre-order half of a basket collected twice
+
+    def when(iso: str) -> str:
+        """"9:00 am", with the day when it is not today (London)."""
+        hh, mm = int(iso[11:13]), iso[14:16]
+        time = f'{hh % 12 or 12}:{mm} {"am" if hh < 12 else "pm"}'
+        from zoneinfo import ZoneInfo
+        today = datetime.now(ZoneInfo("Europe/London")).date()
+        day = datetime.strptime(iso[:10], "%Y-%m-%d").date()
+        if day == today:
+            return time
+        return f'tomorrow, {time}' if (day - today).days == 1 else f'{day.strftime("%A %-d %B")}, {time}'
+
     slot = order.get("scheduled_slot_final") or ""
     slot_line = ""
     if is_takeaway and len(slot) >= 16:
-        hh, mm = int(slot[11:13]), slot[14:16]
-        slot_line = (
-            f'<p style="color:#5C4B47;font-size:13px"><b>Collection time:</b> '
-            f'{hh % 12 or 12}:{mm} {"am" if hh < 12 else "pm"}</p>'
+        label = "Pre-order — collection time" if order.get("is_preorder") else ("Collection time for today's dishes" if linked else "Collection time")
+        slot_line = f'<p style="color:#5C4B47;font-size:13px"><b>{label}:</b> {when(slot)}</p>'
+    if linked and len(linked.get("scheduled_slot_final") or "") >= 16:
+        rows = "".join(
+            f'<tr><td style="padding:4px 0">{i.get("quantity",1)} × {i.get("name","Item")}</td>'
+            f'<td style="padding:4px 0;text-align:right">£{(i.get("price",0)*i.get("quantity",1)):.2f}</td></tr>'
+            for i in (linked.get("items") or [])
+        )
+        slot_line += (
+            f'<p style="color:#5C4B47;font-size:13px;margin-top:10px"><b>Your pre-order #{_order_disp(linked)}</b> is made fresh overnight — '
+            f'<b>collect it {when(linked["scheduled_slot_final"])}</b>:</p>'
+            f'<table style="width:100%;font-size:14px">{rows}</table>'
         )
     dest_line = (
         slot_line + '<p style="color:#5C4B47;font-size:13px"><b>Collection from:</b> ' + COLLECTION_ADDRESS +
@@ -506,17 +527,22 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
         f'<p style="color:#5C4B47;font-size:13px"><b>Deliver to:</b> {addr_line}</p>'
     )
     intro = (
-        "We'll text you as soon as it's ready for collection.</p>" if is_takeaway
+        ("It's made fresh overnight — we'll text you tomorrow as soon as it's ready to collect.</p>" if order.get("is_preorder")
+         else "Two collections: today's dishes first, your pre-order tomorrow. We'll text you each time it's ready.</p>" if linked
+         else "We'll text you as soon as it's ready for collection.</p>") if is_takeaway
         else "We'll text you as soon as it's confirmed and on the way.</p>"
     )
+    paid = (order.get("total", 0) or 0) + ((linked or {}).get("total", 0) or 0)
+    subtotal = (order.get("subtotal", 0) or 0) + ((linked or {}).get("subtotal", 0) or 0)
+    coupon_off = (order.get("coupon_discount", 0) or 0) + ((linked or {}).get("coupon_discount", 0) or 0)
     html = _wrap(
         "Order received",
         f"<p>Hi {name}, we've received your order <b>#{disp}</b>. " + intro +
         f'<table style="width:100%;font-size:14px;border-top:1px solid rgba(0,0,0,0.1);margin-top:10px">{items_rows}</table>'
-        f'<p style="margin-top:12px"><b>Subtotal:</b> £{order.get("subtotal",0):.2f}<br>'
-        + (f'<b>Coupon {order.get("coupon_code")}:</b> −£{order.get("coupon_discount",0):.2f}<br>' if order.get("coupon_code") else "")
+        f'<p style="margin-top:12px"><b>Subtotal:</b> £{subtotal:.2f}<br>'
+        + (f'<b>Coupon {order.get("coupon_code")}:</b> −£{coupon_off:.2f}<br>' if order.get("coupon_code") else "")
         + f'<b>Delivery:</b> £{order.get("delivery_fee",0):.2f}<br>'
-        f'<b>Total:</b> £{order.get("total",0):.2f}</p>'
+        f'<b>Total{" paid" if linked else ""}:</b> £{paid:.2f}</p>'
         + dest_line,
         "Track My Order", f"{SITE_URL}/dashboard",
     )

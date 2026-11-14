@@ -114,13 +114,20 @@ async def seed_customer(request: Request):
 
 
 @app.post("/__seed_order")
-async def seed_order():
-    """A paid order waiting to be accepted, as checkout would leave it (a real card payment needs Stripe)."""
+async def seed_order(request: Request):
+    """A paid order waiting to be accepted, as checkout would leave it (a real card payment needs Stripe).
+    An optional JSON body overrides any Order field (items, is_preorder, scheduled_slot_final, linked_order_number…)."""
     from models import Order
+    try:
+        overrides = await request.json()
+    except Exception:
+        overrides = {}
     n = await db.orders.count_documents({}) + 1
-    order = Order(customer_name="Asha Rao", customer_email="asha.rao@test.example", customer_phone="+447700900123",
+    fields = dict(customer_name="Asha Rao", customer_email="asha.rao@test.example", customer_phone="+447700900123",
                   items=[{"menu_item_id": "x", "name": "Masala Dosa", "price": 6.99, "quantity": 2}], delivery_type="takeaway",
                   total=13.98, order_number=f"SP{n:04d}")
+    fields.update(overrides or {})
+    order = Order(**fields)
     await db.orders.insert_one(order.model_dump())
     return {"id": order.id, "order_number": order.order_number}
 

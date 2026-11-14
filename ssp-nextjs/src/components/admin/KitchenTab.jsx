@@ -29,6 +29,14 @@ const slotLabel = (iso) => {
   return `${hh % 12 || 12}:${iso.slice(14, 16)} ${hh < 12 ? 'am' : 'pm'}`;
 };
 const minsSince = (iso, now) => Math.max(0, Math.floor((now - new Date(iso)) / 60000));
+const londonToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
+// "tomorrow 9:00 am" for a slot on another day; the time alone for today
+const slotWhen = (iso) => {
+  const t = slotLabel(iso);
+  if (!t) return null;
+  const d = iso.slice(0, 10), today = londonToday();
+  return d === today ? t : d > today ? `tomorrow ${t}` : `${d.slice(8, 10)}/${d.slice(5, 7)} ${t}`;
+};
 
 // Advance button per ticket, branched by delivery type
 function nextAction(o) {
@@ -50,7 +58,7 @@ function nextAction(o) {
 function Ticket({ order, now, onAdvance, onCancel, onEightySix, busy }) {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const takeaway = order.delivery_type === 'takeaway';
-  const slot = slotLabel(order.scheduled_slot_final);
+  const slot = slotWhen(order.scheduled_slot_final);
   const mins = minsSince(order.created_at, now);
   const late = ['pending', 'confirmed', 'preparing'].includes(order.status) && mins >= 20;
   const action = nextAction(order);
@@ -72,11 +80,19 @@ function Ticket({ order, now, onAdvance, onCancel, onEightySix, busy }) {
 
       <div className="flex flex-wrap gap-1.5 mt-1.5">
         <span className="text-[10px] font-black tracking-wide px-2 py-0.5 rounded-full"
-          style={takeaway
+          style={order.is_preorder
+            ? { backgroundColor: 'rgba(128,0,32,0.08)', color: C.burgundy, border: '1px solid rgba(128,0,32,0.25)' }
+            : takeaway
             ? { backgroundColor: '#FBF3DC', color: C.gold, border: '1px solid #EBD9A8' }
             : { backgroundColor: '#F0E9F5', color: '#5E4B8B', border: '1px solid #D9CCE8' }}>
-          {takeaway ? (slot ? `COLLECTION ${slot}` : 'COLLECTION · ASAP') : `DELIVERY · ${order.delivery_address?.postcode || ''}`}
+          {order.is_preorder ? `🌙 PRE-ORDER · ${slot ? slot.toUpperCase() : 'TOMORROW'}`
+            : takeaway ? (slot ? `COLLECTION ${slot}` : 'COLLECTION · ASAP') : `DELIVERY · ${order.delivery_address?.postcode || ''}`}
         </span>
+        {order.linked_order_number && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#F6F1E7', color: C.muted }}>
+            with #{order.linked_order_number}
+          </span>
+        )}
         {order.customer_name && (
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#F6F1E7', color: C.muted }}>
             {order.customer_name.split(' ')[0]}
@@ -202,7 +218,7 @@ export default function KitchenTab() {
       slotCounts[o.scheduled_slot_final] = (slotCounts[o.scheduled_slot_final] || 0) + 1;
     }
   });
-  const slotStrip = Object.keys(slotCounts).sort().map(iso => `${slotLabel(iso)} ×${slotCounts[iso]}`);
+  const slotStrip = Object.keys(slotCounts).sort().map(iso => `${slotWhen(iso)} ×${slotCounts[iso]}`);
 
   if (loading) return (
     <div className="flex items-center justify-center py-24">

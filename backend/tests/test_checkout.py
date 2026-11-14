@@ -527,3 +527,69 @@ def test_admin_sees_who_is_waiting_for_the_kitchen_to_reopen(client, db, admin_h
     assert client.get(url, headers=user_headers).status_code == 403
     r = client.get(url, headers=admin_headers).json()
     assert r["count"] == 1 and r["people"][0]["email"] == "asha@example.com" and r["people"][0]["name"] == "Asha"
+
+
+# ── A basket collected twice: today's dishes now, the pre-order tomorrow ─────
+
+def _tomorrow_slot(client):
+    from datetime import datetime as _dt
+    from zoneinfo import ZoneInfo
+    day = (_dt.now(ZoneInfo("Europe/London")) + timedelta(days=1)).strftime("%Y-%m-%d")
+    slots = client.get("/api/pickup-slots", params={"date": day}).json()["slots"]
+    return slots[0]["iso"]
+
+
+def test_mixed_basket_needs_a_time_for_the_preorder_and_keeps_today_asap(client, menu):
+    tomorrow = _tomorrow_slot(client)
+    r = calc(client, [("oats", 1), ("curry", 1)], scheduled_slot=tomorrow)      # an older client: one time only
+    assert r.status_code == 400 and "pre-order" in r.json()["detail"].lower() and "tomorrow" in r.json()["detail"]
+    r = calc(client, [("oats", 1), ("curry", 1)], preorder_slot=tomorrow)       # today's dish ASAP, pre-order tomorrow
+    assert r.status_code == 200, r.text
+    assert r.json()["subtotal"] == round(6.00 + 9.99, 2)
+
+
+def test_mixed_basket_becomes_two_linked_orders_paid_once(client, menu, pay, user_headers, db):
+    tomorrow = _tomorrow_slot(client)
+    priced = calc(client, [("oats", 2), ("curry", 1), ("biryani", 1)], preorder_slot=tomorrow).json()
+    pi = pay(priced["grand_total"])
+    r = client.post(ORDERS, json=order_body(menu, [("oats", 2), ("curry", 1), ("biryani", 1)], pi, preorder_slot=tomorrow), headers=user_headers)
+    assert r.status_code == 200, r.text
+    today_order = r.json()
+    assert [i["name"] for i in today_order["items"]] == ["Chicken Curry", "Chicken Dum Biryani"]
+    assert today_order["is_preorder"] is False and today_order["payment_intent_id"] == pi
+    pre = run(db.orders.find_one({"id": today_order["linked_order_id"]}, {"_id": 0}))
+    assert pre and pre["is_preorder"] and [i["name"] for i in pre["items"]] == ["Overnight Oats Bowl"] and pre["items"][0]["preorder"] is True
+    assert pre["scheduled_slot_final"] == tomorrow and pre["paid_with_order_id"] == today_order["id"] and pre["payment_intent_id"] is None
+    assert pre["payment_status"] == "paid" and pre["is_loyalty_qualifying"] is False
+    assert today_order["linked_order_number"] == pre["order_number"] and pre["linked_order_number"] == today_order["order_number"]
+    assert today_order["linked_slot_final"] == tomorrow
+    # the two totals are the pence that were paid, shared by each part's dishes
+    assert round(today_order["total"] + pre["total"], 2) == priced["grand_total"]
+    assert round(today_order["subtotal"] + pre["subtotal"], 2) == priced["subtotal"]
+    assert pre["subtotal"] == 12.00 and pre["takeaway_discount"] == 1.20
+    # both tickets are the customer's, and the same payment cannot make a third
+    mine = client.get(ORDERS, headers=user_headers).json()
+    assert {o["id"] for o in mine} == {today_order["id"], pre["id"]}
+    again = client.post(ORDERS, json=order_body(menu, [("oats", 2), ("curry", 1), ("biryani", 1)], pi, preorder_slot=tomorrow), headers=user_headers)
+    assert again.status_code == 200 and again.json()["id"] == today_order["id"] and run(db.orders.count_documents({})) == 2
+
+
+def test_an_all_preorder_basket_is_one_preorder_ticket_for_tomorrow(client, menu, pay):
+    tomorrow = _tomorrow_slot(client)
+    priced = calc(client, [("oats", 3)], preorder_slot=tomorrow).json()          # three: over the £15 minimum
+    assert "grand_total" in priced, priced
+    r = client.post(ORDERS, json=order_body(menu, [("oats", 3)], pay(priced["grand_total"]), preorder_slot=tomorrow))
+    assert r.status_code == 200, r.text
+    o = r.json()
+    assert o["is_preorder"] and o["scheduled_slot_final"] == tomorrow and o["linked_order_id"] is None and o["total"] == priced["grand_total"]
+
+
+def test_cancelling_the_preorder_half_frees_its_slot_and_flags_the_refund(client, menu, pay, user_headers, db, admin_headers):
+    tomorrow = _tomorrow_slot(client)
+    priced = calc(client, [("oats", 1), ("curry", 1)], preorder_slot=tomorrow).json()
+    o = client.post(ORDERS, json=order_body(menu, [("oats", 1), ("curry", 1)], pay(priced["grand_total"]), preorder_slot=tomorrow), headers=user_headers).json()
+    pre_id = o["linked_order_id"]
+    assert client.put(f"/api/orders/{pre_id}/status", json={"status": "cancelled"}, headers=admin_headers).status_code == 200
+    pre = run(db.orders.find_one({"id": pre_id}, {"_id": 0}))
+    assert pre["status"] == "cancelled" and pre["payment_status"] == "refund_due"
+    assert run(db.orders.find_one({"id": o["id"]}, {"_id": 0}))["status"] == "pending"      # today's dishes still on

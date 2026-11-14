@@ -23,6 +23,22 @@ Frontend (all conditional on `preorder_only` / cart item `preorder`):
   collection-only strip with a one-tap "Switch" button.
 - `CartContext.tsx`: `CartItem.preorder?: boolean` flows through the cart.
 
+## A basket collected twice (14 Nov 2026)
+
+A pre-order dish no longer drags the whole basket to tomorrow. Today's dishes
+keep their own collection time (ASAP or a slot); the pre-order dishes take a
+time of their own tomorrow (`preorder_slot`). At payment the server splits the
+basket into **two linked orders paid once**: today's order carries the
+payment intent; the pre-order (`is_preorder`, `paid_with_order_id`,
+`linked_order_*`) is a ticket of its own on the kitchen board, with its own
+status, "ready" message and slot, and never counts twice for loyalty. Totals
+are shared in proportion to each part's dishes and add up to the pence paid
+(`split_totals`). Checkout shows two pickers (`CollectionTimes`), the
+confirmation email and text name both times, the success screen shows both
+order numbers, and the kitchen ticket reads "PRE-ORDER · TOMORROW 9:00 AM".
+Cancelling the pre-order half frees its slot and flags `refund_due` (refund
+against the partner's payment in Stripe).
+
 ## Where it shows
 
 - `/order`, `/menu`, the Svadista / Prasada / Breakfast section pages and the

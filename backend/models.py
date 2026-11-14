@@ -267,6 +267,7 @@ class OrderItem(BaseModel):
     name: str
     price: float
     quantity: int = Field(ge=1, le=50)
+    preorder: bool = False   # set by the server from the dish: made overnight, collected tomorrow
 
 
 class OrderCreate(BaseModel):
@@ -284,6 +285,9 @@ class OrderCreate(BaseModel):
     # Requested collection slot (takeaway only) — "YYYY-MM-DDTHH:MM" London time, None = ASAP.
     # Client-supplied by design; fully re-validated server-side.
     scheduled_slot: Optional[str] = None
+    # Collection slot for the pre-order dishes in the basket (tomorrow or later). A basket with both kinds becomes
+    # two linked orders: today's dishes at scheduled_slot, the pre-order at preorder_slot (owner, 14 Nov 2026).
+    preorder_slot: Optional[str] = None
     # Loyalty redemption
     is_loyalty_redemption: bool = False
     loyalty_free_item_id: Optional[str] = None
@@ -317,6 +321,14 @@ class Order(OrderCreate):
     order_number: Optional[str] = None
     # Slot actually assigned by the server (may differ from scheduled_slot if bumped)
     scheduled_slot_final: Optional[str] = None
+    # Pre-order: this order's dishes are made overnight and collected at scheduled_slot_final tomorrow.
+    is_preorder: bool = False
+    # The other half of a basket collected twice: today's order ↔ its pre-order. The pre-order is paid through
+    # the first (paid_with_order_id), so one payment, two tickets on the kitchen board.
+    linked_order_id: Optional[str] = None
+    linked_order_number: Optional[str] = None
+    linked_slot_final: Optional[str] = None
+    paid_with_order_id: Optional[str] = None
 
 
 # --- Subscriptions ---

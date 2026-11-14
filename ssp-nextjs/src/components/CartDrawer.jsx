@@ -505,6 +505,9 @@ const CartDrawer = () => {
                     }
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold leading-tight" style={{ color: '#2D2422' }}>{item.name}</p>
+                      {item.preorder && (
+                        <p className="text-[10px] font-black mt-0.5" style={{ color: '#800020' }} data-testid="cart-preorder-tag">🌙 Pre-order · collect tomorrow</p>
+                      )}
                       <p className="text-sm font-bold mt-0.5" style={{ color: '#800020' }}>
                         {fmt(price(item.price) * item.quantity)}
                         {item.quantity > 1 && <span className="text-xs font-normal text-gray-500 ml-1">({fmt(price(item.price))} each)</span>}
@@ -536,6 +539,11 @@ const CartDrawer = () => {
                   </div>
                 )}
               </div>
+              {cartItems.some(i => i.preorder) && cartItems.some(i => !i.preorder) && (
+                <p className="mx-6 mb-3 text-[11px] font-semibold rounded-lg px-3 py-2" style={{ backgroundColor: 'rgba(128,0,32,0.06)', color: '#800020' }} data-testid="cart-two-collections">
+                  Two collections: today&apos;s dishes at the time you pick, your pre-order tomorrow at its own time. You choose both at checkout.
+                </p>
+              )}
               <UpsellRow cartItems={cartItems} onAdd={addToCart} />
             </div>
 

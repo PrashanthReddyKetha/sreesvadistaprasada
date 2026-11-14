@@ -13,7 +13,7 @@ import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 import { buildItemUrl } from '@/lib/itemUrl';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
-import SlotPicker from '@/components/SlotPicker';
+import CollectionTimes from '@/components/CollectionTimes';
 import IntroPricesBanner from '@/components/IntroPricesBanner';
 import RestockBell from '@/components/RestockBell';
 import PushOptIn from '@/components/PushOptIn';
@@ -344,7 +344,7 @@ export default function OrderClient({ initialItems = [] }) {
 
           {deliveryType === 'takeaway' && (
             <div className={searchMode || controlsCollapsed ? 'hidden' : 'mt-3'}>
-              <SlotPicker pickupSlot={pickupSlot} setPickupSlot={setPickupSlot} requireTomorrow={hasPreorder} />
+              <CollectionTimes />
             </div>
           )}
 
