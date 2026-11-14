@@ -21,7 +21,7 @@ from routes import expenses as expense_routes
 from routes import sales as sales_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings, apply_opening_hours_7_to_11
-from menu_additions import apply_menu_additions, apply_protein_egg_bowl, apply_bowls_at_breakfast, apply_gongura_prawns_and_joint_biryani, apply_biryani_spelling
+from menu_additions import apply_menu_additions, apply_protein_egg_bowl, apply_bowls_at_breakfast, apply_gongura_prawns_and_joint_biryani, apply_biryani_spelling, apply_chicken_65_biryani
 from web_push import ensure_vapid_keys, scheduler_loop
 import asyncio
 from datetime import datetime
@@ -76,6 +76,7 @@ async def lifespan(app: FastAPI):
     await apply_bowls_at_breakfast()
     await apply_gongura_prawns_and_joint_biryani()
     await apply_biryani_spelling()
+    await apply_chicken_65_biryani()
     await normalise_order_dates()
     from allergen_fill import apply_allergen_fill
     await apply_allergen_fill()

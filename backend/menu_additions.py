@@ -374,3 +374,42 @@ async def apply_biryani_spelling():
         r = await db.menu_items.update_one({"name": "Mutton Biriyani"}, {"$set": {"name": "Mutton Biryani", "slug": "mutton-biryani"}})
         if r.modified_count:
             print("menu_additions: Mutton Biriyani is now Mutton Biryani (/svadista/biryani/mutton-biryani)")
+
+
+# Chicken 65 Biryani (Svadista › Biryani) — owner request and price, 14 Nov 2026. Photo: the kitchen's own, served from the site.
+CHICKEN_65_BIRYANI = {
+    "name": "Chicken 65 Biryani",
+    "description": "Crisp Chicken 65 — chicken marinated in yoghurt, red chillies and curry leaves and fried — layered over fragrant biryani rice, with boiled egg, mint and raita on the side.",
+    "price": 10.99,
+    "category": "nonVeg",
+    "subcategory": "Biryani",
+    "slug": "chicken-65-biryani",
+    "is_veg": False,
+    "spice_level": 3,
+    "image": "https://sreesvadistaprasada.com/dishes/chicken-65-biryani.jpg",
+    "seo_meta_description": "Chicken 65 biryani in Milton Keynes: crisp Chicken 65 over fragrant biryani rice with egg and raita. Order online for collection or delivery.",
+}
+# Allergens are left empty like the other new dishes, so the dish page says "please ask us" until the owner confirms them in admin
+
+CHICKEN_65_BIRYANI_VERSION = 1
+
+
+async def apply_chicken_65_biryani():
+    """Inserts the dish once (settings._id == "menu_chicken_65_biryani"); a restart never re-adds it if the admin deletes it."""
+    marker = await db.settings.find_one({"_id": "menu_chicken_65_biryani"}, {"_id": 0, "version": 1})
+    if marker and marker.get("version") == CHICKEN_65_BIRYANI_VERSION:
+        return
+    item = CHICKEN_65_BIRYANI
+    if not await db.menu_items.find_one({"$or": [{"name": item["name"]}, {"slug": item["slug"]}]}, {"_id": 1}):
+        await db.menu_items.insert_one({
+            **COMMON_DEFAULTS,
+            **item,
+            "id": str(uuid.uuid4()),
+            "created_at": datetime.utcnow().isoformat(),
+        })
+        print(f"menu_additions: inserted {item['name']}")
+    await db.settings.update_one(
+        {"_id": "menu_chicken_65_biryani"},
+        {"$set": {"version": CHICKEN_65_BIRYANI_VERSION, "applied_at": datetime.utcnow().isoformat()}},
+        upsert=True,
+    )

@@ -91,3 +91,13 @@ def test_biryani_spelling_moves_tabs_names_and_addresses_once(db):
     assert run(db.menu_items.find_one({"id": "b2"}))["extra_categories"] == [{"category": "veg", "subcategory": "Biryanis & Rice"}]
     assert run(db.menu_items.find_one({"id": "b3"}))["subcategory"] == "Biryanis & Rice"
     assert run(db.menu_items.count_documents({"$or": [{"subcategory": {"$regex": "Biriyani"}}, {"name": {"$regex": "Biriyani"}}]})) == 0
+
+
+def test_chicken_65_biryani_is_added_to_svadista_biryani_once(db):
+    run(menu_additions.apply_chicken_65_biryani())
+    d = run(db.menu_items.find_one({"slug": "chicken-65-biryani"}))
+    assert (d["name"], d["category"], d["subcategory"], d["price"], d["spice_level"]) == ("Chicken 65 Biryani", "nonVeg", "Biryani", 10.99, 3)
+    assert d["available"] and d["id"] and d["image"].startswith("https://sreesvadistaprasada.com/dishes/")
+    run(db.menu_items.delete_one({"slug": "chicken-65-biryani"}))     # the admin takes it off
+    run(menu_additions.apply_chicken_65_biryani())                     # a restart does not bring it back
+    assert run(db.menu_items.count_documents({"slug": "chicken-65-biryani"})) == 0
