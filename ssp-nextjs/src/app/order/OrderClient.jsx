@@ -310,7 +310,7 @@ export default function OrderClient({ initialItems = [] }) {
             Order Now
           </h1>
           <p className="hidden md:block text-sm mt-1 max-w-md" style={{ color: '#F4E9D0' }}>
-            Fresh Andhra food, cooked to order — collect in under 60 minutes and save 10%{deliveryEnabled ? ', or get it delivered across Milton Keynes' : ''}.
+            Every dish cooked fresh when you order — collection in about 30 minutes, and you save 10%{deliveryEnabled ? ', or get it delivered across Milton Keynes' : ''}.
           </p>
         </div>
       </section>

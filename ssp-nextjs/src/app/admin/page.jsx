@@ -20,6 +20,7 @@ import AdminLoyaltyTab from '@/components/admin/AdminLoyaltyTab';
 import KitchenTab from '@/components/admin/KitchenTab';
 import SlotSettingsTab from '@/components/admin/SlotSettingsTab';
 import StockTab from '@/components/admin/StockTab';
+import ReadyTimeSheet from '@/components/admin/ReadyTimeSheet';
 import OrderAlarm from '@/components/admin/OrderAlarm';
 import PushTab from '@/components/admin/PushTab';
 import CouponsTab from '@/components/admin/CouponsTab';
@@ -88,14 +89,16 @@ const flowFor = (order) => order.status === 'preparing' && order.delivery_type =
 const OrderActions = ({ order, onUpdate }) => {
   const [busy, setBusy] = useState(null);
   const [askCancel, setAskCancel] = useState(false);
+  const [askReady, setAskReady] = useState(false);   // "When will it be ready?" before an ASAP collection order starts
   const flow = flowFor(order);
 
-  const handle = async (status) => {
+  const handle = async (status, extra = {}) => {
     setBusy(status);
-    await onUpdate('orders', order.id, status);
+    await onUpdate('orders', order.id, status, extra);
     setBusy(null);
     setAskCancel(false);
   };
+  const asksReadyTime = flow?.next === 'preparing' && order.delivery_type === 'takeaway' && !order.scheduled_slot_final && !order.is_preorder;
   const [askRefund, setAskRefund] = useState(false);
   const markRefunded = async () => {
     setBusy('refunded');
@@ -135,8 +138,12 @@ const OrderActions = ({ order, onUpdate }) => {
                  ['Then', 'the order shows "Refunded" and the customer gets an email saying the money is on its way'],
                  ['Undo', 'cannot be undone here']]} />
       )}
+      {askReady && (
+        <ReadyTimeSheet order={order} busy={busy === 'preparing'} onClose={() => setAskReady(false)}
+          onPick={(iso) => { setAskReady(false); handle('preparing', iso ? { estimated_ready_at: iso } : {}); }} />
+      )}
       {flow && (
-        <button onClick={() => handle(flow.next)} disabled={!!busy}
+        <button onClick={() => asksReadyTime ? setAskReady(true) : handle(flow.next)} disabled={!!busy}
           className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-50 whitespace-nowrap"
           style={{ backgroundColor: flow.color }}>
           {busy === flow.next ? <RefreshCw size={11} className="animate-spin" /> : <ChevronRight size={11} />}
@@ -1076,9 +1083,9 @@ const Admin = () => {
     return () => clearInterval(interval);
   }, [fetchAll]);
 
-  const handleStatusUpdate = async (type, id, status) => {
+  const handleStatusUpdate = async (type, id, status, extra = {}) => {
     try {
-      if (type==='orders' && status) await api.put(`/orders/${id}/status`, { status });   // status null = just refresh
+      if (type==='orders' && status) await api.put(`/orders/${id}/status`, { status, ...extra });   // status null = just refresh
       if (type==='orders') window.dispatchEvent(new Event('ssp:orders-changed'));
       if (type==='subscriptions') await api.put(`/subscriptions/${id}/status`, { status });
       if (type==='contact')       await api.put(`/enquiries/contact/${id}/status?status=${status}`);

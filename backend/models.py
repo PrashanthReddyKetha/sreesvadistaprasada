@@ -298,6 +298,20 @@ class OrderCreate(BaseModel):
 
 class OrderStatusUpdate(BaseModel):
     status: OrderStatus
+    # With "preparing": when the kitchen expects the order to be ready, "YYYY-MM-DDTHH:MM" London time (owner, 14 Nov 2026).
+    # It goes into the "we're preparing your order" message and shows on the ticket and the customer's order.
+    estimated_ready_at: Optional[str] = None
+
+    @field_validator("estimated_ready_at")
+    @classmethod
+    def _ready_at(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        try:
+            datetime.strptime(v, "%Y-%m-%dT%H:%M")
+        except ValueError:
+            raise ValueError("estimated_ready_at must be YYYY-MM-DDTHH:MM")
+        return v
 
 
 class Order(OrderCreate):
@@ -321,6 +335,8 @@ class Order(OrderCreate):
     order_number: Optional[str] = None
     # Slot actually assigned by the server (may differ from scheduled_slot if bumped)
     scheduled_slot_final: Optional[str] = None
+    # When the kitchen said it would be ready, chosen as it started preparing (ASAP collection orders)
+    estimated_ready_at: Optional[str] = None
     # Pre-order: this order's dishes are made overnight and collected at scheduled_slot_final tomorrow.
     is_preorder: bool = False
     # The other half of a basket collected twice: today's order ↔ its pre-order. The pre-order is paid through

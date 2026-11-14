@@ -144,7 +144,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
             <button
               onClick={() => { record('slot_selected', { label: 'ASAP', method: day }); setPickupSlot(null); }}
               style={chipStyle(!pickupSlot, false)}>
-              ASAP<span className="block text-[10px] font-normal" style={{ color: '#5C4B47' }}>&gt;60 mins</span>
+              ASAP<span className="block text-[10px] font-normal" style={{ color: '#5C4B47' }}>~30 mins</span>
             </button>
           )}
           {slots.map(s => {

@@ -529,7 +529,8 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
     intro = (
         ("It's made fresh overnight — we'll text you tomorrow as soon as it's ready to collect.</p>" if order.get("is_preorder")
          else "Two collections: today's dishes first, your pre-order tomorrow. We'll text you each time it's ready.</p>" if linked
-         else "We'll text you as soon as it's ready for collection.</p>") if is_takeaway
+         else ("Cooked fresh to order — we'll text you the moment it's ready for collection.</p>" if slot
+               else "Every dish is cooked fresh to order — yours will be ready in about 30 minutes, and we'll text you the moment it is.</p>")) if is_takeaway
         else "We'll text you as soon as it's confirmed and on the way.</p>"
     )
     paid = (order.get("total", 0) or 0) + ((linked or {}).get("total", 0) or 0)
@@ -560,7 +561,14 @@ def email_order_status(order: dict, name: str, status: str) -> tuple[str, str]:
         "delivered": "Your order was collected" if is_takeaway else "Your order was delivered",
         "cancelled": "Your order was cancelled",
     }.get(status, "Order update")
+    ready_at = order.get("estimated_ready_at") or ""
+    ready_line = ""
+    if status == "preparing" and is_takeaway and len(ready_at) >= 16:
+        hh, mm = int(ready_at[11:13]), ready_at[14:16]
+        ready_line = (f'<p>Our kitchen expects it to be <b>ready for collection at about {hh % 12 or 12}:{mm} {"am" if hh < 12 else "pm"}</b>. '
+                      "We'll text you the moment it is — just give your order number at the door.</p>")
     extra = {
+        "preparing": ready_line,
         "ready": "<p>Come and collect it while it's hot — just give your order number at the door.</p>",
         "out_for_delivery": "<p>Our delivery partner is heading to you now. Please keep your phone handy.</p>",
         "delivered": "<p>We hope you enjoyed it! If you have a moment, a Google review helps other South Indian food lovers in Milton Keynes find us.</p>",

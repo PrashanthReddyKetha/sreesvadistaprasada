@@ -1338,7 +1338,7 @@ const CheckoutInner = () => {
           <p className="text-sm text-gray-500 mb-6">
             {deliveryType === 'takeaway'
               ? (success.isPreorder ? 'We\u2019ll text you tomorrow when it\u2019s ready \u2014 just give your order number at the door.'
-                : success.slotFinal ? 'We\u2019ll text you when it\u2019s ready \u2014 just give your order number at the door.' : 'Ready in under 60 minutes \u2014 we\u2019ll text you when it\u2019s ready to collect.')
+                : success.slotFinal ? 'We\u2019ll text you when it\u2019s ready \u2014 just give your order number at the door.' : 'Cooked fresh for you \u2014 ready in about 30 minutes. We\u2019ll text you the moment it\u2019s ready.')
               : 'Estimated time: 40\u201350 minutes'}
           </p>
           <LoyaltyBanner />
@@ -1992,7 +1992,7 @@ const CheckoutInner = () => {
 
               {/* Trust badges — compact */}
               <div className="flex items-center justify-center gap-4 py-2">
-                {[['🔒', 'Secure'], ['⚡', '30–45 min'], ['🍛', 'Fresh']].map(([icon, label]) => (
+                {[['🔒', 'Secure'], ['⚡', '~30 min'], ['🍛', 'Cooked fresh']].map(([icon, label]) => (
                   <div key={label} className="flex items-center gap-1">
                     <span className="text-sm">{icon}</span>
                     <span className="text-[11px] text-gray-500">{label}</span>

@@ -744,7 +744,8 @@ async def create_order(
             if slot_was_bumped:
                 when = f"Your requested time was full — collect tomorrow at {slot_label(scheduled_final)} instead."
         else:
-            when = f"Collect at {slot_label(scheduled_final)}." if scheduled_final else "We'll text you when it's ready to collect."
+            when = (f"Collect at {slot_label(scheduled_final)}." if scheduled_final
+                    else "Cooked fresh for you — ready in about 30 minutes, and we'll text you the moment it is.")
             if slot_was_bumped and payload.scheduled_slot:
                 when = f"Your requested time was full — new collection time {slot_label(scheduled_final)}."
             elif slot_was_bumped:
@@ -826,9 +827,12 @@ async def update_order_status(
     if payload.status.value not in allowed:
         raise HTTPException(status_code=400, detail=f"Cannot move order from '{current_status}' to '{payload.status.value}'")
     # Conditioned on the status we checked: two taps at once cannot both pass and both send messages
+    changes = {"status": payload.status.value, "updated_at": datetime.utcnow()}
+    if payload.status.value == "preparing" and payload.estimated_ready_at:
+        changes["estimated_ready_at"] = payload.estimated_ready_at      # the kitchen's own estimate, told to the customer
     result = await db.orders.update_one(
         {"id": order_id, "status": current_status},
-        {"$set": {"status": payload.status.value, "updated_at": datetime.utcnow()}},
+        {"$set": changes},
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=409, detail="This order was just changed by someone else — refresh and look again.")
@@ -846,9 +850,11 @@ async def update_order_status(
         # The status text is a service message and does not ask for a rating; the review request (one per channel,
         # marketing, with opt-out) does that on its own (A-0003, MKT-003)
         delivered_sms = f"Order #{disp} {'collected' if is_takeaway else 'delivered'} — enjoy!"
+        ready_at = slot_label(doc.get("estimated_ready_at")) if payload.status.value == "preparing" else None
         sms_copy = {
             "confirmed": f"Order #{disp} confirmed. We'll start prepping shortly.",
-            "preparing": f"Order #{disp} is being prepared now.",
+            "preparing": (f"Order #{disp} is being prepared now — ready for collection at about {ready_at}." if ready_at and is_takeaway
+                          else f"Order #{disp} is being prepared now."),
             "ready": f"Order #{disp} is READY for collection. See you soon!",
             "out_for_delivery": f"Order #{disp} is on the way. Please keep your phone handy.",
             "delivered": delivered_sms,

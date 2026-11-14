@@ -593,3 +593,16 @@ def test_cancelling_the_preorder_half_frees_its_slot_and_flags_the_refund(client
     pre = run(db.orders.find_one({"id": pre_id}, {"_id": 0}))
     assert pre["status"] == "cancelled" and pre["payment_status"] == "refund_due"
     assert run(db.orders.find_one({"id": o["id"]}, {"_id": 0}))["status"] == "pending"      # today's dishes still on
+
+
+def test_starting_to_prepare_with_a_ready_time_tells_the_customer_when(client, menu, pay, admin_headers, db, state):
+    o = client.post(ORDERS, json=order_body(menu, [("curry", 1), ("biryani", 1)], pay(18.88))).json()
+    assert client.put(f"/api/orders/{o['id']}/status", json={"status": "confirmed"}, headers=admin_headers).status_code == 200
+    bad = client.put(f"/api/orders/{o['id']}/status", json={"status": "preparing", "estimated_ready_at": "7pm"}, headers=admin_headers)
+    assert bad.status_code == 422
+    r = client.put(f"/api/orders/{o['id']}/status", json={"status": "preparing", "estimated_ready_at": "2026-11-14T19:00"}, headers=admin_headers)
+    assert r.status_code == 200
+    assert run(db.orders.find_one({"id": o["id"]}, {"_id": 0}))["estimated_ready_at"] == "2026-11-14T19:00"
+    subject, html = [(s, h) for (_, s, h) in state.outbox.email if "preparing" in s.lower()][-1]
+    assert "ready for collection at about 7:00 pm" in html
+    assert any("ready for collection at about 7:00 pm" in body for (_, body) in state.outbox.sms)   # WhatsApp is off in tests, so the text goes by SMS

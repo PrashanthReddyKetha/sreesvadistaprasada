@@ -408,6 +408,10 @@ function OrderCard({ order: o, compact, expanded, onToggle, onCancel, cancelling
                 return ` · Collect${dayWord} ${h % 12 || 12}:${o.scheduled_slot_final.slice(14, 16)} ${h < 12 ? 'am' : 'pm'}`;
               })()}
               {o.linked_order_number && ` · with #${o.linked_order_number}`}
+              {o.estimated_ready_at && ['preparing', 'ready'].includes(o.status) && (() => {
+                const h = parseInt(o.estimated_ready_at.slice(11, 13), 10);
+                return ` · Ready at about ${h % 12 || 12}:${o.estimated_ready_at.slice(14, 16)} ${h < 12 ? 'am' : 'pm'}`;
+              })()}
             </p>
           </div>
         </div>

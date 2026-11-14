@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw } from 'lucide-react';
 import api from '@/api';
+import ReadyTimeSheet from '@/components/admin/ReadyTimeSheet';
 
 /**
  * Kitchen board — the live ticket view for whoever is cooking.
@@ -55,7 +56,7 @@ function nextAction(o) {
   }
 }
 
-function Ticket({ order, now, onAdvance, onCancel, onEightySix, busy }) {
+function Ticket({ order, now, onAdvance, onAskReady, onCancel, onEightySix, busy }) {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const takeaway = order.delivery_type === 'takeaway';
   const slot = slotWhen(order.scheduled_slot_final);
@@ -93,6 +94,11 @@ function Ticket({ order, now, onAdvance, onCancel, onEightySix, busy }) {
             with #{order.linked_order_number}
           </span>
         )}
+        {order.estimated_ready_at && ['preparing', 'ready'].includes(order.status) && (
+          <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ backgroundColor: '#E3F2FD', color: '#1565C0' }} data-testid="ticket-ready-by">
+            READY BY {slotLabel(order.estimated_ready_at)}
+          </span>
+        )}
         {order.customer_name && (
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#F6F1E7', color: C.muted }}>
             {order.customer_name.split(' ')[0]}
@@ -126,7 +132,7 @@ function Ticket({ order, now, onAdvance, onCancel, onEightySix, busy }) {
       )}
 
       {action && (
-        <button onClick={() => onAdvance(order, action.status)} disabled={busy}
+        <button onClick={() => (action.status === 'preparing' && takeaway && !order.scheduled_slot_final && !order.is_preorder) ? onAskReady(order) : onAdvance(order, action.status)} disabled={busy}
           className="mt-2.5 w-full py-3 rounded-xl text-sm font-black text-white disabled:opacity-50"
           style={{ backgroundColor: action.color }}>
           {busy ? <RefreshCw size={14} className="animate-spin inline" /> : action.label}
@@ -162,6 +168,7 @@ export default function KitchenTab() {
   const [mobileLane, setMobileLane] = useState('new');
   const [now, setNow] = useState(Date.now());
   const [toast, setToast] = useState('');
+  const [askReady, setAskReady] = useState(null);   // the order whose ready time the kitchen is choosing
 
   const fetchOrders = useCallback(async () => {
     if (typeof document !== 'undefined' && document.hidden) return;
@@ -183,13 +190,13 @@ export default function KitchenTab() {
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
-  const advance = async (order, status) => {
+  const advance = async (order, status, extra = {}) => {
     setBusyId(order.id);
     const prev = orders;
-    setOrders(os => os.map(o => o.id === order.id ? { ...o, status } : o)
+    setOrders(os => os.map(o => o.id === order.id ? { ...o, status, ...extra } : o)
       .filter(o => !['delivered', 'cancelled'].includes(o.status)));
     try {
-      await api.put(`/orders/${order.id}/status`, { status });
+      await api.put(`/orders/${order.id}/status`, { status, ...extra });
       window.dispatchEvent(new Event('ssp:orders-changed'));   // the alarm stops at once
     } catch (e) {
       setOrders(prev);
@@ -256,6 +263,11 @@ export default function KitchenTab() {
         ))}
       </div>
 
+      {askReady && (
+        <ReadyTimeSheet order={askReady} busy={busyId === askReady.id} onClose={() => setAskReady(null)}
+          onPick={(iso) => { const o = askReady; setAskReady(null); advance(o, 'preparing', iso ? { estimated_ready_at: iso } : {}); }} />
+      )}
+
       {/* Board */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {lanes.map(l => (
@@ -270,7 +282,7 @@ export default function KitchenTab() {
             ) : (
               l.orders.map(o => (
                 <Ticket key={o.id} order={o} now={now}
-                  onAdvance={advance} onCancel={cancel} onEightySix={eightySix}
+                  onAdvance={advance} onAskReady={setAskReady} onCancel={cancel} onEightySix={eightySix}
                   busy={busyId === o.id} />
               ))
             )}
