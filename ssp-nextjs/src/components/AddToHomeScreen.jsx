@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { installTarget } from '@/lib/installTarget';
 
 /**
  * Tasteful add-to-home-screen nudge.
@@ -17,10 +18,9 @@ export default function AddToHomeScreen({ variant = 'card' }) {
   const [showIOSteps, setShowIOSteps] = useState(false);
 
   useEffect(() => {
-    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
-      || window.navigator.standalone === true;
-    if (standalone) return; // already installed
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    const target = installTarget();
+    if (target.kind === 'installed' || target.kind === 'inapp') return;   // already installed, or a web view that cannot install
+    const ios = target.kind === 'ios';     // iPhone and iPad Safari (the iPad calls itself a Mac)
     setIsIOS(ios);
     const update = () => setCanPrompt(!!window.__sspDeferredInstall);
     update();

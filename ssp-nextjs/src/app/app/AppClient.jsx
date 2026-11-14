@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { installTarget } from '@/lib/installTarget';
 
 /**
  * /app — the promotable install landing page.
@@ -20,21 +21,23 @@ const FEATURES = [
 ];
 
 export default function AppClient() {
-  const [state, setState] = useState('loading'); // loading | installed | android | ios | fallback
+  const [state, setState] = useState('loading'); // loading | installed | prompt | ios | mac-safari | inapp | fallback
+  const [device, setDevice] = useState('iPhone');
   const [iosSteps, setIosSteps] = useState(false);
 
   useEffect(() => {
-    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
-      || window.navigator.standalone === true;
-    if (standalone) { setState('installed'); return; }
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-    if (ios) { setState('ios'); return; }
-    const update = () => { if (window.__sspDeferredInstall) setState('android'); };
-    update();
+    const settle = () => {
+      const t = installTarget();
+      if (t.kind === 'ios') setDevice(t.device);
+      return t.kind;
+    };
+    const first = settle();
+    if (first !== 'other') { setState(first); if (first !== 'ios') return; }
+    // Chrome and Edge hand us their install prompt a moment after load; wait for it before deciding
+    const update = () => { if (window.__sspDeferredInstall) setState('prompt'); };
     window.addEventListener('ssp:caninstall', update);
-    // If the prompt never becomes available (in-app browsers, Firefox), show guidance
-    const t = setTimeout(() => setState(s => (s === 'loading' ? 'fallback' : s)), 2500);
-    return () => { window.removeEventListener('ssp:caninstall', update); clearTimeout(t); };
+    const timer = setTimeout(() => setState(s => (s === 'loading' ? 'fallback' : s)), 2500);
+    return () => { window.removeEventListener('ssp:caninstall', update); clearTimeout(timer); };
   }, []);
 
   const install = async () => {
@@ -72,7 +75,7 @@ export default function AppClient() {
             </div>
           )}
 
-          {state === 'android' && (
+          {state === 'prompt' && (
             <button onClick={install}
               className="px-10 py-4 rounded-xl text-base font-black shadow-lg transition-transform active:scale-95"
               style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
@@ -82,30 +85,47 @@ export default function AppClient() {
 
           {state === 'ios' && (
             !iosSteps ? (
-              <button onClick={() => setIosSteps(true)}
+              <button onClick={() => setIosSteps(true)} data-testid="install-ios"
                 className="px-10 py-4 rounded-xl text-base font-black shadow-lg transition-transform active:scale-95"
                 style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
-                📲 Install on iPhone
+                📲 Install on {device}
               </button>
             ) : (
               <div className="rounded-2xl p-5 text-left text-sm space-y-2.5"
                 style={{ backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(244,196,48,0.4)', color: '#fff' }}>
                 <p className="font-bold" style={{ color: '#F4C430' }}>Two taps in Safari:</p>
-                <p>1. Tap the <b>Share</b> button <span aria-hidden>⎋</span> at the bottom of the screen</p>
+                <p>1. Tap the <b>Share</b> button <span aria-hidden>⎋</span> {device === 'iPad' ? 'at the top right, next to the address bar' : 'at the bottom of the screen'}</p>
                 <p>2. Choose <b>&ldquo;Add to Home Screen&rdquo;</b> and tap <b>Add</b></p>
                 <p className="text-xs pt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                  Opened this from Instagram or WhatsApp? Tap ··· and choose &ldquo;Open in Safari&rdquo; first.
+                  Using Chrome on your {device}? Open this page in Safari first — only Safari can add it on Apple devices.
                 </p>
               </div>
             )
           )}
 
+          {state === 'mac-safari' && (
+            <div className="rounded-2xl p-5 text-left text-sm space-y-2.5" data-testid="install-mac"
+              style={{ backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(244,196,48,0.4)', color: '#fff' }}>
+              <p className="font-bold" style={{ color: '#F4C430' }}>On your Mac, in Safari:</p>
+              <p>1. Open the <b>File</b> menu</p>
+              <p>2. Choose <b>&ldquo;Add to Dock&rdquo;</b> and click <b>Add</b></p>
+              <p className="text-xs pt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Needs macOS Sonoma or newer. In Chrome or Edge, use the install icon at the right end of the address bar instead.</p>
+            </div>
+          )}
+
+          {state === 'inapp' && (
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.65)' }} data-testid="install-inapp">
+              You&rsquo;re inside another app&rsquo;s browser, which can&rsquo;t install apps. Tap ··· and choose
+              <b> &ldquo;Open in Safari&rdquo;</b> (iPhone, iPad) or <b>&ldquo;Open in Chrome&rdquo;</b> (Android), then come back here.
+            </p>
+          )}
+
           {(state === 'loading' || state === 'fallback') && (
             <div className="space-y-3">
               {state === 'fallback' && (
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>
-                  Open this page in <b>Chrome</b> (Android) or <b>Safari</b> (iPhone) to install —
-                  in-app browsers can&rsquo;t install apps.
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.65)' }} data-testid="install-fallback">
+                  This browser can&rsquo;t install apps. Open this page in <b>Chrome</b> or <b>Edge</b> (Android, Windows, Mac)
+                  or <b>Safari</b> (iPhone, iPad, Mac) and the install option appears here.
                 </p>
               )}
               <Link href="/order" className="inline-block px-8 py-3.5 rounded-xl text-sm font-black" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
@@ -130,7 +150,7 @@ export default function AppClient() {
             </div>
           ))}
           <p className="text-center text-xs pt-4" style={{ color: '#9CA3AF' }}>
-            Works on Android, iPhone and desktop · under 1&nbsp;MB · always up to date
+            Works on Android, iPhone, iPad, Mac and Windows · under 1&nbsp;MB · always up to date
           </p>
         </div>
       </section>
