@@ -18,6 +18,7 @@ import KitchenClosedNotify from '@/components/KitchenClosedNotify';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
 import CollectionTimes from '@/components/CollectionTimes';
+import { readyBy } from '@/lib/prepTime';
 import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import AddToHomeScreen from '@/components/AddToHomeScreen';
 import { getCached, setCached } from '@/api/menuCache';
@@ -1070,6 +1071,7 @@ const CheckoutInner = () => {
           slotFinal,
           slotBumped: !!(ctx.pickupSlot?.iso && slotFinal && slotFinal !== ctx.pickupSlot.iso),
           isPreorder: !!res.data?.is_preorder,
+          prepMinutes: res.data?.prep_minutes || null,
           linked: res.data?.linked_order_number ? { orderId: res.data.linked_order_number, slotFinal: res.data.linked_slot_final || null } : null,
         });
         clearCart();
@@ -1233,6 +1235,7 @@ const CheckoutInner = () => {
         slotFinal,
         slotBumped: !!(pickupSlot?.iso && slotFinal && slotFinal !== pickupSlot.iso),
         isPreorder: !!res.data?.is_preorder,
+        prepMinutes: res.data?.prep_minutes || null,
         linked: res.data?.linked_order_number ? { orderId: res.data.linked_order_number, slotFinal: res.data.linked_slot_final || null } : null,
       });
       paidIntent.current = null;
@@ -1338,7 +1341,7 @@ const CheckoutInner = () => {
           <p className="text-sm text-gray-500 mb-6">
             {deliveryType === 'takeaway'
               ? (success.isPreorder ? 'We\u2019ll text you tomorrow when it\u2019s ready \u2014 just give your order number at the door.'
-                : success.slotFinal ? 'We\u2019ll text you when it\u2019s ready \u2014 just give your order number at the door.' : 'Ready in under 60 minutes \u2014 we\u2019ll text you when it\u2019s ready to collect.')
+                : success.slotFinal ? 'We\u2019ll text you when it\u2019s ready \u2014 just give your order number at the door.' : `Cooked fresh for you \u2014 ready in about ${success.prepMinutes || 30} minutes${success.prepMinutes ? ` (around ${readyBy(success.prepMinutes)})` : ''}. We\u2019ll text you the moment it\u2019s ready.`)
               : 'Estimated time: 40\u201350 minutes'}
           </p>
           <LoyaltyBanner />
@@ -1580,7 +1583,7 @@ const CheckoutInner = () => {
               {/* Collection time picker */}
               {deliveryType === 'takeaway' && (
                 <div className="px-3 py-3 rounded-lg" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(128,0,32,0.08)' }}>
-                  <CollectionTimes compact />
+                  <CollectionTimes compact prepMinutes={validPricing?.prep_minutes || null} />
                 </div>
               )}
 
@@ -1992,7 +1995,7 @@ const CheckoutInner = () => {
 
               {/* Trust badges — compact */}
               <div className="flex items-center justify-center gap-4 py-2">
-                {[['🔒', 'Secure'], ['⚡', '30–45 min'], ['🍛', 'Fresh']].map(([icon, label]) => (
+                {[['🔒', 'Secure'], ['⚡', `~${validPricing?.prep_minutes || 30} min`], ['🍛', 'Cooked fresh']].map(([icon, label]) => (
                   <div key={label} className="flex items-center gap-1">
                     <span className="text-sm">{icon}</span>
                     <span className="text-[11px] text-gray-500">{label}</span>

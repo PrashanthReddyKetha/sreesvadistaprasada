@@ -33,7 +33,7 @@ const slim = (i) => ({
   id: i.id, name: i.name, slug: i.slug, description: i.description,
   price: i.price, image: i.image, is_veg: i.is_veg, spice_level: i.spice_level,
   category: i.category, subcategory: i.subcategory,
-  preorder_only: i.preorder_only, sold_out_today: i.sold_out_today,
+  preorder_only: i.preorder_only, sold_out_today: i.sold_out_today, prep_minutes: i.prep_minutes,
 });
 
 async function getItems() {

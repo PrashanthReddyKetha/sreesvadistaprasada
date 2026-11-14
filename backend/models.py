@@ -196,6 +196,8 @@ class MenuItemCreate(BaseModel):
     sold_out_until: Optional[str] = None
     # "Coming soon" — shown on the website with a notify-me bell, not for sale until the admin clears it (Admin › Stock levels)
     coming_soon: bool = False
+    # Set by the API from the kitchen's prep rules: about 30 minutes, or about 60 for curries and thalis
+    prep_minutes: Optional[int] = None
 
 
 class MenuItemUpdate(BaseModel):
@@ -321,6 +323,8 @@ class Order(OrderCreate):
     order_number: Optional[str] = None
     # Slot actually assigned by the server (may differ from scheduled_slot if bumped)
     scheduled_slot_final: Optional[str] = None
+    # How long the kitchen promised at checkout (about 30 / 40 / 60 minutes), for the ticket and the messages
+    prep_minutes: Optional[int] = None
     # Pre-order: this order's dishes are made overnight and collected at scheduled_slot_final tomorrow.
     is_preorder: bool = False
     # The other half of a basket collected twice: today's order ↔ its pre-order. The pre-order is paid through

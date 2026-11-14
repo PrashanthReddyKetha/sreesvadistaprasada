@@ -423,7 +423,7 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
     the server-verified total used at order creation.
     Does NOT create an order or charge anything.
     """
-    from routes.pickup_slots import get_slot_settings, slot_in_grid, slot_remaining, asap_open, closed_message
+    from routes.pickup_slots import get_slot_settings, slot_in_grid, slot_remaining, asap_open, closed_message, prep_for
     slot_settings = await get_slot_settings()
     if slot_settings.get("paused"):
         raise HTTPException(status_code=400, detail=(
@@ -437,11 +437,12 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
 
     from restock import is_sold_out_today, london_today
     items_data = []
+    lines = []          # (dish, quantity) — how long the basket takes to cook
     has_preorder = has_today = False
     for i in body.items:
         doc = await db.menu_items.find_one(
             {"id": i.menu_item_id},
-            {"price": 1, "name": 1, "available": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1, "_id": 0})
+            {"price": 1, "name": 1, "subcategory": 1, "available": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1, "_id": 0})
         if not doc or not doc.get("available") or is_sold_out_today(doc):
             name = (doc or {}).get("name") or "An item in your basket"
             why = "isn't on sale yet" if (doc or {}).get("coming_soon") else "has just sold out"
@@ -450,7 +451,9 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
             has_preorder = True
         else:
             has_today = True
+            lines.append((doc, i.quantity))
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
+    prep_minutes, prep_reason = prep_for(slot_settings, lines)     # today's dishes set the wait
 
     # Pre-order dishes are made overnight: collection only, at a time of their own tomorrow. Today's dishes keep
     # their own time (ASAP or a slot), so a basket with both is collected twice (owner, 14 Nov 2026).
@@ -470,10 +473,10 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
         if remaining is not None and remaining <= 0:
             raise HTTPException(status_code=400, detail="That collection time for your pre-order has just filled up — please pick another.")
 
-    if has_today and body.order_type == "takeaway" and not body.scheduled_slot and not asap_open(slot_settings):
-        raise HTTPException(status_code=400, detail=closed_message(slot_settings))
+    if has_today and body.order_type == "takeaway" and not body.scheduled_slot and not asap_open(slot_settings, lead=prep_minutes):
+        raise HTTPException(status_code=400, detail=closed_message(slot_settings, lead=prep_minutes))
     if has_today and body.scheduled_slot and body.order_type == "takeaway":
-        if not slot_in_grid(slot_settings, body.scheduled_slot):
+        if not slot_in_grid(slot_settings, body.scheduled_slot, lead=prep_minutes):
             raise HTTPException(status_code=400, detail="That collection time has just passed — please pick another.")
         remaining = await slot_remaining(slot_settings, body.scheduled_slot)
         if remaining is not None and remaining <= 0:
@@ -493,7 +496,7 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
             items_data, body.order_type, body.postcode, free_item_price,
             body.coupon_code, current_user["sub"] if current_user else None, body.customer_email,
         )
-        return {"ok": True, **result, "coupon_error": coupon_error}
+        return {"ok": True, **result, "coupon_error": coupon_error, "prep_minutes": prep_minutes, "prep_reason": prep_reason}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -543,11 +546,12 @@ async def create_order(
     # Server-side pricing — look up each item price from the DB, never trust the client
     from restock import is_sold_out_today, london_today
     items_data = []
+    lines = []
     has_preorder = has_today = False
     for i in payload.items:
         doc = await db.menu_items.find_one(
             {"id": i.menu_item_id, "available": True},
-            {"name": 1, "price": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1, "_id": 0})
+            {"name": 1, "price": 1, "subcategory": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1, "_id": 0})
         if not doc or is_sold_out_today(doc):
             raise HTTPException(404, detail=f"Item '{i.menu_item_id}' is not available")
         i.preorder = bool(doc.get("preorder_only"))     # from the dish, never the client
@@ -555,6 +559,7 @@ async def create_order(
             has_preorder = True
         else:
             has_today = True
+            lines.append((doc, i.quantity))
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
         # The stored order line is what the kitchen cooks from — take it from the DB too
         i.name = doc.get("name") or i.name
@@ -604,16 +609,17 @@ async def create_order(
     # passed slot must NEVER reject the order — bump forward, else fall back to ASAP.
     scheduled_final = None
     slot_was_bumped = False
-    from routes.pickup_slots import get_slot_settings, slot_in_grid, try_reserve_slot, generate_slots, next_slots, open_now, asap_open, LONDON
+    from routes.pickup_slots import get_slot_settings, slot_in_grid, try_reserve_slot, generate_slots, next_slots, open_now, asap_open, LONDON, prep_for
     slot_settings = await get_slot_settings()
     now_ldn = datetime.now(LONDON)
+    prep_minutes, _prep_reason = prep_for(slot_settings, lines)
     # The customer has paid. If the kitchen closed (by hours or by the pause switch) between pricing and payment, the
     # order is still taken — moved to the next collection time where needed — and the owner is told (A-0003 COM-001/007).
     kitchen_note = None
     if slot_settings.get("paused"):
         kitchen_note = "paid while ordering was paused"
-    if has_today and payload.delivery_type == "takeaway" and not payload.scheduled_slot and not asap_open(slot_settings, now_ldn):
-        for cand in next_slots(slot_settings, now_ldn, limit=12):
+    if has_today and payload.delivery_type == "takeaway" and not payload.scheduled_slot and not asap_open(slot_settings, now_ldn, prep_minutes):
+        for cand in next_slots(slot_settings, now_ldn, limit=12, lead=prep_minutes):
             if await try_reserve_slot(slot_settings, cand["iso"]):
                 scheduled_final = cand["iso"]
                 slot_was_bumped = True
@@ -626,10 +632,10 @@ async def create_order(
         if not slot_settings.get("delivery_enabled"):
             kitchen_note = (kitchen_note + "; " if kitchen_note else "") + "delivery paid while delivery is switched off"
     if has_today and payload.delivery_type == "takeaway" and payload.scheduled_slot:
-        if slot_in_grid(slot_settings, payload.scheduled_slot, now_ldn) and await try_reserve_slot(slot_settings, payload.scheduled_slot):
+        if slot_in_grid(slot_settings, payload.scheduled_slot, now_ldn, prep_minutes) and await try_reserve_slot(slot_settings, payload.scheduled_slot):
             scheduled_final = payload.scheduled_slot
         else:
-            for cand in next_slots(slot_settings, now_ldn, limit=40):          # today first, then tomorrow (A-0003, COM-008)
+            for cand in next_slots(slot_settings, now_ldn, limit=40, lead=prep_minutes):          # today first, then tomorrow (A-0003, COM-008)
                 if cand["iso"] > payload.scheduled_slot and await try_reserve_slot(slot_settings, cand["iso"]):
                     scheduled_final = cand["iso"]
                     slot_was_bumped = True
@@ -651,7 +657,7 @@ async def create_order(
                   "subtotal": part["subtotal"], "small_order_fee": part["small_order_fee"], "delivery_fee": part["delivery_fee"],
                   "takeaway_discount": part["takeaway_discount"], "free_item_discount": part["free_item_discount"],
                   "coupon_discount": part["coupon_discount"], "total": part["grand_total"],
-                  "user_id": user_id, "is_loyalty_qualifying": is_qualifying,
+                  "user_id": user_id, "is_loyalty_qualifying": is_qualifying, "prep_minutes": prep_minutes if has_today else None,
                   "payment_status": "paid"}   # verified as succeeded with Stripe above
         fields.update(extra)
         o = Order(**fields)
@@ -744,7 +750,8 @@ async def create_order(
             if slot_was_bumped:
                 when = f"Your requested time was full — collect tomorrow at {slot_label(scheduled_final)} instead."
         else:
-            when = f"Collect at {slot_label(scheduled_final)}." if scheduled_final else "We'll text you when it's ready to collect."
+            when = (f"Collect at {slot_label(scheduled_final)}." if scheduled_final
+                    else f"Cooked fresh for you — ready in about {prep_minutes} minutes, and we'll text you the moment it is.")
             if slot_was_bumped and payload.scheduled_slot:
                 when = f"Your requested time was full — new collection time {slot_label(scheduled_final)}."
             elif slot_was_bumped:

@@ -79,8 +79,11 @@ async def get_menu(
     await sweep_expired_sold_outs()
 
     items = await db.menu_items.find(query, {"_id": 0}).to_list(500)
+    from routes.pickup_slots import get_slot_settings, prep_for
+    prep_settings = await get_slot_settings()
     for i in items:
         i["sold_out_today"] = is_sold_out_today(i)
+        i["prep_minutes"] = prep_for(prep_settings, [(i, 1)])[0]     # about 30, or about 60 for curries and thalis
     if featured:        # a dish that has sold out today drops out of the featured row until it is back
         items = [i for i in items if not i["sold_out_today"]]
     return items
@@ -157,12 +160,18 @@ async def get_weekly_preview(
     return {"days": results, "dietary_notes": dietary_notes}
 
 
+async def _prep_minutes(doc: dict) -> int:
+    from routes.pickup_slots import get_slot_settings, prep_for
+    return prep_for(await get_slot_settings(), [(doc, 1)])[0]
+
+
 @router.get("/slug/{slug}", response_model=MenuItem)
 async def get_menu_item_by_slug(slug: str):
     doc = await db.menu_items.find_one({"slug": slug}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Menu item not found")
     doc["sold_out_today"] = is_sold_out_today(doc)
+    doc["prep_minutes"] = await _prep_minutes(doc)
     return doc
 
 
@@ -172,6 +181,7 @@ async def get_menu_item(item_id: str):
     if not doc:
         raise HTTPException(status_code=404, detail="Menu item not found")
     doc["sold_out_today"] = is_sold_out_today(doc)
+    doc["prep_minutes"] = await _prep_minutes(doc)
     return doc
 
 
@@ -210,6 +220,7 @@ async def update_menu_item(item_id: str, payload: MenuItemUpdate, _: dict = Depe
         await notify_restock(doc, arrived=bool(before.get("coming_soon")) and not doc.get("coming_soon"))
 
     doc["sold_out_today"] = is_sold_out_today(doc)
+    doc["prep_minutes"] = await _prep_minutes(doc)
     return doc
 
 

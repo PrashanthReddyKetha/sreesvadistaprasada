@@ -135,7 +135,7 @@ const Menu = ({ initialItems = [], seoLine }) => {
           </div>
           <p className="text-xs text-gray-500 line-clamp-1 mb-2 flex-1">{dish.description}</p>
           <div className="flex justify-between items-center">
-            <span className="text-base font-bold" style={{ color: '#800020' }}>{'£'}{dish.price.toFixed(2)}</span>
+            <span className="text-base font-bold" style={{ color: '#800020' }}>{'£'}{dish.price.toFixed(2)}{dish.prep_minutes && <span className="ml-1.5 text-[10px] font-semibold" style={{ color: '#8B6914' }}>~{dish.prep_minutes} min</span>}</span>
             {dish.sold_out_today ? (
               <span onClick={e => { e.preventDefault(); e.stopPropagation(); }}><RestockBell item={dish} compact /></span>
             ) : isOrderable(dish.category) ? (

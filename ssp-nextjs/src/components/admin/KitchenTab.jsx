@@ -60,7 +60,8 @@ function Ticket({ order, now, onAdvance, onCancel, onEightySix, busy }) {
   const takeaway = order.delivery_type === 'takeaway';
   const slot = slotWhen(order.scheduled_slot_final);
   const mins = minsSince(order.created_at, now);
-  const late = ['pending', 'confirmed', 'preparing'].includes(order.status) && mins >= 20;
+  const promised = order.prep_minutes || 30;
+  const late = ['pending', 'confirmed', 'preparing'].includes(order.status) && mins >= Math.round(promised * 2 / 3);   // two thirds of the promise gone
   const action = nextAction(order);
   const allergyNote = order.notes && ALLERGY_WORDS.test(order.notes);
   const laneColor = order.status === 'preparing' ? C.saffron
@@ -91,6 +92,11 @@ function Ticket({ order, now, onAdvance, onCancel, onEightySix, busy }) {
         {order.linked_order_number && (
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#F6F1E7', color: C.muted }}>
             with #{order.linked_order_number}
+          </span>
+        )}
+        {takeaway && !order.scheduled_slot_final && order.prep_minutes && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#F6F1E7', color: C.muted }}>
+            promised ~{order.prep_minutes} min
           </span>
         )}
         {order.customer_name && (

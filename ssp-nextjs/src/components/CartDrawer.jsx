@@ -11,6 +11,7 @@ import api from '../api';
 import useDialog from '@/lib/useDialog';
 import { trackViewCart } from '@/lib/analytics';
 import { isOrderable } from '@/config/softLaunch';
+import { estimatePrep, readyBy, prepReason } from '@/lib/prepTime';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
 
 const MINIMUM_ORDER = 15.00;
@@ -549,6 +550,15 @@ const CartDrawer = () => {
 
             {/* Footer: breakdown + checkout button */}
             <div className="flex-shrink-0 px-6 py-4 border-t space-y-3" style={{ borderColor: 'rgba(128,0,32,0.12)', backgroundColor: '#FDFBF7' }}>
+              {deliveryType === 'takeaway' && cartItems.some(i => !i.preorder) && (() => {
+                const est = estimatePrep(cartItems, kitchen.prep);
+                return (
+                  <div className="px-3 py-2 rounded-lg text-[11px] font-semibold" style={{ backgroundColor: '#FBF3DC', color: '#8B6914' }} data-testid="cart-prep">
+                    🔥 Ready in about {est.minutes} min — around {readyBy(est.minutes)} if you order now.
+                    <span className="block font-normal mt-0.5">{prepReason(est)} Prefer later? You pick the time at checkout.</span>
+                  </div>
+                );
+              })()}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs text-gray-500">
                   <span>Subtotal</span><span>{fmt(cartTotal)}</span>

@@ -15,7 +15,7 @@ const slotsReported = new Set();   // one "saw the times" record per day shown, 
  *   requireTomorrow — only tomorrow's times (pre-order dishes, made overnight)
  *   title / note — the heading and the line under it (CollectionTimes sets them when a basket is collected twice)
  */
-export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false, requireTomorrow = false, title = 'Collection time', note }) {
+export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false, requireTomorrow = false, title = 'Collection time', note, leadMinutes }) {
   const [data, setData] = useState(null);       // API response for the active day
   const [day, setDay] = useState(requireTomorrow ? 'tomorrow' : 'today'); // 'today' | 'tomorrow'
   // Pre-order baskets are made overnight -- lock the picker to tomorrow
@@ -34,6 +34,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
     setError(null);
     try {
       const params = which === 'tomorrow' ? { date: tomorrowStr() } : {};
+      if (leadMinutes) params.lead = leadMinutes;          // the basket's own prep time sets the first slot
       const res = await api.get('/pickup-slots', { params });
       setData(res.data);
       const list = res.data?.slots || [];
@@ -46,7 +47,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [leadMinutes]);
 
   useEffect(() => { fetchSlots(day); }, [day, fetchSlots]);
 
@@ -144,7 +145,7 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
             <button
               onClick={() => { record('slot_selected', { label: 'ASAP', method: day }); setPickupSlot(null); }}
               style={chipStyle(!pickupSlot, false)}>
-              ASAP<span className="block text-[10px] font-normal" style={{ color: '#5C4B47' }}>&gt;60 mins</span>
+              ASAP<span className="block text-[10px] font-normal" style={{ color: '#5C4B47' }}>~{leadMinutes || data?.lead_minutes || 30} mins</span>
             </button>
           )}
           {slots.map(s => {

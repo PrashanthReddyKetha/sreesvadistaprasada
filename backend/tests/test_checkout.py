@@ -361,8 +361,8 @@ def test_outside_opening_hours_an_asap_order_is_refused_with_the_next_times(clie
     from routes import pickup_slots
     from datetime import datetime
     late = datetime(2026, 10, 7, 23, 30, tzinfo=pickup_slots.LONDON)          # a Wednesday night
-    monkeypatch.setattr(pickup_slots, "open_now", lambda settings, now=None: False)
-    monkeypatch.setattr(pickup_slots, "next_slots", lambda settings, now=None, limit=3: _next(settings, late, limit))
+    monkeypatch.setattr(pickup_slots, "open_now", lambda settings, now=None, *a, **k: False)
+    monkeypatch.setattr(pickup_slots, "next_slots", lambda settings, now=None, limit=3, *a, **k: _next(settings, late, limit))
     r = calc(client, [("curry", 1), ("biryani", 1)])
     assert r.status_code == 400
     assert "closed right now" in r.json()["detail"] and "tomorrow" in r.json()["detail"]
@@ -392,10 +392,10 @@ def _real_open_now():
 def test_a_paid_order_arriving_after_closing_is_taken_moved_to_the_next_slot_and_the_owner_told(client, menu, pay, state, monkeypatch, db, user_headers):
     from routes import pickup_slots
     from datetime import datetime, timedelta
-    monkeypatch.setattr(pickup_slots, "open_now", lambda settings, now=None: False)
+    monkeypatch.setattr(pickup_slots, "open_now", lambda settings, now=None, *a, **k: False)
     tomorrow = (datetime.now(pickup_slots.LONDON) + timedelta(days=1)).date()
     first = pickup_slots.generate_slots(pickup_slots.DEFAULT_SETTINGS, tomorrow)[0]["iso"]
-    monkeypatch.setattr(pickup_slots, "next_slots", lambda settings, now=None, limit=3: [{"iso": first, "label": "8:45 am", "end_label": "09:00", "day": "tomorrow"}])
+    monkeypatch.setattr(pickup_slots, "next_slots", lambda settings, now=None, limit=3, *a, **k: [{"iso": first, "label": "8:45 am", "end_label": "09:00", "day": "tomorrow"}])
     pi = pay(18.88)
     r = client.post("/api/orders", json=order_body(menu, [("curry", 1), ("biryani", 1)], pi), headers=user_headers)
     assert r.status_code == 200, r.text
@@ -593,3 +593,30 @@ def test_cancelling_the_preorder_half_frees_its_slot_and_flags_the_refund(client
     pre = run(db.orders.find_one({"id": pre_id}, {"_id": 0}))
     assert pre["status"] == "cancelled" and pre["payment_status"] == "refund_due"
     assert run(db.orders.find_one({"id": o["id"]}, {"_id": 0}))["status"] == "pending"      # today's dishes still on
+
+
+# ── How long a fresh-cooked basket takes ───────────────────────────────────────
+
+def test_prep_time_is_30_or_60_for_a_curry_or_40_for_a_big_basket(client, menu, db):
+    run(db.menu_items.update_one({"id": "curry"}, {"$set": {"subcategory": "Curries", "description": "Andhra style", "category": "nonVeg"}}))
+    run(db.menu_items.update_one({"id": "dosa"}, {"$set": {"description": "Crisp", "category": "breakfast"}}))
+    assert calc(client, [("dosa", 2), ("lassi", 1)]).json()["prep_minutes"] == 30
+    r = calc(client, [("dosa", 1), ("curry", 1)]).json()
+    assert r["prep_minutes"] == 60 and r["prep_reason"] == {"kind": "long", "dish": "Chicken Curry"}
+    r = calc(client, [("dosa", 4), ("lassi", 2)]).json()
+    assert r["prep_minutes"] == 40 and r["prep_reason"] == {"kind": "big", "count": 6}
+    assert client.get("/api/menu/curry").json()["prep_minutes"] == 60 and client.get("/api/menu/dosa").json()["prep_minutes"] == 30
+    assert client.get("/api/kitchen-status").json()["prep"] == {"quick": 30, "long": 60, "big": 40, "big_from": 6}
+
+
+def test_the_first_slot_follows_the_basket_prep_time(client, menu):
+    quick = client.get("/api/pickup-slots", params={"lead": 30}).json()
+    slow = client.get("/api/pickup-slots", params={"lead": 60}).json()
+    assert quick["lead_minutes"] == 30 and slow["lead_minutes"] == 60
+    if quick["slots"] and slow["slots"]:
+        assert quick["slots"][0]["iso"] < slow["slots"][0]["iso"]
+
+
+def test_the_order_keeps_the_promised_prep_time(client, menu, pay):
+    o = client.post(ORDERS, json=order_body(menu, [("curry", 1), ("biryani", 1)], pay(18.88))).json()
+    assert o["prep_minutes"] == 30

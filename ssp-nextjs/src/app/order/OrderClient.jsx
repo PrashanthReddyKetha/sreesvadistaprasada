@@ -293,7 +293,7 @@ export default function OrderClient({ initialItems = [] }) {
     dishes.some(d => d.category === sec.id && isOrderable(d.category) && (!vegOnly || d.is_veg)));
 
   const handleAdd = useCallback(
-    (d) => addToCart({ id: d.id, name: d.name, price: d.price, image: d.image, category: d.category, preorder: !!d.preorder_only }),
+    (d) => addToCart({ id: d.id, name: d.name, price: d.price, image: d.image, category: d.category, preorder: !!d.preorder_only, prep_minutes: d.prep_minutes }),
     [addToCart]
   );
   const hasPreorder = cartItems.some(i => i.preorder);
@@ -310,7 +310,7 @@ export default function OrderClient({ initialItems = [] }) {
             Order Now
           </h1>
           <p className="hidden md:block text-sm mt-1 max-w-md" style={{ color: '#F4E9D0' }}>
-            Fresh Andhra food, cooked to order — collect in under 60 minutes and save 10%{deliveryEnabled ? ', or get it delivered across Milton Keynes' : ''}.
+            Every dish cooked fresh when you order — most ready in about 30 minutes, slow-cooked curries and thalis in about an hour. Collect and save 10%{deliveryEnabled ? ', or get it delivered across Milton Keynes' : ''}.
           </p>
         </div>
       </section>
@@ -503,12 +503,16 @@ export default function OrderClient({ initialItems = [] }) {
                       ))}
                     </div>
                   )}
-                  {d.preorder_only && (
+                  {d.preorder_only ? (
                     <p className="text-[11px] font-bold mt-3 px-3 py-2 rounded-lg"
                       style={{ backgroundColor: 'rgba(128,0,32,0.06)', color: C.burgundy }}>
                       🌙 Made fresh overnight — pre-order today, collect tomorrow in your chosen slot.
                     </p>
-                  )}
+                  ) : d.prep_minutes ? (
+                    <p className="text-[11px] font-bold mt-3 px-3 py-2 rounded-lg" style={{ backgroundColor: '#FBF3DC', color: '#8B6914' }}>
+                      🔥 Cooked fresh when you order — ready in about {d.prep_minutes} minutes{d.prep_minutes > 30 ? ', slow-cooked the Andhra way' : ''}.
+                    </p>
+                  ) : null}
                   <div className="flex items-center gap-3 mt-5">
                     {d.sold_out_today ? (
                       <div className="flex-1 text-center py-2"><RestockBell item={d} /></div>

@@ -14,6 +14,7 @@ interface CartItem {
   category?: string;
   quantity: number;
   preorder?: boolean; // made overnight — collection only, next-day slot
+  prep_minutes?: number; // about 30, or about 60 for curries and thalis (from the menu)
 }
 
 interface Toast {

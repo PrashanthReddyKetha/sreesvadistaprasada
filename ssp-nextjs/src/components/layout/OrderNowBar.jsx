@@ -33,7 +33,7 @@ export default function OrderNowBar() {
         data-testid="order-now-bar">
         <span className="text-sm font-black tracking-wide">Order Now</span>
         <span className="text-[11px] font-bold" style={{ color: '#F4C430' }}>
-          Collect in under 60 min · save 10% →
+          Fresh to order · ready in ~30 min · save 10% →
         </span>
       </Link>
     </div>
