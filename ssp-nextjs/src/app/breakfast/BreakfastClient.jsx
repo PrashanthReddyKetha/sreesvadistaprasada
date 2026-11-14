@@ -7,6 +7,7 @@ import { buildItemUrl } from '@/lib/itemUrl';
 import { ShoppingCart, Sun, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
+import RestockBell from '@/components/RestockBell';
 import SectionTabs, { useSectionTab } from '@/components/SectionTabs';
 import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
@@ -156,12 +157,16 @@ const Breakfast = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
                       {dish.description && (
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3 flex-1">{dish.description}</p>
                       )}
+                      {dish.sold_out_today ? (   /* Admin › Stock levels: sold out today, or back at a set time */
+                        <span className="w-full flex justify-center py-1" onClick={e => { e.preventDefault(); e.stopPropagation(); }}><RestockBell item={dish} compact /></span>
+                      ) : (
                       <button
-                        onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: dish.id, name: dish.name, price: dish.price, image: dish.image, category: dish.category }); }}
+                        onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: dish.id, name: dish.name, price: dish.price, image: dish.image, category: dish.category, preorder: !!dish.preorder_only }); }}
                         className="w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
                         style={{ backgroundColor: '#B45309' }}>
-                        <ShoppingCart size={13} /> Add to Basket
+                        <ShoppingCart size={13} /> {dish.preorder_only ? 'Pre-order · collect tomorrow' : 'Add to Basket'}
                       </button>
+                      )}
                     </div>
                   </div>
                 </Link>

@@ -172,12 +172,8 @@ async def apply_menu_additions():
 
 
 async def _apply_menu_additions():
-    # Pre-order flow is built but parked (docs/PREORDER.md) — Overnight Oats
-    # sell as normal add-to-cart items for now. Set True again to re-enable.
-    await db.menu_items.update_many(
-        {"name": {"$regex": "^Overnight Oats"}},
-        {"$set": {"preorder_only": False}},
-    )
+    # preorder_only is set per dish from Admin › Stock levels ("Pre-order only"); the boot no longer forces it
+    # off (it did for the Overnight Oats until 14 Nov 2026 — docs/PREORDER.md).
 
     # Image host migration — keyed on exact old URLs so admin edits are never
     # overwritten. imglink.cc/vecteezy images now live in the frontend's

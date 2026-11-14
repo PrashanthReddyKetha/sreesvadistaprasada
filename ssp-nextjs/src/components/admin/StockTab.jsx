@@ -1,13 +1,13 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { Search, X, RefreshCw, Check, Clock, Ban, PackageX } from 'lucide-react';
+import { Search, X, RefreshCw, Check, Clock, Ban, PackageX, CalendarClock } from 'lucide-react';
 import api from '@/api';
 import { clearMenuCache } from '@/api/menuCache';
 import { CATEGORY } from '@/lib/adminLabels';
 import useDialog from '@/lib/useDialog';
 
 /** Stock levels — every dish as a tile under its menu section. Tap one to mark it in stock, sold out for today,
-    opening at a set time (back on sale by itself), or off the menu. */
+    opening at a set time (back on sale by itself), pre-order only (ordered today, collected tomorrow), or off the menu. */
 
 const C = { burgundy: '#800020', gold: '#B8860B', muted: '#5C4B47', line: '#E8DFCE', green: '#2E6B4F', red: '#C62828', amber: '#B45309' };
 
@@ -26,6 +26,7 @@ const statusOf = (item, now) => {
   const s = item.sold_out_until;
   if (s && s.includes('T') && s > now) return 'opens';
   if (s && !s.includes('T') && s >= now.slice(0, 10)) return 'sold';
+  if (item.preorder_only) return 'pre';
   return 'in';
 };
 
@@ -33,6 +34,7 @@ const STATUS = {
   in:    { label: 'In stock',           color: C.green },
   sold:  { label: 'Sold out for today', color: C.amber },
   opens: { label: 'Opens later',        color: C.amber },
+  pre:   { label: 'Pre-order · collect tomorrow', color: C.burgundy },
   off:   { label: 'Off the menu',       color: C.red },
 };
 
@@ -99,7 +101,7 @@ function StockSheet({ item, now, onClose, onSaved }) {
       const d = new Date(`${today}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + 1);
       day = d.toISOString().slice(0, 10);
     }
-    save({ available: true, sold_out_until: `${day}T${time}` });
+    save({ available: true, sold_out_until: `${day}T${time}`, preorder_only: false });
   };
 
   return (
@@ -116,9 +118,9 @@ function StockSheet({ item, now, onClose, onSaved }) {
         </div>
 
         <Option id="in" current={current} busy={busy} icon={Check} title="In stock" hint="On sale now"
-          onClick={() => save({ available: true, clear_sold_out: true })} />
+          onClick={() => save({ available: true, clear_sold_out: true, preorder_only: false })} />
         <Option id="sold" current={current} busy={busy} icon={PackageX} title="Sold out for today" hint="Back on sale by itself tomorrow"
-          onClick={() => save({ available: true, sold_out_until: now.slice(0, 10) })} />
+          onClick={() => save({ available: true, sold_out_until: now.slice(0, 10), preorder_only: false })} />
 
         <div className="px-4 py-3 rounded-xl border-2 space-y-2"
           style={{ borderColor: current === 'opens' ? C.burgundy : C.line, backgroundColor: current === 'opens' ? 'rgba(128,0,32,0.04)' : 'white' }}>
@@ -140,8 +142,11 @@ function StockSheet({ item, now, onClose, onSaved }) {
           </div>
         </div>
 
+        <Option id="pre" current={current} busy={busy} icon={CalendarClock} title="Pre-order only" hint="Ordered today, collected tomorrow — the website says so and checkout asks for a next-day collection time"
+          onClick={() => save({ available: true, clear_sold_out: true, preorder_only: true })} />
+
         <Option id="off" current={current} busy={busy} icon={Ban} title="Off the menu" hint="Hidden from the website until you put it back"
-          onClick={() => save({ available: false, clear_sold_out: true })} />
+          onClick={() => save({ available: false, clear_sold_out: true, preorder_only: false })} />
 
         {err && <p role="alert" className="text-sm font-semibold" style={{ color: C.red }}>{err}</p>}
       </div>
@@ -169,7 +174,7 @@ export default function StockTab() {
     <div className="text-sm" style={{ color: loadErr ? C.red : C.muted }}>{loadErr || 'Loading…'}</div>
   );
 
-  const counts = { all: items.length, in: 0, sold: 0, opens: 0, off: 0 };
+  const counts = { all: items.length, in: 0, sold: 0, opens: 0, pre: 0, off: 0 };
   items.forEach(i => { counts[statusOf(i, now)]++; });
 
   const q = search.trim().toLowerCase();
@@ -200,6 +205,7 @@ export default function StockTab() {
             <option value="in">In stock ({counts.in})</option>
             <option value="sold">Sold out for today ({counts.sold})</option>
             <option value="opens">Opens at a set time ({counts.opens})</option>
+            <option value="pre">Pre-order only ({counts.pre})</option>
             <option value="off">Off the menu ({counts.off})</option>
           </select>
           <button onClick={load} aria-label="Refresh" className="px-3 py-2 rounded-lg" style={{ border: `1px solid ${C.line}` }}>
