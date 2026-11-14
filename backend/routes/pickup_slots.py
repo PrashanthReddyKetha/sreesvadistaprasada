@@ -40,26 +40,31 @@ DEFAULT_SETTINGS = {
     # Dabba Wala plans on sale (admin toggle). Off = "opening soon": the page takes names for the launch instead (owner, 10 Nov 2026).
     "dabba_open": False,
     "slot_minutes": 15,
-    # Minimum prep time: every order needs 60 minutes before collection/delivery
+    # Minimum prep time before the first bookable slot: 60 minutes
     "lead_time_minutes": 60,
     "max_orders_per_slot": None,  # None = unlimited
     # Single slots the owner has switched off ("YYYY-MM-DDTHH:MM", London time); past ones are dropped on each change
     "blocked_slots": [],
     "days": {
-        "mon": {"closed": False, "open": "07:00", "close": "23:00"},
-        "tue": {"closed": False, "open": "07:00", "close": "23:00"},
-        "wed": {"closed": False, "open": "07:00", "close": "23:00"},
-        "thu": {"closed": False, "open": "07:00", "close": "23:00"},
-        "fri": {"closed": False, "open": "07:00", "close": "23:00"},
-        "sat": {"closed": False, "open": "07:00", "close": "23:00"},
-        "sun": {"closed": False, "open": "07:00", "close": "23:00"},
+        "mon": {"closed": False, "open": "08:00", "close": "23:00"},
+        "tue": {"closed": False, "open": "08:00", "close": "23:00"},
+        "wed": {"closed": False, "open": "08:00", "close": "23:00"},
+        "thu": {"closed": False, "open": "08:00", "close": "23:00"},
+        "fri": {"closed": False, "open": "08:00", "close": "23:00"},
+        "sat": {"closed": False, "open": "08:00", "close": "23:00"},
+        "sun": {"closed": False, "open": "08:00", "close": "23:00"},
     },
 }
 
 
+# An ASAP order is cooked fresh in about 30 minutes, so ASAP stays on until 30 minutes before closing
+# (owner, 14 Nov 2026: "ASAP under 30 mins should match 11pm"). Slots keep their own 60-minute lead time.
+ASAP_MINUTES = 30
+
+
 class DayHours(BaseModel):
     closed: bool = False
-    open: str = "07:00"
+    open: str = "08:00"
     close: str = "23:00"
 
     @field_validator("open", "close")
@@ -127,8 +132,18 @@ async def apply_opening_hours_7_to_11():
     later changes in admin › Collection Times are kept."""
     if await db.settings.find_one({"_id": "opening_hours_2026_11"}, {"_id": 1}):
         return
-    await db.settings.update_one({"_id": SETTINGS_ID}, {"$set": {"days": DEFAULT_SETTINGS["days"]}})
+    days_7_to_11 = {k: {"closed": False, "open": "07:00", "close": "23:00"} for k in DAY_KEYS}
+    await db.settings.update_one({"_id": SETTINGS_ID}, {"$set": {"days": days_7_to_11}}, upsert=True)
     await db.settings.update_one({"_id": "opening_hours_2026_11"}, {"$set": {"applied_at": datetime.utcnow().isoformat()}}, upsert=True)
+
+
+async def apply_opening_hours_8_to_11():
+    """Owner's hours from 14 Nov 2026: every day 8am – 11pm (the kitchen opens at 8; ASAP runs to 10:30pm so the food is
+    ready by 11). Runs once (settings._id == "opening_hours_2026_11_14"); later changes in admin › Collection Times are kept."""
+    if await db.settings.find_one({"_id": "opening_hours_2026_11_14"}, {"_id": 1}):
+        return
+    await db.settings.update_one({"_id": SETTINGS_ID}, {"$set": {"days": DEFAULT_SETTINGS["days"]}}, upsert=True)
+    await db.settings.update_one({"_id": "opening_hours_2026_11_14"}, {"$set": {"applied_at": datetime.utcnow().isoformat()}}, upsert=True)
 
 
 def _parse_hhmm(day: date, hhmm: str) -> datetime:
@@ -178,13 +193,13 @@ def open_now(settings: dict, now: Optional[datetime] = None) -> bool:
 
 
 def asap_open(settings: dict, now: Optional[datetime] = None) -> bool:
-    """ASAP is taken only while it can be ready before closing: open now, and the prep time still fits before close
-    (owner, 12 Nov 2026). Slots already stop that early."""
+    """ASAP is taken only while it can be ready before closing: open now, and the ~30-minute cook still fits before
+    close (owner, 12 and 14 Nov 2026). With 8am–11pm hours the last ASAP order is 10:30pm; slots stop at 10:45pm."""
     now = now or datetime.now(LONDON)
     if not open_now(settings, now):
         return False
     hours = settings["days"].get(DAY_KEYS[now.weekday()], {})
-    return now + timedelta(minutes=settings["lead_time_minutes"]) <= _parse_hhmm(now.date(), hours.get("close", "00:00"))
+    return now + timedelta(minutes=ASAP_MINUTES) <= _parse_hhmm(now.date(), hours.get("close", "00:00"))
 
 
 def next_slots(settings: dict, now: Optional[datetime] = None, limit: int = 3) -> list[dict]:

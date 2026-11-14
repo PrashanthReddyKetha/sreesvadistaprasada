@@ -467,6 +467,19 @@ def test_opening_hours_move_to_7am_11pm_once(client, admin_headers, db):
     assert client.get("/api/opening-hours").json()["days"]["sun"]["closed"] is True
 
 
+def test_opening_hours_move_to_8am_11pm_once(client, admin_headers, db):
+    from routes.pickup_slots import apply_opening_hours_8_to_11
+    run(db.settings.delete_one({"_id": "opening_hours_2026_11_14"}))
+    run(db.settings.update_one({"_id": "pickup_slots"}, {"$set": {"days.mon": {"closed": False, "open": "07:00", "close": "23:00"}}}))
+    run(apply_opening_hours_8_to_11())
+    days = client.get("/api/opening-hours").json()["days"]
+    assert all((d["open"], d["close"], d["closed"]) == ("08:00", "23:00", False) for d in days.values())
+    client.put("/api/admin/settings/pickup-slots", headers=admin_headers,
+               json={"days": {"sun": {"closed": True, "open": "08:00", "close": "23:00"}}})
+    run(apply_opening_hours_8_to_11())                                   # a restart keeps the admin's later change
+    assert client.get("/api/opening-hours").json()["days"]["sun"]["closed"] is True
+
+
 # ── ASAP stops before closing; single slots can be switched off (owner, 12 Nov 2026) ─────────────────────────
 
 def _real_module():
@@ -481,13 +494,17 @@ def _real_module():
 def test_asap_stops_once_the_prep_time_no_longer_fits_before_closing():
     from datetime import datetime
     mod = _real_module()
-    settings = {**mod.DEFAULT_SETTINGS, "lead_time_minutes": 60}            # Wednesday 07:00–23:00
+    settings = {**mod.DEFAULT_SETTINGS, "lead_time_minutes": 60}            # Wednesday 08:00–23:00
     at = lambda h, m: datetime(2026, 10, 7, h, m, tzinfo=mod.LONDON)
+    assert mod.asap_open(settings, at(7, 59)) is False                      # not open yet
+    assert mod.asap_open(settings, at(8, 0)) is True                        # kitchen opens: ASAP from the first minute
     assert mod.asap_open(settings, at(12, 0)) is True
-    assert mod.asap_open(settings, at(22, 0)) is True                       # ready by 23:00
-    assert mod.asap_open(settings, at(22, 1)) is False                      # still open, but too late for ASAP
-    assert mod.open_now(settings, at(22, 30)) is True
-    assert "stopped taking ASAP" in mod.closed_message(settings, at(22, 30))
+    assert mod.asap_open(settings, at(22, 30)) is True                      # ~30 min cook: ready by 23:00
+    assert mod.asap_open(settings, at(22, 31)) is False                     # still open, but too late for ASAP
+    assert mod.open_now(settings, at(22, 45)) is True
+    assert "stopped taking ASAP" in mod.closed_message(settings, at(22, 45))
+    assert [s["label"] for s in mod.generate_slots(settings, at(8, 0).date(), at(8, 0))][:2] == ["9:00 am", "9:15 am"]
+    assert mod.generate_slots(settings, at(8, 0).date(), at(8, 0))[-1]["label"] == "10:45 pm"
 
 
 def test_a_blocked_slot_is_not_offered_or_bookable(client, menu, db):

@@ -56,7 +56,7 @@ const baseJsonLd = [
     areaServed: { '@type': 'City', name: 'Milton Keynes' },
     sameAs: ['https://sreesvadistaprasada.com'],
     openingHoursSpecification: [
-      { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], opens: '07:00', closes: '23:00' },
+      { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], opens: '08:00', closes: '23:00' },
     ],
   },
   faqSchema(FAQS),

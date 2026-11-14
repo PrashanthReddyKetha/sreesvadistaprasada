@@ -129,7 +129,7 @@ export default function SlotSettingsTab() {
             </select>
           </label>
           <label className="text-xs font-semibold" style={{ color: C.muted }}>
-            Prep time (mins before first slot)
+            Prep time (mins before first slot · ASAP runs to 30 min before close)
             <input type="number" min="0" max="240" defaultValue={settings.lead_time_minutes} disabled={saving}
               onBlur={e => Number(e.target.value) !== settings.lead_time_minutes && save({ lead_time_minutes: Number(e.target.value) })}
               className="mt-1 w-full rounded-lg px-2 py-2 text-sm" style={{ border: `1px solid ${C.line}` }} />
