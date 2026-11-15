@@ -28,7 +28,7 @@ export const PAGE_SEO = {
   '/': {
     primary: 'indian takeaway milton keynes',
     title: `Indian Takeaway Milton Keynes${B}`,
-    description: 'Indian takeaway in Milton Keynes from a South Indian home kitchen: dosas, Andhra curries and biryani made to order. Collect for 10% off, or get delivery.',
+    description: 'Indian takeaway in Milton Keynes from a South Indian kitchen: dosas, Andhra curries and biryani made to order. Collect from Greenleys for 10% off.',
     keywords: ['Indian takeaway Milton Keynes', 'South Indian food Milton Keynes', 'South Indian restaurant Milton Keynes', 'Indian food delivery Milton Keynes', 'Andhra food Milton Keynes', 'Telugu restaurant Milton Keynes'],
     h1: 'Indian Takeaway in Milton Keynes — Authentic South Indian Food Delivery',
     content: {
@@ -212,10 +212,10 @@ export const PAGE_SEO = {
 
   '/milton-keynes': {
     primary: 'south indian food milton keynes',
-    title: `South Indian Home Kitchen Milton Keynes${B}`,
-    description: 'South Indian home kitchen in Greenleys, Milton Keynes — authentic Andhra food delivered to Wolverton, Stony Stratford, Bletchley and all MK postcodes.',
+    title: `South Indian Takeaway Milton Keynes${B}`,
+    description: 'Authentic South Indian takeaway in Greenleys, Milton Keynes — Andhra curries, dosas and biryani cooked fresh to order. Collect with 10% off, or order on Deliveroo; website delivery is coming soon.',
     keywords: ['South Indian restaurant Milton Keynes', 'South Indian food Milton Keynes', 'Indian takeaway Wolverton', 'Indian takeaway Stony Stratford', 'Telugu restaurant Milton Keynes', 'Andhra food Milton Keynes'],
-    h1: 'South Indian Home Kitchen in Milton Keynes',
+    h1: 'Authentic South Indian Takeaway in Milton Keynes',
   },
 
   '/story': {

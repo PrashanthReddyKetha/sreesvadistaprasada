@@ -31,7 +31,7 @@ const PrivacyPolicy = () => (
       <Section title="1. Who We Are">
         <p>
           Sree Svadista Prasada ("<strong>we</strong>", "<strong>us</strong>", "<strong>our</strong>") is a South Indian food ordering
-          and meal-subscription service run from a home kitchen in Milton Keynes, United Kingdom (Edinburgh and Glasgow are planned, not yet served).
+          and meal-subscription service run from a kitchen in Milton Keynes, United Kingdom (Edinburgh and Glasgow are planned, not yet served).
         </p>
         <p>
           For the purposes of UK data-protection law, we are the <strong>Data Controller</strong>.

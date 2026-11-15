@@ -39,7 +39,7 @@ const VEG_RICE = [
 const FAQS = [
   { q: 'Where can I get chicken biryani in Milton Keynes?', a: 'Sree Svadista Prasada cooks two Andhra-style chicken biryanis fresh to order in Greenleys — Chicken Dum Biryani (£10.99) and Chicken Fry Piece Biryani (£10.99) — with delivery across all MK postcodes and collection with 10% off.' },
   { q: 'What is the difference between dum biryani and regular biryani?', a: 'Dum biryani is sealed and finished over low heat so the part-cooked rice steams in the meat and masala, layering the flavour through every grain. A regular biryani is cooked more directly. Fry piece biryani takes another route: the chicken is marinated and crisp-fried, then folded through the spiced rice.' },
-  { q: 'How is Andhra biryani different from Hyderabadi biryani?', a: 'They are close cousins — both from Telugu-speaking South India. Andhra-style biryani generally runs hotter, leaning on Guntur chilli and home-style masala rather than the courtly, saffron-forward Hyderabadi dum tradition. Ours follows the Andhra home kitchen.' },
+  { q: 'How is Andhra biryani different from Hyderabadi biryani?', a: 'They are close cousins — both from Telugu-speaking South India. Andhra-style biryani generally runs hotter, leaning on Guntur chilli and home-style masala rather than the courtly, saffron-forward Hyderabadi dum tradition. Ours follows the Andhra tradition.' },
   { q: 'Is there a vegetarian biryani option?', a: 'Our vegetarian Prasada menu has traditional Andhra spiced rice dishes instead — Gongura Rice, Ghee Pappu Avakaya Rice, Sambar Rice and more, from £4.99. They are cooked with separate vegetarian utensils and cookware.' },
 ];
 

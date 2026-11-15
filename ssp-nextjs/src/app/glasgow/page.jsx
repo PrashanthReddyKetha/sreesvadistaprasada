@@ -26,7 +26,7 @@ export const metadata = {
 const FAQS = [
   { q: 'Is there a South Indian restaurant in Glasgow?', a: 'Sree Svadista Prasada, a dedicated Andhra Telugu kitchen, is expanding to Glasgow. We currently serve Milton Keynes. Register your interest to be first to know when we launch Glasgow delivery.' },
   { q: 'Where can I get South Indian food delivered in Glasgow?', a: 'We are bringing authentic Andhra curries, gongura dishes, dosas, and our Dabba Wala tiffin subscription to Glasgow. Contact us via WhatsApp to register your postcode.' },
-  { q: 'What will Sree Svadista Prasada bring to Glasgow?', a: 'Most Indian restaurants in Britain serve Punjabi-style North Indian food. Sree Svadista Prasada cooks the food of Andhra Pradesh and the Telugu home kitchen — gongura curries, Guntur-spiced dishes, temple-style Prasada cooking, and the Dabba Wala home-style meal subscription. We currently serve Milton Keynes; Glasgow is planned.' },
+  { q: 'What will Sree Svadista Prasada bring to Glasgow?', a: 'Most Indian restaurants in Britain serve Punjabi-style North Indian food. Sree Svadista Prasada cooks the food of Andhra Pradesh and the Telugu tradition — gongura curries, Guntur-spiced dishes, temple-style Prasada cooking, and the Dabba Wala home-style meal subscription. We currently serve Milton Keynes; Glasgow is planned.' },
 ];
 
 const jsonLd = [

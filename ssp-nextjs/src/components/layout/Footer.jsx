@@ -292,7 +292,7 @@ const Footer = () => {
               ['Indian takeaway menu', '/menu'], ['South Indian breakfast', '/breakfast'], ['Dosa', '/breakfast/dosas'],
               ['Idli & vada', '/breakfast/idli-vada'], ['Chicken biryani', '/svadista/biryani'], ['Andhra chicken curry', '/svadista/curries'],
               ['Veg thali', '/prasada/thalis-rice-bowls'], ['Vegetarian South Indian food', '/prasada'], ['Indian tiffin service', '/subscriptions'],
-              ['Indian catering', '/catering'], ['Indian food delivery', '/delivery'], ['South Indian home kitchen', '/milton-keynes'],
+              ['Indian catering', '/catering'], ['Indian food delivery', '/delivery'], ['South Indian takeaway Milton Keynes', '/milton-keynes'],
             ].map(([label, href]) => (
               <li key={href}>
                 <Link prefetch={false} href={href} className="text-xs transition-colors duration-200 hover:text-white" style={{ color: '#A09890' }}>{label}</Link>

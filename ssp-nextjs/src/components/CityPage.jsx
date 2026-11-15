@@ -1,7 +1,10 @@
 import Link from 'next/link';
-import { MapPin, Clock, ShoppingBag, CheckCircle } from 'lucide-react';
+import { MapPin, Clock, ShoppingBag, CheckCircle, Truck } from 'lucide-react';
 import FaqSection from '@/components/FaqSection';
 import { jsonLd as safeJsonLd } from '@/lib/seo/jsonLd';
+
+// The live Deliveroo listing (branch 843684, live since 6 Nov 2026) — delivery goes there until website delivery launches.
+export const DELIVEROO_URL = 'https://deliveroo.co.uk/menu/milton-keynes/old-wolverton/sree-svadista-prasada-24-oxman-lane';
 
 const MENU_CATEGORIES = [
   { label: 'Prasada — Pure Vegetarian', sub: 'Andhra curries, veg thali, rice dishes & more', href: '/prasada', emoji: '🌿' },
@@ -21,7 +24,8 @@ const TRUST_POINTS = [
 ];
 
 export default function CityPage({ data, jsonLd }) {
-  const { city, tagline, deliveryTime, minOrder, freeDeliveryThreshold, areas, isKitchen, faqs = [], heading } = data;
+  // delivery: the admin switch (KitchenContext.deliveryEnabled on the server) — off = collection on the website, delivery via Deliveroo
+  const { city, tagline, minOrder, areas, isKitchen, faqs = [], heading, delivery = false } = data;
 
   return (
     <>
@@ -45,7 +49,7 @@ export default function CityPage({ data, jsonLd }) {
               className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight tracking-tight"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              {heading || `South Indian Food Delivery in ${city}`}
+              {heading || `South Indian Food in ${city}`}
             </h1>
             <p className="text-base md:text-lg text-gray-200 mb-8 leading-relaxed">
               {tagline}
@@ -76,12 +80,14 @@ export default function CityPage({ data, jsonLd }) {
       <div style={{ backgroundColor: '#F9F6EE', borderBottom: '1px solid rgba(128,0,32,0.1)' }}>
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { icon: <Clock size={16} />, label: 'Delivery Time', value: deliveryTime },
+            { icon: <Clock size={16} />, label: 'Collection', value: 'About 30 minutes · cooked fresh' },
+            { icon: <CheckCircle size={16} />, label: 'Collect & save', value: '10% off at Greenleys, MK12' },
             { icon: <ShoppingBag size={16} />, label: 'Minimum Order', value: minOrder },
-            { icon: <MapPin size={16} />, label: 'Free Delivery', value: freeDeliveryThreshold },
-            { icon: <CheckCircle size={16} />, label: 'Collection', value: 'Save 10% at Greenleys' },
-          ].map(({ icon, label, value }) => (
-            <div key={label} className="flex items-start gap-3">
+            delivery
+              ? { icon: <Truck size={16} />, label: 'Delivery', value: '30–60 min · free from £28, by zone' }
+              : { icon: <Truck size={16} />, label: 'Delivery', value: <>On <a href={DELIVEROO_URL} target="_blank" rel="noopener noreferrer" className="underline font-semibold" style={{ color: '#800020' }}>Deliveroo</a> now · website delivery coming soon</>, testid: 'city-delivery-soon' },
+          ].map(({ icon, label, value, testid }) => (
+            <div key={label} className="flex items-start gap-3" data-testid={testid}>
               <span className="mt-0.5 flex-shrink-0" style={{ color: '#800020' }}>{icon}</span>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#800020' }}>{label}</p>
@@ -137,20 +143,31 @@ export default function CityPage({ data, jsonLd }) {
                 className="text-3xl font-bold mb-4 tracking-tight"
                 style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}
               >
-                Delivering across {city}
+                {delivery ? `Delivering across ${city}` : `Serving the whole of ${city}`}
               </h2>
-              <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                We cover a wide area{isKitchen ? ' — this is where our kitchen is based' : ''}. Not sure if we reach you?{' '}
-                <a
-                  href="https://wa.me/447307119962?text=Hi,%20do%20you%20deliver%20to%20my%20area?"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold hover:underline"
-                  style={{ color: '#800020' }}
-                >
-                  WhatsApp us your postcode.
-                </a>
-              </p>
+              {delivery ? (
+                <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                  We cover a wide area{isKitchen ? ' — this is where our kitchen is based' : ''}. Not sure if we reach you?{' '}
+                  <a
+                    href="https://wa.me/447307119962?text=Hi,%20do%20you%20deliver%20to%20my%20area?"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold hover:underline"
+                    style={{ color: '#800020' }}
+                  >
+                    WhatsApp us your postcode.
+                  </a>
+                </p>
+              ) : (
+                <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                  Our kitchen is in Greenleys (MK12). Order on this website and collect in about 30 minutes with 10% off, or get it
+                  delivered today through{' '}
+                  <a href={DELIVEROO_URL} target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline" style={{ color: '#800020' }}>
+                    Deliveroo
+                  </a>
+                  . Delivery straight from our website to these areas is coming soon.
+                </p>
+              )}
               <div className="flex flex-wrap gap-2">
                 {areas.map(area => (
                   <span
@@ -177,7 +194,7 @@ export default function CityPage({ data, jsonLd }) {
                 Dabba Wala in {city}
               </h3>
               <p className="text-sm leading-relaxed mb-4" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                A fresh, home-style South Indian dabba delivered to your home or workplace, Monday to Friday.
+                A fresh, traditional South Indian dabba delivered to your home or workplace, Monday to Friday.
                 Rice, curry, dal, sambar, pickle, papad — the whole meal, every time.
               </p>
               <ul className="space-y-1.5 mb-6">
