@@ -19,6 +19,7 @@ from routes import health as health_routes
 from routes import analysis as analysis_routes
 from routes import expenses as expense_routes
 from routes import sales as sales_routes
+from routes import instagram as instagram_routes
 from routes.menu import migrate_slugs
 from routes.pickup_slots import seed_slot_settings, apply_opening_hours_7_to_11, apply_opening_hours_8_to_11
 from menu_additions import apply_menu_additions, apply_protein_egg_bowl, apply_bowls_at_breakfast, apply_gongura_prawns_and_joint_biryani, apply_biryani_spelling, apply_chicken_65_biryani
@@ -251,6 +252,7 @@ app.include_router(health_routes.router, prefix="/api")
 app.include_router(analysis_routes.router, prefix="/api")
 app.include_router(expense_routes.router, prefix="/api")
 app.include_router(sales_routes.router, prefix="/api")
+app.include_router(instagram_routes.router, prefix="/api")
 
 
 @app.get("/api")

@@ -91,6 +91,17 @@ async def health(_: dict = Depends(require_admin)):
     else:
         checks.append(_check("WhatsApp", "down" if wa_failed else "ok", f"{wa_failed} failed in the last 24 hours", "Check Twilio" if wa_failed else ""))
 
+    # Instagram feed on the Catering page
+    import instagram as instagram_feed
+    ig = await instagram_feed.status()
+    if ig["configured"]:
+        if ig["error"] and not ig["fetched_at"]:
+            checks.append(_check("Instagram feed", "down", f"never loaded — {ig['error'][:120]}", "Generate a new token in the Meta app and update INSTAGRAM_ACCESS_TOKEN on Render"))
+        elif ig["error"]:
+            checks.append(_check("Instagram feed", "watch", f"showing the last good copy ({ig['posts']} posts, fetched {_ago(ig['fetched_at'])}); latest attempt failed: {ig['error'][:100]}", "If it stays like this for a day, generate a new token in the Meta app"))
+        else:
+            checks.append(_check("Instagram feed", "ok", f"{ig['posts']} posts, fetched {_ago(ig['fetched_at']) if ig['fetched_at'] else 'not yet'}", ""))
+
     # notifications to the installed app
     vapid = await db.settings.find_one({"_id": "web_push"}, {"_id": 1})
     devices = await db.push_subs.count_documents({})
@@ -169,6 +180,7 @@ AUTO = [
     ("stripe_webhook", "Stripe tells the server about payments (webhook)", lambda: bool(os.getenv("STRIPE_WEBHOOK_SECRET")), "Stripe › Developers › Webhooks → endpoint /api/payments/webhook → Render › STRIPE_WEBHOOK_SECRET"),
     ("firebase", "Phone-number verification at sign-up (Firebase)", lambda: bool(os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")), "Render › Environment › FIREBASE_SERVICE_ACCOUNT_JSON — in production sign-up refuses without it"),
     ("alert_email", "Alerts go to your own address", lambda: bool(os.getenv("ADMIN_ALERT_EMAIL") or os.getenv("ADMIN_EMAIL")), "Render › Environment › ADMIN_ALERT_EMAIL"),
+    ("instagram", "Instagram posts and reels on the Catering page", lambda: bool(os.getenv("INSTAGRAM_ACCESS_TOKEN")), "Meta app › Instagram API › Generate token → Render › INSTAGRAM_ACCESS_TOKEN (+ INSTAGRAM_USER_ID, INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET)"),
 ]
 
 

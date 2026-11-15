@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Users, Briefcase, Heart, Calendar, ArrowRight, Phone, Star, Sparkles } from 'lucide-react';
 import api from '@/api';
 import { trackEnquirySubmit } from '@/lib/analytics';
+import InstagramFeed from '@/components/InstagramFeed';
 
 const Catering = () => {
   const [formData, setFormData] = useState({
@@ -137,6 +138,9 @@ const Catering = () => {
           </div>
         </div>
       </section>
+
+      {/* Our own Instagram posts and reels (owner, 14 Nov 2026) — hidden until the feed has posts */}
+      <InstagramFeed eyebrow="See it cooked" title="Our kitchen on Instagram" />
 
       {/* Enquiry Form */}
       <section id="quote" className="py-16 md:py-24 px-4 md:px-8 scroll-mt-24">
