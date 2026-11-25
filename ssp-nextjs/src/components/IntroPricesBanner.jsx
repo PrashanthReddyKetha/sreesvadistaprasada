@@ -19,7 +19,6 @@ export default function IntroPricesBanner({ compact = false }) {
       </p>
       <p className={`${compact ? 'text-xs' : 'text-sm'} leading-relaxed`} style={{ color: '#F9EFDD' }}>
         Every dish is cooked fresh to order, with premium ingredients and true Andhra spices —
-        food we believe is worth more than we are asking. These are our opening prices, and they will rise.
         <span className="font-semibold" style={{ color: '#F4C430' }}> Taste it at today&apos;s price while it lasts.</span>
       </p>
     </div>
