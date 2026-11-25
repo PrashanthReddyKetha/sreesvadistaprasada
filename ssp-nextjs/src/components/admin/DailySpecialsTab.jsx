@@ -4,6 +4,7 @@ import api from '@/api';
 import { words, CATEGORY } from '@/lib/adminLabels';
 import { Plus, Edit2, Trash2, Eye, EyeOff, RefreshCw, X, Search } from 'lucide-react';
 import { buildItemUrl } from '@/lib/itemUrl';
+import OrderSpecials from './OrderSpecials';
 
 const BLANK = {
   title: '',
@@ -144,10 +145,11 @@ const DailySpecialsTab = () => {
 
   return (
     <div>
+      <OrderSpecials />
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Today's Specials</h2>
-          <p className="text-sm text-gray-500 mt-1">Manage the rotating daily highlights shown on the home page.</p>
+          <h2 className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#800020' }}>Home page specials</h2>
+          <p className="text-sm text-gray-500 mt-1">The rotating daily highlights shown on the home page. The order page has its own list above.</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={load} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg" style={{ backgroundColor: 'rgba(128,0,32,0.08)', color: '#800020' }}>

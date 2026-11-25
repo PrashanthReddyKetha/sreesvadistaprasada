@@ -44,7 +44,9 @@ against the partner's payment in Stripe).
 `/order` has one switch: **Today's Menu** (saffron, ready in about 30 minutes) and **Pre-order** (burgundy, collected
 tomorrow). A dish is on one list only: Today's Menu is every dish that is not `preorder_only` and not `coming_soon`;
 Pre-order is the `preorder_only` dishes, then "coming soon" in a group of its own (bell only). Today's specials
-(Admin › Daily Specials) sit in a photo strip above Today's Menu and are also listed under their own section.
+(Admin › Today's Specials › Order page specials: the owner's own list for this page, `GET /api/daily-specials/order-page`,
+settings `order_specials`; it falls back to the home page specials until the owner saves one) sit in a photo strip
+above Today's Menu and are also listed under their own section.
 
 **A dish that has sold out today can be ordered for tomorrow.** On Today's Menu it is greyed with a "Tomorrow"
 button, and it is listed on Pre-order. The rule is `restock.back_tomorrow` (sold out for today only, or back at a set

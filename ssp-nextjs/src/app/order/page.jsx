@@ -26,12 +26,14 @@ async function getMenu() {
   } catch { return []; }
 }
 
-// Today's specials are the dishes picked in Admin › Daily Specials; baked in so the strip does not pop in late
+// Today's specials are the dishes the owner picked for this page (Admin › Today's Specials › Order page specials);
+// baked in so the strip does not pop in late
 async function getSpecialIds() {
   try {
-    const res = await fetch(`${BASE}/api/daily-specials`, { next: { revalidate: 300 } });
+    const res = await fetch(`${BASE}/api/daily-specials/order-page`, { next: { revalidate: 300 } });
     if (!res.ok) return [];
-    return (await res.json()).map(s => s.menu_item_id).filter(Boolean);
+    const ids = await res.json();
+    return Array.isArray(ids) ? ids : [];
   } catch { return []; }
 }
 

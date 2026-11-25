@@ -374,9 +374,9 @@ export default function OrderClient({ initialItems = [], initialSpecialIds = [] 
       .then(res => { startTransition(() => setDishes(res.data)); setCached('all', res.data); })
       .catch(() => { if (!getCached('all')) setLoadFailed(true); })
       .finally(() => { clearTimeout(slow); setSlowLoad(false); setLoading(false); });
-    // Today's specials are the dishes picked in Admin › Daily Specials
-    api.get('/daily-specials')
-      .then(res => setSpecialIds((res.data || []).map(s => s.menu_item_id).filter(Boolean)))
+    // Today's specials are the dishes picked for this page in Admin › Today's Specials › Order page specials
+    api.get('/daily-specials/order-page')
+      .then(res => { if (Array.isArray(res.data)) setSpecialIds(res.data); })
       .catch(() => {});
     return () => clearTimeout(slow);
   }, [loadAttempt]);
