@@ -62,6 +62,11 @@ async function signIn(page, who) {
   // 2 — basket on the order page, then checkout
   await p.goto(BASE + '/order', { waitUntil: 'load' });
   await p.waitForSelector('button:has-text("+ ADD")'); await sleep(800);
+  // the page orders for two days: Today's Menu (cooking now) and Pre-order (collected tomorrow)
+  check('the order page opens on Today\'s Menu, with Pre-order beside it', (await p.locator('[data-testid="day-today"][aria-selected="true"]').count()) === 1 && (await p.locator('[data-testid="day-tomorrow"]').count()) === 1);
+  await p.locator('[data-testid="day-tomorrow"]').click(); await sleep(600);
+  check('Pre-order shows no dish that can be added for today', (await p.locator('[data-testid="list-tomorrow"] button:has-text("+ ADD")').count()) === 0);
+  await p.locator('[data-testid="day-today"]').click(); await sleep(600);
   const rows = p.locator('div.flex.items-center.gap-3.py-3').filter({ has: p.locator('button:has-text("+ ADD")') });
   const info = async (row) => ({ name: (await row.locator('span.truncate').first().innerText()).trim(), price: money(await row.locator('span.font-black').first().innerText()) });
   const A = await info(rows.nth(0)), B = await info(rows.nth(1));

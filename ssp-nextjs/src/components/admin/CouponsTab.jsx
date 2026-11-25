@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Plus, RefreshCw, Copy, Pause, Play, Trash2, X, Tag, Layers, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '@/api';
+import BiryaniOffer from '@/components/admin/BiryaniOffer';
 
 /* Admin › Coupons — create single-use / multi-use codes with every rule, batch-generate, pause, delete, see redemptions. */
 
@@ -309,6 +310,8 @@ export default function CouponsTab() {
           <button onClick={() => setMode('create')} className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded-lg" style={{ backgroundColor: P }}><Plus size={14} /> New coupon</button>
         </div>
       </div>
+
+      <BiryaniOffer />
 
       {mode && (
         <CouponForm

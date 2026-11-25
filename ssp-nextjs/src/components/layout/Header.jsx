@@ -10,6 +10,7 @@ import { useKitchen } from '@/context/KitchenContext';
 import KitchenClosedNotify from '@/components/KitchenClosedNotify';
 import api from '@/api';
 import LogoMark from '../LogoMark';
+import { OFFER_HREF } from '@/lib/offer';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -124,6 +125,13 @@ const Header = () => {
         {pendingReward ? (
           <Link href="/dashboard?tab=loyalty" className="font-bold hover:underline">
             🎁 Your free dish is ready — choose it on your next order →
+          </Link>
+        ) : kitchen.offer?.live ? (
+          /* The biryani multi-buy while it runs (Admin › Coupons): one tap to its dishes on Order Now */
+          <Link href={OFFER_HREF} data-testid="offer-strip" className="font-bold hover:underline"
+            onClick={(e) => { if (pathname === '/order') { e.preventDefault(); window.dispatchEvent(new Event('ssp:show-offer')); } }}>
+            <span className="hidden sm:inline">Biryani offer &nbsp;·&nbsp; any two for <span style={{ color: '#F4C430' }}>£{kitchen.offer.price.toFixed(2)}</span>, mixed as you like &nbsp;·&nbsp; Order now →</span>
+            <span className="sm:hidden">Biryani <span style={{ color: '#F4C430' }}>{kitchen.offer.label}</span> · Order now →</span>
           </Link>
         ) : (
           <>

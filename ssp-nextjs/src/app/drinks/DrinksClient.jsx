@@ -7,6 +7,7 @@ import { buildItemUrl } from '@/lib/itemUrl';
 import { ShoppingCart, Droplets, Search, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import MenuLoader from '@/components/MenuLoader';
+import RestockBell from '@/components/RestockBell';
 import api from '@/api';
 import { trackMenuCategoryView } from '@/lib/analytics';
 import { recordSearch } from '@/lib/track';
@@ -100,12 +101,16 @@ const Drinks = ({ initialItems = [] }) => {
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3 flex-1">{drink.description}</p>
                       )}
                       <div className="w-full space-y-1.5">
+                        {drink.sold_out_today ? (   /* Admin › Stock levels: sold out today, back at a set time, or coming soon */
+                          <span className="w-full flex justify-center py-1" onClick={e => { e.preventDefault(); e.stopPropagation(); }}><RestockBell item={drink} compact /></span>
+                        ) : (
                         <button
-                          onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: drink.id, name: drink.name, price: drink.price, image: drink.image, category: drink.category }); }}
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: drink.id, name: drink.name, price: drink.price, image: drink.image, category: drink.category, preorder: !!drink.preorder_only }); }}
                           className="w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
                           style={{ backgroundColor: '#7E22CE' }}>
-                          <ShoppingCart size={13} /> Add to Basket
+                          <ShoppingCart size={13} /> {drink.preorder_only ? 'Pre-order · collect tomorrow' : 'Add to Basket'}
                         </button>
+                        )}
                       </div>
                     </div>
                   </div>

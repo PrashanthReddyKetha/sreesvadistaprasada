@@ -12,13 +12,13 @@ const slotsReported = new Set();   // one "saw the times" record per day shown, 
  * Props:
  *   pickupSlot / setPickupSlot — from useCart()
  *   compact — tighter layout for the checkout card
- *   requireTomorrow — only tomorrow's times (pre-order dishes, made overnight)
+ *   requireTomorrow — only tomorrow's times (pre-order lines)
  *   title / note — the heading and the line under it (CollectionTimes sets them when a basket is collected twice)
  */
 export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false, requireTomorrow = false, title = 'Collection time', note }) {
   const [data, setData] = useState(null);       // API response for the active day
   const [day, setDay] = useState(requireTomorrow ? 'tomorrow' : 'today'); // 'today' | 'tomorrow'
-  // Pre-order baskets are made overnight -- lock the picker to tomorrow
+  // Pre-order lines are collected tomorrow -- lock the picker to tomorrow
   useEffect(() => { if (requireTomorrow) setDay('tomorrow'); }, [requireTomorrow]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -129,9 +129,9 @@ export default function SlotPicker({ pickupSlot, setPickupSlot, compact = false,
         </div>
       </div>
 
-      {(note ?? (requireTomorrow ? '🌙 Your basket has a pre-order dish — it’s made overnight, so collection is tomorrow.' : null)) && (
+      {(note ?? (requireTomorrow ? '🌙 Your basket is a pre-order, so collection is tomorrow.' : null)) && (
         <p className="text-[11px] mb-1.5 font-semibold" style={{ color: '#8B6914' }}>
-          {note ?? '🌙 Your basket has a pre-order dish — it’s made overnight, so collection is tomorrow.'}
+          {note ?? '🌙 Your basket is a pre-order, so collection is tomorrow.'}
         </p>
       )}
       {closedToday ? (

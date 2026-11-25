@@ -2,19 +2,21 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import api from '@/api';
 
-interface KitchenStatus { open: boolean; message: string; deliveryEnabled: boolean; minimumOrderEnabled: boolean; dabbaOpen: boolean; loaded: boolean; refresh: () => Promise<void> }
+// The biryani multi-buy as the server is running it (backend offers.py); null until the server has answered
+export interface MultibuyOffer { live: boolean; label: string; qty: number; price: number; ends_at: string | null }
+interface KitchenStatus { open: boolean; message: string; deliveryEnabled: boolean; minimumOrderEnabled: boolean; dabbaOpen: boolean; offer: MultibuyOffer | null; loaded: boolean; refresh: () => Promise<void> }
 
-const KitchenContext = createContext<KitchenStatus>({ open: true, message: '', deliveryEnabled: false, minimumOrderEnabled: true, dabbaOpen: false, loaded: false, refresh: async () => {} });
+const KitchenContext = createContext<KitchenStatus>({ open: true, message: '', deliveryEnabled: false, minimumOrderEnabled: true, dabbaOpen: false, offer: null, loaded: false, refresh: async () => {} });
 
 // Polls /kitchen-status so the admin "Kitchen closed", "Delivery on/off" and "Min £15" toggles show
 // site-wide within a minute. Delivery and Dabba Wala sign-ups stay off until the server says otherwise.
 export const KitchenProvider = ({ children }: { children: React.ReactNode }) => {
-  const [status, setStatus] = useState({ open: true, message: '', deliveryEnabled: false, minimumOrderEnabled: true, dabbaOpen: false, loaded: false });
+  const [status, setStatus] = useState<Omit<KitchenStatus, 'refresh'>>({ open: true, message: '', deliveryEnabled: false, minimumOrderEnabled: true, dabbaOpen: false, offer: null, loaded: false });
 
   const refresh = useCallback(async () => {
     try {
       const r = await api.get('/kitchen-status');
-      setStatus({ open: r.data.open !== false, message: r.data.message || '', deliveryEnabled: r.data.delivery_enabled === true, minimumOrderEnabled: r.data.minimum_order_enabled !== false, dabbaOpen: r.data.dabba_open === true, loaded: true });
+      setStatus({ open: r.data.open !== false, message: r.data.message || '', deliveryEnabled: r.data.delivery_enabled === true, minimumOrderEnabled: r.data.minimum_order_enabled !== false, dabbaOpen: r.data.dabba_open === true, offer: r.data.offer || null, loaded: true });
     } catch { /* keep last known state — never block the site on a failed poll */ }
   }, []);
 

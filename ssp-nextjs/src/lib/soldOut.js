@@ -10,3 +10,13 @@ export function soldOutLabel(item, wholeDay = 'Sold out today') {
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
   return day > today ? `Back tomorrow at ${time}` : `Back at ${time}`;
 }
+
+/** Sold out for now but back in time for tomorrow — sold out for today only, or back at a set time today — so it can
+    still be pre-ordered for tomorrow (owner, 25 Nov 2026). Not a dish sold out through a later day, one that is
+    "coming soon", or a pre-order dish whose batch has gone. The server decides (backend orders.py line_day). */
+export function orderableTomorrow(item) {
+  const s = item?.sold_out_until;
+  if (!s || !item.sold_out_today || item.coming_soon || item.preorder_only) return false;
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
+  return s.slice(0, 10) <= today;
+}

@@ -12,6 +12,7 @@ import useDialog from '@/lib/useDialog';
 import { trackViewCart } from '@/lib/analytics';
 import { isOrderable } from '@/config/softLaunch';
 import DeliveryLockedNotice from '@/components/DeliveryLockedNotice';
+import { offerFor, OFFER_HREF } from '@/lib/offer';
 
 const MINIMUM_ORDER = 15.00;
 const MIN_DELIVERY_FEE = 2.49; // Zone 1 (nearest MK postcodes) — floor used before postcode is known
@@ -104,13 +105,13 @@ function UpsellRow({ cartItems, onAdd }) {
         }
       }
       const paired = pairIds
-        .map(pid => r.data.find(m => m.id === pid && isOrderable(m.category)))
+        .map(pid => r.data.find(m => m.id === pid && isOrderable(m.category) && !m.sold_out_today))
         .filter(Boolean);
       if (paired.length >= 2) { setSuggestions(paired.slice(0, 4)); return; }
       // Fallback: category-complement heuristic when items have no pairings
       const cartCategories = [...new Set(cartItems.map(i => i.category).filter(Boolean))];
       const candidates = r.data
-        .filter(i => !cartIds.has(i.id) && isOrderable(i.category))
+        .filter(i => !cartIds.has(i.id) && isOrderable(i.category) && !i.sold_out_today)
         .map(i => ({ item: i, score: scoreComplement(i, cartCategories) }))
         .filter(({ score }) => score < 99)
         .sort((a, b) => a.score - b.score)
@@ -135,7 +136,7 @@ function UpsellRow({ cartItems, onAdd }) {
               <p className="text-[10px] font-semibold leading-tight mb-1 line-clamp-2" style={{ color: '#2D2422' }}>{item.name}</p>
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold" style={{ color: '#800020' }}>{fmt(price(item.price))}</span>
-                <button onClick={() => onAdd(item)} aria-label={`Add ${item.name}`} className="w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: '#800020' }}>
+                <button onClick={() => onAdd({ id: item.id, name: item.name, price: item.price, image: item.image, category: item.category, subcategory: item.subcategory, preorder: !!item.preorder_only })} aria-label={`Add ${item.name}`} className="w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: '#800020' }}>
                   <Plus size={10} />
                 </button>
               </div>
@@ -155,7 +156,7 @@ function FreeItemPicker({ onSelect, onSkip }) {
 
   useEffect(() => {
     api.get('/menu?available=true')
-      .then(r => setItems(r.data.filter(i => isOrderable(i.category))))
+      .then(r => setItems(r.data.filter(i => isOrderable(i.category) && !i.sold_out_today)))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -298,37 +299,42 @@ const CartDrawer = () => {
   const freeItemPrice     = freeItem ? price(freeItem.price) : 0;
   const effectiveSubtotal = cartTotal + freeItemPrice;
   const meetsMinimum      = !kitchen.minimumOrderEnabled || effectiveSubtotal >= MINIMUM_ORDER;
+  // The biryani multi-buy while it is running: the same sum the server does at checkout (lib/offer.js). The 10%
+  // collection discount, the small-order fee and free delivery are worked out on what is left after it.
+  const offer             = kitchen.offer?.live ? kitchen.offer : null;
+  const deal              = offerFor(cartItems, offer);
+  const afterOffer        = Math.round((effectiveSubtotal - deal.saving) * 100) / 100;
 
   // Client-side preview pricing
   const takeawayDiscount = deliveryType === 'takeaway' && meetsMinimum
-    ? Math.round(effectiveSubtotal * 0.10 * 100) / 100 : 0;
+    ? Math.round(afterOffer * 0.10 * 100) / 100 : 0;
 
   const deliveryFee = (() => {
     if (deliveryType === 'takeaway') return 0;
     if (!zoneInfo) return null; // unknown until postcode entered
-    return effectiveSubtotal >= zoneInfo.free_delivery_over ? 0 : zoneInfo.delivery_fee;
+    return afterOffer >= zoneInfo.free_delivery_over ? 0 : zoneInfo.delivery_fee;
   })();
 
   const smallOrderFee = (() => {
     if (deliveryType === 'takeaway' || !zoneInfo || !meetsMinimum) return 0;
-    return effectiveSubtotal <= 19.99 ? 1.50 : 0;
+    return afterOffer <= 19.99 ? 1.50 : 0;
   })();
 
   // Total saving vs delivery — used in both collection confirmation + delivery-mode switch nudge
   // potentialDeliveryFee uses zoneInfo directly (not deliveryFee, which returns 0 on takeaway)
   const potentialDeliveryFee = zoneInfo
-    ? (effectiveSubtotal >= zoneInfo.free_delivery_over ? 0 : zoneInfo.delivery_fee)
+    ? (afterOffer >= zoneInfo.free_delivery_over ? 0 : zoneInfo.delivery_fee)
     : null;
   const collectSavingIsEstimate = potentialDeliveryFee === null; // true = using MIN_DELIVERY_FEE floor
   const collectSaving = meetsMinimum
-    ? Math.round(((potentialDeliveryFee ?? MIN_DELIVERY_FEE) + (effectiveSubtotal <= 19.99 ? 1.50 : 0) + effectiveSubtotal * 0.10) * 100) / 100
+    ? Math.round(((potentialDeliveryFee ?? MIN_DELIVERY_FEE) + (afterOffer <= 19.99 ? 1.50 : 0) + afterOffer * 0.10) * 100) / 100
     : null;
 
   const grandTotal = (() => {
-    if (!meetsMinimum) return effectiveSubtotal;
-    if (deliveryType === 'takeaway') return Math.round((effectiveSubtotal - takeawayDiscount) * 100) / 100;
-    if (deliveryFee === null) return effectiveSubtotal;
-    return Math.round((effectiveSubtotal + smallOrderFee + deliveryFee - takeawayDiscount) * 100) / 100;
+    if (!meetsMinimum) return afterOffer;
+    if (deliveryType === 'takeaway') return Math.round((afterOffer - takeawayDiscount) * 100) / 100;
+    if (deliveryFee === null) return afterOffer;
+    return Math.round((afterOffer + smallOrderFee + deliveryFee - takeawayDiscount) * 100) / 100;
   })();
 
   const needsPostcode = deliveryType === 'delivery' && !zoneInfo;
@@ -544,6 +550,19 @@ const CartDrawer = () => {
                   Two collections: today&apos;s dishes at the time you pick, your pre-order tomorrow at its own time. You choose both at checkout.
                 </p>
               )}
+              {offer && deal.short > 0 && (   /* one biryani short of the offer: say so, and show its dishes */
+                <button data-testid="cart-offer-nudge"
+                  onClick={() => {
+                    setCartOpen(false);
+                    // already on Order Now: show the offer's dishes in place (the page reads the link only when it opens)
+                    if (window.location.pathname === '/order') window.dispatchEvent(new Event('ssp:show-offer'));
+                    else router.push(OFFER_HREF);
+                  }}
+                  className="mx-6 mb-3 block w-[calc(100%-3rem)] text-left text-[11px] font-black rounded-lg px-3 py-2"
+                  style={{ backgroundColor: '#FBF3DC', color: '#2D2422', border: '1px solid #EBD9A8' }}>
+                  Add {deal.short} more biryani{deal.short > 1 ? 's' : ''} · {offer.label} →
+                </button>
+              )}
               <UpsellRow cartItems={cartItems} onAdd={addToCart} />
             </div>
 
@@ -556,6 +575,11 @@ const CartDrawer = () => {
                 {freeItem && (
                   <div className="flex justify-between text-xs font-semibold" style={{ color: '#166534' }}>
                     <span>🎁 {freeItem.name}</span><span>FREE</span>
+                  </div>
+                )}
+                {deal.saving > 0 && (
+                  <div className="flex justify-between text-xs font-semibold" style={{ color: '#166534' }} data-testid="cart-offer-line">
+                    <span>Biryani {offer.label}</span><span>-{fmt(deal.saving)}</span>
                   </div>
                 )}
                 {deliveryType === 'takeaway' && takeawayDiscount > 0 && (

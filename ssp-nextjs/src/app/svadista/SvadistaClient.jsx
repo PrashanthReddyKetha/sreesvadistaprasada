@@ -14,6 +14,7 @@ import api from '@/api';
 import { getCached, setCached } from '@/api/menuCache';
 import { trackMenuCategoryView } from '@/lib/analytics';
 import { recordSearch } from '@/lib/track';
+import OfferTag from '@/components/OfferTag';
 
 const fmt = (p) => `£${parseFloat(p).toFixed(2)}`;
 
@@ -156,6 +157,7 @@ const Svadista = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
                         </div>
                         <span className="text-sm font-bold flex-shrink-0" style={{ color: '#800020' }}>{fmt(dish.price)}</span>
                       </div>
+                      <OfferTag dish={dish} className="self-start mb-1.5" />
                       {dish.description && (
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3 flex-1">{dish.description}</p>
                       )}
@@ -163,7 +165,7 @@ const Svadista = ({ initialItems = [], initialTab = 'All', seoHeading }) => {
                         <span className="w-full flex justify-center py-1" onClick={e => { e.preventDefault(); e.stopPropagation(); }}><RestockBell item={dish} compact /></span>
                       ) : (
                       <button
-                        onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: dish.id, name: dish.name, price: dish.price, image: dish.image, category: dish.category, preorder: !!dish.preorder_only }); }}
+                        onClick={e => { e.preventDefault(); e.stopPropagation(); addToCart({ id: dish.id, name: dish.name, price: dish.price, image: dish.image, category: dish.category, subcategory: dish.subcategory, preorder: !!dish.preorder_only }); }}
                         className="w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95"
                         style={{ backgroundColor: '#800020' }}>
                         <ShoppingCart size={13} /> {dish.preorder_only ? 'Pre-order · collect tomorrow' : 'Add to Basket'}

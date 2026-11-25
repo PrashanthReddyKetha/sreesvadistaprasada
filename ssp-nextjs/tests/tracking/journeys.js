@@ -46,7 +46,7 @@ async function orderPage() {
   while (qtyA < 3 || qtyA * A.price < 15.5) { await tap(row(A).locator('button[aria-label="Increase quantity"]')); qtyA++; await sleep(900); }
   await tap(row(B).locator('button:has-text("+ ADD")')); await sleep(900);
   await tap(row(B).locator('button[aria-label="Decrease quantity"]')); await sleep(900);
-  await p.locator('input[placeholder="Search dishes…"]').fill('dosa'); await sleep(1800);
+  await p.locator('[data-testid="order-search"]').fill('dosa'); await sleep(1800);
   await p.locator('button:has-text("Go to Checkout")').click();
   await p.waitForURL(/\/checkout/, { timeout: 20000 }).catch(() => {}); await sleep(5000);
   await done(v, p);

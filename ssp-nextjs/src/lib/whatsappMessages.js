@@ -48,6 +48,7 @@ const orderSummary = (o) => [
   '*Your order*',
   ...(o.items || []).map(i => `${i.quantity} × ${i.name} — ${money(i.price * i.quantity)}`),
   o.free_item_discount > 0 ? `Loyalty free dish — -${money(o.free_item_discount)}` : '',
+  o.offer_discount > 0 ? `Biryani ${o.offer_label || 'offer'} — -${money(o.offer_discount)}` : '',
   o.takeaway_discount > 0 ? `Collection discount — -${money(o.takeaway_discount)}` : '',
   o.coupon_code ? `Coupon ${o.coupon_code} — -${money(o.coupon_discount)}` : '',
   o.small_order_fee > 0 ? `Small order fee — ${money(o.small_order_fee)}` : '',

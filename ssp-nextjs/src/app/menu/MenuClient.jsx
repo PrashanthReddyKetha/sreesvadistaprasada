@@ -16,6 +16,7 @@ import RestockBell from '@/components/RestockBell';
 import IntroPricesBanner from '@/components/IntroPricesBanner';
 import HygieneRating from '@/components/HygieneRating';
 import { useKitchen } from '@/context/KitchenContext';
+import OfferTag from '@/components/OfferTag';
 
 const categories = [
   { id: 'all', name: 'All Dishes' },
@@ -135,7 +136,7 @@ const Menu = ({ initialItems = [], seoLine }) => {
           </div>
           <p className="text-xs text-gray-500 line-clamp-1 mb-2 flex-1">{dish.description}</p>
           <div className="flex justify-between items-center">
-            <span className="text-base font-bold" style={{ color: '#800020' }}>{'£'}{dish.price.toFixed(2)}</span>
+            <span className="text-base font-bold" style={{ color: '#800020' }}>{'£'}{dish.price.toFixed(2)} <OfferTag dish={dish} className="align-middle ml-1" /></span>
             {dish.sold_out_today ? (
               <span onClick={e => { e.preventDefault(); e.stopPropagation(); }}><RestockBell item={dish} compact /></span>
             ) : isOrderable(dish.category) ? (

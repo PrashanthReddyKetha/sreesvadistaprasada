@@ -2,12 +2,13 @@
 import SlotPicker from '@/components/SlotPicker';
 import { useCart } from '@/context/CartContext';
 
-/** The collection time(s) for the basket. Today's dishes take one time (ASAP or a slot); pre-order dishes are made
-    overnight and take a time of their own tomorrow. A basket with both is collected twice, so it shows two pickers
+/** The collection time(s) for the basket. Today's dishes take one time (ASAP or a slot); pre-order lines (a pre-order
+    dish, or one that sold out today and was added for tomorrow) take a time of their own tomorrow. A basket with both is collected twice, so it shows two pickers
     and says so (owner, 14 Nov 2026). The choices live in CartContext as pickupSlot and preorderSlot. */
-export default function CollectionTimes({ compact = false }) {
+export default function CollectionTimes({ compact = false, freeItem = null }) {
   const { cartItems, pickupSlot, setPickupSlot, preorderSlot, setPreorderSlot } = useCart();
-  const preNames = cartItems.filter(i => i.preorder).map(i => i.name);
+  // freeItem: the free loyalty dish chosen at checkout — when it is a pre-order dish it needs its time tomorrow too
+  const preNames = [...cartItems.filter(i => i.preorder), ...(freeItem?.preorder_only ? [freeItem] : [])].map(i => i.name);
   const hasPre = preNames.length > 0;
   const hasToday = cartItems.some(i => !i.preorder);
   const both = hasPre && hasToday;
@@ -26,7 +27,7 @@ export default function CollectionTimes({ compact = false }) {
         <div data-testid="preorder-slot">
           <SlotPicker pickupSlot={preorderSlot} setPickupSlot={setPreorderSlot} compact={compact} requireTomorrow
             title={both ? 'Pre-order · collect tomorrow' : 'Collection time'}
-            note={both ? `🌙 ${preNames.join(', ')} ${preNames.length > 1 ? 'are' : 'is'} made overnight — pick when to collect tomorrow.` : undefined} />
+            note={both ? `🌙 ${preNames.join(', ')} — pick when to collect tomorrow.` : undefined} />
         </div>
       )}
     </div>

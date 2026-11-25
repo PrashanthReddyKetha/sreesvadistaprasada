@@ -26,10 +26,19 @@ async function getMenu() {
   } catch { return []; }
 }
 
+// Today's specials are the dishes picked in Admin › Daily Specials; baked in so the strip does not pop in late
+async function getSpecialIds() {
+  try {
+    const res = await fetch(`${BASE}/api/daily-specials`, { next: { revalidate: 300 } });
+    if (!res.ok) return [];
+    return (await res.json()).map(s => s.menu_item_id).filter(Boolean);
+  } catch { return []; }
+}
+
 export const metadata = {
   title: { absolute: 'Order Online | Sree Svadista Prasada' },
   description:
-    'Order authentic Andhra food for collection or delivery in Milton Keynes. Pick your collection time, pay securely, and collect fresh from our kitchen.',
+    'Order authentic Andhra food in Milton Keynes. Today\'s menu is ready in about 30 minutes; everything else can be pre-ordered for tomorrow. Pick your collection time and pay securely.',
   alternates: { canonical: 'https://sreesvadistaprasada.com/order' },
   // Transactional funnel page duplicating /menu's content — keep it for
   // people and out of the index; /menu is the page that should rank.
@@ -37,6 +46,6 @@ export const metadata = {
 };
 
 export default async function OrderPage() {
-  const initialItems = await getMenu();
-  return <Suspense fallback={null}><OrderClient initialItems={initialItems} /></Suspense>;
+  const [initialItems, initialSpecialIds] = await Promise.all([getMenu(), getSpecialIds()]);
+  return <Suspense fallback={null}><OrderClient initialItems={initialItems} initialSpecialIds={initialSpecialIds} /></Suspense>;
 }

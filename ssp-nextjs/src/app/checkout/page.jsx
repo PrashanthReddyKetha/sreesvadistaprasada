@@ -18,6 +18,7 @@ import KitchenClosedNotify from '@/components/KitchenClosedNotify';
 import api from '@/api';
 import LoyaltyProgressBar from '@/components/LoyaltyProgressBar';
 import CollectionTimes from '@/components/CollectionTimes';
+import { orderableTomorrow } from '@/lib/soldOut';
 import AddressPicker, { saveAddress } from '@/components/AddressPicker';
 import AddToHomeScreen from '@/components/AddToHomeScreen';
 import { getCached, setCached } from '@/api/menuCache';
@@ -60,6 +61,30 @@ const slotLabel = (iso) => {
 };
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
+/** The moment before the card is charged the total is confirmed with the server once more: a collection time can
+    fill, a dish can sell out, and a price, an offer or a coupon can change while the customer types their card
+    details. The server re-prices at order creation and refuses a payment of any other amount, so a stale total
+    must never be charged. Resolves to { ok } when the total stands, { changed: pricing } when it is different now,
+    or { detail } when the basket cannot be ordered as it is. */
+async function confirmTotal({ cartItems, deliveryType, postcode, freeItem, slotFields, couponCode, email, expected }) {
+  try {
+    const r = await api.post('/orders/calculate', {
+      items: cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity, preorder: !!i.preorder })),
+      order_type: deliveryType,
+      postcode,
+      free_item_id: freeItem?.id,
+      ...slotFields,
+      coupon_code: couponCode || undefined,
+      customer_email: email || undefined,
+    });
+    return Math.round(r.data.grand_total * 100) === Math.round(expected * 100) ? { ok: true } : { changed: r.data };
+  } catch (e) {
+    const detail = e.response?.data?.detail;
+    return { detail: typeof detail === 'string' ? detail : "We couldn't confirm your total just now — please try again in a moment." };
+  }
+}
+const totalChangedMessage = (pricing) => `Your total is now ${fmt(pricing.grand_total)} — a price or an offer changed while you were here. Please check it and tap Pay again.`;
+
 function Field({ label, icon: Icon, type = 'text', placeholder, value, onChange, locked, hint, required: req, autoComplete }) {
   // Label and field are joined by id, so screen readers and autofill know what each box is (audit A-0003, A11Y-002)
   const id = 'f-' + String(label).toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -131,7 +156,7 @@ function DeliveryBar({ total, freeOver, onAddMore }) {
 }
 
 /* ── Order summary panel ─────────────────────────────────────────────────── */
-function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, takeawayDiscount = 0, smallOrderFee = 0, coupon = null, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true, feeSaved = 0, feeSavedIsEstimate = false, smallFeeSaved = 0, onAddMore }) {
+function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, offerDiscount = 0, offerLabel = '', takeawayDiscount = 0, smallOrderFee = 0, coupon = null, updateQuantity, removeFromCart, deliveryFee, grandTotal: grandTotalProp, deliveryType = 'delivery', feeKnown = true, feeSaved = 0, feeSavedIsEstimate = false, smallFeeSaved = 0, onAddMore }) {
   const [collapsed, setCollapsed] = useState(false);
   const grandTotal = grandTotalProp ?? (cartTotal - takeawayDiscount + (deliveryFee || 0));
 
@@ -201,6 +226,11 @@ function OrderSummary({ cartItems, cartTotal, freeItem, freeItemDiscount = 0, ta
             {freeItem && (
               <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }}>
                 <span>🎁 {freeItem.name}</span><span>FREE</span>
+              </div>
+            )}
+            {offerDiscount > 0 && (   /* the biryani multi-buy, priced by the server (backend offers.py) */
+              <div className="flex justify-between text-sm font-semibold" style={{ color: '#166534' }} data-testid="offer-line">
+                <span>Biryani {offerLabel}</span><span>-{fmt(offerDiscount)}</span>
               </div>
             )}
             {takeawayDiscount > 0 && (
@@ -331,7 +361,7 @@ function PairsRow({ cartItems, addToCart }) {
               <div className="flex items-center justify-between mt-1.5">
                 <span className="text-[11px] font-black" style={{ color: '#800020' }}>£{Number(m.price).toFixed(2)}</span>
                 <button
-                  onClick={() => addToCart({ id: m.id, name: m.name, price: m.price, image: m.image, category: m.category })}
+                  onClick={() => addToCart({ id: m.id, name: m.name, price: m.price, image: m.image, category: m.category, subcategory: m.subcategory, preorder: !!m.preorder_only })}
                   className="px-2 py-1 rounded-full text-[10px] font-black"
                   style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>
                   + ADD
@@ -857,7 +887,8 @@ const CheckoutInner = () => {
     setAddressDropdown(false);
   };
 
-  const hasPreorder = cartItems.some(i => i.preorder);
+  // The free loyalty dish is a line too: a pre-order dish chosen as the free one needs its time tomorrow
+  const hasPreorder = cartItems.some(i => i.preorder) || !!freeItem?.preorder_only;
   const hasToday = cartItems.some(i => !i.preorder);
   // Today's dishes are collected at pickupSlot (ASAP when empty); pre-order dishes at preorderSlot, tomorrow.
   // A basket that is all pre-order sends its one time as both, for older servers.
@@ -880,7 +911,7 @@ const CheckoutInner = () => {
     }
     setServerPricing(null);   // the total is unknown until the newest answer arrives
     try {
-      const items = cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity }));
+      const items = cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity, preorder: !!i.preorder }));
       const r = await api.post('/orders/calculate', {
         items,
         order_type: deliveryType,
@@ -919,8 +950,13 @@ const CheckoutInner = () => {
       if (e.response?.status === 404) {
         try {
           const menu = await api.get('/menu?available=true');
-          const liveIds = new Set(menu.data.map(m => m.id));
-          const gone = cartItems.filter(i => !liveIds.has(i.id));
+          // Off the menu, not on sale yet, or sold out for the day the line is for (a sold-out dish can still be
+          // had tomorrow where the kitchen has it back by then)
+          const live = new Map(menu.data.map(m => [m.id, m]));
+          const gone = cartItems.filter(i => {
+            const m = live.get(i.id);
+            return !m || m.coming_soon || (m.sold_out_today && !(i.preorder && orderableTomorrow(m)));
+          });
           if (gone.length) setUnavailableItems(gone);
         } catch {}
       }
@@ -935,7 +971,8 @@ const CheckoutInner = () => {
         setZoneInfo(null);
       }
     }
-  }, [cartItems, deliveryType, form.postcode, freeItem, pickupSlot?.iso, preorderSlot?.iso, couponCode, form.email]); // eslint-disable-line react-hooks/exhaustive-deps
+  // kitchen.offer: the biryani multi-buy starting, stopping or changing price re-prices the basket
+  }, [cartItems, deliveryType, form.postcode, freeItem, pickupSlot?.iso, preorderSlot?.iso, couponCode, form.email, kitchen.offer?.live, kitchen.offer?.price]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { recalculate(); }, [recalculate]);
 
@@ -999,23 +1036,16 @@ const CheckoutInner = () => {
       let capturedPI = null;
       let walletPaid = false;
       try {
-        // Re-check the slot(s) at the last moment
-        if (ctx.deliveryType === 'takeaway' && (ctx.pickupSlot?.iso || ctx.preorderSlot?.iso)) {
-          try {
-            await api.post('/orders/calculate', {
-              items: ctx.cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity })),
-              order_type: ctx.deliveryType,
-              postcode: ctx.form.postcode,
-              free_item_id: ctx.freeItem?.id,
-              ...ctx.slotFields,
-            });
-          } catch (slotErr) {
-            const d0 = slotErr.response?.data?.detail;
-            if (typeof d0 === 'string' && /pre-order/i.test(d0)) setPreorderSlot(null); else setPickupSlot(null);
-            const d = slotErr.response?.data?.detail;
-            return fail(typeof d === 'string' ? d : 'Your collection time is no longer available — please pick another.');
-          }
+        // Re-check the slot(s) and the total at the last moment
+        const last = await confirmTotal({
+          cartItems: ctx.cartItems, deliveryType: ctx.deliveryType, postcode: ctx.form.postcode, freeItem: ctx.freeItem,
+          slotFields: ctx.slotFields, couponCode: ctx.couponCode, email: ctx.form.email, expected: ctx.validPricing.grand_total,
+        });
+        if (last.detail) {
+          if (/collection time/i.test(last.detail)) { if (/pre-order/i.test(last.detail)) setPreorderSlot(null); else setPickupSlot(null); }
+          return fail(last.detail);
         }
+        if (last.changed) { setServerPricing(last.changed); return fail(totalChangedMessage(last.changed)); }
 
         const intentRes = await api.post('/payments/create-intent', { amount: ctx.validPricing.grand_total, purpose: 'order' });
         const { client_secret, payment_intent_id } = intentRes.data;
@@ -1036,7 +1066,7 @@ const CheckoutInner = () => {
         const email = ctx.form.email?.trim() || ev.payerEmail || '';
         const phone = ctx.form.phone?.trim() ? normPhone(ctx.form.phone) : (ev.payerPhone || '');
         const items = [
-          ...ctx.cartItems.map(i => ({ menu_item_id: i.id, name: i.name, price: price(i.price), quantity: i.quantity })),
+          ...ctx.cartItems.map(i => ({ menu_item_id: i.id, name: i.name, price: price(i.price), quantity: i.quantity, preorder: !!i.preorder })),
           ...(ctx.freeItem ? [{ menu_item_id: ctx.freeItem.id, name: ctx.freeItem.name, price: ctx.freeItemDiscount, quantity: 1 }] : []),
         ];
         const res = await api.post('/orders', {
@@ -1130,23 +1160,19 @@ const CheckoutInner = () => {
     let paymentSucceeded = false;
     let capturedPI = null;
     try {
-      // Final slot check the moment before charging — a slot can fill or pass
-      // while the customer types card details
-      if (deliveryType === 'takeaway' && (pickupSlot?.iso || preorderSlot?.iso)) {
-        try {
-          await api.post('/orders/calculate', {
-            items: cartItems.map(i => ({ menu_item_id: i.id, quantity: i.quantity })),
-            order_type: deliveryType,
-            postcode: form.postcode,
-            free_item_id: freeItem?.id,
-            ...slotFields,
-          });
-        } catch (slotErr) {
-          const detail = slotErr.response?.data?.detail;
-          setError(typeof detail === 'string' ? detail : 'Your collection time is no longer available — please pick another.');
-          if (typeof detail === 'string' && /pre-order/i.test(detail)) setPreorderSlot(null); else setPickupSlot(null);
+      // Final check the moment before charging — a slot can fill or pass, and a price or an offer can change,
+      // while the customer types card details. Skipped once the card has been charged: that payment is reused below.
+      if (!paidIntent.current) {
+        const last = await confirmTotal({
+          cartItems, deliveryType, postcode: form.postcode, freeItem, slotFields,
+          couponCode, email: form.email, expected: validPricing.grand_total,
+        });
+        if (last.detail) {
+          setError(last.detail);
+          if (/collection time/i.test(last.detail)) { if (/pre-order/i.test(last.detail)) setPreorderSlot(null); else setPickupSlot(null); }
           return;
         }
+        if (last.changed) { setServerPricing(last.changed); setError(totalChangedMessage(last.changed)); return; }
       }
 
       // Server-verified total only — never fall back to a client-guessed amount
@@ -1185,7 +1211,7 @@ const CheckoutInner = () => {
       }
 
       const items = [
-        ...cartItems.map(i => ({ menu_item_id: i.id, name: i.name, price: price(i.price), quantity: i.quantity })),
+        ...cartItems.map(i => ({ menu_item_id: i.id, name: i.name, price: price(i.price), quantity: i.quantity, preorder: !!i.preorder })),
         ...(freeItem ? [{ menu_item_id: freeItem.id, name: freeItem.name, price: freeItemDiscount, quantity: 1 }] : []),
       ];
 
@@ -1331,7 +1357,7 @@ const CheckoutInner = () => {
               style={{ backgroundColor: 'rgba(128,0,32,0.06)', color: '#800020' }} data-testid="success-preorder">
               🌙 Pre-order #{success.linked.orderId} — collect tomorrow{success.linked.slotFinal ? ` at ${slotLabel(success.linked.slotFinal)}` : ''}
               <p className="text-xs font-medium mt-1" style={{ color: '#5C4B47' }}>
-                Made fresh overnight. It has its own order number, so we can text you separately when each is ready.
+                Cooked fresh for tomorrow. It has its own order number, so we can text you separately when each is ready.
               </p>
             </div>
           )}
@@ -1580,7 +1606,7 @@ const CheckoutInner = () => {
               {/* Collection time picker */}
               {deliveryType === 'takeaway' && (
                 <div className="px-3 py-3 rounded-lg" style={{ backgroundColor: '#FDFBF7', border: '1px solid rgba(128,0,32,0.08)' }}>
-                  <CollectionTimes compact />
+                  <CollectionTimes compact freeItem={freeItem} />
                 </div>
               )}
 
@@ -1834,6 +1860,8 @@ const CheckoutInner = () => {
                 cartTotal={cartTotal}
                 freeItem={freeItem}
                 freeItemDiscount={freeItemDiscount}
+                offerDiscount={validPricing?.offer_discount || 0}
+                offerLabel={validPricing?.offer_label || ''}
                 takeawayDiscount={takeawayDiscount}
                 smallOrderFee={smallOrderFee}
                 coupon={appliedCoupon}

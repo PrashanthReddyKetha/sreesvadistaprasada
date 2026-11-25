@@ -4,9 +4,26 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { heroSlides } from '../data/mockData';
+import { OFFER_HREF } from '@/lib/offer';
 
-const HeroSlider = ({ images = [] }) => {
+// offer: the biryani multi-buy while it is running (useKitchen().offer) — it gets the first slide, so it is the
+// first thing a visitor sees; offerImage is the photo behind it.
+const HeroSlider = ({ images = [], offer = null, offerImage = null }) => {
+  const slides = React.useMemo(() => (offer ? [{
+    id: 'offer',
+    image: offerImage || '/home/svadista-spread.jpg',
+    eyebrow: 'Offer',
+    title: `Biryani.\n${offer.label}.`,
+    subtitle: 'Any two of our non-veg biryanis — mix them as you like.',
+    description: 'Collect from our kitchen and the 10% collection saving comes off as well.',
+    cta: 'See the offer',
+    link: OFFER_HREF,
+  }, ...heroSlides] : heroSlides), [offer, offerImage]);
+  const pictures = offer ? [null, ...images] : images;
   const [currentSlide, setCurrentSlide] = useState(0);
+  // The offer arrives a moment after the page (it is read from the server): show it straight away
+  const hasOffer = !!offer;
+  useEffect(() => { setCurrentSlide(0); }, [hasOffer]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
@@ -15,10 +32,10 @@ const HeroSlider = ({ images = [] }) => {
   const goToSlide = useCallback((index) => {
     if (isTransitioning) return;
     setIsTransitioning(true);
-    const total = heroSlides.length;
+    const total = slides.length;
     setCurrentSlide(((index % total) + total) % total);
     setTimeout(() => setIsTransitioning(false), 700);
-  }, [isTransitioning]);
+  }, [isTransitioning, slides.length]);
 
   const nextSlide = useCallback(() => goToSlide(currentSlide + 1), [currentSlide, goToSlide]);
   const prevSlide = useCallback(() => goToSlide(currentSlide - 1), [currentSlide, goToSlide]);
@@ -63,16 +80,16 @@ const HeroSlider = ({ images = [] }) => {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {heroSlides.map((slide, index) => (
+      {slides.map((slide, index) => (
         <div
           key={slide.id}
           className={`absolute inset-0 ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
           style={{ transition: 'opacity 700ms ease-in-out, transform 700ms ease-in-out' }}
         >
-          {Array.isArray(images[index]) && images[index].filter(Boolean).length === 2 ? (
+          {Array.isArray(pictures[index]) && pictures[index].filter(Boolean).length === 2 ? (
             /* Two photos, one per kitchen: stacked on phones, side by side on wider screens */
             <div className="absolute inset-0 grid grid-rows-2 md:grid-rows-1 md:grid-cols-2">
-              {images[index].map((src, k) => (
+              {pictures[index].map((src, k) => (
                 <div key={k} className="relative">
                   <Image src={src} alt={k === 0 ? 'Prasada — vegetarian' : 'Svadista — non-vegetarian'} fill
                     className="object-cover object-center" priority={index === 0} sizes="(max-width: 768px) 100vw, 50vw" quality={80} />
@@ -82,7 +99,7 @@ const HeroSlider = ({ images = [] }) => {
           ) : (
             <div className="absolute inset-0">
               <Image
-                src={(Array.isArray(images[index]) ? images[index].find(Boolean) : images[index]) || slide.image}
+                src={(Array.isArray(pictures[index]) ? pictures[index].find(Boolean) : pictures[index]) || slide.image}
                 alt={slide.title.replace(/\n/g, ' ')}
                 fill
                 className={`object-cover ${slide.trayRight ? 'object-[72%_50%] md:object-center' : 'object-center'}`}
@@ -101,7 +118,9 @@ const HeroSlider = ({ images = [] }) => {
               className={`max-w-xl transition-all duration-700 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
               style={{ transitionDelay: index === currentSlide ? '250ms' : '0ms' }}
             >
-              <div className="w-12 h-0.5 mb-6" style={{ backgroundColor: '#F4C430' }} />
+              {slide.eyebrow
+                ? <p className="inline-block rounded-full px-3 py-1 mb-5 text-[11px] font-black uppercase tracking-[0.2em]" style={{ backgroundColor: '#F4C430', color: '#2D2422' }}>{slide.eyebrow}</p>
+                : <div className="w-12 h-0.5 mb-6" style={{ backgroundColor: '#F4C430' }} />}
               <h2
                 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 text-white leading-tight tracking-tight whitespace-pre-line"
                 style={{ fontFamily: "'Playfair Display', serif" }}
@@ -150,7 +169,7 @@ const HeroSlider = ({ images = [] }) => {
       </button>
 
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-        {heroSlides.map((_, index) => (
+        {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => { goToSlide(index); resetTimer(); }}

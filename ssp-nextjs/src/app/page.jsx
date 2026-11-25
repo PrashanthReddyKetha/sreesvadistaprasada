@@ -73,6 +73,8 @@ export default async function HomePage() {
     // the kitchen's full spread (owner, 10 Nov 2026); the two kitchens from large landscape dish photos; the two Dabba Wala
     // boxes in front and the dal, sabzi and curries that change daily behind, cut from the menu photos; words on the left
     hero: ['/hero/welcome-spread.jpg', [pic('gongura-rice'), pic('joint-chicken-biryani')], '/hero/dabba-trays.jpg'],
+    // the photo behind the biryani offer's slide, shown only while the offer runs (Admin › Coupons)
+    offer: pic('joint-chicken-biryani') || pic('chicken-dum-biryani'),
     // each kitchen's signature dishes together, cut from the menu photos (public/home)
     svadista: '/home/svadista-spread.jpg',
     prasada: '/home/prasada-spread.jpg',

@@ -17,6 +17,7 @@ import RestockBell from '@/components/RestockBell';
 import api from '@/api';
 import { buildItemUrl } from '@/lib/itemUrl';
 import { soldOutLabel } from '@/lib/soldOut';
+import OfferTag from '@/components/OfferTag';
 
 // ── constants ──────────────────────────────────────────────────────────────
 const CAT_LABELS = {
@@ -395,6 +396,8 @@ export default function ItemDetailClient({ initialItem, initialGoesWith = [], se
                   <span className="text-sm font-semibold">{social.likes}</span>
                 </button>
               </div>
+
+              <OfferTag dish={item} line className="mb-4" />
 
               {isOrderable(item.category) && item.sold_out_today ? (
                 <div className="rounded-xl p-4 text-center" style={{ backgroundColor:'#F3EDE2' }}>

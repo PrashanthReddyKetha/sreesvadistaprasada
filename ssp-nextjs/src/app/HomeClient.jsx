@@ -35,7 +35,7 @@ import HygieneRating from '@/components/HygieneRating';
 import { soldOutLabel } from '@/lib/soldOut';
 
 const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, hoursByDay = null }) => {
-  const { deliveryEnabled, open: kitchenOpen, loaded: kitchenLoaded, dabbaOpen } = useKitchen();
+  const { deliveryEnabled, open: kitchenOpen, loaded: kitchenLoaded, dabbaOpen, offer } = useKitchen();
   const dabbaSoon = kitchenLoaded && !dabbaOpen;
   // "Open today 8am – 8:30pm", from the hours set in admin. Worked out in the browser so it is right for today.
   const [todayLine, setTodayLine] = useState(null);
@@ -175,7 +175,7 @@ const Home = ({ intro, initialFeatured = [], initialSpecial = null, art = {}, ho
 
       {/* Hero Slider */}
       <section className="pt-[calc(32px+4rem)] md:pt-[calc(32px+5rem)]">
-        <HeroSlider images={art.hero || []} />
+        <HeroSlider images={art.hero || []} offer={offer?.live && kitchenOpen ? offer : null} offerImage={art.offer} />
       </section>
 
       {/* At a glance — the page's one H1, one line on who we are, and the facts a first-time

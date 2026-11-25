@@ -12,8 +12,11 @@ interface CartItem {
   price: number | string;
   image?: string;
   category?: string;
+  subcategory?: string;
   quantity: number;
-  preorder?: boolean; // made overnight — collection only, next-day slot
+  // Collected tomorrow at a time of its own: a pre-order dish, or one that sold out today and was added for tomorrow.
+  // The server has the last word (backend orders.py line_day); refreshPrices below keeps this in step with the menu.
+  preorder?: boolean;
 }
 
 interface Toast {
@@ -174,18 +177,27 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   // A dish's price is whatever the menu says now, not what it was when it went in the basket: re-read it when the
   // page loads, the basket opens, the tab comes back or checkout opens, so a price changed in admin shows here too
   // (the server always charges the menu price, so a stale basket would show one figure and charge another).
+  // The same read keeps each line's day in step with the menu: a dish that is now pre-order only is tomorrow's. A line
+  // the customer added for tomorrow stays tomorrow's — the server honours it — so their choice is never changed
+  // under them when a sold-out dish comes back.
   const refreshPrices = useCallback(async () => {
     if (!cartRef.current.length) return;
     try {
       const { data } = await api.get('/menu', { params: { available: true } });
-      const now = new Map<string, number>((data || []).map((m: { id: string; price: number }) => [m.id, Number(m.price)]));
+      type Dish = { id: string; price: number; category?: string; subcategory?: string; preorder_only?: boolean };
+      const now = new Map<string, Dish>((data || []).map((m: Dish) => [m.id, m]));
       setCartItems(prev => {
         let changed = false;
         const next = prev.map(i => {
-          const price = now.get(i.id);
-          if (price === undefined || Number.isNaN(price) || price === parseFloat(String(i.price).replace('£', ''))) return i;
+          const m = now.get(i.id);
+          if (!m) return i;
+          const price = Number(m.price);
+          const preorder = !!m.preorder_only || !!i.preorder;
+          const same = (Number.isNaN(price) || price === parseFloat(String(i.price).replace('£', '')))
+            && preorder === !!i.preorder && (m.subcategory || '') === (i.subcategory || '');
+          if (same) return i;
           changed = true;
-          return { ...i, price };
+          return { ...i, price: Number.isNaN(price) ? i.price : price, preorder, subcategory: m.subcategory };
         });
         return changed ? next : prev;
       });
@@ -222,14 +234,17 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     const category = (item as { category?: string }).category;
     if (category && !isOrderable(category)) return;
     trackAddToCart(item, 1);
+    // The day the line is for: what the button said (preorder), else the dish's own setting. One more of a dish
+    // already in the basket follows the button just pressed, so a dish is never split between the two days.
+    const asked = item.preorder ?? ((item as { preorder_only?: boolean }).preorder_only ? true : undefined);
     setCartItems(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
         showToast({ type: 'update', name: item.name, qty: existing.quantity + 1 });
-        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1, preorder: asked ?? i.preorder } : i);
       }
       showToast({ type: 'add', name: item.name, price: item.price });
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, { ...item, preorder: !!asked, quantity: 1 }];
     });
   }, [showToast]);
 
