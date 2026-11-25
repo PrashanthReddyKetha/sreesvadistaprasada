@@ -55,3 +55,40 @@ def test_inactive_specials_stay_hidden_and_order_is_kept(db):
                 [special("Dish B", 2.0, order=2), special("Dish A", 1.0, order=1),
                  {**special("Dish A hidden", 1.0, order=0, menu_item_id="a"), "active": False}])
     assert list(out) == ["Dish A", "Dish B"]
+
+
+# ── The specials on Order Now are the owner's own list ───────────────────────
+
+def test_order_page_shows_the_home_page_specials_until_the_owner_chooses(db):
+    run(db.menu_items.insert_many([item("idli", "Idli (3 pcs)", 4.99), item("vada", "Vada (2 pcs)", 3.99)]))
+    run(db.daily_specials.insert_one(special("Idli (3 pcs)", 4.99, menu_item_id="idli")))
+    assert run(daily_specials.order_page_specials()) == ["idli"]
+    assert run(daily_specials.get_order_specials({})) == {"ids": ["idli"], "saved": False}
+
+
+def test_the_owners_list_replaces_it_and_keeps_its_order(db):
+    run(db.menu_items.insert_many([item("idli", "Idli (3 pcs)", 4.99), item("vada", "Vada (2 pcs)", 3.99),
+                                   item("gone", "Old Dish", 5.00, available=False)]))
+    run(db.daily_specials.insert_one(special("Idli (3 pcs)", 4.99, menu_item_id="idli")))
+    saved = run(daily_specials.set_order_specials(
+        daily_specials.OrderSpecialsIn(ids=["vada", "gone", "vada", "not-a-dish", "idli"]), {}))
+    assert saved == {"ids": ["vada", "gone", "idli"], "saved": True}          # no repeats, no unknown dishes
+    assert run(daily_specials.order_page_specials()) == ["vada", "idli"]       # a hidden dish is left out
+    # the home page list is untouched
+    assert [s["menu_item_id"] for s in run(daily_specials.list_active_specials())] == ["idli"]
+
+
+def test_an_empty_list_means_no_specials_on_the_order_page(db):
+    run(db.menu_items.insert_one(item("idli", "Idli (3 pcs)", 4.99)))
+    run(db.daily_specials.insert_one(special("Idli (3 pcs)", 4.99, menu_item_id="idli")))
+    run(daily_specials.set_order_specials(daily_specials.OrderSpecialsIn(ids=[]), {}))
+    assert run(daily_specials.order_page_specials()) == []
+
+
+def test_only_the_admin_can_choose_them(client, menu, admin_headers):
+    assert client.put("/api/daily-specials/order-page/chosen", json={"ids": ["dosa"]}).status_code in (401, 403)
+    assert client.get("/api/daily-specials/order-page/chosen").status_code in (401, 403)
+    assert client.get("/api/daily-specials/order-page").json() == []
+    r = client.put("/api/daily-specials/order-page/chosen", json={"ids": ["dosa", "lassi"]}, headers=admin_headers)
+    assert r.status_code == 200 and r.json() == {"ids": ["dosa", "lassi"], "saved": True}
+    assert client.get("/api/daily-specials/order-page").json() == ["dosa", "lassi"]

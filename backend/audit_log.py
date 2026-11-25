@@ -43,6 +43,7 @@ WORDING = [
     (r"^POST /api/menu/ai/enhance$", "asked the AI to fill in a dish"),
     (r"^POST /api/admin/coupons/batch$", "created a batch of coupons"), (r"^POST /api/admin/coupons$", "created a coupon"),
     (r"^PUT /api/admin/coupons/", "changed a coupon"), (r"^DELETE /api/admin/coupons/", "deleted a coupon"),
+    (r"^PUT /api/daily-specials/order-page/chosen$", "chose the specials on the order page"),
     (r"^POST /api/daily-specials", "added a daily special"), (r"^PUT /api/daily-specials/", "changed a daily special"),
     (r"^DELETE /api/daily-specials/", "removed a daily special"),
     (r"^POST /api/admin/subscriptions/[^/]+/skips/[^/]+/make-up$", "gave a make-up meal"),

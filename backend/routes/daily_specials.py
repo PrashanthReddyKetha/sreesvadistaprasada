@@ -2,6 +2,7 @@ import re
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from datetime import datetime
+from pydantic import BaseModel, Field
 from database import db
 from models import DailySpecial, DailySpecialCreate, DailySpecialUpdate
 from auth import require_admin
@@ -118,3 +119,50 @@ async def delete_special(special_id: str, admin: dict = Depends(require_admin)):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Special not found")
     return {"ok": True}
+
+
+# ── The specials on Order Now ────────────────────────────────────────────────
+# The Today's Specials strip on the order page has its own list of dishes (owner, 25 Nov 2026), chosen in
+# Admin › Today's Specials and kept in settings._id "order_specials". Until the owner saves one, the strip shows
+# the home page specials above, as it did before.
+ORDER_SPECIALS_ID = "order_specials"
+
+
+class OrderSpecialsIn(BaseModel):
+    ids: List[str] = Field(default_factory=list, max_length=30)
+
+
+async def _order_special_ids() -> tuple[list, bool]:
+    """(dish ids in the owner's order, has the owner saved a list of their own?)"""
+    doc = await db.settings.find_one({"_id": ORDER_SPECIALS_ID})
+    if doc is not None:
+        return list(doc.get("ids") or []), True
+    return [s["menu_item_id"] for s in await list_active_specials() if s.get("menu_item_id")], False
+
+
+@router.get("/order-page", response_model=List[str])
+async def order_page_specials():
+    """The dishes in the specials strip on Order Now, in the owner's order. A hidden dish is left out."""
+    ids, _ = await _order_special_ids()
+    if not ids:
+        return []
+    menu = await db.menu_items.find({"id": {"$in": ids}}, {"_id": 0, "id": 1, "available": 1}).to_list(len(ids))
+    on_sale = {m["id"] for m in menu if m.get("available", True)}
+    return [i for i in ids if i in on_sale]
+
+
+@router.get("/order-page/chosen")
+async def get_order_specials(_: dict = Depends(require_admin)):
+    ids, saved = await _order_special_ids()
+    return {"ids": ids, "saved": saved}
+
+
+@router.put("/order-page/chosen")
+async def set_order_specials(payload: OrderSpecialsIn, _: dict = Depends(require_admin)):
+    wanted = list(dict.fromkeys(payload.ids))
+    menu = await db.menu_items.find({"id": {"$in": wanted}}, {"_id": 0, "id": 1}).to_list(len(wanted) or 1)
+    known = {m["id"] for m in menu}
+    ids = [i for i in wanted if i in known]
+    await db.settings.update_one({"_id": ORDER_SPECIALS_ID},
+                                 {"$set": {"ids": ids, "updated_at": datetime.utcnow().isoformat()}}, upsert=True)
+    return {"ids": ids, "saved": True}
