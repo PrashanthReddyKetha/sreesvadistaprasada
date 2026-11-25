@@ -23,7 +23,7 @@ from notifications import (
     create_notification, send_push_notification,
 )
 from whatsapp import notify_customer, whatsapp_enabled, tracking_link, first_name
-from coupons import resolve_coupon, redeem as redeem_coupon
+from coupons import resolve_coupon, redeem as redeem_coupon, NO_SAVING
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 logger = logging.getLogger(__name__)
@@ -86,6 +86,22 @@ def preorder_slot_of(body, has_today: bool) -> Optional[str]:
     return body.preorder_slot or (None if has_today else body.scheduled_slot)
 
 
+def line_day(doc: Optional[dict], wants_tomorrow: bool = False) -> Optional[str]:
+    """The day a basket line is cooked for: "today", "preorder" (collected tomorrow), or None when the dish cannot be
+    ordered. A pre-order dish is always tomorrow's. Any other dish is today's unless the customer asked for it
+    tomorrow — the Tomorrow button on a dish that has sold out today (owner, 25 Nov 2026) — which is allowed
+    whenever the dish is on sale again by then. A client can never turn a pre-order dish into one for today."""
+    from restock import is_sold_out_today, back_tomorrow
+    if not doc or not doc.get("available", True) or doc.get("coming_soon"):
+        return None
+    sold_out = is_sold_out_today(doc)
+    if doc.get("preorder_only"):
+        return None if sold_out else "preorder"
+    if wants_tomorrow:
+        return "preorder" if (not sold_out or back_tomorrow(doc)) else None
+    return None if sold_out else "today"
+
+
 def split_totals(totals: dict, today_items: list, pre_items: list, free_item_id: Optional[str]) -> tuple[dict, dict]:
     """Share one priced basket between today's order and its pre-order, in proportion to each part's dishes, so the
     two totals add up to the pence the customer paid. The free loyalty dish's discount stays with its own part;
@@ -93,9 +109,13 @@ def split_totals(totals: dict, today_items: list, pre_items: list, free_item_id:
     def part_subtotal(items):
         return round(sum(float(i.price) * i.quantity for i in items), 2)
     sub_today, sub_pre = part_subtotal(today_items), part_subtotal(pre_items)
-    whole = sub_today + sub_pre
-    ratio = (sub_pre / whole) if whole else 0.0
     free_in_pre = any(i.menu_item_id == free_item_id for i in pre_items)
+    # Shared on what each part costs once its free dish is taken off, so a part that is only the free dish carries
+    # none of the discounts (shared on the full prices, its total came out below zero)
+    free = float(totals.get("free_item_discount") or 0.0)
+    net_today = max(0.0, sub_today - (0.0 if free_in_pre else free))
+    net_pre = max(0.0, sub_pre - (free if free_in_pre else 0.0))
+    ratio = (net_pre / (net_today + net_pre)) if (net_today + net_pre) else 0.0
 
     def share(key):
         v = float(totals.get(key) or 0.0)
@@ -103,12 +123,13 @@ def split_totals(totals: dict, today_items: list, pre_items: list, free_item_id:
             return (0.0, v) if free_in_pre else (v, 0.0)
         b = round(v * ratio, 2)
         return round(v - b, 2), b
-    keys = ["small_order_fee", "delivery_fee", "takeaway_discount", "free_item_discount", "coupon_discount"]
+    keys = ["small_order_fee", "delivery_fee", "takeaway_discount", "free_item_discount", "offer_discount", "coupon_discount"]
     today, pre = {"subtotal": sub_today}, {"subtotal": sub_pre}
     for k in keys:
         today[k], pre[k] = share(k)
     def total(p):
-        return round(p["subtotal"] + p["small_order_fee"] + p["delivery_fee"] - p["takeaway_discount"] - p["free_item_discount"] - p["coupon_discount"], 2)
+        return round(p["subtotal"] + p["small_order_fee"] + p["delivery_fee"] - p["takeaway_discount"] - p["free_item_discount"]
+                     - p["offer_discount"] - p["coupon_discount"], 2)
     pre["grand_total"] = max(0.0, total(pre))
     today["grand_total"] = round(float(totals["grand_total"]) - pre["grand_total"], 2)
     return today, pre
@@ -160,6 +181,7 @@ def calculate_order_total(
     postcode: str = "",
     free_item_price: float = 0.0,
     minimum_order: float = MINIMUM_ORDER,  # 0 while the owner has paused the minimum (admin header)
+    offer_discount: float = 0.0,           # the biryani multi-buy (offers.py), already worked out for this basket
 ) -> dict:
     """
     Single source of truth for all order pricing.
@@ -176,9 +198,11 @@ def calculate_order_total(
             f"Your basket is £{subtotal:.2f}."
         )
 
-    # 3. Loyalty free item discount
+    # 3. Loyalty free item discount, then the multi-buy offer. The collection discount, the small-order fee and
+    #    free delivery are all worked out on what is left, so the 10% applies on top of the offer.
     free_item_discount = round(free_item_price, 2) if free_item_price > 0 else 0.0
-    subtotal_after_free = round(subtotal - free_item_discount, 2)
+    offer_discount = round(offer_discount, 2) if offer_discount > 0 else 0.0
+    subtotal_after_free = round(subtotal - free_item_discount - offer_discount, 2)
 
     if order_type == "takeaway":
         small_order_fee   = 0.0
@@ -217,6 +241,8 @@ def calculate_order_total(
     return {
         "subtotal":          subtotal,
         "free_item_discount": free_item_discount,
+        "offer_discount":    offer_discount,
+        "offer_label":       None,
         "small_order_fee":   small_order_fee,
         "delivery_fee":      delivery_fee,
         "takeaway_discount": takeaway_discount,
@@ -240,24 +266,34 @@ async def current_minimum_order() -> float:
 async def price_with_coupon(
     items_data: list, order_type: str, postcode: str, free_item_price: float,
     coupon_code: Optional[str], user_id: Optional[str], email: Optional[str],
+    offer: Optional[dict] = None,
 ) -> tuple[dict, Optional[str]]:
     """
-    calculate_order_total + coupon. Returns (totals, coupon_error). A refused
+    calculate_order_total + the multi-buy offer + coupon. Returns (totals, coupon_error). A refused
     coupon never blocks pricing — totals come back without it and the reason
     is returned for the UI. Percent/fixed codes discount the food (after any
-    loyalty free dish); free-delivery codes zero the delivery fee.
+    loyalty free dish, and leaving out the dishes bought in the offer); free-delivery codes zero the delivery fee.
+    `offer` is offers.offer_for() for this basket, or None.
     """
-    totals = calculate_order_total(items_data, order_type, postcode, free_item_price, await current_minimum_order())
+    totals = calculate_order_total(items_data, order_type, postcode, free_item_price, await current_minimum_order(),
+                                   offer["discount"] if offer else 0.0)
+    if offer:
+        totals["offer_label"] = offer["label"]
     if not coupon_code:
         return totals, None
     without_coupon = dict(totals)
-    food_pence = round((totals["subtotal"] - totals["free_item_discount"]) * 100)
+    # A coupon works on the rest of the basket: the offer's dishes are neither discounted again nor counted
+    # towards a code's minimum spend (owner, 25 Nov 2026)
+    food_pence = round((totals["subtotal"] - totals["free_item_discount"] - totals["offer_discount"]
+                        - (offer["paid"] if offer else 0.0)) * 100)
     applied, err = await resolve_coupon(
         coupon_code, scope="orders", base_pence=food_pence,
         delivery_pence=round(totals["delivery_fee"] * 100),
         user_id=user_id, email=email, order_type=order_type,
         has_loyalty_item=free_item_price > 0,
     )
+    if err == NO_SAVING and offer and food_pence <= 0:
+        err = f"That code can't be used on the {offer['label']} biryanis — add another dish to use it."
     if err or not applied:
         return totals, err
     if applied["discount_type"] == "free_delivery":
@@ -266,7 +302,7 @@ async def price_with_coupon(
     totals["coupon_discount"] = applied["discount"]
     totals["coupon"] = applied
     totals["grand_total"] = round(
-        totals["subtotal"] - totals["free_item_discount"]
+        totals["subtotal"] - totals["free_item_discount"] - totals["offer_discount"]
         - (0.0 if applied["discount_type"] == "free_delivery" else applied["discount"])
         + totals["small_order_fee"] + totals["delivery_fee"] - totals["takeaway_discount"], 2
     )
@@ -403,6 +439,7 @@ async def check_delivery_postcode(postcode: str):
 class OrderCalculateItem(BaseModel):
     menu_item_id: str
     quantity: int = Field(default=1, ge=1, le=50)
+    preorder: bool = False      # the customer asked for this line tomorrow; line_day() decides whether it can be
 
 class OrderCalculateRequest(BaseModel):
     items: List[OrderCalculateItem] = []
@@ -435,34 +472,62 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
             "Delivery isn't available right now — please choose collection."
         ))
 
-    from restock import is_sold_out_today, london_today
+    from restock import back_tomorrow, london_today
+    from offers import applies_to, offer_for
     items_data = []
+    offer_units = []        # one price per dish that is in the biryani multi-buy
     has_preorder = has_today = False
     for i in body.items:
         doc = await db.menu_items.find_one(
             {"id": i.menu_item_id},
-            {"price": 1, "name": 1, "available": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1, "_id": 0})
-        if not doc or not doc.get("available") or is_sold_out_today(doc):
+            {"price": 1, "name": 1, "available": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1,
+             "category": 1, "subcategory": 1, "_id": 0})
+        day = line_day(doc if doc and doc.get("available") else None, i.preorder)
+        if not day:
             name = (doc or {}).get("name") or "An item in your basket"
+            if doc and doc.get("available") and not doc.get("preorder_only") and back_tomorrow(doc):
+                raise HTTPException(status_code=404, detail=(
+                    f"{name} has just sold out for today — please remove it from your basket to continue. "
+                    "You can pre-order it for tomorrow on the Order page."))
             why = "isn't on sale yet" if (doc or {}).get("coming_soon") else "has just sold out"
             raise HTTPException(status_code=404, detail=f"{name} {why} — please remove it from your basket to continue.")
-        if doc.get("preorder_only"):
+        if day == "preorder":
             has_preorder = True
         else:
             has_today = True
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
+        if applies_to(doc):
+            offer_units += [float(doc["price"])] * i.quantity
 
-    # Pre-order dishes are made overnight: collection only, at a time of their own tomorrow. Today's dishes keep
-    # their own time (ASAP or a slot), so a basket with both is collected twice (owner, 14 Nov 2026).
+    # The free loyalty dish is a line of the order too: it must be on sale, and it is cooked on its own dish's day —
+    # checked here so the customer hears before paying, not after (create_order runs the same check on it).
+    free_doc = None
+    if body.free_item_id:
+        free_doc = await db.menu_items.find_one(
+            {"id": body.free_item_id, "available": True},
+            {"price": 1, "name": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1, "_id": 0})
+        if free_doc:
+            free_day = line_day(free_doc)
+            if not free_day:
+                raise HTTPException(status_code=404, detail=(
+                    f"Your free dish, {free_doc.get('name') or 'the one you chose'}, has just sold out — please choose another."))
+            if free_day == "preorder":
+                has_preorder = True
+            else:
+                has_today = True
+
+    # Pre-order lines (a pre-order dish, or one asked for tomorrow) are collection only, at a time of their own
+    # tomorrow. Today's dishes keep their own time (ASAP or a slot), so a basket with both is collected twice
+    # (owner, 14 Nov 2026).
     pre_slot = preorder_slot_of(body, has_today)
     if has_preorder:
         if body.order_type != "takeaway":
             raise HTTPException(status_code=400, detail=(
-                "Your basket includes a pre-order dish (made fresh overnight) — "
+                "Your basket includes a pre-order dish — "
                 "please switch to collection and pick a collection time for it tomorrow."))
         if not pre_slot or pre_slot[:10] <= london_today():
             raise HTTPException(status_code=400, detail=(
-                "Pre-order dishes are prepared the night before — "
+                "Pre-order dishes are cooked fresh for tomorrow — "
                 "please choose a collection time for them tomorrow."))
         if not slot_in_grid(slot_settings, pre_slot):
             raise HTTPException(status_code=400, detail="That collection time for your pre-order has just passed — please pick another.")
@@ -481,17 +546,18 @@ async def preview_calculate(body: OrderCalculateRequest, current_user: Optional[
 
     free_item_price = 0.0
     if body.free_item_id:
-        free_doc = await db.menu_items.find_one({"id": body.free_item_id, "available": True}, {"price": 1, "_id": 0})
         if free_doc:
             free_item_price = float(free_doc["price"])
             # The free dish is added at full price and then discounted in full —
             # exactly how create_order prices it — so both totals always agree.
+            # It is not in offer_units: a free dish never counts towards an offer pair.
             items_data.append({"price": free_item_price, "quantity": 1})
 
     try:
         result, coupon_error = await price_with_coupon(
             items_data, body.order_type, body.postcode, free_item_price,
             body.coupon_code, current_user["sub"] if current_user else None, body.customer_email,
+            offer=await offer_for(offer_units),
         )
         return {"ok": True, **result, "coupon_error": coupon_error}
     except ValueError as e:
@@ -541,21 +607,30 @@ async def create_order(
             payload.loyalty_free_item_original_price = free_item_price
 
     # Server-side pricing — look up each item price from the DB, never trust the client
-    from restock import is_sold_out_today, london_today
+    from restock import london_today
+    from offers import applies_to, offer_for
     items_data = []
+    offer_units = []        # one price per dish that is in the biryani multi-buy
+    free_left = 1 if free_item_price > 0 else 0      # the free loyalty dish is one of the lines: it never counts towards a pair
     has_preorder = has_today = False
     for i in payload.items:
         doc = await db.menu_items.find_one(
             {"id": i.menu_item_id, "available": True},
-            {"name": 1, "price": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1, "_id": 0})
-        if not doc or is_sold_out_today(doc):
+            {"name": 1, "price": 1, "sold_out_until": 1, "preorder_only": 1, "coming_soon": 1,
+             "category": 1, "subcategory": 1, "_id": 0})
+        day = line_day(doc, i.preorder)                 # the client may ask for tomorrow; the dish decides if it can be
+        if not day:
             raise HTTPException(404, detail=f"Item '{i.menu_item_id}' is not available")
-        i.preorder = bool(doc.get("preorder_only"))     # from the dish, never the client
+        i.preorder = day == "preorder"
         if i.preorder:
             has_preorder = True
         else:
             has_today = True
         items_data.append({"price": float(doc["price"]), "quantity": i.quantity})
+        if applies_to(doc):
+            free_here = free_left if i.menu_item_id == payload.loyalty_free_item_id else 0
+            free_left -= free_here
+            offer_units += [float(doc["price"])] * (i.quantity - free_here)
         # The stored order line is what the kitchen cooks from — take it from the DB too
         i.name = doc.get("name") or i.name
         i.price = float(doc["price"])
@@ -572,6 +647,7 @@ async def create_order(
             items_data, payload.delivery_type,
             payload.delivery_address.postcode if payload.delivery_address else "",
             free_item_price, payload.coupon_code, user_id, payload.customer_email,
+            offer=await offer_for(offer_units),
         )
     except ValueError as e:
         raise HTTPException(400, detail=str(e))
@@ -650,6 +726,7 @@ async def create_order(
         fields = {**payload.model_dump(exclude={"user_id", "items"}), "items": [i.model_dump() for i in items],
                   "subtotal": part["subtotal"], "small_order_fee": part["small_order_fee"], "delivery_fee": part["delivery_fee"],
                   "takeaway_discount": part["takeaway_discount"], "free_item_discount": part["free_item_discount"],
+                  "offer_discount": part.get("offer_discount", 0.0), "offer_label": totals.get("offer_label"),
                   "coupon_discount": part["coupon_discount"], "total": part["grand_total"],
                   "user_id": user_id, "is_loyalty_qualifying": is_qualifying,
                   "payment_status": "paid"}   # verified as succeeded with Stripe above
@@ -740,7 +817,7 @@ async def create_order(
     short_id = order.order_number
     if payload.delivery_type == "takeaway":
         if order.is_preorder:
-            when = f"It's made fresh overnight — collect tomorrow at {slot_label(scheduled_final)}."
+            when = f"It's cooked fresh for tomorrow — collect at {slot_label(scheduled_final)}."
             if slot_was_bumped:
                 when = f"Your requested time was full — collect tomorrow at {slot_label(scheduled_final)} instead."
         else:
@@ -751,7 +828,7 @@ async def create_order(
             elif slot_was_bumped:
                 when = f"We were closed when you ordered — your collection time is {slot_label(scheduled_final)}."
         if preorder:
-            when += (f" Your pre-order #{preorder.order_number} is made overnight — collect it tomorrow at "
+            when += (f" Your pre-order #{preorder.order_number} is cooked fresh for tomorrow — collect it at "
                      f"{slot_label(pre_final)}{' (your first choice was full)' if pre_bumped else ''}.")
         sms_body = f"Sree Svadista Prasada: order #{short_id} received — £{paid_total:.2f}. {when}"
     else:

@@ -337,12 +337,14 @@ async def list_pickup_slots(date_str: Optional[str] = Query(None, alias="date"))
 @router.get("/kitchen-status")
 async def kitchen_status():
     """Public — lets the site show a 'kitchen closed' banner and disable checkout."""
+    from offers import get_offer, public_view
     settings = await get_slot_settings()
     return {
         "open": not settings.get("paused"),
         "delivery_enabled": bool(settings.get("delivery_enabled")),
         "minimum_order_enabled": settings.get("minimum_order_enabled", True) is not False,
         "dabba_open": bool(settings.get("dabba_open")),
+        "offer": public_view(await get_offer()),      # the biryani multi-buy: whether it is running, and its words
         "message": settings.get("paused_message") or "Our kitchen is closed today — we're not taking orders right now. Please check back soon.",
     }
 

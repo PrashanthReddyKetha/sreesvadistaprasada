@@ -267,7 +267,7 @@ class OrderItem(BaseModel):
     name: str
     price: float
     quantity: int = Field(ge=1, le=50)
-    preorder: bool = False   # set by the server from the dish: made overnight, collected tomorrow
+    preorder: bool = False   # cooked for tomorrow: a pre-order dish, or one the customer asked for tomorrow (orders.py line_day)
 
 
 class OrderCreate(BaseModel):
@@ -321,6 +321,8 @@ class Order(OrderCreate):
     delivery_fee: float = 0.0
     takeaway_discount: float = 0.0
     free_item_discount: float = 0.0
+    offer_discount: float = 0.0            # the biryani multi-buy (offers.py)
+    offer_label: Optional[str] = None      # "2 for £19.99", as it was when the order was placed
     coupon_discount: float = 0.0
     total: float = 0.0
     status: OrderStatus = OrderStatus.pending

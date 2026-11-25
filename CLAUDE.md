@@ -43,6 +43,7 @@ Programme records, decisions, risks and audits live in `docs/ops/` (its own git 
 - Middleware order: `CatchErrors` (inside CORS, `error_log.py`) → CORS → `AdminActionLog` (`audit_log.py`)
 - Auth: JWT (python-jose), bcrypt; `ENVIRONMENT=production` is the **only** production test; role read from DB per request
 - Pricing is server-authoritative (`routes/orders.py` `price_with_coupon`); Stripe intents verified on status, purpose and exact pence; one intent per order/plan (unique sparse indexes)
+- Order Now has two days, Today's Menu and Pre-order (`docs/PREORDER.md`); each basket line carries its day and `orders.py` `line_day` decides. The biryani multi-buy is `offers.py` (Admin › Coupons switches it on, sets its price and times; `/kitchen-status` carries it to the site, `src/lib/offer.js` shows it)
 - Messaging: `notifications.py` (Resend with Idempotency-Key, Twilio), `whatsapp.py`, `automations.py` (consent-based audience, pause-all), `routes/comms.py`
 - AI: `ai_ops.py` (Opus nightly investigator, aggregates only, 40 calls / $5 a month) and menu auto-fill (Haiku) — both under `ai_ops.allowed()`
 - Tests: `backend/tests/` (pytest, mongomock_motor; `conftest.py` fakes Stripe and providers, keeps the kitchen "open" and Dabba selling by default)

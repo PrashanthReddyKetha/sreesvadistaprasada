@@ -152,6 +152,9 @@ def _re_escape(s: str) -> str:
     return re.escape(s)
 
 
+NO_SAVING = "That code wouldn't save you anything on this basket."
+
+
 async def resolve_coupon(
     code: str,
     *,
@@ -230,7 +233,7 @@ async def resolve_coupon(
 
     saving = discount_pence(c, base_pence, delivery_pence)
     if saving <= 0:
-        return None, "That code wouldn't save you anything on this basket."
+        return None, NO_SAVING
 
     return {
         "coupon_id": c["id"],

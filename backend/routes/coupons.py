@@ -248,3 +248,48 @@ async def redemptions(coupon_id: str, _: dict = Depends(require_admin)):
     for r in rows:
         r["discount"] = r.get("discount_pence", 0) / 100
     return rows
+
+
+# ── The biryani multi-buy (offers.py): on/off, when it runs, and its price ───────────────────────────
+
+class MultibuyIn(BaseModel):
+    enabled: bool
+    starts_at: Optional[str] = None     # London "YYYY-MM-DDTHH:MM"; empty = as soon as it is switched on
+    ends_at: Optional[str] = None       # London "YYYY-MM-DDTHH:MM"; empty = until it is switched off
+    price: float = Field(gt=0, le=200)
+
+    @field_validator("starts_at", "ends_at")
+    @classmethod
+    def _london_minute(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return None
+        try:
+            return datetime.strptime(v[:16], "%Y-%m-%dT%H:%M").strftime("%Y-%m-%dT%H:%M")
+        except ValueError:
+            raise ValueError("Times must be YYYY-MM-DDTHH:MM")
+
+
+async def _multibuy_view() -> dict:
+    import offers
+    offer = await offers.get_offer()
+    menu = await db.menu_items.find({"available": True}, {"_id": 0, "name": 1, "price": 1, "category": 1, "subcategory": 1}).to_list(1000)
+    dishes = sorted(({"name": m["name"], "price": float(m["price"])} for m in menu if offers.applies_to(m)), key=lambda d: d["name"])
+    return {**offer, "state": offers.status_of(offer), "label": offers.label(offer), "qty": offers.QTY, "dishes": dishes}
+
+
+@router.get("/admin/offers/multibuy")
+async def get_multibuy(_: dict = Depends(require_admin)):
+    return await _multibuy_view()
+
+
+@router.put("/admin/offers/multibuy")
+async def set_multibuy(payload: MultibuyIn, _: dict = Depends(require_admin)):
+    import offers
+    if payload.starts_at and payload.ends_at and payload.ends_at <= payload.starts_at:
+        raise HTTPException(400, "The offer has to end after it starts")
+    await db.settings.update_one(
+        {"_id": offers.SETTINGS_ID},
+        {"$set": {"enabled": payload.enabled, "starts_at": payload.starts_at, "ends_at": payload.ends_at,
+                  "price": round(payload.price, 2), "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True)
+    return await _multibuy_view()

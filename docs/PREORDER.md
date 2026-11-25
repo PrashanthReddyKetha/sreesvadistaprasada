@@ -13,8 +13,8 @@ Backend (`backend/routes/orders.py`):
   today (Europe/London).
 
 Frontend (all conditional on `preorder_only` / cart item `preorder`):
-- `/order` (`OrderClient.jsx`): "Pre-order" button label (burgundy), item
-  sheet note "🌙 Made fresh overnight — pre-order today, collect tomorrow."
+- `/order` (`OrderClient.jsx`): the dish is listed on the Pre-order tab with a burgundy
+  "Pre-order" button (see "Today's Menu and Pre-order" below).
 - `/menu` (`MenuClient.jsx`): "Pre-order" button label.
 - `SlotPicker.jsx` `requireTomorrow` prop: locks the picker to Tomorrow,
   hides Today/ASAP, shows an explainer line. Passed from OrderClient and
@@ -38,6 +38,22 @@ confirmation email and text name both times, the success screen shows both
 order numbers, and the kitchen ticket reads "PRE-ORDER · TOMORROW 9:00 AM".
 Cancelling the pre-order half frees its slot and flags `refund_due` (refund
 against the partner's payment in Stripe).
+
+## Today's Menu and Pre-order on Order Now (25 Nov 2026)
+
+`/order` has one switch: **Today's Menu** (saffron, ready in about 30 minutes) and **Pre-order** (burgundy, collected
+tomorrow). A dish is on one list only: Today's Menu is every dish that is not `preorder_only` and not `coming_soon`;
+Pre-order is the `preorder_only` dishes, then "coming soon" in a group of its own (bell only). Today's specials
+(Admin › Daily Specials) sit in a photo strip above Today's Menu and are also listed under their own section.
+
+**A dish that has sold out today can be ordered for tomorrow.** On Today's Menu it is greyed with a "Tomorrow"
+button, and it is listed on Pre-order. The rule is `restock.back_tomorrow` (sold out for today only, or back at a set
+time today — not one sold out through a later day, and not a special, which the page keeps to today). Each basket
+line carries its day (`CartItem.preorder`), checkout sends it (`preorder` on each line of `/orders/calculate` and
+`/orders`), and `orders.py line_day()` decides: a pre-order dish is always tomorrow's; any other dish is today's
+unless the line asks for tomorrow and the dish is back by then. `CartContext.refreshPrices` keeps each line's day
+in step with the menu. The basket bar shows one chip per day; each day's time is picked on its own tab, and
+checkout shows both pickers.
 
 ## Where it shows
 

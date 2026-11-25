@@ -516,7 +516,7 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
             for i in (linked.get("items") or [])
         )
         slot_line += (
-            f'<p style="color:#5C4B47;font-size:13px;margin-top:10px"><b>Your pre-order #{_order_disp(linked)}</b> is made fresh overnight — '
+            f'<p style="color:#5C4B47;font-size:13px;margin-top:10px"><b>Your pre-order #{_order_disp(linked)}</b> is cooked fresh for tomorrow — '
             f'<b>collect it {when(linked["scheduled_slot_final"])}</b>:</p>'
             f'<table style="width:100%;font-size:14px">{rows}</table>'
         )
@@ -527,7 +527,7 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
         f'<p style="color:#5C4B47;font-size:13px"><b>Deliver to:</b> {addr_line}</p>'
     )
     intro = (
-        ("It's made fresh overnight — we'll text you tomorrow as soon as it's ready to collect.</p>" if order.get("is_preorder")
+        ("It's cooked fresh for tomorrow — we'll text you as soon as it's ready to collect.</p>" if order.get("is_preorder")
          else "Two collections: today's dishes first, your pre-order tomorrow. We'll text you each time it's ready.</p>" if linked
          else ("Cooked fresh to order — we'll text you the moment it's ready for collection.</p>" if slot
                else "Every dish is cooked fresh to order — yours will be ready in about 30 minutes, and we'll text you the moment it is.</p>")) if is_takeaway
@@ -536,11 +536,13 @@ def email_order_confirmation(order: dict, name: str) -> tuple[str, str]:
     paid = (order.get("total", 0) or 0) + ((linked or {}).get("total", 0) or 0)
     subtotal = (order.get("subtotal", 0) or 0) + ((linked or {}).get("subtotal", 0) or 0)
     coupon_off = (order.get("coupon_discount", 0) or 0) + ((linked or {}).get("coupon_discount", 0) or 0)
+    offer_off = (order.get("offer_discount", 0) or 0) + ((linked or {}).get("offer_discount", 0) or 0)
     html = _wrap(
         "Order received",
         f"<p>Hi {name}, we've received your order <b>#{disp}</b>. " + intro +
         f'<table style="width:100%;font-size:14px;border-top:1px solid rgba(0,0,0,0.1);margin-top:10px">{items_rows}</table>'
         f'<p style="margin-top:12px"><b>Subtotal:</b> £{subtotal:.2f}<br>'
+        + (f'<b>Biryani {html_escape(str(order.get("offer_label") or "offer"))}:</b> −£{offer_off:.2f}<br>' if offer_off > 0 else "")
         + (f'<b>Coupon {order.get("coupon_code")}:</b> −£{coupon_off:.2f}<br>' if order.get("coupon_code") else "")
         + f'<b>Delivery:</b> £{order.get("delivery_fee",0):.2f}<br>'
         f'<b>Total{" paid" if linked else ""}:</b> £{paid:.2f}</p>'

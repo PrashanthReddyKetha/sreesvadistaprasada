@@ -34,6 +34,14 @@ def is_sold_out_today(item: dict) -> bool:
     return s > london_now() if "T" in s else s >= london_today()
 
 
+def back_tomorrow(item: dict) -> bool:
+    """A dish that is off sale for now but back in time to be cooked for tomorrow: sold out for today only, or back
+    at a set time today. Such a dish can still be pre-ordered for tomorrow (owner, 25 Nov 2026). One that is sold out
+    through a later day, back at a time tomorrow, or "coming soon" cannot."""
+    s = item.get("sold_out_until")
+    return bool(s) and not item.get("coming_soon") and s[:10] <= london_today()
+
+
 def restock_email(item: dict, name: str, arrived: bool = False) -> tuple[str, str]:
     """arrived: the dish was "coming soon" and is on sale for the first time, so the words say so."""
     first = (name or "Friend").split(" ")[0]
